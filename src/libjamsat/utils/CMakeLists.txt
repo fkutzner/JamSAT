@@ -1,3 +1,5 @@
 add_library(jamsatUtils OBJECT
   Assert.h
-  Assert.cpp)
+  Assert.cpp
+  Truth.h
+)
