@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.5)
 
 add_definitions(-std=c++11)
 
+add_subdirectory(doc)
+
 add_subdirectory(lib/googletest)
 enable_testing()
 
