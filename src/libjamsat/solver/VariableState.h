@@ -77,28 +77,6 @@ public:
   TruthValue getAssignment(CNFVar variable) const noexcept;
 
   /**
-   * \brief Marks variables as eligible for being used in branching decisions.
-   *
-   * \param variable  The target variable. Must not be greater than \p maxVar
-   * passed to the constructor.
-   * \param isEligible  Iff true, \p variable may be used as a branching
-   * decision variable.
-   */
-  void setEligibleForDecisions(CNFVar variable, bool isEligible) noexcept;
-
-  /**
-   * \brief Determines whether a given variable is eligible for being used in
-   * branching decisions.
-   *
-   * \param variable  The target variable. Must not be greater than \p maxVar
-   * passed to the constructor.
-   * \returns true iff \p variable has been marked eligible for being used in
-   * branching decisions. If the variables's eligibility has not been set yet,
-   * false is returned.
-   */
-  bool isEligibleForDecisions(CNFVar variable) const noexcept;
-
-  /**
    * \brief Marks the given variable as eliminated from the SAT problem instance
    * being solved.
    *
@@ -166,7 +144,6 @@ public:
 
 private:
   std::vector<TruthValue> m_assignments;
-  std::vector<Bool> m_decisionVariables;
   std::vector<Bool> m_eliminatedVariables;
   std::vector<Trail::DecisionLevel> m_assignmentLevel;
   std::vector<const Clause *> m_reasons;

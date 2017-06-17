@@ -25,44 +25,17 @@
 */
 
 #include <gtest/gtest.h>
-
-#include <libjamsat/solver/VariableState.h>
+#include <libjamsat/branching/BranchingHeuristicBase.h>
 
 namespace jamsat {
-TEST(UnitSolver, unsettedVariablesAreIndeterminate) {
-  VariableState underTest{CNFVar{10}};
-  EXPECT_EQ(underTest.getAssignment(CNFVar{4}),
-            VariableState::TruthValue::INDETERMINATE);
+TEST(UnitBranching, variablesArentEligibleForDecisionByDefault) {
+  BranchingHeuristicBase underTest{CNFVar{10}};
+  EXPECT_EQ(underTest.isEligibleForDecisions(CNFVar{3}), false);
 }
 
-TEST(UnitSolver, variableTruthValuesAreStored) {
-  VariableState underTest{CNFVar{10}};
-  underTest.setAssignment(CNFVar{8}, VariableState::TruthValue::FALSE);
-  EXPECT_EQ(underTest.getAssignment(CNFVar{8}),
-            VariableState::TruthValue::FALSE);
-}
-
-TEST(UnitSolver, variablesAreNotEliminatedByDefault) {
-  VariableState underTest{CNFVar{10}};
-  EXPECT_EQ(underTest.isEliminated(CNFVar{3}), false);
-}
-
-TEST(UnitSolver, variableEliminationIsStored) {
-  VariableState underTest{CNFVar{10}};
-  underTest.setEliminated(CNFVar{3});
-  EXPECT_EQ(underTest.isEliminated(CNFVar{3}), true);
-}
-
-TEST(UnitSolver, variableDecisionLevelsAreStored) {
-  VariableState underTest{CNFVar{10}};
-  underTest.setAssignmentDecisionLevel(CNFVar{5}, 100ul);
-  EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{5}), 100ul);
-}
-
-TEST(UnitSolver, variablReasonsAreStored) {
-  VariableState underTest{CNFVar{10}};
-  Clause *dummy = reinterpret_cast<Clause *>(0xFF);
-  underTest.setAssignmentReason(CNFVar{5}, dummy);
-  EXPECT_EQ(underTest.getAssignmentReason(CNFVar{5}), dummy);
+TEST(UnitBranching, decisionVariableEligibilityIsStored) {
+  BranchingHeuristicBase underTest{CNFVar{10}};
+  underTest.setEligibleForDecisions(CNFVar{3}, true);
+  EXPECT_EQ(underTest.isEligibleForDecisions(CNFVar{3}), true);
 }
 }

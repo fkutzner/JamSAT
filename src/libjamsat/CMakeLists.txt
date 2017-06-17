@@ -3,10 +3,12 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 add_subdirectory(cnfproblem)
 add_subdirectory(utils)
 add_subdirectory(solver)
+add_subdirectory(branching)
 
 add_library(
-  jamcore STATIC 
+  jamcore STATIC
   $<TARGET_OBJECTS:jamsatCnfProblem>
   $<TARGET_OBJECTS:jamsatUtils>
   $<TARGET_OBJECTS:jamsatSolver>
+  $<TARGET_OBJECTS:jamsatBranching>
 )

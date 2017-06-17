@@ -24,45 +24,31 @@
 
 */
 
-#include <gtest/gtest.h>
+#include "BranchingHeuristicBase.h"
 
-#include <libjamsat/solver/VariableState.h>
+#include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
-TEST(UnitSolver, unsettedVariablesAreIndeterminate) {
-  VariableState underTest{CNFVar{10}};
-  EXPECT_EQ(underTest.getAssignment(CNFVar{4}),
-            VariableState::TruthValue::INDETERMINATE);
+BranchingHeuristicBase::BranchingHeuristicBase(CNFVar maxVar) noexcept
+    : m_decisionVariables({}) {
+  m_decisionVariables.resize(maxVar.getRawValue(), Bool::FALSE);
 }
 
-TEST(UnitSolver, variableTruthValuesAreStored) {
-  VariableState underTest{CNFVar{10}};
-  underTest.setAssignment(CNFVar{8}, VariableState::TruthValue::FALSE);
-  EXPECT_EQ(underTest.getAssignment(CNFVar{8}),
-            VariableState::TruthValue::FALSE);
+bool BranchingHeuristicBase::isEligibleForDecisions(CNFVar variable) const
+    noexcept {
+  JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariableType>(
+                                          m_decisionVariables.size()),
+             "Variable out of bounds");
+  return toRawBool(m_decisionVariables[variable.getRawValue()]);
 }
 
-TEST(UnitSolver, variablesAreNotEliminatedByDefault) {
-  VariableState underTest{CNFVar{10}};
-  EXPECT_EQ(underTest.isEliminated(CNFVar{3}), false);
-}
-
-TEST(UnitSolver, variableEliminationIsStored) {
-  VariableState underTest{CNFVar{10}};
-  underTest.setEliminated(CNFVar{3});
-  EXPECT_EQ(underTest.isEliminated(CNFVar{3}), true);
-}
-
-TEST(UnitSolver, variableDecisionLevelsAreStored) {
-  VariableState underTest{CNFVar{10}};
-  underTest.setAssignmentDecisionLevel(CNFVar{5}, 100ul);
-  EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{5}), 100ul);
-}
-
-TEST(UnitSolver, variablReasonsAreStored) {
-  VariableState underTest{CNFVar{10}};
-  Clause *dummy = reinterpret_cast<Clause *>(0xFF);
-  underTest.setAssignmentReason(CNFVar{5}, dummy);
-  EXPECT_EQ(underTest.getAssignmentReason(CNFVar{5}), dummy);
+void BranchingHeuristicBase::setEligibleForDecisions(CNFVar variable,
+                                                     bool isEligible) noexcept {
+  JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariableType>(
+                                          m_decisionVariables.size()),
+             "Variable out of bounds");
+  m_decisionVariables[variable.getRawValue()] = toBool(isEligible);
 }
 }
