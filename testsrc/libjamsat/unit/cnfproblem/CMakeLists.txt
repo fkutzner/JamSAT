@@ -1,5 +1,7 @@
 add_executable(cnfproblem_unit_tests
-  CNFLiteralUnitTests.cpp)
+  CNFLiteralUnitTests.cpp
+  CNFProblemUnitTests.cpp
+)
 
 target_link_libraries(cnfproblem_unit_tests jamcore gtest gtest_main)
 target_include_directories(cnfproblem_unit_tests PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include

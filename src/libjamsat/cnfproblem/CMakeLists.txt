@@ -1,3 +1,6 @@
 add_library(jamsatCnfProblem OBJECT
   CNFLiteral.h
-  CNFLiteral.cpp)
+  CNFLiteral.cpp
+  CNFProblem.h
+  CNFProblem.cpp
+)
