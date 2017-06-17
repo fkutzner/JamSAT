@@ -42,7 +42,7 @@ namespace jamsat {
  */
 class VariableState {
 public:
-  using TruthValue = CNFSign;
+  using TruthValue = TBool;
 
   /**
    * \brief Constructs a new VariableState object with the given maximum amount
@@ -67,7 +67,8 @@ public:
    *
    * \param variable  The target variable. Must not be greater than \p maxVar
    * passed to the constructor.
-   * \returns The variable's current assignment.
+   * \returns The variable's current assignment. If the variable's assignment
+   * has not been set yet, INDETERMINATE is returned.
    */
   TruthValue getAssignment(CNFVar variable) const noexcept;
 
@@ -87,8 +88,9 @@ public:
    *
    * \param variable  The target variable. Must not be greater than \p maxVar
    * passed to the constructor.
-   * \returns true iff \p variable is eligible for being used in branching
-   * decisions
+   * \returns true iff \p variable has been marked eligible for being used in
+   * branching decisions. If the variables's eligibility has not been set yet,
+   * false is returned.
    */
   bool isEligibleForDecisions(CNFVar variable) const noexcept;
 

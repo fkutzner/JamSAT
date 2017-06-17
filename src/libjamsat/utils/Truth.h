@@ -58,4 +58,22 @@ inline bool toRawBool(Bool value) { return value == Bool::TRUE ? true : false; }
 inline Bool toBool(bool rawValue) {
   return rawValue ? Bool::TRUE : Bool::FALSE;
 }
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \enum jamsat::TBool
+ *
+ * \brief Values of three-valued logic: TRUE, FALSE and INDETERMINATE.
+ */
+enum class TBool : uint8_t {
+  /// The "false" value.
+  FALSE = 0,
+
+  /// The "true" value.
+  TRUE = 1,
+
+  /// The indeterminate value.
+  INDETERMINATE = 2
+};
 }
