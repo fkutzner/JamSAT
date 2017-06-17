@@ -29,10 +29,14 @@
 #include <cstdint>
 #include <vector>
 
+#include <libjamsat/solver/Trail.h>
+
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
+class Clause;
+
 /**
  * \ingroup JamSAT_Solver
  *
@@ -113,9 +117,58 @@ public:
    */
   bool isEliminated(CNFVar variable) const noexcept;
 
+  /**
+   * \brief Stores the decision level on which the given variable has been
+   * assigned.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor. \p variable must be a variable with a
+   * determinate truth value.
+   * \param level     The decision level where \p variable has been assigned.
+   */
+  void setAssignmentDecisionLevel(CNFVar variable,
+                                  Trail::DecisionLevel level) noexcept;
+
+  /**
+   * \brief Gets the decision level on which the given variable has been
+   * assigned.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor. \p variable must be a variable with a
+   * determinate truth value.
+   * \returns   The decsiion level where \p variable has been assigned.
+   */
+  Trail::DecisionLevel getAssignmentDecisionLevel(CNFVar variable) const
+      noexcept;
+
+  /**
+   * \brief Stores a pointer to the clause which forced the assignment of the
+   * given variable.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor. \p variable must be a variable with a
+   * determinate truth value.
+   * \param reason    The clause which forced the assignment of the given
+   * variable.
+   */
+  void setAssignmentReason(CNFVar variable, Clause *reason) noexcept;
+
+  /**
+   * \brief Gets the pointer to the clause which forced the assignment of the
+   * given variable.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor. \p variable must be a variable with a
+   * determinate truth value.
+   * \returns    The clause which forced the assignment of the given variable.
+   */
+  const Clause *getAssignmentReason(CNFVar variable) const noexcept;
+
 private:
   std::vector<TruthValue> m_assignments;
   std::vector<Bool> m_decisionVariables;
   std::vector<Bool> m_eliminatedVariables;
+  std::vector<Trail::DecisionLevel> m_assignmentLevel;
+  std::vector<const Clause *> m_reasons;
 };
 }
