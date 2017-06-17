@@ -42,11 +42,39 @@ class Clause {
 public:
   using size_type = size_t;
 
-  Clause(size_type size);
-  CNFLit &operator[](size_type index);
+  /**
+   * \brief Returns a reference to a literal within the clause.
+   *
+   * \param index The index of the target literal. \p index must be smaller than
+   * the clause size.
+   * \returns A reference to the literal with index \p index.
+   */
+  CNFLit &operator[](size_type index) noexcept;
+
+  friend Clause *createHeapClause(size_type size);
 
 private:
-  uint32_t size;
-  CNFLit *anchor;
+  /**
+   * \brief Constructs a clause object of the given size.
+   *
+   * Note that objects are expected to be constructed within a preallocated
+   * memory buffer of sufficient size.
+   *
+   * \param size  The clause's size.
+   */
+  Clause(size_type size) noexcept;
+
+  uint32_t m_size;
+  CNFLit *m_anchor;
 };
+
+/**
+ * \ingroup JamSAT_Solver
+ *
+ * \brief Allocates a clause of the given size on the heap.
+ *
+ * \param size The clause's size.
+ * \returns A new clause of size \p size, allocated on the heap.
+ */
+Clause *createHeapClause(Clause::size_type size);
 }

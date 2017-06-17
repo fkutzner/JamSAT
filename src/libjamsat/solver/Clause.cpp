@@ -27,5 +27,5 @@
 #include "Clause.h"
 
 namespace jamsat {
-Clause::Clause(size_type size) {}
+Clause::Clause(size_type size) noexcept {}
 }
