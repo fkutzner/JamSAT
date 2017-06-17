@@ -109,5 +109,5 @@ std::ostream &operator<<(std::ostream &stream, const CNFProblem &problem);
  * \param problem   The problem instance to which the problem instance's clauses
  * should be added.
  */
-std::istream &operator>>(std::istream &stream, const CNFProblem &problem);
+std::istream &operator>>(std::istream &stream, CNFProblem &problem);
 }

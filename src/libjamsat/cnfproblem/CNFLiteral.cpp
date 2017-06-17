@@ -38,12 +38,12 @@ const CNFLit CNFLit::undefinedLiteral = CNFLit{};
 const CNFVar CNFVar::undefinedVariable = CNFVar{};
 
 std::ostream &operator<<(std::ostream &stream, const CNFVar &variable) {
-  stream << variable.getRawValue();
+  stream << (variable.getRawValue() + 1);
   return stream;
 }
 
 std::ostream &operator<<(std::ostream &stream, const CNFLit &literal) {
-  stream << (literal.getSign() == CNFSign::POSITIVE ? "+" : "-");
+  stream << (literal.getSign() == CNFSign::POSITIVE ? " " : "-");
   stream << literal.getVariable();
   return stream;
 }

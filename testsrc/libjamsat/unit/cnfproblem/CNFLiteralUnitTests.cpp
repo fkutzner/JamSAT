@@ -62,7 +62,7 @@ TEST(UnitCNFProblem, printVariable) {
 
   std::string printedVariable;
   target >> printedVariable;
-  EXPECT_EQ(printedVariable, "5");
+  EXPECT_EQ(printedVariable, "6");
 }
 
 TEST(UnitCNFProblem, printNegativeLiteral) {
@@ -72,7 +72,7 @@ TEST(UnitCNFProblem, printNegativeLiteral) {
 
   std::string printedVariable;
   target >> printedVariable;
-  EXPECT_EQ(printedVariable, "-5");
+  EXPECT_EQ(printedVariable, "-6");
 }
 
 TEST(UnitCNFProblem, printPositiveLiteral) {
@@ -82,7 +82,7 @@ TEST(UnitCNFProblem, printPositiveLiteral) {
 
   std::string printedVariable;
   target >> printedVariable;
-  EXPECT_EQ(printedVariable, "+5");
+  EXPECT_EQ(printedVariable, "6");
 }
 
 TEST(UnitCNFProblem, variableOfUndefinedLiteralIsUndefiend) {

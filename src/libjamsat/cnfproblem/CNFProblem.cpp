@@ -25,6 +25,7 @@
 */
 
 #include "CNFProblem.h"
+#include <istream>
 
 namespace jamsat {
 CNFProblem::CNFProblem() : m_clauses({}), m_maxVar(CNFVar::undefinedVariable) {}
@@ -58,10 +59,25 @@ CNFVar CNFProblem::getMaxVar() const noexcept {
 }
 
 std::ostream &operator<<(std::ostream &stream, const CNFProblem &problem) {
+  if (problem.isEmpty()) {
+    stream << "p cnf 0 0" << std::endl;
+    return stream;
+  }
+
+  stream << "p cnf " << problem.getMaxVar() << " " << problem.getSize()
+         << std::endl;
+  for (auto &clause : problem.getClauses()) {
+    for (auto literal : clause) {
+      stream << literal << " ";
+    }
+    stream << "0" << std::endl;
+  }
+
   return stream;
 }
 
-std::istream &operator>>(std::istream &stream, const CNFProblem &problem) {
+std::istream &operator>>(std::istream &stream, CNFProblem &problem) {
+  (void)problem;
   return stream;
 }
 }

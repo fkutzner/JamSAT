@@ -26,6 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <sstream>
+#include <string>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
@@ -101,6 +102,51 @@ TEST(UnitCNFProblem, cnfProblemReportsMaximumVariable) {
   underTest.addClause(clause1);
   underTest.addClause(clause2);
   EXPECT_EQ(underTest.getMaxVar(), CNFVar{6});
+}
+
+TEST(UnitCNFProblem, printEmptyCNFProblemAsDIMACS) {
+  std::stringstream collector;
+  CNFProblem underTest;
+  collector << underTest;
+
+  ASSERT_TRUE(collector);
+  std::string result;
+  std::getline(collector, result);
+  EXPECT_EQ(result, "p cnf 0 0");
+
+  collector.get();
+  EXPECT_FALSE(collector);
+}
+
+TEST(UnitCNFProblem, printTwoClauseCNFProblemAsDIMACS) {
+  std::vector<CNFLit> clause1 = {CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+                                 CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+
+  std::vector<CNFLit> clause2 = {CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
+                                 CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+  CNFProblem underTest;
+
+  underTest.addClause(clause1);
+  underTest.addClause(clause2);
+
+  std::stringstream collector;
+  collector << underTest;
+
+  ASSERT_TRUE(collector);
+  std::string currentLine;
+  std::getline(collector, currentLine);
+  EXPECT_EQ(currentLine, "p cnf 7 2");
+
+  ASSERT_TRUE(collector);
+  std::getline(collector, currentLine);
+  EXPECT_EQ(currentLine, "-4 -5 0");
+
+  ASSERT_TRUE(collector);
+  std::getline(collector, currentLine);
+  EXPECT_EQ(currentLine, "-6  7 0");
+
+  collector.get();
+  EXPECT_FALSE(collector);
 }
 
 TEST(UnitCNFProblem, parseEmptyDIMACSInputData) {
