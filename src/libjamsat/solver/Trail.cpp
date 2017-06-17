@@ -25,18 +25,50 @@
 */
 
 #include "Trail.h"
+#include "libjamsat/utils/Assert.h"
 
 namespace jamsat {
-Trail::Trail(CNFVar maxVar) {}
+Trail::Trail(CNFVar maxVar) : m_trail({}), m_trailLimits({0}) {
+  JAM_ASSERT(
+      maxVar != CNFVar::undefinedVariable,
+      "Trail cannot be instantiated with the undefined variable as maxVar");
+  m_trail.reserve(maxVar.getRawValue());
+}
 
-void Trail::newDecisionLevel() noexcept {}
+void Trail::newDecisionLevel() noexcept {
+  m_trailLimits.push_back(m_trail.size());
+}
 
-Trail::DecisionLevel Trail::getCurrentDecisionLevel() const noexcept {}
+Trail::DecisionLevel Trail::getCurrentDecisionLevel() const noexcept {
+  return m_trailLimits.size() - 1;
+}
 
-void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {}
+void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
+  JAM_ASSERT(level < m_trailLimits.size(),
+             "Cannot shrink to a decision level higher than the current one");
+  m_trail.resize(m_trailLimits[level]);
+  m_trailLimits.resize(level + 1);
+}
 
-void Trail::addLiteral(CNFLit literal) noexcept {}
+void Trail::addLiteral(CNFLit literal) noexcept { m_trail.push_back(literal); }
+
+Trail::size_type Trail::getNumberOfAssignments() const noexcept {
+  return m_trail.size();
+}
 
 std::pair<Trail::const_iterator, Trail::const_iterator>
-Trail::getDecisionLevelLiterals(DecisionLevel level) const noexcept {}
+Trail::getDecisionLevelLiterals(DecisionLevel level) const noexcept {
+  if (level >= m_trailLimits.size()) {
+    return std::pair<const_iterator, const_iterator>(m_trail.end(),
+                                                     m_trail.end());
+  }
+
+  const_iterator begin = m_trail.begin() + m_trailLimits[level];
+  if (level == m_trailLimits.size()) {
+    return std::pair<const_iterator, const_iterator>(begin, m_trail.end());
+  } else {
+    const_iterator end = m_trail.begin() + m_trailLimits[level + 1];
+    return std::pair<const_iterator, const_iterator>(begin, end);
+  }
+}
 }

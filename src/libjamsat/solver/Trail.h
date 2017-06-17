@@ -58,7 +58,8 @@ public:
   /**
    * \brief Constructs a new trail.
    *
-   * \param maxVar    The maximum variable which will occur on the trail.
+   * \param maxVar    The maximum variable which will occur on the trail. maxVar
+   * must not be CNFVar::undefinedVariable.
    */
   explicit Trail(CNFVar maxVar);
 
@@ -87,6 +88,13 @@ public:
    * belong to the current decision level.
    */
   void addLiteral(CNFLit literal) noexcept;
+
+  /**
+   * \brief Gets the number of current variable assignments.
+   *
+   * \returns the number of current variable assignments.
+   */
+  size_type getNumberOfAssignments() const noexcept;
 
   /**
    * \brief Gets the literals of the requested decision level.
