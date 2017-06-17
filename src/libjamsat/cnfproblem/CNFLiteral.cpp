@@ -30,9 +30,12 @@
 
 namespace jamsat {
 
-CNFLit::CNFLit() : m_value(std::numeric_limits<int>::max()) {}
+CNFLit::CNFLit() noexcept : m_value(std::numeric_limits<int>::max()) {}
+
+CNFVar::CNFVar() noexcept : m_value(std::numeric_limits<int>::max() >> 1) {}
 
 const CNFLit CNFLit::undefinedLiteral = CNFLit{};
+const CNFVar CNFVar::undefinedVariable = CNFVar{};
 
 std::ostream &operator<<(std::ostream &stream, const CNFVar &variable) {
   stream << variable.getRawValue();

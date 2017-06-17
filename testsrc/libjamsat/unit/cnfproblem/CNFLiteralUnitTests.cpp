@@ -85,6 +85,11 @@ TEST(UnitCNFProblem, printPositiveLiteral) {
   EXPECT_EQ(printedVariable, "+5");
 }
 
+TEST(UnitCNFProblem, variableOfUndefinedLiteralIsUndefiend) {
+  CNFVar undefinedLiteralVar = CNFLit::undefinedLiteral.getVariable();
+  EXPECT_EQ(undefinedLiteralVar, CNFVar::undefinedVariable);
+}
+
 #if !defined(NDEBUG)
 TEST(UnitCNFProblem, cannotNegateUndefinedLiteral) {
   CNFLit underTest = CNFLit::undefinedLiteral;

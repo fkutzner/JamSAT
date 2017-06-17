@@ -94,7 +94,28 @@ public:
    */
   inline bool operator==(const CNFVar &rhs) const noexcept;
 
+  /**
+   * \brief Inquality operator for CNFVar.
+   *
+   * \param rhs   The right-hand-side variable.
+   * \returns \p true iff this variable is inequal to \p rhs.
+   */
+  inline bool operator!=(const CNFVar &rhs) const noexcept;
+
+  /**
+   * \brief The undefined marker variable.
+   *
+   * \param rhs   The right-hand-side variable.
+   * \returns \p true iff this variable is equal to \p rhs.
+   */
+  static const CNFVar undefinedVariable;
+
 private:
+  /**
+   * \brief Constructs an undefined variable.
+   */
+  CNFVar() noexcept;
+
   RawVariableType m_value;
 };
 
@@ -110,9 +131,7 @@ public:
    * \brief Constructs a CNFLit object.
    *
    * \param variable  The literal's variable. The variable's value must be
-   * nonnegative
-   *                  and smaller than
-   * std::numeric_limits<CNFVar::RawVariableType>::max().
+   * nonnegative and smaller than CNFVar::undefinedVariable.
    * \param sign      The literal's sign.
    */
   inline CNFLit(CNFVar variable, CNFSign sign) noexcept;
@@ -163,7 +182,7 @@ private:
   /**
    * \brief Constructs an undefined literal.
    */
-  CNFLit();
+  CNFLit() noexcept;
 
   int m_value;
 };
@@ -182,13 +201,15 @@ bool CNFVar::operator==(const CNFVar &rhs) const noexcept {
   return rhs.m_value == m_value;
 }
 
+bool CNFVar::operator!=(const CNFVar &rhs) const noexcept {
+  return rhs.m_value != m_value;
+}
+
 CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept {
   JAM_ASSERT(variable.getRawValue() >= 0,
              "The variable of a literal must not be negative");
-  JAM_ASSERT(variable.getRawValue() <
-                 std::numeric_limits<CNFVar::RawVariableType>::max(),
-             "The variable must be smaller than "
-             "std::numeric_limits<CNFVar::RawVariableType>::max()");
+  JAM_ASSERT(variable != CNFVar::undefinedVariable,
+             "The variable must be smaller than CNFVar::undefinedVariable");
   m_value = (variable.getRawValue() << 1) | static_cast<int>(sign);
 }
 
