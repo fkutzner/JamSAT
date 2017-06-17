@@ -33,5 +33,5 @@ namespace jamsat {
  * \defgroup JamSAT_Utils Collection of utilities for JamSAT.
  */
 
-#define JAM_ASSERT(x, message) assert(#x &&#message)
+#define JAM_ASSERT(x, message) assert(x &&message)
 }

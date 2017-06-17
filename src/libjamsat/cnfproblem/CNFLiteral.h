@@ -1,15 +1,15 @@
 /* Copyright (c) 2017 Felix Kutzner (github.com/fkutzner)
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -17,16 +17,18 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
- 
+
  Except as contained in this notice, the name(s) of the above copyright holders
  shall not be used in advertising or otherwise to promote the sale, use or
  other dealings in this Software without prior written authorization.
- 
+
 */
 
 #pragma once
 
 #include <ostream>
+
+#include <libjamsat/utils/Assert.h>
 
 namespace jamsat {
 /**
@@ -107,7 +109,10 @@ public:
   /**
    * \brief Constructs a CNFLit object.
    *
-   * \param variable  The literal's variable.
+   * \param variable  The literal's variable. The variable's value must be
+   * nonnegative
+   *                  and smaller than
+   * std::numeric_limits<CNFVar::RawVariableType>::max().
    * \param sign      The literal's sign.
    */
   inline CNFLit(CNFVar variable, CNFSign sign);
@@ -148,13 +153,18 @@ public:
    * \returns \p true iff this literal is inequal to \p rhs.
    */
   inline bool operator!=(const CNFLit &rhs) const noexcept;
- 
+
   /**
    * \brief The undefined marker literal.
    */
   static const CNFLit undefinedLiteral;
 
 private:
+  /**
+   * \brief Constructs an undefined literal.
+   */
+  CNFLit();
+
   int m_value;
 };
 
@@ -172,6 +182,12 @@ bool CNFVar::operator==(const CNFVar &rhs) const noexcept {
 }
 
 CNFLit::CNFLit(CNFVar variable, CNFSign sign) {
+  JAM_ASSERT(variable.getRawValue() >= 0,
+             "The variable of a literal must not be negative");
+  JAM_ASSERT(variable.getRawValue() <
+                 std::numeric_limits<CNFVar::RawVariableType>::max(),
+             "The variable must be smaller than "
+             "std::numeric_limits<CNFVar::RawVariableType>::max()");
   m_value = (variable.getRawValue() << 1) | static_cast<int>(sign);
 }
 
@@ -182,6 +198,8 @@ CNFSign CNFLit::getSign() const noexcept {
 }
 
 CNFLit CNFLit::operator~() const noexcept {
+  JAM_ASSERT(*this != CNFLit::undefinedLiteral,
+             "Cannot negate an undefined literal");
   return CNFLit{getVariable(), invert(getSign())};
 }
 
