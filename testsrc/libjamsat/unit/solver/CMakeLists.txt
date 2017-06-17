@@ -1,5 +1,6 @@
 add_executable(solver_unit_tests
   TrailUnitTests.cpp
+  VariableStateUnitTests.cpp
 )
 
 target_link_libraries(solver_unit_tests jamcore gtest gtest_main)
