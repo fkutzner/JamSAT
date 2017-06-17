@@ -114,7 +114,7 @@ public:
   bool isEliminated(CNFVar variable) const noexcept;
 
 private:
-  std::vector<CNFSign> m_assignments;
+  std::vector<TruthValue> m_assignments;
   std::vector<Bool> m_decisionVariables;
   std::vector<Bool> m_eliminatedVariables;
 };

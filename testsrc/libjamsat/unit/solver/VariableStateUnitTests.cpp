@@ -26,4 +26,41 @@
 
 #include <gtest/gtest.h>
 
-namespace jamsat {}
+#include <libjamsat/solver/VariableState.h>
+
+namespace jamsat {
+TEST(UnitSolver, unsettedVariablesAreIndeterminate) {
+  VariableState underTest{CNFVar{10}};
+  EXPECT_EQ(underTest.getAssignment(CNFVar{4}),
+            VariableState::TruthValue::INDETERMINATE);
+}
+
+TEST(UnitSolver, variableTruthValuesAreStored) {
+  VariableState underTest{CNFVar{10}};
+  underTest.setAssignment(CNFVar{8}, VariableState::TruthValue::FALSE);
+  EXPECT_EQ(underTest.getAssignment(CNFVar{8}),
+            VariableState::TruthValue::FALSE);
+}
+
+TEST(UnitSolver, variablesArentEligibleForDecisionByDefault) {
+  VariableState underTest{CNFVar{10}};
+  EXPECT_EQ(underTest.isEligibleForDecisions(CNFVar{3}), false);
+}
+
+TEST(UnitSolver, decisionVariableEligibilityIsStored) {
+  VariableState underTest{CNFVar{10}};
+  underTest.setEligibleForDecisions(CNFVar{3}, true);
+  EXPECT_EQ(underTest.isEligibleForDecisions(CNFVar{3}), true);
+}
+
+TEST(UnitSolver, variablesAreNotEliminatedByDefault) {
+  VariableState underTest{CNFVar{10}};
+  EXPECT_EQ(underTest.isEliminated(CNFVar{3}), false);
+}
+
+TEST(UnitSolver, variableEliminationIsStored) {
+  VariableState underTest{CNFVar{10}};
+  underTest.setEliminated(CNFVar{3});
+  EXPECT_EQ(underTest.isEliminated(CNFVar{3}), true);
+}
+}
