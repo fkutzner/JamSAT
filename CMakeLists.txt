@@ -11,3 +11,16 @@ enable_testing()
 add_subdirectory(src)
 
 add_subdirectory(testsrc)
+
+
+file(GLOB_RECURSE SRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.h)
+file(GLOB_RECURSE TESTSRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/testsrc/*.cpp *${PROJECT_SOURCE_DIR}/testsrc/*.h)
+set(ALL_SOURCE_FILES ${SRC_SOURCE_FILES} ${TESTSRC_SOURCE_FILES})
+
+add_custom_target(
+        format-src
+        COMMAND clang-format
+        -style=LLVM
+        -i
+        ${ALL_SOURCE_FILES}
+)
