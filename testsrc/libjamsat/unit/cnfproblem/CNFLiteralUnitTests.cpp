@@ -1,7 +1,3 @@
-#include <gtest/gtest.h>
-#include <sstream>
-
-#include <libjamsat/cnfproblem/CNFLiteral.h>
 /* Copyright (c) 2017 Felix Kutzner (github.com/fkutzner)
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,6 +23,11 @@
  other dealings in this Software without prior written authorization.
 
 */
+
+#include <gtest/gtest.h>
+#include <sstream>
+
+#include <libjamsat/cnfproblem/CNFLiteral.h>
 
 namespace jamsat {
 TEST(UnitCNFProblem, invertSign) {
