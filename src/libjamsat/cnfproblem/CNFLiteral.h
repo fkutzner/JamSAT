@@ -58,6 +58,12 @@ namespace jamsat {
          */
         inline RawVariableType getRawValue() const noexcept;
         
+        /**
+         * \brief Equality operator for CNFVar.
+         *
+         * \param rhs   The right-hand-side variable.
+         * \returns \p true iff this variable is equal to \p rhs.
+         */
         inline bool operator==(const CNFVar &rhs) const noexcept;
     private:
         RawVariableType m_value;
@@ -100,7 +106,20 @@ namespace jamsat {
          */
         inline CNFLit operator~() const noexcept;
         
+        /**
+         * \brief Equality operator for CNFVar.
+         *
+         * \param rhs   The right-hand-side literal.
+         * \returns \p true iff this literal is equal to \p rhs.
+         */
         inline bool operator==(const CNFLit &rhs) const noexcept;
+        
+        /**
+         * \brief Inequality operator for CNFVar.
+         *
+         * \param rhs   The right-hand-side literal.
+         * \returns \p true iff this literal is inequal to \p rhs.
+         */
         inline bool operator!=(const CNFLit &rhs) const noexcept;
     private:
         int m_value;
