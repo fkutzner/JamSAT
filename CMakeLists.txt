@@ -24,3 +24,15 @@ add_custom_target(
         -i
         ${ALL_SOURCE_FILES}
 )
+
+add_custom_target(
+        cppcheck
+        COMMAND cppcheck
+        -I ${PROJECT_SOURCE_DIR}/src
+        -I ${PROJECT_SOURCE_DIR}/testsrc
+        --enable=all
+        --suppress=missingIncludeSystem
+        --std=c++11
+        --verbose
+        ${ALL_SOURCE_FILES}
+)
