@@ -51,6 +51,21 @@ public:
    */
   CNFLit &operator[](size_type index) noexcept;
 
+  /**
+   * \brief Returns the clause's size.
+   *
+   * \returns The clause's size.
+   */
+  size_type getSize() const noexcept;
+
+  /**
+   * \brief Reduces the length of the clause to the given size.
+   *
+   * \param newSize  The clause's new size, which must not be larger than the
+   * current size.
+   */
+  void shrink(size_type newSize) noexcept;
+
   friend Clause *createHeapClause(size_type size);
 
 private:
