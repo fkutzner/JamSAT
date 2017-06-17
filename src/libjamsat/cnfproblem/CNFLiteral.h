@@ -80,6 +80,11 @@ public:
   explicit inline CNFVar(RawVariableType variableValue) noexcept;
 
   /**
+   * \brief Constructs an undefined variable.
+   */
+  CNFVar() noexcept;
+
+  /**
    * \brief Gets the variable's raw value.
    *
    * \returns the variable's raw value.
@@ -111,11 +116,6 @@ public:
   static const CNFVar undefinedVariable;
 
 private:
-  /**
-   * \brief Constructs an undefined variable.
-   */
-  CNFVar() noexcept;
-
   RawVariableType m_value;
 };
 
@@ -135,6 +135,11 @@ public:
    * \param sign      The literal's sign.
    */
   inline CNFLit(CNFVar variable, CNFSign sign) noexcept;
+
+  /**
+   * \brief Constructs an undefined literal.
+   */
+  CNFLit() noexcept;
 
   /**
    * \brief Gets the literal's variable.
@@ -179,11 +184,6 @@ public:
   static const CNFLit undefinedLiteral;
 
 private:
-  /**
-   * \brief Constructs an undefined literal.
-   */
-  CNFLit() noexcept;
-
   int m_value;
 };
 
