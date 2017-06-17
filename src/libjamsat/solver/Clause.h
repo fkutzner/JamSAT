@@ -27,6 +27,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 
@@ -41,6 +42,8 @@ namespace jamsat {
 class Clause {
 public:
   using size_type = size_t;
+  using iterator = CNFLit *;
+  using const_iterator = const CNFLit *;
 
   /**
    * \brief Returns a reference to a literal within the clause.
@@ -66,7 +69,37 @@ public:
    */
   void shrink(size_type newSize) noexcept;
 
-  friend Clause *createHeapClause(size_type size);
+  /**
+   * \brief Gets the begin random-access iterator for the literal list.
+   *
+   * \returns The begin iterator for the literal list.
+   */
+  iterator begin() noexcept;
+
+  /**
+   * \brief Gets the end random-access iterator for the literal list.
+   *
+   * \returns The end iterator for the literal list. This iterator may not be
+   * dereferenced.
+   */
+  iterator end() noexcept;
+
+  /**
+   * \brief Gets the begin random-access const iterator for the literal list.
+   *
+   * \returns The begin const iterator for the literal list.
+   */
+  const_iterator begin() const noexcept;
+
+  /**
+   * \brief Gets the end random-access const iterator for the literal list.
+   *
+   * \returns The end const iterator for the literal list. This iterator may not
+   * be dereferenced.
+   */
+  const_iterator end() const noexcept;
+
+  friend std::unique_ptr<Clause> createHeapClause(size_type size);
 
 private:
   /**
@@ -80,7 +113,7 @@ private:
   Clause(size_type size) noexcept;
 
   uint32_t m_size;
-  CNFLit *m_anchor;
+  CNFLit m_anchor;
 };
 
 /**
@@ -89,7 +122,8 @@ private:
  * \brief Allocates a clause of the given size on the heap.
  *
  * \param size The clause's size.
- * \returns A new clause of size \p size, allocated on the heap.
+ * \returns A pointer to a new clause of size \p size, allocated on the heap.
+ * Ownership of this object is transferred to the caller.
  */
-Clause *createHeapClause(Clause::size_type size);
+std::unique_ptr<Clause> createHeapClause(Clause::size_type size);
 }

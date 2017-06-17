@@ -26,5 +26,68 @@
 
 #include <gtest/gtest.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/solver/Clause.h>
 
-namespace jamsat {}
+namespace jamsat {
+TEST(UnitSolver, allocateClauseOnHeap) {
+  auto allocatedClause = createHeapClause(11);
+  ASSERT_NE(allocatedClause.get(), nullptr);
+  EXPECT_EQ(allocatedClause->getSize(), 11ull);
+}
+
+TEST(UnitSolver, freshHeapClauseContainsUndefinedLiterals) {
+  auto underTest = createHeapClause(11);
+  ASSERT_NE(underTest.get(), nullptr);
+  for (Clause::size_type i = 0; i < underTest->getSize(); ++i) {
+    EXPECT_EQ((*underTest)[i], CNFLit::undefinedLiteral);
+  }
+}
+
+TEST(UnitSolver, heapClauseIsWritable) {
+  auto underTest = createHeapClause(11);
+  ASSERT_NE(underTest.get(), nullptr);
+  CNFLit testLiteral{CNFVar{3}, CNFSign::NEGATIVE};
+  (*underTest)[3] = testLiteral;
+  EXPECT_EQ((*underTest)[3], testLiteral);
+}
+
+TEST(UnitSolver, iterateOverEmptyClause) {
+  auto underTest = createHeapClause(0);
+  ASSERT_NE(underTest.get(), nullptr);
+  bool iterated = false;
+  for (auto &lit : *underTest) {
+    (void)lit;
+    iterated = true;
+  }
+  ASSERT_FALSE(iterated);
+}
+
+TEST(UnitSolver, iterateOverClause) {
+  auto underTest = createHeapClause(11);
+  ASSERT_NE(underTest.get(), nullptr);
+  CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
+  CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
+  (*underTest)[3] = testLiteral1;
+  (*underTest)[4] = testLiteral2;
+
+  int i = 0;
+  for (auto &lit : *underTest) {
+    if (i == 3) {
+      EXPECT_EQ(lit, testLiteral1);
+    } else if (i == 4) {
+      EXPECT_EQ(lit, testLiteral2);
+    }
+  }
+}
+
+TEST(UnitSolver, shrinkClause) {
+  auto underTest = createHeapClause(11);
+  ASSERT_NE(underTest.get(), nullptr);
+  ASSERT_EQ(underTest->end() - underTest->begin(), 11);
+  ASSERT_EQ(underTest->getSize(), 11ull);
+
+  underTest->shrink(5);
+  EXPECT_EQ(underTest->end() - underTest->begin(), 5);
+  EXPECT_EQ(underTest->getSize(), 5ull);
+}
+}

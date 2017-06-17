@@ -25,7 +25,54 @@
 */
 
 #include "Clause.h"
+#include <libjamsat/utils/Assert.h>
 
 namespace jamsat {
-Clause::Clause(size_type size) noexcept {}
+Clause::Clause(size_type size) noexcept
+    : m_size(size), m_anchor(CNFLit::undefinedLiteral) {}
+
+CNFLit &Clause::operator[](size_type index) noexcept {
+  JAM_ASSERT(index < m_size, "Index out of bounds");
+  return *(&m_anchor + index);
+}
+
+Clause::size_type Clause::getSize() const noexcept { return m_size; }
+
+void Clause::shrink(size_type newSize) noexcept {
+  JAM_ASSERT(newSize <= m_size,
+             "newSize may not be larger than the current size");
+  m_size = newSize;
+}
+
+Clause::iterator Clause::begin() noexcept {
+  return const_cast<Clause::iterator>(
+      static_cast<const Clause *>(this)->begin());
+}
+
+Clause::iterator Clause::end() noexcept {
+  return const_cast<Clause::iterator>(static_cast<const Clause *>(this)->end());
+}
+
+Clause::const_iterator Clause::begin() const noexcept { return &m_anchor; }
+
+Clause::const_iterator Clause::end() const noexcept {
+  return &m_anchor + m_size;
+}
+
+std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
+  Clause *result;
+  if (size == 0) {
+    result = new Clause(size);
+  } else {
+    Clause::size_type actualSize = sizeof(Clause) + (size - 1) * sizeof(CNFLit);
+    void *rawMemory = operator new(actualSize);
+    result = new (rawMemory) Clause(size);
+  }
+
+  for (auto &lit : *result) {
+    lit = CNFLit::undefinedLiteral;
+  }
+
+  return std::unique_ptr<Clause>(result);
+}
 }
