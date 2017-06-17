@@ -56,7 +56,7 @@ enum class CNFSign {
  * \param sign      The sign to be inverted.
  * \returns         The inverted sign.
  */
-inline CNFSign invert(CNFSign sign) {
+inline CNFSign invert(CNFSign sign) noexcept {
   int rawSign = static_cast<int>(sign);
   return static_cast<CNFSign>(1 - rawSign);
 }
@@ -77,7 +77,7 @@ public:
    *
    * \param variableValue  The non-negative raw variable identifier.
    */
-  explicit inline CNFVar(RawVariableType variableValue);
+  explicit inline CNFVar(RawVariableType variableValue) noexcept;
 
   /**
    * \brief Gets the variable's raw value.
@@ -115,7 +115,7 @@ public:
    * std::numeric_limits<CNFVar::RawVariableType>::max().
    * \param sign      The literal's sign.
    */
-  inline CNFLit(CNFVar variable, CNFSign sign);
+  inline CNFLit(CNFVar variable, CNFSign sign) noexcept;
 
   /**
    * \brief Gets the literal's variable.
@@ -173,7 +173,8 @@ std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
 
 /********** Implementation ****************************** */
 
-CNFVar::CNFVar(RawVariableType variableValue) : m_value(variableValue) {}
+CNFVar::CNFVar(RawVariableType variableValue) noexcept
+    : m_value(variableValue) {}
 
 CNFVar::RawVariableType CNFVar::getRawValue() const noexcept { return m_value; }
 
@@ -181,7 +182,7 @@ bool CNFVar::operator==(const CNFVar &rhs) const noexcept {
   return rhs.m_value == m_value;
 }
 
-CNFLit::CNFLit(CNFVar variable, CNFSign sign) {
+CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept {
   JAM_ASSERT(variable.getRawValue() >= 0,
              "The variable of a literal must not be negative");
   JAM_ASSERT(variable.getRawValue() <
