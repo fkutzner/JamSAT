@@ -50,11 +50,29 @@ Trail::DecisionLevel Trail::getCurrentDecisionLevel() const noexcept {
 void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
   JAM_ASSERT(level < m_trailLimits.size(),
              "Cannot shrink to a decision level higher than the current one");
+  for (auto i = m_trail.begin() + m_trailLimits[level]; i != m_trail.end();
+       ++i) {
+    m_assignments[(*i).getVariable().getRawValue()] = TBool::INDETERMINATE;
+  }
+
   m_trail.resize(m_trailLimits[level]);
   m_trailLimits.resize(level + 1);
 }
 
-void Trail::addLiteral(CNFLit literal) noexcept { m_trail.push_back(literal); }
+void Trail::addLiteral(CNFLit literal) noexcept {
+  JAM_ASSERT(literal.getVariable().getRawValue() <
+                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+             "Variable out of bounds");
+  JAM_ASSERT(getAssignment(literal.getVariable()) == TBool::INDETERMINATE,
+             "Variable has already been assigned");
+
+  m_trail.push_back(literal);
+
+  auto index = literal.getVariable().getRawValue();
+  TBool value = static_cast<TBool>(literal.getSign());
+  m_assignments[index] = value;
+  m_assignmentLevel[index] = getCurrentDecisionLevel();
+}
 
 Trail::size_type Trail::getNumberOfAssignments() const noexcept {
   return m_trail.size();
