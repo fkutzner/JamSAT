@@ -1,5 +1,6 @@
 add_executable(branching_unit_tests
   BranchingHeuristicsBaseUnitTests.cpp
+  VSIDSBranchingHeuristicUnitTests.cpp
 )
 
 target_link_libraries(branching_unit_tests jamcore gtest gtest_main)

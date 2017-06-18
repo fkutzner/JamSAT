@@ -12,3 +12,6 @@ add_library(
   $<TARGET_OBJECTS:jamsatSolver>
   $<TARGET_OBJECTS:jamsatBranching>
 )
+
+
+target_link_libraries(jamcore ${Boost_LIBRARIES})
