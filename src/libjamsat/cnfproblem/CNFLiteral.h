@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <functional>
 #include <ostream>
 
 #include <libjamsat/utils/Assert.h>
@@ -232,4 +233,15 @@ bool CNFLit::operator==(const CNFLit &rhs) const noexcept {
 bool CNFLit::operator!=(const CNFLit &rhs) const noexcept {
   return !(*this == rhs);
 }
+}
+
+namespace std {
+template <> struct hash<jamsat::CNFVar> {
+  using argument_type = jamsat::CNFVar;
+  using result_type = std::size_t;
+
+  result_type operator()(argument_type variable) const noexcept {
+    return std::hash<jamsat::CNFVar::RawVariableType>{}(variable.getRawValue());
+  }
+};
 }
