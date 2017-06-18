@@ -29,7 +29,7 @@
 #include <queue>
 #include <vector>
 
-#include <boost/heap/priority_queue.hpp>
+#include <boost/heap/d_ary_heap.hpp>
 
 #include <libjamsat/branching/BranchingHeuristicBase.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
@@ -128,11 +128,19 @@ public:
   void reset(CNFVar variable) noexcept;
 
 private:
+  void scaleDownActivities();
+
   std::vector<double> m_activity;
   detail::CNFVarActivityOrder m_activityOrder;
 
-  using HeapCompareType = boost::heap::compare<detail::CNFVarActivityOrder>;
-  boost::heap::priority_queue<CNFVar, HeapCompareType> m_variableOrder;
+  using HeapCompare = boost::heap::compare<detail::CNFVarActivityOrder>;
+  using HeapArity = boost::heap::arity<2>;
+  using HeapMutability = boost::heap::mutable_<true>;
+  using VariableHeap =
+      boost::heap::d_ary_heap<CNFVar, HeapCompare, HeapArity, HeapMutability>;
+  VariableHeap m_variableOrder;
+  std::vector<VariableHeap::handle_type> m_heapVariableHandles;
+
   const AssignmentProvider &m_assignmentProvider;
 
   static const double m_activityBump;
@@ -145,8 +153,9 @@ VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
     CNFVar maxVar, AssignmentProvider &assignmentProvider)
     : BranchingHeuristicBase(maxVar), m_activity({}),
       m_activityOrder(m_activity), m_variableOrder(m_activityOrder),
-      m_assignmentProvider(assignmentProvider) {
+      m_heapVariableHandles({}), m_assignmentProvider(assignmentProvider) {
   m_activity.resize(maxVar.getRawValue() + 1);
+  m_heapVariableHandles.resize(maxVar.getRawValue() + 1);
   reset();
 }
 
@@ -172,21 +181,33 @@ VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept {
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(
     CNFVar variable) noexcept {
-  m_activity[variable] += 1.0f;
+  auto index = variable.getRawValue();
+  m_activity[index] += 1.0f;
+
+  if (m_activity[index] > 1e100) {
+    scaleDownActivities();
+  }
+
+  m_variableOrder.increase(m_heapVariableHandles[index]);
 }
+
+template <class AssignmentProvider>
+void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {}
 
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept {
   m_variableOrder.clear();
   for (CNFVar::RawVariableType i = 0;
        i < static_cast<CNFVar::RawVariableType>(m_activity.size()); ++i) {
-    m_variableOrder.emplace(CNFVar{i});
+    auto heapHandle = m_variableOrder.emplace(CNFVar{i});
+    m_heapVariableHandles[i] = heapHandle;
   }
 }
 
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset(
     CNFVar variable) noexcept {
-  m_variableOrder.emplace(CNFVar{variable});
+  auto heapHandle = m_variableOrder.emplace(variable);
+  m_heapVariableHandles[variable.getRawValue()] = heapHandle;
 }
 }

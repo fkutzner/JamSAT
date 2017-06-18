@@ -66,4 +66,23 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_singleVariableGetsPicked) {
   CNFLit result = underTest.pickBranchLiteral();
   EXPECT_EQ(result.getVariable(), CNFVar{0});
 }
+
+TEST(UnitBranching,
+     VSIDSBranchingHeuristic_usingVariablesInConflictCausesReordering) {
+  CNFVar maxVar{10};
+  FakeAssignmentProvider fakeAssignmentProvider{
+      VariableState::TruthValue::INDETERMINATE};
+  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
+      maxVar, fakeAssignmentProvider};
+
+  for (CNFVar::RawVariableType i = 0; i <= 10; ++i) {
+    underTest.setEligibleForDecisions(CNFVar{i}, true);
+  }
+
+  underTest.seenInConflict(CNFVar{4});
+
+  CNFLit result = underTest.pickBranchLiteral();
+  EXPECT_NE(result, CNFLit::undefinedLiteral);
+  EXPECT_EQ(result.getVariable(), CNFVar{4});
+}
 }
