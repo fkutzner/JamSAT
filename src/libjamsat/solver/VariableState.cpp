@@ -30,10 +30,10 @@ namespace jamsat {
 VariableState::VariableState(CNFVar maxVar)
     : m_assignments({}), m_eliminatedVariables({}), m_assignmentLevel({}),
       m_reasons({}) {
-  m_assignments.resize(maxVar.getRawValue(), TruthValue::INDETERMINATE);
-  m_eliminatedVariables.resize(maxVar.getRawValue());
-  m_assignmentLevel.resize(maxVar.getRawValue());
-  m_reasons.resize(maxVar.getRawValue());
+  m_assignments.resize(maxVar.getRawValue() + 1, TruthValue::INDETERMINATE);
+  m_eliminatedVariables.resize(maxVar.getRawValue() + 1);
+  m_assignmentLevel.resize(maxVar.getRawValue() + 1);
+  m_reasons.resize(maxVar.getRawValue() + 1);
 }
 
 VariableState::TruthValue VariableState::getAssignment(CNFVar variable) const
