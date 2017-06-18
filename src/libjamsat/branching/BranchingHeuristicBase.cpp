@@ -33,7 +33,7 @@
 namespace jamsat {
 BranchingHeuristicBase::BranchingHeuristicBase(CNFVar maxVar) noexcept
     : m_decisionVariables({}) {
-  m_decisionVariables.resize(maxVar.getRawValue(), Bool::FALSE);
+  m_decisionVariables.resize(maxVar.getRawValue() + 1, Bool::FALSE);
 }
 
 bool BranchingHeuristicBase::isEligibleForDecisions(CNFVar variable) const
