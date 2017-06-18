@@ -105,7 +105,11 @@ public:
    * belonging to the decision level \p level, while the second iterator points
    * to one element past the literals belonging to the decision level \p level
    * and may not be dereferenced. If \p level is empty or not a valid decision
-   * level, the two iterators are equal.
+   * level, the two iterators are equal. The first iterator remains valid until
+   * shrinkToDecisionLevel(x) is called with x < \p level. The second iterator
+   * remains valid until shrinkToDecisionLevel(x) is called with x < \p level
+   * and may be incremented once per subsequent call to addLiteral(...) if \p
+   * level is the current decision level.
    */
   std::pair<const_iterator, const_iterator>
   getDecisionLevelLiterals(DecisionLevel level) const noexcept;
