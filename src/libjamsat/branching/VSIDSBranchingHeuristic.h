@@ -83,7 +83,7 @@ public:
    * variable assignment can be obtained.
    */
   VSIDSBranchingHeuristic(CNFVar maxVar,
-                          AssignmentProvider &assignmentProvider);
+                          const AssignmentProvider &assignmentProvider);
 
   /**
    * \brief Informs the branching heuristic that the given variable was
@@ -182,7 +182,7 @@ private:
 
 template <class AssignmentProvider>
 VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
-    CNFVar maxVar, AssignmentProvider &assignmentProvider)
+    CNFVar maxVar, const AssignmentProvider &assignmentProvider)
     : BranchingHeuristicBase(maxVar), m_activity({}),
       m_activityOrder(m_activity), m_variableOrder(m_activityOrder),
       m_heapVariableHandles({}), m_assignmentProvider(assignmentProvider),
