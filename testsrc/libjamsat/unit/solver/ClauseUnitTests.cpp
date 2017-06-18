@@ -29,10 +29,49 @@
 #include <libjamsat/solver/Clause.h>
 
 namespace jamsat {
+
 TEST(UnitSolver, allocateClauseOnHeap) {
   auto allocatedClause = createHeapClause(11);
   ASSERT_NE(allocatedClause.get(), nullptr);
   EXPECT_EQ(allocatedClause->getSize(), 11ull);
+}
+
+TEST(UnitSolver, nonemptyHeapClausesHaveSufficientMemory) {
+  auto allocatedClause = createHeapClause(11);
+  ASSERT_NE(allocatedClause.get(), nullptr);
+
+  auto addrJustBeyondClause =
+      reinterpret_cast<uintptr_t>(allocatedClause->end());
+  auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
+
+  auto computedSize = getClauseAllocationSize(11);
+  EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
+}
+
+TEST(UnitSolver, singleLitHeapClausesHaveSufficientMemory) {
+  auto allocatedClause = createHeapClause(1);
+  ASSERT_NE(allocatedClause.get(), nullptr);
+
+  auto addrJustBeyondClause =
+      reinterpret_cast<uintptr_t>(allocatedClause->end());
+  auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
+
+  auto computedSize = getClauseAllocationSize(1);
+  EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
+}
+
+TEST(UnitSolver, emptyHeapClausesHaveSufficientMemory) {
+  auto allocatedClause = createHeapClause(0);
+  ASSERT_NE(allocatedClause.get(), nullptr);
+
+  auto addrJustBeyondClause =
+      reinterpret_cast<uintptr_t>(allocatedClause->end());
+  auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
+
+  // The struct is trailed by a CNFLit whose memory does not get accessed in
+  // size-0 clauses.
+  EXPECT_LE(sizeof(Clause),
+            addrJustBeyondClause - addrBeginClause + sizeof(CNFLit));
 }
 
 TEST(UnitSolver, freshHeapClauseContainsUndefinedLiterals) {

@@ -59,13 +59,20 @@ Clause::const_iterator Clause::end() const noexcept {
   return &m_anchor + m_size;
 }
 
+size_t getClauseAllocationSize(Clause::size_type clauseSize) {
+  if (clauseSize == 0) {
+    return 0;
+  }
+  return sizeof(Clause) + (clauseSize - 1) * sizeof(CNFLit);
+}
+
 std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
   Clause *result;
   if (size == 0) {
-    result = new Clause(size);
+    result = new Clause(0);
   } else {
-    Clause::size_type actualSize = sizeof(Clause) + (size - 1) * sizeof(CNFLit);
-    void *rawMemory = operator new(actualSize);
+    auto memorySize = getClauseAllocationSize(size);
+    void *rawMemory = operator new(memorySize);
     result = new (rawMemory) Clause(size);
   }
 

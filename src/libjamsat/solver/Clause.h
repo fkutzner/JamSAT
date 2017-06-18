@@ -119,6 +119,16 @@ private:
 /**
  * \ingroup JamSAT_Solver
  *
+ * \brief Computes the size of a Clause object.
+ *
+ * \param clauseSize The length of the clause.
+ * \returns The size of a Clause object, in bytes.
+ */
+size_t getClauseAllocationSize(Clause::size_type clauseSize);
+
+/**
+ * \ingroup JamSAT_Solver
+ *
  * \brief Allocates a clause of the given size on the heap.
  *
  * \param size The clause's size.
