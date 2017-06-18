@@ -5,4 +5,5 @@ add_library(jamsatSolver OBJECT
   VariableState.cpp
   Clause.h
   Clause.cpp
+  Propagation.h
 )
