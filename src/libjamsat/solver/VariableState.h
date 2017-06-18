@@ -46,8 +46,6 @@ class Clause;
  */
 class VariableState {
 public:
-  using TruthValue = TBool;
-
   /**
    * \brief Constructs a new VariableState object with the given maximum amount
    * of variables.
@@ -56,25 +54,6 @@ public:
    * VariableState object.
    */
   explicit VariableState(CNFVar maxVar);
-
-  /**
-   * \brief Sets the assignment for the given variable.
-   *
-   * \param variable  The target variable. Must not be greater than \p maxVar
-   * passed to the constructor.
-   * \param value     The variable's new value.
-   */
-  void setAssignment(CNFVar variable, TruthValue value) noexcept;
-
-  /**
-   * \brief Gets the assignment for the given variable.
-   *
-   * \param variable  The target variable. Must not be greater than \p maxVar
-   * passed to the constructor.
-   * \returns The variable's current assignment. If the variable's assignment
-   * has not been set yet, INDETERMINATE is returned.
-   */
-  TruthValue getAssignment(CNFVar variable) const noexcept;
 
   /**
    * \brief Marks the given variable as eliminated from the SAT problem instance
@@ -94,30 +73,6 @@ public:
    * \returns true iff setEliminated(\p variable) has been called before.
    */
   bool isEliminated(CNFVar variable) const noexcept;
-
-  /**
-   * \brief Stores the decision level on which the given variable has been
-   * assigned.
-   *
-   * \param variable  The target variable. Must not be greater than \p maxVar
-   * passed to the constructor. \p variable must be a variable with a
-   * determinate truth value.
-   * \param level     The decision level where \p variable has been assigned.
-   */
-  void setAssignmentDecisionLevel(CNFVar variable,
-                                  Trail::DecisionLevel level) noexcept;
-
-  /**
-   * \brief Gets the decision level on which the given variable has been
-   * assigned.
-   *
-   * \param variable  The target variable. Must not be greater than \p maxVar
-   * passed to the constructor. \p variable must be a variable with a
-   * determinate truth value.
-   * \returns   The decsiion level where \p variable has been assigned.
-   */
-  Trail::DecisionLevel getAssignmentDecisionLevel(CNFVar variable) const
-      noexcept;
 
   /**
    * \brief Stores a pointer to the clause which forced the assignment of the
@@ -143,9 +98,7 @@ public:
   const Clause *getAssignmentReason(CNFVar variable) const noexcept;
 
 private:
-  std::vector<TruthValue> m_assignments;
   std::vector<Bool> m_eliminatedVariables;
-  std::vector<Trail::DecisionLevel> m_assignmentLevel;
   std::vector<const Clause *> m_reasons;
 };
 }

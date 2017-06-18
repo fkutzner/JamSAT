@@ -28,11 +28,15 @@
 #include "libjamsat/utils/Assert.h"
 
 namespace jamsat {
-Trail::Trail(CNFVar maxVar) : m_trail({}), m_trailLimits({0}) {
+Trail::Trail(CNFVar maxVar)
+    : m_trail({}), m_trailLimits({0}), m_assignments({}),
+      m_assignmentLevel({}) {
   JAM_ASSERT(
       maxVar != CNFVar::undefinedVariable,
       "Trail cannot be instantiated with the undefined variable as maxVar");
-  m_trail.reserve(maxVar.getRawValue());
+  m_trail.reserve(maxVar.getRawValue() + 1);
+  m_assignments.resize(maxVar.getRawValue() + 1, TBool::INDETERMINATE);
+  m_assignmentLevel.resize(maxVar.getRawValue() + 1);
 }
 
 void Trail::newDecisionLevel() noexcept {
@@ -70,5 +74,20 @@ Trail::getDecisionLevelLiterals(DecisionLevel level) const noexcept {
     const_iterator end = m_trail.begin() + m_trailLimits[level + 1];
     return std::pair<const_iterator, const_iterator>(begin, end);
   }
+}
+
+Trail::DecisionLevel Trail::getAssignmentDecisionLevel(CNFVar variable) const
+    noexcept {
+  JAM_ASSERT(variable.getRawValue() <
+                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+             "Variable out of bounds");
+  return m_assignmentLevel[variable.getRawValue()];
+}
+
+TBool Trail::getAssignment(CNFVar variable) const noexcept {
+  JAM_ASSERT(variable.getRawValue() <
+                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+             "Variable out of bounds");
+  return m_assignments[variable.getRawValue()];
 }
 }

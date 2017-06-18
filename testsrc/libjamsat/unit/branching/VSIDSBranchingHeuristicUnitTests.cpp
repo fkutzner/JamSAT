@@ -38,10 +38,10 @@
 namespace jamsat {
 class FakeAssignmentProvider {
 public:
-  FakeAssignmentProvider(VariableState::TruthValue defaultAssignment)
+  FakeAssignmentProvider(TBool defaultAssignment)
       : m_defaultAssignment(defaultAssignment) {}
 
-  VariableState::TruthValue getAssignment(CNFVar variable) const noexcept {
+  TBool getAssignment(CNFVar variable) const noexcept {
     auto result = m_assignments.find(variable);
     if (result == m_assignments.end()) {
       return m_defaultAssignment;
@@ -49,19 +49,18 @@ public:
     return result->second;
   }
 
-  void setAssignment(CNFVar variable, VariableState::TruthValue assignment) {
+  void setAssignment(CNFVar variable, TBool assignment) {
     m_assignments[variable] = assignment;
   }
 
 private:
-  VariableState::TruthValue m_defaultAssignment;
-  std::unordered_map<CNFVar, VariableState::TruthValue> m_assignments;
+  TBool m_defaultAssignment;
+  std::unordered_map<CNFVar, TBool> m_assignments;
 };
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_allAssignedCausesUndefToBePicked) {
   CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{
-      VariableState::TruthValue::TRUE};
+  FakeAssignmentProvider fakeAssignmentProvider{TBool::TRUE};
   VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
       maxVar, fakeAssignmentProvider};
   EXPECT_EQ(underTest.pickBranchLiteral(), CNFLit::undefinedLiteral);
@@ -69,8 +68,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_allAssignedCausesUndefToBePicked) {
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_singleVariableGetsPicked) {
   CNFVar maxVar{0};
-  FakeAssignmentProvider fakeAssignmentProvider{
-      VariableState::TruthValue::INDETERMINATE};
+  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
   VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
       maxVar, fakeAssignmentProvider};
 
@@ -83,8 +81,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_singleVariableGetsPicked) {
 TEST(UnitBranching,
      VSIDSBranchingHeuristic_variablesInitiallyHaveSameActivities) {
   CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{
-      VariableState::TruthValue::INDETERMINATE};
+  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
   VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
       maxVar, fakeAssignmentProvider};
 
@@ -128,8 +125,7 @@ void addDefaultConflictSequence(Heuristic &underTest) {
 TEST(UnitBranching,
      VSIDSBranchingHeuristic_usingVariablesInConflictCausesReordering) {
   CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{
-      VariableState::TruthValue::INDETERMINATE};
+  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
   VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
       maxVar, fakeAssignmentProvider};
 
@@ -141,8 +137,7 @@ TEST(UnitBranching,
 TEST(UnitBranching,
      VSIDSBranchingHeuristic_ineligibleVariableDoesNotGetPicked) {
   CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{
-      VariableState::TruthValue::INDETERMINATE};
+  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
   VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
       maxVar, fakeAssignmentProvider};
 
@@ -154,13 +149,11 @@ TEST(UnitBranching,
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_assignedVariableDoesNotGetPicked) {
   CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{
-      VariableState::TruthValue::INDETERMINATE};
+  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
   VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
       maxVar, fakeAssignmentProvider};
 
-  fakeAssignmentProvider.setAssignment(CNFVar{4},
-                                       VariableState::TruthValue::TRUE);
+  fakeAssignmentProvider.setAssignment(CNFVar{4}, TBool::TRUE);
   addDefaultConflictSequence(underTest);
 
   expectVariableSequence(underTest, {CNFVar{5}, CNFVar{3}});
@@ -169,8 +162,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_assignedVariableDoesNotGetPicked) {
 TEST(UnitBranching,
      VSIDSBranchingHeuristic_variableActivityDecaysWhenTooLarge) {
   CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{
-      VariableState::TruthValue::INDETERMINATE};
+  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
   VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
       maxVar, fakeAssignmentProvider};
 

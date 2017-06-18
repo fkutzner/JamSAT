@@ -29,6 +29,7 @@
 #include <vector>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
 
@@ -49,6 +50,8 @@ class Trail {
 private:
   std::vector<CNFLit> m_trail;
   std::vector<decltype(m_trail)::size_type> m_trailLimits;
+  std::vector<TBool> m_assignments;
+  std::vector<decltype(m_trailLimits)::size_type> m_assignmentLevel;
 
 public:
   using size_type = decltype(m_trail)::size_type;
@@ -95,6 +98,28 @@ public:
    * \returns the number of current variable assignments.
    */
   size_type getNumberOfAssignments() const noexcept;
+
+  /**
+   * \brief Gets the assignment for the given variable.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor.
+   * \returns The variable's current assignment. If the variable's assignment
+   * has not been set yet, INDETERMINATE is returned.
+   */
+  TBool getAssignment(CNFVar variable) const noexcept;
+
+  /**
+   * \brief Gets the decision level on which the given variable has been
+   * assigned.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor. \p variable must be a variable with a
+   * determinate truth value.
+   * \returns   The decsiion level where \p variable has been assigned.
+   */
+  Trail::DecisionLevel getAssignmentDecisionLevel(CNFVar variable) const
+      noexcept;
 
   /**
    * \brief Gets the literals of the requested decision level.

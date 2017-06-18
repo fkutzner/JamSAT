@@ -28,63 +28,29 @@
 
 namespace jamsat {
 VariableState::VariableState(CNFVar maxVar)
-    : m_assignments({}), m_eliminatedVariables({}), m_assignmentLevel({}),
-      m_reasons({}) {
-  m_assignments.resize(maxVar.getRawValue() + 1, TruthValue::INDETERMINATE);
+    : m_eliminatedVariables({}), m_reasons({}) {
   m_eliminatedVariables.resize(maxVar.getRawValue() + 1);
-  m_assignmentLevel.resize(maxVar.getRawValue() + 1);
   m_reasons.resize(maxVar.getRawValue() + 1);
 }
 
-VariableState::TruthValue VariableState::getAssignment(CNFVar variable) const
-    noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
-             "Variable out of bounds");
-  return m_assignments[variable.getRawValue()];
-}
-
-void VariableState::setAssignment(CNFVar variable, TruthValue value) noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
-             "Variable out of bounds");
-  m_assignments[variable.getRawValue()] = value;
-}
-
 bool VariableState::isEliminated(CNFVar variable) const noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+  JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariableType>(
+                                          m_eliminatedVariables.size()),
              "Variable out of bounds");
   return toRawBool(m_eliminatedVariables[variable.getRawValue()]);
 }
 
 void VariableState::setEliminated(CNFVar variable) noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+  JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariableType>(
+                                          m_eliminatedVariables.size()),
              "Variable out of bounds");
   m_eliminatedVariables[variable.getRawValue()] = Bool::TRUE;
-}
-
-Trail::DecisionLevel
-VariableState::getAssignmentDecisionLevel(CNFVar variable) const noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
-             "Variable out of bounds");
-  return m_assignmentLevel[variable.getRawValue()];
-}
-
-void VariableState::setAssignmentDecisionLevel(
-    CNFVar variable, Trail::DecisionLevel level) noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
-             "Variable out of bounds");
-  m_assignmentLevel[variable.getRawValue()] = level;
 }
 
 const Clause *VariableState::getAssignmentReason(CNFVar variable) const
     noexcept {
   JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Variable out of bounds");
   return m_reasons[variable.getRawValue()];
 }
@@ -92,7 +58,7 @@ const Clause *VariableState::getAssignmentReason(CNFVar variable) const
 void VariableState::setAssignmentReason(CNFVar variable,
                                         Clause *reason) noexcept {
   JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Variable out of bounds");
   m_reasons[variable.getRawValue()] = reason;
 }
