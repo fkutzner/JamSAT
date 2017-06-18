@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <queue>
 #include <vector>
 
@@ -128,14 +129,32 @@ public:
   void reset(CNFVar variable) noexcept;
 
   /**
+   * \brief Informs the heuristic that the solver is about to begin processing a
+   * conflict.
+   */
+  void beginHandlingConflict() noexcept;
+
+  /**
+   * \brief Informs the heuristic that the solver has just finished processing a
+   * conflict.
+   */
+  void endHandlingConflict() noexcept;
+
+  /**
    * \brief Sets the activity value delta added to a variable's activity when it
    * is bumped.
    *
    * \param delta The new activity delta.
    */
-  void setActivityBumpDelta(double delta) noexcept {
-    m_activityBumpDelta = delta;
-  }
+  void setActivityBumpDelta(double delta) noexcept;
+
+  /**
+   * \brief Gets the activity value delta added to a variable's activity when it
+   * is bumped.
+   *
+   * \returns The specified activity delta.
+   */
+  double getActivityBumpDelta() const noexcept;
 
 private:
   void scaleDownActivities();
@@ -154,6 +173,9 @@ private:
   const AssignmentProvider &m_assignmentProvider;
 
   double m_activityBumpDelta;
+  double m_decayRate;
+  double m_maxDecayRate;
+  int m_numberOfConflicts;
 };
 
 /********** Implementation ****************************** */
@@ -164,7 +186,8 @@ VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
     : BranchingHeuristicBase(maxVar), m_activity({}),
       m_activityOrder(m_activity), m_variableOrder(m_activityOrder),
       m_heapVariableHandles({}), m_assignmentProvider(assignmentProvider),
-      m_activityBumpDelta(1.0f) {
+      m_activityBumpDelta(1.0f), m_decayRate(0.8f), m_maxDecayRate(0.95f),
+      m_numberOfConflicts(0) {
   m_activity.resize(maxVar.getRawValue() + 1);
   m_heapVariableHandles.resize(maxVar.getRawValue() + 1);
   reset();
@@ -224,5 +247,33 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::reset(
     CNFVar variable) noexcept {
   auto heapHandle = m_variableOrder.emplace(variable);
   m_heapVariableHandles[variable.getRawValue()] = heapHandle;
+}
+
+template <class AssignmentProvider>
+void VSIDSBranchingHeuristic<AssignmentProvider>::setActivityBumpDelta(
+    double delta) noexcept {
+  m_activityBumpDelta = delta;
+}
+
+template <class AssignmentProvider>
+double VSIDSBranchingHeuristic<AssignmentProvider>::getActivityBumpDelta() const
+    noexcept {
+  return m_activityBumpDelta;
+}
+
+template <class AssignmentProvider>
+void VSIDSBranchingHeuristic<
+    AssignmentProvider>::beginHandlingConflict() noexcept {
+  ++m_numberOfConflicts;
+  if (m_numberOfConflicts == 5000) {
+    m_decayRate = std::min(m_decayRate + 0.1, m_maxDecayRate);
+    m_numberOfConflicts = 0;
+  }
+}
+
+template <class AssignmentProvider>
+void VSIDSBranchingHeuristic<
+    AssignmentProvider>::endHandlingConflict() noexcept {
+  m_activityBumpDelta *= (1 / m_decayRate);
 }
 }

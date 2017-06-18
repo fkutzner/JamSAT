@@ -28,6 +28,8 @@
 
 #include <unordered_map>
 
+#include <boost/log/trivial.hpp>
+
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/solver/VariableState.h>
@@ -164,7 +166,8 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_assignedVariableDoesNotGetPicked) {
   expectVariableSequence(underTest, {CNFVar{5}, CNFVar{3}});
 }
 
-TEST(UnitBranching, VSIDSBranchingHeuristic_variableActivityDecays) {
+TEST(UnitBranching,
+     VSIDSBranchingHeuristic_variableActivityDecaysWhenTooLarge) {
   CNFVar maxVar{10};
   FakeAssignmentProvider fakeAssignmentProvider{
       VariableState::TruthValue::INDETERMINATE};
@@ -184,4 +187,6 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_variableActivityDecays) {
 
   expectVariableSequence(underTest, {CNFVar{3}, CNFVar{4}, CNFVar{5}});
 }
+
+// TODO: unit tests for decay and bumping
 }
