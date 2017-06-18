@@ -127,6 +127,16 @@ public:
    */
   void reset(CNFVar variable) noexcept;
 
+  /**
+   * \brief Sets the activity value delta added to a variable's activity when it
+   * is bumped.
+   *
+   * \param delta The new activity delta.
+   */
+  void setActivityBumpDelta(double delta) noexcept {
+    m_activityBumpDelta = delta;
+  }
+
 private:
   void scaleDownActivities();
 
@@ -143,7 +153,7 @@ private:
 
   const AssignmentProvider &m_assignmentProvider;
 
-  static const double m_activityBump;
+  double m_activityBumpDelta;
 };
 
 /********** Implementation ****************************** */
@@ -153,7 +163,8 @@ VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
     CNFVar maxVar, AssignmentProvider &assignmentProvider)
     : BranchingHeuristicBase(maxVar), m_activity({}),
       m_activityOrder(m_activity), m_variableOrder(m_activityOrder),
-      m_heapVariableHandles({}), m_assignmentProvider(assignmentProvider) {
+      m_heapVariableHandles({}), m_assignmentProvider(assignmentProvider),
+      m_activityBumpDelta(1.0f) {
   m_activity.resize(maxVar.getRawValue() + 1);
   m_heapVariableHandles.resize(maxVar.getRawValue() + 1);
   reset();
@@ -182,9 +193,9 @@ template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(
     CNFVar variable) noexcept {
   auto index = variable.getRawValue();
-  m_activity[index] += 1.0f;
+  m_activity[index] += m_activityBumpDelta;
 
-  if (m_activity[index] > 1e100) {
+  if (m_activity[index] >= 1e100) {
     scaleDownActivities();
   }
 
@@ -192,7 +203,11 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {}
+void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {
+  for (auto &activity : m_activity) {
+    activity = 1e-100 * activity;
+  }
+}
 
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept {
