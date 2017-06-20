@@ -78,7 +78,7 @@ Trail::size_type Trail::getNumberOfAssignments() const noexcept {
   return m_trail.size();
 }
 
-std::pair<Trail::const_iterator, Trail::const_iterator>
+boost::iterator_range<Trail::const_iterator>
 Trail::getDecisionLevelLiterals(DecisionLevel level) const noexcept {
   if (level >= m_trailLimits.size()) {
     return std::pair<const_iterator, const_iterator>(m_trail.end(),
@@ -87,10 +87,10 @@ Trail::getDecisionLevelLiterals(DecisionLevel level) const noexcept {
 
   const_iterator begin = m_trail.begin() + m_trailLimits[level];
   if (level == m_trailLimits.size()) {
-    return std::pair<const_iterator, const_iterator>(begin, m_trail.end());
+    return boost::make_iterator_range(begin, m_trail.end());
   } else {
     const_iterator end = m_trail.begin() + m_trailLimits[level + 1];
-    return std::pair<const_iterator, const_iterator>(begin, end);
+    return boost::make_iterator_range(begin, end);
   }
 }
 

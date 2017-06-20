@@ -28,6 +28,8 @@
 
 #include <vector>
 
+#include <boost/range.hpp>
+
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Truth.h>
 
@@ -122,21 +124,19 @@ public:
       noexcept;
 
   /**
-   * \brief Gets the literals of the requested decision level.
+   * \brief Gets the assignments of the requested decision level, expressed as
+   * literals.
    *
    * \param level   The requested decision level.
-   * \returns       a pair of random-access const iterators pointing to
-   * literals. The first iterator points to the beginning of the literals
-   * belonging to the decision level \p level, while the second iterator points
-   * to one element past the literals belonging to the decision level \p level
-   * and may not be dereferenced. If \p level is empty or not a valid decision
-   * level, the two iterators are equal. The first iterator remains valid until
-   * shrinkToDecisionLevel(x) is called with x < \p level. The second iterator
-   * remains valid until shrinkToDecisionLevel(x) is called with x < \p level
-   * and may be incremented once per subsequent call to addLiteral(...) if \p
-   * level is the current decision level.
+   * \returns       an iterator range whose begin points to the first literal of
+   * the decision level \level (if any) and whose end points to the first
+   * literal beyond the last literal of that decision level. The begin iterator
+   * remains valid until shrinkToDecisionLevel(x) is called with x < \p level.
+   * The end iterator remains valid until shrinkToDecisionLevel(x) is called
+   * with x < \p level and may be incremented once per subsequent call to
+   * addLiteral(...) if \p level is the current decision level.
    */
-  std::pair<const_iterator, const_iterator>
+  boost::iterator_range<const_iterator>
   getDecisionLevelLiterals(DecisionLevel level) const noexcept;
 };
 }
