@@ -2,6 +2,19 @@ project(JamSAT)
 cmake_minimum_required(VERSION 3.5)
 
 add_definitions(-std=c++11 -Wall -Wextra)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-inline -O0 -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined")
+
+ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+find_package(Boost
+        1.63.0
+        REQUIRED
+        COMPONENTS
+          container
+          log
+)
+
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 add_subdirectory(doc)
 
