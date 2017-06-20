@@ -67,6 +67,10 @@ private:
  *
  * \brief A VSIDS Branching heuristic implementation.
  *
+ * Usage example: Use VSIDSBranchingHeuristic in a CDCL SAT solver to decide
+ * which literal to put on the solver's trail (which can be used as an
+ * assignment provider) when currently no further facts can be propagated.
+ *
  * \tparam AssignmentProvider   A class type T having the method TBool
  * T::getAssignment(CNFLit x) which returns the current variable assignment of
  * x.
