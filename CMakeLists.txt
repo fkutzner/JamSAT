@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.5)
 ### Options
 option(JAMSAT_ENABLE_SANITIZERS "Enable code sanitizers" OFF)
 option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
+option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 
 ### Find libraries
 
@@ -47,10 +48,15 @@ if(COMPILING_WITH_GNULIKE)
       set(sanitizer_flags
           "-fsanitize-blacklist=${PROJECT_BINARY_DIR}/asan.supp -fsanitize=address -fsanitize=undefined")
       add_definitions(-fno-omit-frame-pointer ${sanitizer_flags})
-      set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} ${sanitizer_flags})
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${sanitizer_flags}")
     else()
       message(ERROR "GCC sanitizer support is not implemented yet")
     endif()
+  endif()
+
+  if(JAMSAT_ENABLE_COVERAGE)
+    add_definitions(--coverage)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
   endif()
 
 elseif(COMPILING_WITH_MSVC)
