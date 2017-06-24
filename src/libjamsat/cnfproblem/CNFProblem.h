@@ -56,6 +56,14 @@ public:
   void addClause(const CNFClause &clause) noexcept;
 
   /**
+   * \brief Adds the given clause to the problem instance, transferring
+   * ownership.
+   *
+   * \param clause    The clause to be added.
+   */
+  void addClause(CNFClause &&clause) noexcept;
+
+  /**
    * \brief Gets the problem instance's clauses.
    *
    * \returns A vector of clauses.
@@ -84,6 +92,11 @@ public:
    */
   CNFVar getMaxVar() const noexcept;
 
+  /**
+   * \brief Removes all clauses.
+   */
+  void clear() noexcept;
+
 private:
   std::vector<CNFClause> m_clauses;
   CNFVar m_maxVar;
@@ -94,20 +107,47 @@ private:
  *
  * \brief Prints a CNF-encoded problem, DIMACS-formatted.
  *
- * \param stream    The target output stream.
+ * \param output    The target output stream.
  * \param problem   The problem instance to be printed.
  */
-std::ostream &operator<<(std::ostream &stream, const CNFProblem &problem);
+std::ostream &operator<<(std::ostream &output, const CNFProblem &problem);
+
+/**
+ * \ingroup JamSAT_CNFProblem
+ *
+ * \brief Prints a CNF clause, DIMACS-formatted with trailing 0.
+ *
+ * \param output    The target output stream.
+ * \param clause    The clause to be printed.
+ */
+std::ostream &operator<<(std::ostream &output, const CNFClause &clause);
 
 /**
  * \ingroup JamSAT_CNFProblem
  *
  * \brief Reads a DIMACS-formatted CNF problem instance from the given stream.
  *
- * \param stream    The input stream from which the DIMACS problem should be
+ * If reading the problem fails, \p problem is empty when this method returns,
+ * and the fail bit of \p input is set.
+ *
+ * \param input    The input stream from which the DIMACS problem should be
  * read.
- * \param problem   The problem instance to which the problem instance's clauses
- * should be added.
+ * \param problem   The empty problem instance to which the problem instance's
+ * clauses should be added.
  */
-std::istream &operator>>(std::istream &stream, CNFProblem &problem);
+std::istream &operator>>(std::istream &input, CNFProblem &problem);
+
+/**
+ * \ingroup JamSAT_CNFProblem
+ *
+ * \brief Reads a DIMACS clause from the given stream.
+ *
+ * If reading the clause fails, \p clause is reset to the state it had when this
+ * method was invoked, and fail bit of \p input is set.
+ *
+ * \param input    The input stream from which the DIMACS clause should be
+ * read.
+ * \param clause    The clause where the literals should be appended.
+ */
+std::istream &operator>>(std::istream &input, CNFClause &clause);
 }

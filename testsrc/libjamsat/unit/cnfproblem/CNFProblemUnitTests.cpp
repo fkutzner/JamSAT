@@ -28,6 +28,10 @@
 #include <sstream>
 #include <string>
 
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/trivial.hpp>
+
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
 
@@ -104,6 +108,36 @@ TEST(UnitCNFProblem, cnfProblemReportsMaximumVariable) {
   EXPECT_EQ(underTest.getMaxVar(), CNFVar{6});
 }
 
+TEST(UnitCNFProblem, printEmptyClauseAsDIMACS) {
+  std::stringstream collector;
+  CNFClause underTest;
+  collector << underTest;
+
+  ASSERT_TRUE(collector);
+  std::string result;
+  std::getline(collector, result);
+  EXPECT_EQ(result, "0");
+
+  collector.get();
+  EXPECT_FALSE(collector);
+}
+
+TEST(UnitCNFProblem, printBinaryClauseAsDIMACS) {
+  std::stringstream collector;
+  CNFClause underTest{CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
+                      CNFLit{CNFVar{3}, CNFSign::POSITIVE}};
+
+  collector << underTest;
+
+  ASSERT_TRUE(collector);
+  std::string result;
+  std::getline(collector, result);
+  EXPECT_EQ(result, "-2  4 0");
+
+  collector.get();
+  EXPECT_FALSE(collector);
+}
+
 TEST(UnitCNFProblem, printEmptyCNFProblemAsDIMACS) {
   std::stringstream collector;
   CNFProblem underTest;
@@ -149,31 +183,185 @@ TEST(UnitCNFProblem, printTwoClauseCNFProblemAsDIMACS) {
   EXPECT_FALSE(collector);
 }
 
-TEST(UnitCNFProblem, parseEmptyDIMACSInputData) {
+namespace {
+void suppressLoggedWarnings() {
+  auto filter = boost::log::trivial::severity > boost::log::trivial::warning;
+  boost::log::core::get()->set_filter(filter);
+}
+
+void enableLoggedWarnings() { boost::log::core::reset_filter(); }
+}
+
+TEST(UnitCNFProblem, parseEmptyDIMACSClause) {
+
+  std::stringstream conduit;
+  conduit << "0";
+
+  CNFClause underTest;
+  conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
+  EXPECT_TRUE(underTest.empty());
+}
+
+TEST(UnitCNFProblem, parseSinglePositiveLiteralDIMACSClause) {
+  std::stringstream conduit;
+  conduit << "1 0";
+
+  CNFClause underTest;
+  conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
+  ASSERT_EQ(underTest.size(), 1ull);
+  CNFLit expectedLiteral{CNFVar{0}, CNFSign::POSITIVE};
+  EXPECT_EQ(underTest[0], expectedLiteral);
+}
+
+TEST(UnitCNFProblem, parseSingleNegativeLiteralDIMACSClause) {
+  std::stringstream conduit;
+  conduit << "-2 0";
+
+  CNFClause underTest;
+  conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
+  ASSERT_EQ(underTest.size(), 1ull);
+  CNFLit expectedLiteral{CNFVar{1}, CNFSign::NEGATIVE};
+  EXPECT_EQ(underTest[0], expectedLiteral);
+}
+
+TEST(UnitCNFProblem, parseSimpleFormattedCNFClause) {
+  std::stringstream conduit;
+  conduit << "-2 4 1 0";
+
+  CNFClause underTest;
+  conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
+  ASSERT_EQ(underTest.size(), 3ull);
+
+  CNFClause expected = {
+      CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+      CNFLit{CNFVar{0}, CNFSign::POSITIVE},
+  };
+
+  EXPECT_EQ(underTest, expected);
+}
+
+TEST(UnitCNFProblem, inputStreamPointsJustBeyondClauseAfterParsing) {
+  std::stringstream conduit;
+  conduit << "-2 4 1 0 ok";
+
+  CNFClause dummy;
+  conduit >> dummy;
+  ASSERT_FALSE(conduit.fail());
+
+  std::string dataBeyondClause;
+  conduit >> dataBeyondClause;
+
+  ASSERT_FALSE(conduit.fail());
+  EXPECT_EQ(dataBeyondClause, "ok");
+}
+
+TEST(UnitCNFProblem, parseMultilineCNFClause) {
+  std::stringstream conduit;
+  conduit << "-2 4" << std::endl << "1 0";
+
+  CNFClause underTest;
+  conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
+  ASSERT_EQ(underTest.size(), 3ull);
+
+  CNFClause expected = {
+      CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+      CNFLit{CNFVar{0}, CNFSign::POSITIVE},
+  };
+
+  EXPECT_EQ(underTest, expected);
+}
+
+TEST(UnitCNFProblem, parseCommentContainingCNFClause) {
+  std::stringstream conduit;
+  conduit << "-2 4 c this is a comment" << std::endl << "1 0";
+
+  CNFClause underTest;
+  conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
+  ASSERT_EQ(underTest.size(), 3ull);
+
+  CNFClause expected = {
+      CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+      CNFLit{CNFVar{0}, CNFSign::POSITIVE},
+  };
+
+  EXPECT_EQ(underTest, expected);
+}
+
+TEST(UnitCNFProblem, parseGarbageContainingCNFClauseFails) {
+  suppressLoggedWarnings();
+
+  std::stringstream conduit;
+  conduit << "-2 4 this is garbage" << std::endl << "1 0";
+
+  CNFClause underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.empty());
+}
+
+TEST(UnitCNFProblem, parseUnterminatedCNFClauseFails) {
+  suppressLoggedWarnings();
+
+  std::stringstream conduit;
+  conduit << "-2 4";
+
+  CNFClause underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.empty());
+}
+
+TEST(UnitCNFProblem, parseEmptyDIMACSProblemInputFails) {
+  suppressLoggedWarnings();
+
   std::string testData = " ";
   std::stringstream conduit{testData};
   CNFProblem underTest;
   conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
   EXPECT_TRUE(underTest.isEmpty());
 }
 
-TEST(UnitCNFProblem, parseCommentOnlyDIMACSInputData) {
+TEST(UnitCNFProblem, parseCommentOnlyDIMACSProblemFails) {
+  suppressLoggedWarnings();
+
   std::stringstream conduit;
   conduit << "c Foo" << std::endl;
   conduit << "c" << std::endl;
 
   CNFProblem underTest;
   conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
   EXPECT_TRUE(underTest.isEmpty());
 }
 
-TEST(UnitCNFProblem, parseSingleClauseDIMACSInputData) {
+TEST(UnitCNFProblem, parseEmptyDIMACSProblem) {
+  std::stringstream conduit;
+  conduit << "p cnf 0 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
+  ASSERT_TRUE(underTest.isEmpty());
+}
+
+TEST(UnitCNFProblem, parseSingleClauseDIMACSProblem) {
   std::stringstream conduit;
   conduit << "p cnf 5 1" << std::endl;
   conduit << "1 2 -3 4 -5 0" << std::endl;
 
   CNFProblem underTest;
   conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
   ASSERT_EQ(underTest.getSize(), 1ull);
 
   CNFClause expected = {
@@ -186,5 +374,104 @@ TEST(UnitCNFProblem, parseSingleClauseDIMACSInputData) {
 
   EXPECT_EQ(underTest.getClauses()[0], expected);
   EXPECT_EQ(underTest.getMaxVar(), CNFVar{4});
+}
+
+TEST(UnitCNFProblem, parseMultipleClauseDIMACSProblem) {
+  std::stringstream conduit;
+  conduit << "p cnf 6 2" << std::endl;
+  conduit << "1 2 0" << std::endl;
+  conduit << "5 6 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
+  ASSERT_EQ(underTest.getSize(), 2ull);
+
+  CNFClause expected1 = {
+      CNFLit{CNFVar{0}, CNFSign::POSITIVE},
+      CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+  };
+
+  CNFClause expected2 = {
+      CNFLit{CNFVar{4}, CNFSign::POSITIVE},
+      CNFLit{CNFVar{5}, CNFSign::POSITIVE},
+  };
+
+  EXPECT_EQ(underTest.getClauses()[0], expected1);
+  EXPECT_EQ(underTest.getClauses()[1], expected2);
+  EXPECT_EQ(underTest.getMaxVar(), CNFVar{5});
+}
+
+TEST(UnitCNFProblem, parseDIMACSProblemWithBadClauseFails) {
+  std::stringstream conduit;
+  conduit << "p cnf 6 2" << std::endl;
+  conduit << "1 2 0" << std::endl;
+  conduit << "1 X 0" << std::endl;
+  conduit << "5 6 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.isEmpty());
+}
+
+TEST(UnitCNFProblem, parseDIMACSProblemWithCommentsAndWhitespace) {
+
+  std::stringstream conduit;
+  conduit << "c cnf 5 1" << std::endl;
+  conduit << "\t p cnf 6 2 c Foobar" << std::endl;
+  conduit << "1 2 0" << std::endl;
+  conduit << "c Baz" << std::endl;
+  conduit << "5 6 0 c Bam" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  ASSERT_FALSE(conduit.fail());
+  ASSERT_EQ(underTest.getSize(), 2ull);
+  ASSERT_EQ(underTest.getClauses()[0].size(), 2ull);
+  ASSERT_EQ(underTest.getClauses()[1].size(), 2ull);
+}
+
+TEST(UnitCNFProblem, parseIllegalDIMACSHeaderCNFFails) {
+  std::stringstream conduit;
+  conduit << "p illegal 0 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.isEmpty());
+}
+
+TEST(UnitCNFProblem, parseIllegalDIMACSHeaderVarCountFails) {
+  std::stringstream conduit;
+  conduit << "p cnf illegal 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.isEmpty());
+}
+
+TEST(UnitCNFProblem, parseIllegalDIMACSHeaderClauseCountCountFails) {
+  std::stringstream conduit;
+  conduit << "p cnf 0 illegal" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.isEmpty());
+}
+
+TEST(UnitCNFProblem, parseCNFProblemWithIllegallyHighVariableFails) {
+  std::stringstream conduit;
+  conduit << "p cnf 6 2" << std::endl;
+  conduit << "1 2 0" << std::endl;
+  conduit << "1 9 0" << std::endl;
+  conduit << "5 7 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.isEmpty());
 }
 }
