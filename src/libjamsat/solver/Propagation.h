@@ -165,6 +165,28 @@ bool Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const
   JAM_ASSERT(variable.getRawValue() <
                  static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Variable out of bounds");
-  m_reasons[variable.getRawValue()] != nullptr;
+  return m_reasons[variable.getRawValue()] != nullptr;
+}
+
+template <class AssignmentProvider>
+Clause *Propagation<AssignmentProvider>::propagateUntilFixpoint(
+    CNFLit toPropagate, size_t &amountOfNewFacts) {
+  JAM_ASSERT(toPropagate.getVariable().getRawValue() <
+             static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+             "Literal variable out of bounds");
+  m_reasons[toPropagate.getVariable().getRawValue()] = nullptr;
+  amountOfNewFacts = 0;
+  return nullptr;
+}
+
+template <class AssignmentProvider>
+Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
+                                                   size_t &amountOfNewFacts) {
+  JAM_ASSERT(toPropagate.getVariable().getRawValue() <
+             static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+             "Literal variable out of bounds");
+  m_reasons[toPropagate.getVariable().getRawValue()] = nullptr;
+  amountOfNewFacts = 0;
+  return nullptr;
 }
 }

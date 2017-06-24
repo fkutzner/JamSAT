@@ -28,4 +28,35 @@
 
 #include <libjamsat/solver/Propagation.h>
 
-namespace jamsat {}
+namespace jamsat {
+class DummyAssignmentProvider {};
+
+TEST(UnitSolver, propagateWithoutClausesIsNoop) {
+  DummyAssignmentProvider assignments;
+  CNFVar maxVar{4};
+  Propagation<DummyAssignmentProvider> underTest(maxVar, assignments);
+
+  size_t amntNewFacts = 0xFFFF;
+  CNFLit propagatedLit = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+  auto conflictingClause = underTest.propagate(propagatedLit, amntNewFacts);
+
+  EXPECT_EQ(amntNewFacts, 0ull);
+  EXPECT_EQ(conflictingClause, nullptr);
+  EXPECT_FALSE(underTest.hasForcedAssignment(propagatedLit.getVariable()));
+}
+
+TEST(UnitSolver, propagateToFixpointWithoutClausesIsNoop) {
+  DummyAssignmentProvider assignments;
+  CNFVar maxVar{4};
+  Propagation<DummyAssignmentProvider> underTest(maxVar, assignments);
+
+  size_t amntNewFacts = 0xFFFF;
+  CNFLit propagatedLit = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+  auto conflictingClause =
+      underTest.propagateUntilFixpoint(propagatedLit, amntNewFacts);
+
+  EXPECT_EQ(amntNewFacts, 0ull);
+  EXPECT_EQ(conflictingClause, nullptr);
+  EXPECT_FALSE(underTest.hasForcedAssignment(propagatedLit.getVariable()));
+}
+}
