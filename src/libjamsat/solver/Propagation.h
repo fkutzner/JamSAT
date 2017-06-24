@@ -26,7 +26,10 @@
 
 #pragma once
 
+#include <vector>
+
 #include "Clause.h"
+#include "Watcher.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 
 namespace jamsat {
@@ -172,7 +175,7 @@ template <class AssignmentProvider>
 Clause *Propagation<AssignmentProvider>::propagateUntilFixpoint(
     CNFLit toPropagate, size_t &amountOfNewFacts) {
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
-             static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Literal variable out of bounds");
   m_reasons[toPropagate.getVariable().getRawValue()] = nullptr;
   amountOfNewFacts = 0;
@@ -183,7 +186,7 @@ template <class AssignmentProvider>
 Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
                                                    size_t &amountOfNewFacts) {
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
-             static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Literal variable out of bounds");
   m_reasons[toPropagate.getVariable().getRawValue()] = nullptr;
   amountOfNewFacts = 0;
