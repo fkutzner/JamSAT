@@ -128,6 +128,9 @@ private:
  */
 class CNFLit {
 public:
+  /** The underlying literal type. */
+  using RawLiteralType = int;
+
   /**
    * \brief Constructs a CNFLit object.
    *
@@ -178,6 +181,16 @@ public:
    * \returns \p true iff this literal is inequal to \p rhs.
    */
   inline bool operator!=(const CNFLit &rhs) const noexcept;
+
+  /**
+   * \brief Gets the literal's raw value.
+   *
+   * Literal raw values are monotonically increasing wrt. the raw value of the
+   * corresponding variables.
+   *
+   * \returns the literal's raw value.
+   */
+  inline RawLiteralType getRawValue() const noexcept;
 
   /**
    * \brief The undefined marker literal.
@@ -233,6 +246,8 @@ bool CNFLit::operator==(const CNFLit &rhs) const noexcept {
 bool CNFLit::operator!=(const CNFLit &rhs) const noexcept {
   return !(*this == rhs);
 }
+
+CNFLit::RawLiteralType CNFLit::getRawValue() const noexcept { return m_value; }
 }
 
 namespace std {
