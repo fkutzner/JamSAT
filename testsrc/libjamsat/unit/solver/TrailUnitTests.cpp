@@ -79,9 +79,7 @@ TEST(UnitSolver, trailSeparatesLiteralsByDecisionLevels) {
   underTest.addLiteral(testLiteral2);
   underTest.addLiteral(testLiteral3);
 
-  underTest.newDecisionLevel();
-
-  ASSERT_EQ(underTest.getCurrentDecisionLevel(), 2ull);
+  ASSERT_EQ(underTest.getCurrentDecisionLevel(), 1ull);
 
   auto level0Iterator = underTest.getDecisionLevelLiterals(0);
   EXPECT_EQ(level0Iterator.end() - level0Iterator.begin(), 1);
@@ -92,8 +90,14 @@ TEST(UnitSolver, trailSeparatesLiteralsByDecisionLevels) {
   EXPECT_EQ(*(level1Iterator.begin()), testLiteral2);
   EXPECT_EQ(*(level1Iterator.begin() + 1), testLiteral3);
 
-  auto level2Iterator = underTest.getDecisionLevelLiterals(3);
+  underTest.newDecisionLevel();
+  ASSERT_EQ(underTest.getCurrentDecisionLevel(), 2ull);
+
+  auto level2Iterator = underTest.getDecisionLevelLiterals(2);
   EXPECT_EQ(level2Iterator.end(), level2Iterator.begin());
+
+  auto level3Iterator = underTest.getDecisionLevelLiterals(3);
+  EXPECT_EQ(level3Iterator.end(), level2Iterator.begin());
 }
 
 TEST(UnitSolver, trailIsEmptyAfterShrinkToLevel0) {
