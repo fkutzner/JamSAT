@@ -41,14 +41,17 @@ namespace detail_propagation {
 
 class Watcher {
 public:
-  Watcher(Clause &watchedClause, CNFLit otherWatchedLiteral)
-      : m_clause(&watchedClause), m_otherWatchedLiteral(otherWatchedLiteral) {}
+  Watcher(Clause &watchedClause, CNFLit otherWatchedLiteral, int index = 0)
+      : m_clause(&watchedClause), m_otherWatchedLiteral(otherWatchedLiteral),
+        m_index(index) {}
 
   Clause &getClause() noexcept { return *m_clause; }
 
   CNFLit getOtherWatchedLiteral() const noexcept {
     return m_otherWatchedLiteral;
   }
+
+  int getIndex() const noexcept { return m_index; }
 
   void setOtherWatchedLiteral(CNFLit literal) noexcept {
     m_otherWatchedLiteral = literal;
@@ -67,6 +70,7 @@ public:
 private:
   Clause *m_clause;
   CNFLit m_otherWatchedLiteral;
+  int m_index;
 };
 
 using WatcherList = std::vector<Watcher>;
