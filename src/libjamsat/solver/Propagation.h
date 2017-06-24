@@ -31,6 +31,7 @@
 #include "Clause.h"
 #include "Watcher.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
 /**
@@ -83,10 +84,9 @@ public:
    * reaches a fixpoint.
    *
    * As soon as a new fact has been deduced, the assignment provider's
-   * addLiteral(l) method
-   * is called with l encoding the new fact. If the propagation leads to a
-   * conflict, a pointer
-   * to the clause falsified under the current assignment is returned.
+   * addLiteral(l) method is called with l encoding the new fact. If the
+   * propagation leads to a conflict, a pointer to the clause falsified under
+   * the current assignment is returned.
    *
    * \param toPropagate       The fact to propagate, encoded as a literal.
    * \param amountOfNewFacts  (out-parameter) The amount of facts added due to
@@ -102,10 +102,9 @@ public:
    * propagation object.
    *
    * As soon as a new fact has been deduced, the assignment provider's
-   * addLiteral(l) method
-   * is called with l encoding the new fact. If the propagation leads to a
-   * conflict, a pointer
-   * to the clause falsified under the current assignment is returned.
+   * addLiteral(l) method is called with l encoding the new fact. If the
+   * propagation leads to a conflict, a pointer to the clause falsified under
+   * the current assignment is returned.
    *
    * \param toPropagate       The fact to propagate, encoded as a literal.
    * \param amountOfNewFacts  (out-parameter) The amount of facts added due to
@@ -141,6 +140,7 @@ public:
 private:
   AssignmentProvider &m_assignmentProvider;
   std::vector<const Clause *> m_reasons;
+  detail_propagation::Watchers m_watchers;
 };
 
 /********** Implementation ****************************** */
@@ -148,8 +148,18 @@ private:
 template <class AssignmentProvider>
 Propagation<AssignmentProvider>::Propagation(
     CNFVar maxVar, AssignmentProvider &assignmentProvider)
-    : m_assignmentProvider(assignmentProvider), m_reasons({}) {
+    : m_assignmentProvider(assignmentProvider), m_reasons({}),
+      m_watchers(maxVar) {
   m_reasons.resize(maxVar.getRawValue() + 1);
+}
+
+template <class AssignmentProvider>
+void Propagation<AssignmentProvider>::registerClause(Clause &clause) {
+  JAM_ASSERT(clause.getSize() >= 2ull, "Illegally small clause argument");
+  detail_propagation::Watcher watcher1{clause, clause[0], 1};
+  detail_propagation::Watcher watcher2{clause, clause[1], 0};
+  m_watchers.addWatcher(clause[0], watcher2);
+  m_watchers.addWatcher(clause[1], watcher1);
 }
 
 template <class AssignmentProvider>
@@ -188,8 +198,85 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Literal variable out of bounds");
+
   m_reasons[toPropagate.getVariable().getRawValue()] = nullptr;
   amountOfNewFacts = 0;
+  CNFLit negatedToPropagate = ~toPropagate;
+
+  // Traverse all watchers referencing clauses containing ~toPropagate to find
+  // new forced assignments.
+  auto watcherListTraversal = m_watchers.getWatchers(negatedToPropagate);
+  while (!watcherListTraversal.hasFinishedTraversal()) {
+    auto currentWatcher = *watcherListTraversal;
+    CNFLit otherWatchedLit = currentWatcher.getOtherWatchedLiteral();
+    TBool assignment = m_assignmentProvider.getAssignment(otherWatchedLit);
+
+    if (assignment == TBool::TRUE) {
+      // The clause is already satisfied and can be ignored for propagation.
+      ++watcherListTraversal;
+      continue;
+    }
+
+    auto &clause = currentWatcher.getClause();
+
+    // otherWatchedLit might not actually be the other watched literal due to
+    // the swap at (*), so restore it
+    otherWatchedLit = clause[1 - currentWatcher.getIndex()];
+    assignment = m_assignmentProvider.getAssignment(otherWatchedLit);
+    if (assignment == TBool::TRUE) {
+      // The clause is already satisfied and can be ignored for propagation.
+      ++watcherListTraversal;
+      continue;
+    }
+
+    bool actionIsForced = true;
+    for (Clause::size_type i = 2; i < clause.getSize(); ++i) {
+      CNFLit currentLiteral = clause[i];
+      if (m_assignmentProvider.getAssignment(currentLiteral) != TBool::FALSE) {
+        // Swapping the FALSE-assigned literal with the non-false one to
+        // re-establish the invariant first two literals cannot be FALSE unless
+        // all other literals are FALSE. If a watched literal becomes FALSE in
+        // the future, it will either be swapped with a non-FALSE literal beyond
+        // the second one, or cause a propagation/conflict to happen. In the
+        // case of a propagation, the assignment to TRUE of the remaining
+        // literal R will be removed in the same backtracking operation as the
+        // FALSE assignment of ~toPropagate; in case of a conflict, both watched
+        // literals have been assigned on the current decision level, and both
+        // their assignments are removed in the ensuing backtracking step.
+        JAM_ASSERT(
+            assignment == TBool::INDETERMINATE,
+            "Invariant violated: other watched literal must be unassigned");
+        std::swap(clause[currentWatcher.getIndex()],
+                  clause[i]); // (*, see above)
+        m_watchers.addWatcher(currentLiteral, currentWatcher);
+        watcherListTraversal.removeCurrent();
+        actionIsForced = false;
+        break;
+      }
+    }
+
+    if (actionIsForced) {
+      // Invariant holding here: all literals in the clause beyond the second
+      // literal have the value FALSE.
+      if (assignment == TBool::FALSE) {
+        // Conflict case: all literals are FALSE. Return the conflicting clause.
+        watcherListTraversal.finishedTraversal();
+        return &clause;
+      } else {
+        // Propagation case: otherWatchedLit is the only remaining unassigned
+        // literal
+        ++amountOfNewFacts;
+        m_assignmentProvider.addLiteral(otherWatchedLit);
+      }
+
+      // Only advancing the traversal if an action is forced, since otherwise
+      // the current watcher has been removed via removeCurrent() and
+      // watcherListTraversal already points to the next watcher.
+      ++watcherListTraversal;
+    }
+  }
+
+  watcherListTraversal.finishedTraversal();
   return nullptr;
 }
 }
