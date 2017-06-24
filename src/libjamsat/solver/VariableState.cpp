@@ -27,10 +27,8 @@
 #include "VariableState.h"
 
 namespace jamsat {
-VariableState::VariableState(CNFVar maxVar)
-    : m_eliminatedVariables({}), m_reasons({}) {
+VariableState::VariableState(CNFVar maxVar) : m_eliminatedVariables({}) {
   m_eliminatedVariables.resize(maxVar.getRawValue() + 1);
-  m_reasons.resize(maxVar.getRawValue() + 1);
 }
 
 bool VariableState::isEliminated(CNFVar variable) const noexcept {
@@ -45,21 +43,5 @@ void VariableState::setEliminated(CNFVar variable) noexcept {
                                           m_eliminatedVariables.size()),
              "Variable out of bounds");
   m_eliminatedVariables[variable.getRawValue()] = Bool::TRUE;
-}
-
-const Clause *VariableState::getAssignmentReason(CNFVar variable) const
-    noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
-             "Variable out of bounds");
-  return m_reasons[variable.getRawValue()];
-}
-
-void VariableState::setAssignmentReason(CNFVar variable,
-                                        Clause *reason) noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
-             "Variable out of bounds");
-  m_reasons[variable.getRawValue()] = reason;
 }
 }

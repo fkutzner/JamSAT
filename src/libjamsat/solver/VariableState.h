@@ -74,31 +74,7 @@ public:
    */
   bool isEliminated(CNFVar variable) const noexcept;
 
-  /**
-   * \brief Stores a pointer to the clause which forced the assignment of the
-   * given variable.
-   *
-   * \param variable  The target variable. Must not be greater than \p maxVar
-   * passed to the constructor. \p variable must be a variable with a
-   * determinate truth value.
-   * \param reason    The clause which forced the assignment of the given
-   * variable.
-   */
-  void setAssignmentReason(CNFVar variable, Clause *reason) noexcept;
-
-  /**
-   * \brief Gets the pointer to the clause which forced the assignment of the
-   * given variable.
-   *
-   * \param variable  The target variable. Must not be greater than \p maxVar
-   * passed to the constructor. \p variable must be a variable with a
-   * determinate truth value.
-   * \returns    The clause which forced the assignment of the given variable.
-   */
-  const Clause *getAssignmentReason(CNFVar variable) const noexcept;
-
 private:
   std::vector<Bool> m_eliminatedVariables;
-  std::vector<const Clause *> m_reasons;
 };
 }

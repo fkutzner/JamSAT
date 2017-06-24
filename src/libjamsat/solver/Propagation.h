@@ -113,7 +113,58 @@ public:
    */
   Clause *propagate(CNFLit toPropagate, size_t &amountOfNewFacts);
 
+  /**
+   * \brief Determines whether the given variable as a forced assignment.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor. \p variable must be a variable with a
+   * determinate truth value.
+   */
+  bool hasForcedAssignment(CNFVar variable) const noexcept;
+
+  /**
+   * \brief Gets the pointer to the clause which forced the assignment of the
+   * given variable.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor. \p variable must be a variable with a
+   * determinate truth value.
+   * \returns    The clause which forced the assignment of the given variable.
+   * If the assignment was not forced due to propagation, \p nullptr is returned
+   * instead.
+   */
+  const Clause *getAssignmentReason(CNFVar variable) const noexcept;
+
 private:
   AssignmentProvider &m_assignmentProvider;
+  std::vector<const Clause *> m_reasons;
 };
+
+/********** Implementation ****************************** */
+
+template <class AssignmentProvider>
+Propagation<AssignmentProvider>::Propagation(
+    CNFVar maxVar, AssignmentProvider &assignmentProvider)
+    : m_assignmentProvider(assignmentProvider), m_reasons({}) {
+  m_reasons.resize(maxVar.getRawValue() + 1);
+}
+
+template <class AssignmentProvider>
+const Clause *
+Propagation<AssignmentProvider>::getAssignmentReason(CNFVar variable) const
+    noexcept {
+  JAM_ASSERT(variable.getRawValue() <
+                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+             "Variable out of bounds");
+  return m_reasons[variable.getRawValue()];
+}
+
+template <class AssignmentProvider>
+bool Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const
+    noexcept {
+  JAM_ASSERT(variable.getRawValue() <
+                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+             "Variable out of bounds");
+  m_reasons[variable.getRawValue()] != nullptr;
+}
 }

@@ -40,11 +40,4 @@ TEST(UnitSolver, variableEliminationIsStored) {
   underTest.setEliminated(CNFVar{3});
   EXPECT_EQ(underTest.isEliminated(CNFVar{3}), true);
 }
-
-TEST(UnitSolver, variablReasonsAreStored) {
-  VariableState underTest{CNFVar{10}};
-  Clause *dummy = reinterpret_cast<Clause *>(0xFF);
-  underTest.setAssignmentReason(CNFVar{5}, dummy);
-  EXPECT_EQ(underTest.getAssignmentReason(CNFVar{5}), dummy);
-}
 }
