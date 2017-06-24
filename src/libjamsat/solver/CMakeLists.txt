@@ -6,4 +6,5 @@ add_library(jamsatSolver OBJECT
   Clause.h
   Clause.cpp
   Propagation.h
+  Watcher.h
 )
