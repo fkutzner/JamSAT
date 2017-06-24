@@ -36,6 +36,18 @@
 #include <libjamsat/cnfproblem/CNFProblem.h>
 
 namespace jamsat {
+namespace {
+class SuppressLoggedWarningsRAII {
+public:
+  SuppressLoggedWarningsRAII() {
+    auto filter = boost::log::trivial::severity > boost::log::trivial::warning;
+    boost::log::core::get()->set_filter(filter);
+  }
+
+  ~SuppressLoggedWarningsRAII() { boost::log::core::get()->reset_filter(); }
+};
+}
+
 TEST(UnitCNFProblem, emptyCNFProblemHasSize0) {
   CNFProblem underTest;
   ASSERT_EQ(underTest.getSize(), 0ull);
@@ -183,17 +195,7 @@ TEST(UnitCNFProblem, printTwoClauseCNFProblemAsDIMACS) {
   EXPECT_FALSE(collector);
 }
 
-namespace {
-void suppressLoggedWarnings() {
-  auto filter = boost::log::trivial::severity > boost::log::trivial::warning;
-  boost::log::core::get()->set_filter(filter);
-}
-
-void enableLoggedWarnings() { boost::log::core::reset_filter(); }
-}
-
 TEST(UnitCNFProblem, parseEmptyDIMACSClause) {
-
   std::stringstream conduit;
   conduit << "0";
 
@@ -297,7 +299,7 @@ TEST(UnitCNFProblem, parseCommentContainingCNFClause) {
 }
 
 TEST(UnitCNFProblem, parseGarbageContainingCNFClauseFails) {
-  suppressLoggedWarnings();
+  SuppressLoggedWarningsRAII suppressWarnings;
 
   std::stringstream conduit;
   conduit << "-2 4 this is garbage" << std::endl << "1 0";
@@ -309,7 +311,7 @@ TEST(UnitCNFProblem, parseGarbageContainingCNFClauseFails) {
 }
 
 TEST(UnitCNFProblem, parseUnterminatedCNFClauseFails) {
-  suppressLoggedWarnings();
+  SuppressLoggedWarningsRAII suppressWarnings;
 
   std::stringstream conduit;
   conduit << "-2 4";
@@ -321,7 +323,7 @@ TEST(UnitCNFProblem, parseUnterminatedCNFClauseFails) {
 }
 
 TEST(UnitCNFProblem, parseEmptyDIMACSProblemInputFails) {
-  suppressLoggedWarnings();
+  SuppressLoggedWarningsRAII suppressWarnings;
 
   std::string testData = " ";
   std::stringstream conduit{testData};
@@ -332,7 +334,7 @@ TEST(UnitCNFProblem, parseEmptyDIMACSProblemInputFails) {
 }
 
 TEST(UnitCNFProblem, parseCommentOnlyDIMACSProblemFails) {
-  suppressLoggedWarnings();
+  SuppressLoggedWarningsRAII suppressWarnings;
 
   std::stringstream conduit;
   conduit << "c Foo" << std::endl;
@@ -403,6 +405,7 @@ TEST(UnitCNFProblem, parseMultipleClauseDIMACSProblem) {
 }
 
 TEST(UnitCNFProblem, parseDIMACSProblemWithBadClauseFails) {
+  SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
   conduit << "p cnf 6 2" << std::endl;
   conduit << "1 2 0" << std::endl;
@@ -416,7 +419,6 @@ TEST(UnitCNFProblem, parseDIMACSProblemWithBadClauseFails) {
 }
 
 TEST(UnitCNFProblem, parseDIMACSProblemWithCommentsAndWhitespace) {
-
   std::stringstream conduit;
   conduit << "c cnf 5 1" << std::endl;
   conduit << "\t p cnf 6 2 c Foobar" << std::endl;
@@ -433,6 +435,7 @@ TEST(UnitCNFProblem, parseDIMACSProblemWithCommentsAndWhitespace) {
 }
 
 TEST(UnitCNFProblem, parseIllegalDIMACSHeaderCNFFails) {
+  SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
   conduit << "p illegal 0 0" << std::endl;
 
@@ -443,6 +446,7 @@ TEST(UnitCNFProblem, parseIllegalDIMACSHeaderCNFFails) {
 }
 
 TEST(UnitCNFProblem, parseIllegalDIMACSHeaderVarCountFails) {
+  SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
   conduit << "p cnf illegal 0" << std::endl;
 
@@ -453,6 +457,7 @@ TEST(UnitCNFProblem, parseIllegalDIMACSHeaderVarCountFails) {
 }
 
 TEST(UnitCNFProblem, parseIllegalDIMACSHeaderClauseCountCountFails) {
+  SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
   conduit << "p cnf 0 illegal" << std::endl;
 
@@ -463,6 +468,7 @@ TEST(UnitCNFProblem, parseIllegalDIMACSHeaderClauseCountCountFails) {
 }
 
 TEST(UnitCNFProblem, parseCNFProblemWithIllegallyHighVariableFails) {
+  SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
   conduit << "p cnf 6 2" << std::endl;
   conduit << "1 2 0" << std::endl;
