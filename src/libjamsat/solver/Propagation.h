@@ -140,6 +140,15 @@ public:
 private:
   AssignmentProvider &m_assignmentProvider;
   std::vector<const Clause *> m_reasons;
+
+  /**
+   * \internal
+   *
+   * Invariants for m_watchers: for each registered clause C,
+   *  - \p m_watchers contains exactly two different watchers pointing to C.
+   *  - the lists \p m_watchers.getWatchers(C[0]) and \p
+   * m_watchers.getWatchers(C[1]) each contain a watcher pointing to C.
+   */
   detail_propagation::Watchers m_watchers;
 };
 
@@ -229,18 +238,23 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
       continue;
     }
 
+    // Invariant: both watchers pointing to the clause have an other watched
+    // literal pointing either to clause[0] or clause[1], but not to the literal
+    // which is their index in m_watchers.
+
     bool actionIsForced = true;
     for (Clause::size_type i = 2; i < clause.getSize(); ++i) {
       CNFLit currentLiteral = clause[i];
       if (m_assignmentProvider.getAssignment(currentLiteral) != TBool::FALSE) {
         // Swapping the FALSE-assigned literal with the non-false one to
-        // re-establish the invariant first two literals cannot be FALSE unless
-        // all other literals are FALSE. If a watched literal becomes FALSE in
-        // the future, it will either be swapped with a non-FALSE literal beyond
-        // the second one, or cause a propagation/conflict to happen. In the
-        // case of a propagation, the assignment to TRUE of the remaining
-        // literal R will be removed in the same backtracking operation as the
-        // FALSE assignment of ~toPropagate; in case of a conflict, both watched
+        // re-establish the invariant that first two literals cannot be FALSE
+        // unless all other literals are FALSE. If a watched literal becomes
+        // FALSE in the future, it will either be swapped with a non-FALSE
+        // literal beyond the second one, or cause a propagation/conflict to
+        // happen. In the case of a propagation, the assignment to TRUE of the
+        // remaining literal R will be removed in the same
+        // backtracking operation as the FALSE assignment of ~toPropagate;
+        // in case of a conflict, both watched
         // literals have been assigned on the current decision level, and both
         // their assignments are removed in the ensuing backtracking step.
         JAM_ASSERT(
