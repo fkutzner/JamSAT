@@ -112,6 +112,16 @@ public:
   TBool getAssignment(CNFVar variable) const noexcept;
 
   /**
+   * \brief Gets the assignment for the given literal.
+   *
+   * \param literal  The target literal. Its variable must not be greater than
+   * \p maxVar passed to the constructor.
+   * \returns The literal's current assignment. If the literal's assignment
+   * has not been set yet, INDETERMINATE is returned.
+   */
+  TBool getAssignment(CNFLit literal) const noexcept;
+
+  /**
    * \brief Gets the decision level on which the given variable has been
    * assigned.
    *

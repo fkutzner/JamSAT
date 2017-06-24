@@ -107,4 +107,17 @@ TBool Trail::getAssignment(CNFVar variable) const noexcept {
              "Variable out of bounds");
   return m_assignments[variable.getRawValue()];
 }
+
+TBool Trail::getAssignment(CNFLit literal) const noexcept {
+  CNFVar variable = literal.getVariable();
+  JAM_ASSERT(variable.getRawValue() <
+                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+             "Variable out of bounds");
+  TBool variableAssignment = getAssignment(variable);
+  if (variableAssignment == TBool::INDETERMINATE ||
+      literal.getSign() == CNFSign::POSITIVE) {
+    return variableAssignment;
+  }
+  return variableAssignment == TBool::FALSE ? TBool::TRUE : TBool::FALSE;
+}
 }
