@@ -164,9 +164,9 @@ std::istream &readDIMACSClauses(std::istream &input, DIMACSHeader problemHeader,
     if (static_cast<unsigned int>(problem.getMaxVar().getRawValue()) + 1 >
         problemHeader.variableCount) {
       input.setstate(std::ios::failbit);
-      BOOST_LOG_TRIVIAL(warning) << "Clause no. " << i << " exceeds"
-                                 << " the max. amount of variables";
       problem.clear();
+      BOOST_LOG_TRIVIAL(warning) << "Illegal variable " << i;
+      BOOST_LOG_TRIVIAL(warning) << "Failed parsing DIMACS clause no. " << i;
       return input;
     }
   }
@@ -206,8 +206,7 @@ std::istream &operator>>(std::istream &input, CNFClause &clause) {
         continue;
       }
       input.setstate(std::ios::failbit);
-      BOOST_LOG_TRIVIAL(warning) << "Failed to parse clause: illegal token "
-                                 << buffer;
+      BOOST_LOG_TRIVIAL(warning) << "Illegal token in clause: " << buffer;
       clause.resize(originalClauseSize);
       return input;
     }
