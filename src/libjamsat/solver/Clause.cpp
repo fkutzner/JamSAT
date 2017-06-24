@@ -60,9 +60,7 @@ Clause::const_iterator Clause::end() const noexcept {
 }
 
 size_t getClauseAllocationSize(Clause::size_type clauseSize) {
-  if (clauseSize == 0) {
-    return 0;
-  }
+  JAM_ASSERT(clauseSize > 0, "clauseSize must be nonzero");
   return sizeof(Clause) + (clauseSize - 1) * sizeof(CNFLit);
 }
 
