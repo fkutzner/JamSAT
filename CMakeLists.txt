@@ -2,8 +2,11 @@ project(JamSAT)
 cmake_minimum_required(VERSION 3.5)
 
 ### Options
+
+# The default for all boolean options is "OFF".
 option(JAMSAT_ENABLE_SANITIZERS "Enable code sanitizers" OFF)
 option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
+option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 
 ### Find libraries
@@ -57,6 +60,12 @@ if(COMPILING_WITH_GNULIKE)
   if(JAMSAT_ENABLE_COVERAGE)
     add_definitions(--coverage)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+  endif()
+
+  if(JAMSAT_ENABLE_RELEASE_ASSERTIONS)
+    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
+    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
+    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_CXX_FLAGS_MINSIZEREL})
   endif()
 
 elseif(COMPILING_WITH_MSVC)
