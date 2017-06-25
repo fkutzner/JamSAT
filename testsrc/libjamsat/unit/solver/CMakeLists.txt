@@ -4,6 +4,7 @@ add_library(solver_unit_tests OBJECT
   ClauseUnitTests.cpp
   PropagationUnitTests.cpp
   WatcherUnitTests.cpp
+  FirstUIPLearningUnitTests.cpp
   TestAssignmentProvider.cpp
   TestAssignmentProvider.h
 )
