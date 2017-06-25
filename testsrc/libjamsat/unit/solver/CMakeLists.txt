@@ -4,6 +4,8 @@ add_library(solver_unit_tests OBJECT
   ClauseUnitTests.cpp
   PropagationUnitTests.cpp
   WatcherUnitTests.cpp
+  TestAssignmentProvider.cpp
+  TestAssignmentProvider.h
 )
 
 target_include_directories(solver_unit_tests PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include

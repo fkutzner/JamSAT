@@ -25,59 +25,11 @@
 */
 
 #include <gtest/gtest.h>
-#include <unordered_map>
 
+#include "TestAssignmentProvider.h"
 #include <libjamsat/solver/Propagation.h>
 
 namespace jamsat {
-class DummyAssignmentProvider {
-public:
-  TBool getAssignment(CNFVar variable) const noexcept {
-    auto possibleAssgn = m_assignments.find(variable);
-    if (possibleAssgn != m_assignments.end()) {
-      return possibleAssgn->second;
-    }
-    return TBool::INDETERMINATE;
-  }
-
-  TBool getAssignment(CNFLit literal) {
-    auto varAssgn = getAssignment(literal.getVariable());
-    if (literal.getSign() == CNFSign::POSITIVE ||
-        varAssgn == TBool::INDETERMINATE) {
-      return varAssgn;
-    }
-    return varAssgn == TBool::FALSE ? TBool::TRUE : TBool::FALSE;
-  }
-
-  void addLiteral(CNFLit literal) {
-    m_assignments[literal.getVariable()] =
-        (literal.getSign() == CNFSign::POSITIVE ? TBool::TRUE : TBool::FALSE);
-    m_trail.push_back(literal);
-  }
-
-  void clearLiteral(CNFLit literal) {
-    if (m_assignments.find(literal.getVariable()) != m_assignments.end()) {
-      m_assignments.erase(literal.getVariable());
-
-      m_trail.erase(
-          std::find_if(m_trail.begin(), m_trail.end(), [literal](CNFLit &l) {
-            return l.getVariable() == literal.getVariable();
-          }));
-    }
-  }
-
-  size_t getNumberOfAssignments() { return m_trail.size(); }
-
-  boost::iterator_range<std::vector<CNFLit>::const_iterator>
-  getAssignments(size_t index) {
-    return boost::make_iterator_range(m_trail.begin() + index, m_trail.end());
-  }
-
-private:
-  std::unordered_map<CNFVar, TBool> m_assignments;
-  std::vector<CNFLit> m_trail{512};
-};
-
 TEST(UnitSolver, propagateWithoutClausesIsNoop) {
   DummyAssignmentProvider assignments;
   CNFVar maxVar{4};
