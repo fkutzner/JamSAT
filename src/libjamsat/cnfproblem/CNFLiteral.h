@@ -299,4 +299,13 @@ template <> struct hash<jamsat::CNFVar> {
     return std::hash<jamsat::CNFVar::RawVariableType>{}(variable.getRawValue());
   }
 };
+
+template <> struct hash<jamsat::CNFLit> {
+  using argument_type = jamsat::CNFLit;
+  using result_type = std::size_t;
+
+  result_type operator()(argument_type literal) const noexcept {
+    return std::hash<jamsat::CNFLit::RawLiteralType>{}(literal.getRawValue());
+  }
+};
 }
