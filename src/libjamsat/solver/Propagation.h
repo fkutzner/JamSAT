@@ -64,12 +64,22 @@ public:
   /**
    * \brief Registers a clause in the propagation system.
    *
-   * This method may only be called when no variables have an assignment.
+   * This method may only be called if one of the following conditions is
+   * satisfied:
+   *
+   * - No literals occurring in \p clause have an assignment.
+   * - All literals occurring in \p clause except for the first one are assigned
+   * to FALSE.
+   *
+   * If the second condition holds and the first literal in \p clause has no
+   * assignment, the value of the first literal gets propagated until fixpoint.
    *
    * \param clause    The clause to be registered, which must exist until this
    * is destroyed or it is deregistered from this.
+   * \returns         A conflicting clause if adding \clause caused a
+   * propagation and a conflict occured; nullptr otherwise.
    */
-  void registerClause(Clause &clause);
+  Clause *registerClause(Clause &clause);
 
   /**
    * \brief Unregisters a clause in the propagation system.
@@ -165,12 +175,24 @@ Propagation<AssignmentProvider>::Propagation(
 }
 
 template <class AssignmentProvider>
-void Propagation<AssignmentProvider>::registerClause(Clause &clause) {
+Clause *Propagation<AssignmentProvider>::registerClause(Clause &clause) {
   JAM_ASSERT(clause.getSize() >= 2ull, "Illegally small clause argument");
   detail_propagation::Watcher watcher1{clause, clause[0], 1};
   detail_propagation::Watcher watcher2{clause, clause[1], 0};
   m_watchers.addWatcher(clause[0], watcher2);
   m_watchers.addWatcher(clause[1], watcher1);
+
+  TBool secondLiteralAssignment = m_assignmentProvider.getAssignment(clause[1]);
+  // By method contract, if secondLiteralAssignment != INDETERMINATE, we need
+  // to propagate the first literal.
+  if (secondLiteralAssignment != TBool::INDETERMINATE) {
+    size_t additionalPropagations = 0;
+    auto confl = propagateUntilFixpoint(clause[0], additionalPropagations);
+    // Fix the reason since this was not a decision:
+    m_reasons[clause[0].getVariable().getRawValue()] = &clause;
+    return confl;
+  }
+  return nullptr;
 }
 
 template <class AssignmentProvider>

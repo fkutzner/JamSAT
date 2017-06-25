@@ -204,5 +204,48 @@ TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
   EXPECT_EQ(assignments.getAssignment(lit3), TBool::TRUE);
 }
 
+TEST(UnitSolver, registerClauseWithUnassignedLiteralsCausesNoPropagation) {
+  CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+  CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+  CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+
+  auto ternaryClause = createHeapClause(3);
+  (*ternaryClause)[0] = lit1;
+  (*ternaryClause)[1] = lit2;
+  (*ternaryClause)[2] = lit3;
+
+  DummyAssignmentProvider assignments;
+  CNFVar maxVar{4};
+  Propagation<DummyAssignmentProvider> underTest(maxVar, assignments);
+  underTest.registerClause(*ternaryClause);
+
+  EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBool::INDETERMINATE);
+  EXPECT_EQ(assignments.getAssignment(CNFVar{2}), TBool::INDETERMINATE);
+  EXPECT_EQ(assignments.getAssignment(CNFVar{3}), TBool::INDETERMINATE);
+}
+
+TEST(UnitSolver, registerClauseWithAssignedLiteralsCausesPropagation) {
+  CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+  CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+  CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+
+  auto ternaryClause = createHeapClause(3);
+  (*ternaryClause)[0] = lit1;
+  (*ternaryClause)[1] = lit2;
+  (*ternaryClause)[2] = lit3;
+
+  DummyAssignmentProvider assignments;
+  assignments.addLiteral(~lit2);
+  assignments.addLiteral(~lit3);
+
+  CNFVar maxVar{4};
+  Propagation<DummyAssignmentProvider> underTest(maxVar, assignments);
+  underTest.registerClause(*ternaryClause);
+
+  EXPECT_EQ(assignments.getAssignment(lit1), TBool::TRUE);
+  EXPECT_EQ(assignments.getAssignment(lit2), TBool::FALSE);
+  EXPECT_EQ(assignments.getAssignment(lit3), TBool::FALSE);
+}
+
 // TODO: test watcher restoration
 }
