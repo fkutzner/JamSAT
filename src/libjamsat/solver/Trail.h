@@ -148,5 +148,21 @@ public:
    */
   boost::iterator_range<const_iterator>
   getDecisionLevelLiterals(DecisionLevel level) const noexcept;
+
+  /**
+   * \brief Gets the variable assignments expressed as literals, beginning with
+   * the assignment at the given index.
+   *
+   * \param index   The index of the first assignment to be included in the
+   * result. \p index must not be greater than the current value of \p
+   * getNumberOfAssignments() .
+   * \returns       an iterator range whose begin points to the literal at index
+   * \p index. Let \p level be the current decision level. The begin iterator
+   * remains valid until shrinkToDecisionLevel(x) is called with x < \p level.
+   * The end iterator remains valid until shrinkToDecisionLevel(x) is called
+   * with x < \p level and may be incremented once per subsequent call to
+   * addLiteral(...) if \p level is the current decision level.
+   */
+  boost::iterator_range<const_iterator> getAssignments(size_type beginIndex);
 };
 }

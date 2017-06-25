@@ -93,6 +93,13 @@ Trail::getDecisionLevelLiterals(DecisionLevel level) const noexcept {
   }
 }
 
+boost::iterator_range<Trail::const_iterator>
+Trail::getAssignments(size_type beginIndex) {
+  JAM_ASSERT(beginIndex <= m_trail.size(), "beginIndex out of bounds");
+  return boost::make_iterator_range(m_trail.begin() + beginIndex,
+                                    m_trail.end());
+}
+
 Trail::DecisionLevel Trail::getAssignmentDecisionLevel(CNFVar variable) const
     noexcept {
   JAM_ASSERT(variable.getRawValue() <

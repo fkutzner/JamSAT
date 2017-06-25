@@ -188,4 +188,22 @@ TEST(UnitSolver, unshrinkedDecisionLevelsRemainIntactAfterShrink) {
   EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{5}), 1ul);
   EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{6}), 1ul);
 }
+
+TEST(UnitSolver, assignmentRangeMatchesAssignment) {
+  Trail underTest{CNFVar{8}};
+  CNFLit lit1{CNFVar{4}, CNFSign::NEGATIVE};
+  CNFLit lit2{CNFVar{5}, CNFSign::POSITIVE};
+  CNFLit lit3{CNFVar{8}, CNFSign::POSITIVE};
+
+  underTest.addLiteral(lit1);
+  underTest.addLiteral(lit2);
+  underTest.addLiteral(lit3);
+
+  auto assignmentRange = underTest.getAssignments(1ull);
+  ASSERT_EQ(assignmentRange.end() - assignmentRange.begin(), 2);
+  auto begin = assignmentRange.begin();
+  EXPECT_EQ(*begin, lit2);
+  EXPECT_EQ(*(begin + 1), lit3);
+  EXPECT_EQ(begin + 2, assignmentRange.end());
+}
 }
