@@ -147,7 +147,7 @@ public:
    * addLiteral(...) if \p level is the current decision level.
    */
   boost::iterator_range<const_iterator>
-  getDecisionLevelLiterals(DecisionLevel level) const noexcept;
+  getDecisionLevelAssignments(DecisionLevel level) const noexcept;
 
   /**
    * \brief Gets the variable assignments expressed as literals, beginning with

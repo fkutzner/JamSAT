@@ -79,7 +79,7 @@ Trail::size_type Trail::getNumberOfAssignments() const noexcept {
 }
 
 boost::iterator_range<Trail::const_iterator>
-Trail::getDecisionLevelLiterals(DecisionLevel level) const noexcept {
+Trail::getDecisionLevelAssignments(DecisionLevel level) const noexcept {
   if (level >= m_trailLimits.size()) {
     return boost::make_iterator_range(m_trail.end(), m_trail.end());
   }
