@@ -26,11 +26,10 @@
 
 #pragma once
 
-#include <vector>
-
 #include "Clause.h"
 #include "Watcher.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/utils/ArrayMap.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -145,7 +144,7 @@ public:
 
 private:
   AssignmentProvider &m_assignmentProvider;
-  std::vector<const Clause *> m_reasons;
+  ArrayMap<CNFVar, const Clause *> m_reasons;
 
   /**
    * \internal
@@ -163,10 +162,8 @@ private:
 template <class AssignmentProvider>
 Propagation<AssignmentProvider>::Propagation(
     CNFVar maxVar, AssignmentProvider &assignmentProvider)
-    : m_assignmentProvider(assignmentProvider), m_reasons({}),
-      m_watchers(maxVar) {
-  m_reasons.resize(maxVar.getRawValue() + 1);
-}
+    : m_assignmentProvider(assignmentProvider), m_reasons(maxVar),
+      m_watchers(maxVar) {}
 
 template <class AssignmentProvider>
 Clause *Propagation<AssignmentProvider>::registerClause(Clause &clause) {
@@ -183,7 +180,7 @@ Clause *Propagation<AssignmentProvider>::registerClause(Clause &clause) {
     m_assignmentProvider.addLiteral(clause[0]);
     auto confl = propagateUntilFixpoint(clause[0]);
     // Fix the reason since this was not a decision:
-    m_reasons[clause[0].getVariable().getRawValue()] = &clause;
+    m_reasons[clause[0].getVariable()] = &clause;
     return confl;
   }
   return nullptr;
@@ -196,7 +193,7 @@ Propagation<AssignmentProvider>::getAssignmentReason(CNFVar variable) const
   JAM_ASSERT(variable.getRawValue() <
                  static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Variable out of bounds");
-  return m_reasons[variable.getRawValue()];
+  return m_reasons[variable];
 }
 
 template <class AssignmentProvider>
@@ -205,7 +202,7 @@ bool Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const
   JAM_ASSERT(variable.getRawValue() <
                  static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Variable out of bounds");
-  return m_reasons[variable.getRawValue()] != nullptr;
+  return m_reasons[variable] != nullptr;
 }
 
 template <class AssignmentProvider>
@@ -214,7 +211,7 @@ Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate) {
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Literal variable out of bounds");
-  m_reasons[toPropagate.getVariable().getRawValue()] = nullptr;
+  m_reasons[toPropagate.getVariable()] = nullptr;
   auto trailEndIndex = m_assignmentProvider.getNumberOfAssignments();
 
   // Using the space on the trail beyond its current last literal as a
@@ -253,7 +250,7 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
                  static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Literal variable out of bounds");
 
-  m_reasons[toPropagate.getVariable().getRawValue()] = nullptr;
+  m_reasons[toPropagate.getVariable()] = nullptr;
   amountOfNewFacts = 0;
   CNFLit negatedToPropagate = ~toPropagate;
 
@@ -322,7 +319,7 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
         // Propagation case: otherWatchedLit is the only remaining unassigned
         // literal
         ++amountOfNewFacts;
-        m_reasons[otherWatchedLit.getVariable().getRawValue()] = &clause;
+        m_reasons[otherWatchedLit.getVariable()] = &clause;
         m_assignmentProvider.addLiteral(otherWatchedLit);
       }
 

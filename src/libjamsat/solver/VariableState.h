@@ -26,12 +26,8 @@
 
 #pragma once
 
-#include <cstdint>
-#include <vector>
-
-#include <libjamsat/solver/Trail.h>
-
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/utils/ArrayMap.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -75,6 +71,6 @@ public:
   bool isEliminated(CNFVar variable) const noexcept;
 
 private:
-  std::vector<Bool> m_eliminatedVariables;
+  ArrayMap<CNFVar, Bool> m_eliminatedVariables;
 };
 }

@@ -32,6 +32,7 @@
 
 #include "Clause.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/utils/ArrayMap.h>
 #include <libjamsat/utils/Assert.h>
 
 namespace jamsat {
@@ -132,31 +133,25 @@ private:
 
 class Watchers {
 public:
-  Watchers(CNFVar maxVar) : m_watchers({}) {
-    CNFLit negativeLiteral{maxVar, CNFSign::NEGATIVE};
-    CNFLit positiveLiteral{maxVar, CNFSign::POSITIVE};
-    size_t maxLiteralIndex =
-        std::max(negativeLiteral.getRawValue(), positiveLiteral.getRawValue());
-    m_watchers.resize(maxLiteralIndex + 1);
-  }
+  Watchers(CNFVar maxVar) : m_watchers(CNFLit{maxVar, CNFSign::POSITIVE}) {}
 
   WatcherTraversal getWatchers(CNFLit literal) noexcept {
     JAM_ASSERT(literal.getRawValue() <
                    static_cast<CNFLit::RawLiteralType>(m_watchers.size()),
                "literal out of bounds");
 
-    return WatcherTraversal{&m_watchers[literal.getRawValue()]};
+    return WatcherTraversal{&m_watchers[literal]};
   }
 
   void addWatcher(CNFLit literal, Watcher watcher) noexcept {
     JAM_ASSERT(literal.getRawValue() <
                    static_cast<CNFLit::RawLiteralType>(m_watchers.size()),
                "literal out of bounds");
-    m_watchers[literal.getRawValue()].push_back(watcher);
+    m_watchers[literal].push_back(watcher);
   }
 
 private:
-  std::vector<WatcherList> m_watchers;
+  ArrayMap<CNFLit, WatcherList> m_watchers;
 };
 }
 }

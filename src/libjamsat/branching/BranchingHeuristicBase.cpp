@@ -32,16 +32,14 @@
 
 namespace jamsat {
 BranchingHeuristicBase::BranchingHeuristicBase(CNFVar maxVar) noexcept
-    : m_decisionVariables({}) {
-  m_decisionVariables.resize(maxVar.getRawValue() + 1, Bool::FALSE);
-}
+    : m_decisionVariables(maxVar, Bool::FALSE) {}
 
 bool BranchingHeuristicBase::isEligibleForDecisions(CNFVar variable) const
     noexcept {
   JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariableType>(
                                           m_decisionVariables.size()),
              "Variable out of bounds");
-  return toRawBool(m_decisionVariables[variable.getRawValue()]);
+  return toRawBool(m_decisionVariables[variable]);
 }
 
 void BranchingHeuristicBase::setEligibleForDecisions(CNFVar variable,
@@ -49,6 +47,6 @@ void BranchingHeuristicBase::setEligibleForDecisions(CNFVar variable,
   JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariableType>(
                                           m_decisionVariables.size()),
              "Variable out of bounds");
-  m_decisionVariables[variable.getRawValue()] = toBool(isEligible);
+  m_decisionVariables[variable] = toBool(isEligible);
 }
 }

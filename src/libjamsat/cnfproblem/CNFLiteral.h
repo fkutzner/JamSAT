@@ -116,6 +116,26 @@ public:
    */
   static const CNFVar undefinedVariable;
 
+  /**
+   * \ingroup JamSAT_CNFProblem
+   *
+   * \class jamsat::CNFVar::CNFVarIndex
+   *
+   * \brief Indexer class for CNFVar objects, e.g. for use with ArrayBackedMap.
+   */
+  class Index {
+  public:
+    /**
+     * \brief Gets an index value for the given variable.
+     *
+     * \param variable    A variable.
+     * \returns           The variable's raw value, to be used for indexing.
+     */
+    static inline CNFVar::RawVariableType getIndex(CNFVar variable) {
+      return variable.getRawValue();
+    }
+  };
+
 private:
   RawVariableType m_value;
 };
@@ -196,6 +216,26 @@ public:
    * \brief The undefined marker literal.
    */
   static const CNFLit undefinedLiteral;
+
+  /**
+   * \ingroup JamSAT_CNFProblem
+   *
+   * \class jamsat::CNFLit::CNFLitIndex
+   *
+   * \brief Indexer class for CNFLit objects, e.g. for use with ArrayBackedMap.
+   */
+  class Index {
+  public:
+    /**
+     * \brief Gets an index value for the given literal.
+     *
+     * \param literal    A literal.
+     * \returns           The literal's raw value, to be used for indexing.
+     */
+    static inline CNFLit::RawLiteralType getIndex(CNFLit literal) {
+      return literal.getRawValue();
+    }
+  };
 
 private:
   int m_value;

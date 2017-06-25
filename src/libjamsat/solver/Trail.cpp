@@ -29,14 +29,12 @@
 
 namespace jamsat {
 Trail::Trail(CNFVar maxVar)
-    : m_trail({}), m_trailLimits({0}), m_assignments({}),
-      m_assignmentLevel({}) {
+    : m_trail({}), m_trailLimits({0}),
+      m_assignments(maxVar, TBool::INDETERMINATE), m_assignmentLevel(maxVar) {
   JAM_ASSERT(
       maxVar != CNFVar::undefinedVariable,
       "Trail cannot be instantiated with the undefined variable as maxVar");
   m_trail.reserve(maxVar.getRawValue() + 1);
-  m_assignments.resize(maxVar.getRawValue() + 1, TBool::INDETERMINATE);
-  m_assignmentLevel.resize(maxVar.getRawValue() + 1);
 }
 
 void Trail::newDecisionLevel() noexcept {
@@ -52,7 +50,7 @@ void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
              "Cannot shrink to a decision level higher than the current one");
   for (auto i = m_trail.begin() + m_trailLimits[level]; i != m_trail.end();
        ++i) {
-    m_assignments[(*i).getVariable().getRawValue()] = TBool::INDETERMINATE;
+    m_assignments[(*i).getVariable()] = TBool::INDETERMINATE;
   }
 
   m_trail.resize(m_trailLimits[level]);
@@ -68,10 +66,9 @@ void Trail::addLiteral(CNFLit literal) noexcept {
 
   m_trail.push_back(literal);
 
-  auto index = literal.getVariable().getRawValue();
   TBool value = static_cast<TBool>(literal.getSign());
-  m_assignments[index] = value;
-  m_assignmentLevel[index] = getCurrentDecisionLevel();
+  m_assignments[literal.getVariable()] = value;
+  m_assignmentLevel[literal.getVariable()] = getCurrentDecisionLevel();
 }
 
 Trail::size_type Trail::getNumberOfAssignments() const noexcept {
@@ -105,14 +102,14 @@ Trail::DecisionLevel Trail::getAssignmentDecisionLevel(CNFVar variable) const
   JAM_ASSERT(variable.getRawValue() <
                  static_cast<CNFVar::RawVariableType>(m_assignments.size()),
              "Variable out of bounds");
-  return m_assignmentLevel[variable.getRawValue()];
+  return m_assignmentLevel[variable];
 }
 
 TBool Trail::getAssignment(CNFVar variable) const noexcept {
   JAM_ASSERT(variable.getRawValue() <
                  static_cast<CNFVar::RawVariableType>(m_assignments.size()),
              "Variable out of bounds");
-  return m_assignments[variable.getRawValue()];
+  return m_assignments[variable];
 }
 
 TBool Trail::getAssignment(CNFLit literal) const noexcept {
