@@ -110,7 +110,7 @@ private:
    *
    * \param size  The clause's size.
    */
-  Clause(size_type size) noexcept;
+  explicit Clause(size_type size) noexcept;
 
   uint32_t m_size;
   CNFLit m_anchor;

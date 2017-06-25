@@ -78,7 +78,7 @@ using WatcherList = std::vector<Watcher>;
 
 class WatcherTraversal {
 public:
-  WatcherTraversal(WatcherList *iteratee) noexcept
+  explicit WatcherTraversal(WatcherList *iteratee) noexcept
       : m_iteratee(iteratee), m_current(iteratee->begin()),
         m_toTraverse(iteratee->size()) {}
 
@@ -133,7 +133,8 @@ private:
 
 class Watchers {
 public:
-  Watchers(CNFVar maxVar) : m_watchers(CNFLit{maxVar, CNFSign::POSITIVE}) {}
+  explicit Watchers(CNFVar maxVar)
+      : m_watchers(CNFLit{maxVar, CNFSign::POSITIVE}) {}
 
   WatcherTraversal getWatchers(CNFLit literal) noexcept {
     JAM_ASSERT(literal.getRawValue() <

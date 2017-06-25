@@ -45,7 +45,7 @@ namespace jamsat {
  */
 class BranchingHeuristicBase {
 public:
-  BranchingHeuristicBase(CNFVar maxVar) noexcept;
+  explicit BranchingHeuristicBase(CNFVar maxVar) noexcept;
 
   /**
    * \brief Marks variables as eligible for being used in branching decisions.

@@ -41,7 +41,7 @@ namespace detail {
 
 class CNFVarActivityOrder {
 public:
-  CNFVarActivityOrder(ArrayMap<CNFVar, double> &activity)
+  explicit CNFVarActivityOrder(ArrayMap<CNFVar, double> &activity)
       : m_activity(activity){};
 
   bool operator()(const CNFVar &lhs, const CNFVar &rhs) const {

@@ -63,7 +63,7 @@ public:
    * \param maxKey    The key with the maximum index supported by the map
    * instance.
    */
-  ArrayMap(K maxKey) : m_values(KIndex::getIndex(maxKey) + 1) {}
+  explicit ArrayMap(K maxKey) : m_values(KIndex::getIndex(maxKey) + 1) {}
 
   /**
    * \brief Constructs an ArrayBackedMap with the given default value and
