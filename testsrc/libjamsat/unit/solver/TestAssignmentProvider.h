@@ -59,7 +59,7 @@
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 
 namespace jamsat {
-  class DummyAssignmentProvider {
+  class TestAssignmentProvider {
   public:
     TBool getAssignment(CNFVar variable) const noexcept;
     TBool getAssignment(CNFLit literal) const noexcept;

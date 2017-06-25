@@ -27,7 +27,7 @@
 #include "TestAssignmentProvider.h"
 
 namespace jamsat {
-TBool DummyAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
+TBool TestAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
   auto possibleAssgn = m_assignments.find(variable);
   if (possibleAssgn != m_assignments.end()) {
     return possibleAssgn->second;
@@ -35,7 +35,7 @@ TBool DummyAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
   return TBool::INDETERMINATE;
 }
 
-TBool DummyAssignmentProvider::getAssignment(CNFLit literal) const noexcept {
+TBool TestAssignmentProvider::getAssignment(CNFLit literal) const noexcept {
   auto varAssgn = getAssignment(literal.getVariable());
   if (literal.getSign() == CNFSign::POSITIVE ||
       varAssgn == TBool::INDETERMINATE) {
@@ -44,13 +44,13 @@ TBool DummyAssignmentProvider::getAssignment(CNFLit literal) const noexcept {
   return varAssgn == TBool::FALSE ? TBool::TRUE : TBool::FALSE;
 }
 
-void DummyAssignmentProvider::addLiteral(CNFLit literal) noexcept {
+void TestAssignmentProvider::addLiteral(CNFLit literal) noexcept {
   m_assignments[literal.getVariable()] =
       (literal.getSign() == CNFSign::POSITIVE ? TBool::TRUE : TBool::FALSE);
   m_trail.push_back(literal);
 }
 
-void DummyAssignmentProvider::clearLiteral(CNFLit literal) noexcept {
+void TestAssignmentProvider::clearLiteral(CNFLit literal) noexcept {
   if (m_assignments.find(literal.getVariable()) != m_assignments.end()) {
     m_assignments.erase(literal.getVariable());
 
@@ -61,12 +61,12 @@ void DummyAssignmentProvider::clearLiteral(CNFLit literal) noexcept {
   }
 }
 
-size_t DummyAssignmentProvider::getNumberOfAssignments() const noexcept {
+size_t TestAssignmentProvider::getNumberOfAssignments() const noexcept {
   return m_trail.size();
 }
 
 boost::iterator_range<std::vector<CNFLit>::const_iterator>
-DummyAssignmentProvider::getAssignments(size_t index) const noexcept {
+TestAssignmentProvider::getAssignments(size_t index) const noexcept {
   return boost::make_iterator_range(m_trail.begin() + index, m_trail.end());
 }
 }
