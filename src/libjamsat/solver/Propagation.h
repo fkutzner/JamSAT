@@ -91,9 +91,8 @@ public:
 
   /**
    * \brief Propagates the given fact wrt. the clauses registered in the
-   * propagation object,
-   * further propagating forced assignments until the variable assignment
-   * reaches a fixpoint.
+   * propagation object, further propagating forced assignments until the
+   * variable assignment  reaches a fixpoint.
    *
    * As soon as a new fact has been deduced, the assignment provider's
    * addLiteral(l) method is called with l encoding the new fact. If the
@@ -101,13 +100,8 @@ public:
    * the current assignment is returned.
    *
    * \param toPropagate       The fact to propagate, encoded as a literal.
-   * \param amountOfNewFacts  (out-parameter) The amount of facts added due to
-   * propagation is stored in the variable referenced by \p amountOfNewFacts.
-   * \returns \p nullptr if a fixpoint has been reached without any clause being
-   * falsified; otherwise, the pointer to a clause falsified under the current
-   * assignment is returned.
    */
-  Clause *propagateUntilFixpoint(CNFLit toPropagate, size_t &amountOfNewFacts);
+  Clause *propagateUntilFixpoint(CNFLit toPropagate);
 
   /**
    * \brief Propagates the given fact wrt. the clauses registered in the
@@ -186,8 +180,8 @@ Clause *Propagation<AssignmentProvider>::registerClause(Clause &clause) {
   // By method contract, if secondLiteralAssignment != INDETERMINATE, we need
   // to propagate the first literal.
   if (secondLiteralAssignment != TBool::INDETERMINATE) {
-    size_t additionalPropagations = 0;
-    auto confl = propagateUntilFixpoint(clause[0], additionalPropagations);
+    m_assignmentProvider.addLiteral(clause[0]);
+    auto confl = propagateUntilFixpoint(clause[0]);
     // Fix the reason since this was not a decision:
     m_reasons[clause[0].getVariable().getRawValue()] = &clause;
     return confl;
@@ -215,13 +209,40 @@ bool Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const
 }
 
 template <class AssignmentProvider>
-Clause *Propagation<AssignmentProvider>::propagateUntilFixpoint(
-    CNFLit toPropagate, size_t &amountOfNewFacts) {
+Clause *
+Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate) {
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariableType>(m_reasons.size()),
              "Literal variable out of bounds");
   m_reasons[toPropagate.getVariable().getRawValue()] = nullptr;
-  amountOfNewFacts = 0;
+  auto trailEndIndex = m_assignmentProvider.getNumberOfAssignments();
+
+  // Using the space on the trail beyond its current last literal as a
+  // propagation queue.
+  auto propagationQueue = m_assignmentProvider.getAssignments(trailEndIndex);
+
+  size_t amountOfNewFacts = 0;
+  Clause *conflictingClause = propagate(toPropagate, amountOfNewFacts);
+  if (conflictingClause) {
+    return conflictingClause;
+  }
+
+  // Propagate all forced assignments. New assignments are added to the
+  // assignment provider by propagate, and therefore are also added to the
+  // propagation queue.
+  auto pqBegin = propagationQueue.begin();
+  auto pqEnd = propagationQueue.end() + amountOfNewFacts;
+  while (pqBegin != pqEnd) {
+    size_t localNewFacts = 0;
+    conflictingClause = propagate(*pqBegin, localNewFacts);
+    pqEnd += localNewFacts;
+    if (conflictingClause) {
+      return conflictingClause;
+    }
+    ++pqBegin;
+  }
+
+  // No more forced assignments can be propagated => fixpoint reached.
   return nullptr;
 }
 
@@ -270,20 +291,17 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
     for (Clause::size_type i = 2; i < clause.getSize(); ++i) {
       CNFLit currentLiteral = clause[i];
       if (m_assignmentProvider.getAssignment(currentLiteral) != TBool::FALSE) {
-        // Swapping the FALSE-assigned literal with the non-false one to
-        // re-establish the invariant that first two literals cannot be FALSE
-        // unless all other literals are FALSE. If a watched literal becomes
-        // FALSE in the future, it will either be swapped with a non-FALSE
-        // literal beyond the second one, or cause a propagation/conflict to
-        // happen. In the case of a propagation, the assignment to TRUE of the
-        // remaining literal R will be removed in the same
-        // backtracking operation as the FALSE assignment of ~toPropagate;
-        // in case of a conflict, both watched
-        // literals have been assigned on the current decision level, and both
-        // their assignments are removed in the ensuing backtracking step.
-        JAM_ASSERT(
-            assignment == TBool::INDETERMINATE,
-            "Invariant violated: other watched literal must be unassigned");
+        // The FALSE literal is moved into the unwatched of the clause here,
+        // such that an INDETERMINATE or TRUE literal gets watched.
+        //
+        // If otherLit is INDETERMINATE, this clause does not force anything,
+        // and we can skip propagation.
+        //
+        // Since FALSE literals are moved into the non-watched part of the
+        // clause as much as possible, otherLit can only be FALSE due to
+        // a forced assignment which has not been propagated yet (but will
+        // still be propagated in the future, causing a possible conflict
+        // or propagation to be detected).
         std::swap(clause[currentWatcher.getIndex()],
                   clause[i]); // (*, see above)
         m_watchers.addWatcher(currentLiteral, currentWatcher);
@@ -304,6 +322,7 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
         // Propagation case: otherWatchedLit is the only remaining unassigned
         // literal
         ++amountOfNewFacts;
+        m_reasons[otherWatchedLit.getVariable().getRawValue()] = &clause;
         m_assignmentProvider.addLiteral(otherWatchedLit);
       }
 

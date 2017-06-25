@@ -52,14 +52,30 @@ public:
   void addLiteral(CNFLit literal) {
     m_assignments[literal.getVariable()] =
         (literal.getSign() == CNFSign::POSITIVE ? TBool::TRUE : TBool::FALSE);
+    m_trail.push_back(literal);
   }
 
   void clearLiteral(CNFLit literal) {
-    m_assignments.erase(literal.getVariable());
+    if (m_assignments.find(literal.getVariable()) != m_assignments.end()) {
+      m_assignments.erase(literal.getVariable());
+
+      m_trail.erase(
+          std::find_if(m_trail.begin(), m_trail.end(), [literal](CNFLit &l) {
+            return l.getVariable() == literal.getVariable();
+          }));
+    }
+  }
+
+  size_t getNumberOfAssignments() { return m_trail.size(); }
+
+  boost::iterator_range<std::vector<CNFLit>::const_iterator>
+  getAssignments(size_t index) {
+    return boost::make_iterator_range(m_trail.begin() + index, m_trail.end());
   }
 
 private:
   std::unordered_map<CNFVar, TBool> m_assignments;
+  std::vector<CNFLit> m_trail{512};
 };
 
 TEST(UnitSolver, propagateWithoutClausesIsNoop) {
@@ -81,12 +97,9 @@ TEST(UnitSolver, propagateToFixpointWithoutClausesIsNoop) {
   CNFVar maxVar{4};
   Propagation<DummyAssignmentProvider> underTest(maxVar, assignments);
 
-  size_t amntNewFacts = 0xFFFF;
   CNFLit propagatedLit = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
-  auto conflictingClause =
-      underTest.propagateUntilFixpoint(propagatedLit, amntNewFacts);
+  auto conflictingClause = underTest.propagateUntilFixpoint(propagatedLit);
 
-  EXPECT_EQ(amntNewFacts, 0ull);
   EXPECT_EQ(conflictingClause, nullptr);
   EXPECT_FALSE(underTest.hasForcedAssignment(propagatedLit.getVariable()));
 }
@@ -110,6 +123,27 @@ TEST(UnitSolver, falsingSingleLiteralInBinaryClauseCausesPropagation) {
   EXPECT_EQ(conflictingClause, nullptr); // no conflict expected
   EXPECT_EQ(amntNewFacts, 1ull);
   EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBool::FALSE);
+}
+
+TEST(UnitSolver, reasonsAreRecordedDuringPropagation) {
+  CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
+  CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+  auto binaryClause = createHeapClause(2);
+  (*binaryClause)[0] = lit1;
+  (*binaryClause)[1] = lit2;
+
+  DummyAssignmentProvider assignments;
+  CNFVar maxVar{4};
+  Propagation<DummyAssignmentProvider> underTest(maxVar, assignments);
+  underTest.registerClause(*binaryClause);
+
+  assignments.addLiteral(~lit2);
+
+  size_t amntNewFacts = 0xFFFF;
+  underTest.propagate(~lit2, amntNewFacts);
+
+  EXPECT_EQ(underTest.getAssignmentReason(CNFVar{2}), nullptr);
+  EXPECT_EQ(underTest.getAssignmentReason(CNFVar{1}), binaryClause.get());
 }
 
 TEST(UnitSolver, propagateWithSingleTrueClauseCausesNoPropagation) {
@@ -245,6 +279,117 @@ TEST(UnitSolver, registerClauseWithAssignedLiteralsCausesPropagation) {
   EXPECT_EQ(assignments.getAssignment(lit1), TBool::TRUE);
   EXPECT_EQ(assignments.getAssignment(lit2), TBool::FALSE);
   EXPECT_EQ(assignments.getAssignment(lit3), TBool::FALSE);
+}
+
+TEST(UnitSolver, propagateUntilFixpointPropagatesTransitively) {
+  CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+  CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+  CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+  CNFLit lit4{CNFVar{4}, CNFSign::NEGATIVE};
+  CNFLit lit5{CNFVar{5}, CNFSign::POSITIVE};
+
+  auto firstForcingClause = createHeapClause(2);
+  (*firstForcingClause)[0] = lit1;
+  (*firstForcingClause)[1] = lit2;
+
+  auto midForcingClause1 = createHeapClause(3);
+  (*midForcingClause1)[0] = ~lit3;
+  (*midForcingClause1)[1] = lit1;
+  (*midForcingClause1)[2] = ~lit2;
+
+  auto midForcingClause2 = createHeapClause(3);
+  (*midForcingClause2)[0] = ~lit2;
+  (*midForcingClause2)[1] = lit1;
+  (*midForcingClause2)[2] = lit4;
+
+  auto lastForcingClause = createHeapClause(3);
+  (*lastForcingClause)[0] = lit3;
+  (*lastForcingClause)[1] = ~lit4;
+  (*lastForcingClause)[2] = lit5;
+
+  DummyAssignmentProvider assignments;
+
+  CNFVar maxVar{5};
+  Propagation<DummyAssignmentProvider> underTest(maxVar, assignments);
+  underTest.registerClause(*firstForcingClause);
+  underTest.registerClause(*midForcingClause1);
+  underTest.registerClause(*midForcingClause2);
+  underTest.registerClause(*lastForcingClause);
+
+  assignments.addLiteral(~lit1);
+  auto conflictingClause = underTest.propagateUntilFixpoint(~lit1);
+
+  EXPECT_EQ(conflictingClause, nullptr);
+  EXPECT_EQ(assignments.getAssignment(lit1), TBool::FALSE);
+  EXPECT_EQ(assignments.getAssignment(lit2), TBool::TRUE);
+  EXPECT_EQ(assignments.getAssignment(lit3), TBool::FALSE);
+  EXPECT_EQ(assignments.getAssignment(lit4), TBool::TRUE);
+  EXPECT_EQ(assignments.getAssignment(lit5), TBool::TRUE);
+}
+
+TEST(UnitSolver, propagateUntilFixpointReportsImmediateConflicts) {
+  CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
+  CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+  auto binaryClause = createHeapClause(2);
+  (*binaryClause)[0] = lit1;
+  (*binaryClause)[1] = lit2;
+
+  DummyAssignmentProvider assignments;
+  CNFVar maxVar{4};
+  Propagation<DummyAssignmentProvider> underTest(maxVar, assignments);
+  underTest.registerClause(*binaryClause);
+
+  assignments.addLiteral(~lit1);
+  assignments.addLiteral(~lit2);
+
+  auto conflictingClause = underTest.propagateUntilFixpoint(~lit2);
+  EXPECT_EQ(conflictingClause, binaryClause.get());
+}
+
+TEST(UnitSolver, propagateUntilFixpointReportsEnsuingConflicts) {
+  CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+  CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+  CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+  CNFLit lit4{CNFVar{4}, CNFSign::NEGATIVE};
+  CNFLit lit5{CNFVar{5}, CNFSign::POSITIVE};
+
+  auto firstForcingClause = createHeapClause(2);
+  (*firstForcingClause)[0] = lit1;
+  (*firstForcingClause)[1] = lit2;
+
+  auto midForcingClause1 = createHeapClause(3);
+  (*midForcingClause1)[0] = ~lit3;
+  (*midForcingClause1)[1] = lit1;
+  (*midForcingClause1)[2] = ~lit2;
+
+  auto midForcingClause2 = createHeapClause(3);
+  (*midForcingClause2)[0] = ~lit2;
+  (*midForcingClause2)[1] = lit1;
+  (*midForcingClause2)[2] = lit4;
+
+  auto lastForcingClause = createHeapClause(3);
+  (*lastForcingClause)[0] = lit3;
+  (*lastForcingClause)[1] = ~lit4;
+  (*lastForcingClause)[2] = lit5;
+
+  DummyAssignmentProvider assignments;
+
+  CNFVar maxVar{5};
+  Propagation<DummyAssignmentProvider> underTest(maxVar, assignments);
+  underTest.registerClause(*firstForcingClause);
+  underTest.registerClause(*midForcingClause1);
+  underTest.registerClause(*midForcingClause2);
+  underTest.registerClause(*lastForcingClause);
+
+  assignments.addLiteral(~lit5);
+  auto conflictingClause = underTest.propagateUntilFixpoint(~lit5);
+  EXPECT_EQ(conflictingClause, nullptr);
+
+  assignments.addLiteral(~lit1);
+  conflictingClause = underTest.propagateUntilFixpoint(~lit1);
+  EXPECT_TRUE(conflictingClause == midForcingClause1.get() ||
+              conflictingClause == midForcingClause2.get() ||
+              conflictingClause == lastForcingClause.get());
 }
 
 // TODO: test watcher restoration
