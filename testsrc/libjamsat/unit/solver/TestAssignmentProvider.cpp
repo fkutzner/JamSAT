@@ -69,4 +69,27 @@ boost::iterator_range<std::vector<CNFLit>::const_iterator>
 TestAssignmentProvider::getAssignments(size_t index) const noexcept {
   return boost::make_iterator_range(m_trail.begin() + index, m_trail.end());
 }
+
+TestAssignmentProvider::DecisionLevel
+TestAssignmentProvider::getDecisionLevel(CNFVar variable) const noexcept {
+  auto result = m_decisionLevels.find(variable);
+  if (result != m_decisionLevels.end()) {
+    return result->second;
+  }
+  return 0;
+}
+
+void TestAssignmentProvider::setDecisionLevel(CNFVar variable,
+                                              DecisionLevel level) noexcept {
+  m_decisionLevels[variable] = level;
+}
+
+TestAssignmentProvider::DecisionLevel
+TestAssignmentProvider::getCurrentDecisionLevel() const noexcept {
+  return m_currentLevel;
+}
+void TestAssignmentProvider::setCurrentDecisionLevel(
+    TestAssignmentProvider::DecisionLevel level) noexcept {
+  m_currentLevel = level;
+}
 }

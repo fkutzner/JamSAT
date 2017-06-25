@@ -61,6 +61,8 @@
 namespace jamsat {
   class TestAssignmentProvider {
   public:
+    using DecisionLevel = size_t;
+    
     TBool getAssignment(CNFVar variable) const noexcept;
     TBool getAssignment(CNFLit literal) const noexcept;
     void addLiteral(CNFLit literal) noexcept;
@@ -69,8 +71,15 @@ namespace jamsat {
     boost::iterator_range<std::vector<CNFLit>::const_iterator>
     getAssignments(size_t index) const noexcept;
     
+    DecisionLevel getDecisionLevel(CNFVar variable) const noexcept;
+    void setDecisionLevel(CNFVar variable, DecisionLevel level) noexcept;
+    DecisionLevel getCurrentDecisionLevel() const noexcept;
+    void setCurrentDecisionLevel(DecisionLevel level) noexcept;
+    
   private:
     std::unordered_map<CNFVar, TBool> m_assignments;
+    std::unordered_map<CNFVar, DecisionLevel> m_decisionLevels;
+    DecisionLevel m_currentLevel;
     std::vector<CNFLit> m_trail{512};
   };
 }
