@@ -64,6 +64,8 @@ public:
   /**
    * \brief Registers a clause in the propagation system.
    *
+   * This method may only be called when no variables have an assignment.
+   *
    * \param clause    The clause to be registered, which must exist until this
    * is destroyed or it is deregistered from this.
    */
