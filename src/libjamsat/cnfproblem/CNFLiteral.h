@@ -71,7 +71,7 @@ inline CNFSign invert(CNFSign sign) noexcept {
 class CNFVar {
 public:
   /** The underlying variable type. */
-  using RawVariableType = int;
+  using RawVariableType = uint32_t;
 
   /**
    * \brief Constructs a CNFVar object.
@@ -149,7 +149,7 @@ private:
 class CNFLit {
 public:
   /** The underlying literal type. */
-  using RawLiteralType = int;
+  using RawLiteralType = uint32_t;
 
   /**
    * \brief Constructs a CNFLit object.
@@ -238,7 +238,7 @@ public:
   };
 
 private:
-  int m_value;
+  CNFLit::RawLiteralType m_value;
 };
 
 std::ostream &operator<<(std::ostream &stream, const CNFVar &variable);

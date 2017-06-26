@@ -217,7 +217,9 @@ std::istream &operator>>(std::istream &input, CNFClause &clause) {
     }
     CNFSign literalSign =
         encodedLiteral > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
-    CNFVar literalVariable{std::abs(encodedLiteral) - 1};
+    auto rawVariable =
+        static_cast<CNFVar::RawVariableType>(std::abs(encodedLiteral) - 1);
+    CNFVar literalVariable{rawVariable};
     clause.push_back(CNFLit{literalVariable, literalSign});
   }
 
