@@ -85,7 +85,7 @@ TEST(UnitBranching,
   VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
       maxVar, fakeAssignmentProvider};
 
-  for (CNFVar::RawVariableType i = 0; i <= 10; ++i) {
+  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
     underTest.setEligibleForDecisions(CNFVar{i}, true);
   }
 
@@ -109,7 +109,7 @@ void expectVariableSequence(Heuristic &underTest,
 }
 template <typename Heuristic>
 void addDefaultConflictSequence(Heuristic &underTest) {
-  for (CNFVar::RawVariableType i = 0; i <= 10; ++i) {
+  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
     underTest.setEligibleForDecisions(CNFVar{i}, true);
   }
 

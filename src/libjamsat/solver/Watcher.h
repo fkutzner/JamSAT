@@ -138,7 +138,7 @@ public:
 
   WatcherTraversal getWatchers(CNFLit literal) noexcept {
     JAM_ASSERT(literal.getRawValue() <
-                   static_cast<CNFLit::RawLiteralType>(m_watchers.size()),
+                   static_cast<CNFLit::RawLiteral>(m_watchers.size()),
                "literal out of bounds");
 
     return WatcherTraversal{&m_watchers[literal]};
@@ -146,7 +146,7 @@ public:
 
   void addWatcher(CNFLit literal, Watcher watcher) noexcept {
     JAM_ASSERT(literal.getRawValue() <
-                   static_cast<CNFLit::RawLiteralType>(m_watchers.size()),
+                   static_cast<CNFLit::RawLiteral>(m_watchers.size()),
                "literal out of bounds");
     m_watchers[literal].push_back(watcher);
   }

@@ -206,7 +206,7 @@ TEST(UnitSolver, compareWatcherListTraversals) {
 
 TEST(UnitSolver, emptyWatchersProducesEmptyTraversals) {
   Watchers underTest{CNFVar{10}};
-  for (CNFVar::RawVariableType i = 0; i <= 10; ++i) {
+  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
     auto probeNeg = underTest.getWatchers(CNFLit{CNFVar{i}, CNFSign::NEGATIVE});
     EXPECT_TRUE(probeNeg.hasFinishedTraversal());
     auto probePos = underTest.getWatchers(CNFLit{CNFVar{i}, CNFSign::POSITIVE});
@@ -230,7 +230,7 @@ TEST(UnitSolver, addedWatcherIsContainedInTraversal) {
   ++probe;
   EXPECT_TRUE(probe.hasFinishedTraversal());
 
-  for (CNFVar::RawVariableType i = 0; i <= 10; ++i) {
+  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
     auto probeNeg = underTest.getWatchers(CNFLit{CNFVar{i}, CNFSign::NEGATIVE});
     EXPECT_TRUE(probeNeg.hasFinishedTraversal());
     if (i == 10) {

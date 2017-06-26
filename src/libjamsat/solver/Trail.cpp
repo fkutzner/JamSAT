@@ -59,7 +59,7 @@ void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
 
 void Trail::addLiteral(CNFLit literal) noexcept {
   JAM_ASSERT(literal.getVariable().getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+                 static_cast<CNFVar::RawVariable>(m_assignments.size()),
              "Variable out of bounds");
   JAM_ASSERT(getAssignment(literal.getVariable()) == TBool::INDETERMINATE,
              "Variable has already been assigned");
@@ -100,14 +100,14 @@ Trail::getAssignments(size_type beginIndex) {
 Trail::DecisionLevel Trail::getAssignmentDecisionLevel(CNFVar variable) const
     noexcept {
   JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+                 static_cast<CNFVar::RawVariable>(m_assignments.size()),
              "Variable out of bounds");
   return m_assignmentLevel[variable];
 }
 
 TBool Trail::getAssignment(CNFVar variable) const noexcept {
   JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+                 static_cast<CNFVar::RawVariable>(m_assignments.size()),
              "Variable out of bounds");
   return m_assignments[variable];
 }
@@ -115,7 +115,7 @@ TBool Trail::getAssignment(CNFVar variable) const noexcept {
 TBool Trail::getAssignment(CNFLit literal) const noexcept {
   CNFVar variable = literal.getVariable();
   JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_assignments.size()),
+                 static_cast<CNFVar::RawVariable>(m_assignments.size()),
              "Variable out of bounds");
   TBool variableAssignment = getAssignment(variable);
   if (variableAssignment == TBool::INDETERMINATE ||

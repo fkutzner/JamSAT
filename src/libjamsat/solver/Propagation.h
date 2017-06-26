@@ -191,7 +191,7 @@ const Clause *
 Propagation<AssignmentProvider>::getAssignmentReason(CNFVar variable) const
     noexcept {
   JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+                 static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Variable out of bounds");
   return m_reasons[variable];
 }
@@ -200,7 +200,7 @@ template <class AssignmentProvider>
 bool Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const
     noexcept {
   JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+                 static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Variable out of bounds");
   return m_reasons[variable] != nullptr;
 }
@@ -209,7 +209,7 @@ template <class AssignmentProvider>
 Clause *
 Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate) {
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+                 static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Literal variable out of bounds");
   m_reasons[toPropagate.getVariable()] = nullptr;
   auto trailEndIndex = m_assignmentProvider.getNumberOfAssignments();
@@ -247,7 +247,7 @@ template <class AssignmentProvider>
 Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
                                                    size_t &amountOfNewFacts) {
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
-                 static_cast<CNFVar::RawVariableType>(m_reasons.size()),
+                 static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Literal variable out of bounds");
 
   m_reasons[toPropagate.getVariable()] = nullptr;

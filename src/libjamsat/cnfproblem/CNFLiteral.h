@@ -71,14 +71,14 @@ inline CNFSign invert(CNFSign sign) noexcept {
 class CNFVar {
 public:
   /** The underlying variable type. */
-  using RawVariableType = uint32_t;
+  using RawVariable = uint32_t;
 
   /**
    * \brief Constructs a CNFVar object.
    *
    * \param variableValue  The non-negative raw variable identifier.
    */
-  explicit inline CNFVar(RawVariableType variableValue) noexcept;
+  explicit inline CNFVar(RawVariable variableValue) noexcept;
 
   /**
    * \brief Constructs an undefined variable.
@@ -90,7 +90,7 @@ public:
    *
    * \returns the variable's raw value.
    */
-  inline RawVariableType getRawValue() const noexcept;
+  inline RawVariable getRawValue() const noexcept;
 
   /**
    * \brief Equality operator for CNFVar.
@@ -131,13 +131,13 @@ public:
      * \param variable    A variable.
      * \returns           The variable's raw value, to be used for indexing.
      */
-    static inline CNFVar::RawVariableType getIndex(CNFVar variable) {
+    static inline CNFVar::RawVariable getIndex(CNFVar variable) {
       return variable.getRawValue();
     }
   };
 
 private:
-  RawVariableType m_value;
+  RawVariable m_value;
 };
 
 /**
@@ -149,7 +149,7 @@ private:
 class CNFLit {
 public:
   /** The underlying literal type. */
-  using RawLiteralType = uint32_t;
+  using RawLiteral = uint32_t;
 
   /**
    * \brief Constructs a CNFLit object.
@@ -210,7 +210,7 @@ public:
    *
    * \returns the literal's raw value.
    */
-  inline RawLiteralType getRawValue() const noexcept;
+  inline RawLiteral getRawValue() const noexcept;
 
   /**
    * \brief The undefined marker literal.
@@ -232,13 +232,13 @@ public:
      * \param literal    A literal.
      * \returns           The literal's raw value, to be used for indexing.
      */
-    static inline CNFLit::RawLiteralType getIndex(CNFLit literal) {
+    static inline CNFLit::RawLiteral getIndex(CNFLit literal) {
       return literal.getRawValue();
     }
   };
 
 private:
-  CNFLit::RawLiteralType m_value;
+  CNFLit::RawLiteral m_value;
 };
 
 std::ostream &operator<<(std::ostream &stream, const CNFVar &variable);
@@ -246,10 +246,9 @@ std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
 
 /********** Implementation ****************************** */
 
-CNFVar::CNFVar(RawVariableType variableValue) noexcept
-    : m_value(variableValue) {}
+CNFVar::CNFVar(RawVariable variableValue) noexcept : m_value(variableValue) {}
 
-CNFVar::RawVariableType CNFVar::getRawValue() const noexcept { return m_value; }
+CNFVar::RawVariable CNFVar::getRawValue() const noexcept { return m_value; }
 
 bool CNFVar::operator==(const CNFVar &rhs) const noexcept {
   return rhs.m_value == m_value;
@@ -287,7 +286,7 @@ bool CNFLit::operator!=(const CNFLit &rhs) const noexcept {
   return !(*this == rhs);
 }
 
-CNFLit::RawLiteralType CNFLit::getRawValue() const noexcept { return m_value; }
+CNFLit::RawLiteral CNFLit::getRawValue() const noexcept { return m_value; }
 }
 
 namespace std {
@@ -296,7 +295,7 @@ template <> struct hash<jamsat::CNFVar> {
   using result_type = std::size_t;
 
   result_type operator()(argument_type variable) const noexcept {
-    return std::hash<jamsat::CNFVar::RawVariableType>{}(variable.getRawValue());
+    return std::hash<jamsat::CNFVar::RawVariable>{}(variable.getRawValue());
   }
 };
 
@@ -305,7 +304,7 @@ template <> struct hash<jamsat::CNFLit> {
   using result_type = std::size_t;
 
   result_type operator()(argument_type literal) const noexcept {
-    return std::hash<jamsat::CNFLit::RawLiteralType>{}(literal.getRawValue());
+    return std::hash<jamsat::CNFLit::RawLiteral>{}(literal.getRawValue());
   }
 };
 }

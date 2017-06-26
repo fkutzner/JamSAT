@@ -46,10 +46,10 @@ public:
 
   bool operator()(const CNFVar &lhs, const CNFVar &rhs) const {
     JAM_ASSERT(lhs.getRawValue() <
-                   static_cast<CNFVar::RawVariableType>(m_activity.size()),
+                   static_cast<CNFVar::RawVariable>(m_activity.size()),
                "Index out of bounds");
     JAM_ASSERT(rhs.getRawValue() <
-                   static_cast<CNFVar::RawVariableType>(m_activity.size()),
+                   static_cast<CNFVar::RawVariable>(m_activity.size()),
                "Index out of bounds");
 
     return m_activity[lhs] <= m_activity[rhs];
@@ -229,7 +229,7 @@ template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {
   for (typename decltype(m_activity)::size_type i = 0; i < m_activity.size();
        ++i) {
-    auto rawVariable = static_cast<CNFVar::RawVariableType>(i);
+    auto rawVariable = static_cast<CNFVar::RawVariable>(i);
     auto &activity = m_activity[CNFVar{rawVariable}];
     activity = 1e-100 * activity;
   }
@@ -238,8 +238,8 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept {
   m_variableOrder.clear();
-  for (CNFVar::RawVariableType i = 0;
-       i < static_cast<CNFVar::RawVariableType>(m_activity.size()); ++i) {
+  for (CNFVar::RawVariable i = 0;
+       i < static_cast<CNFVar::RawVariable>(m_activity.size()); ++i) {
     auto heapHandle = m_variableOrder.emplace(CNFVar{i});
     m_heapVariableHandles[CNFVar{i}] = heapHandle;
   }

@@ -119,7 +119,7 @@ TEST(UnitSolver, trailIsEmptyAfterShrinkToLevel0) {
 
 TEST(UnitSolver, emptyTrailHasIndeterminateAssignment) {
   Trail underTest{CNFVar{10}};
-  for (CNFVar::RawVariableType i = 0; i <= 10; ++i) {
+  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
     EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBool::INDETERMINATE);
     CNFLit iLit = CNFLit{CNFVar{i}, CNFSign::POSITIVE};
     EXPECT_EQ(underTest.getAssignment(iLit), TBool::INDETERMINATE);
@@ -136,7 +136,7 @@ TEST(UnitSolver, variablesOnTrailHaveAssignment) {
   EXPECT_EQ(underTest.getAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE}),
             TBool::TRUE);
 
-  for (CNFVar::RawVariableType i = 0; i <= 10; ++i) {
+  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
     if (i != 4) {
       EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBool::INDETERMINATE);
     }

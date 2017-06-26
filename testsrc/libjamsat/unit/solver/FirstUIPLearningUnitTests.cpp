@@ -74,11 +74,11 @@ std::unique_ptr<Clause> createClause(const std::vector<CNFLit> &literals) {
   return result;
 }
 
-std::vector<CNFLit> createLiterals(CNFVar::RawVariableType min,
-                                   CNFVar::RawVariableType max) {
+std::vector<CNFLit> createLiterals(CNFVar::RawVariable min,
+                                   CNFVar::RawVariable max) {
   std::vector<CNFLit> result;
 
-  for (CNFVar::RawVariableType i = min; i <= max; ++i) {
+  for (CNFVar::RawVariable i = min; i <= max; ++i) {
     result.push_back(CNFLit{CNFVar{i}, CNFSign::POSITIVE});
   }
 
