@@ -259,8 +259,6 @@ bool CNFVar::operator!=(const CNFVar &rhs) const noexcept {
 }
 
 CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept {
-  JAM_ASSERT(variable.getRawValue() >= 0,
-             "The variable of a literal must not be negative");
   JAM_ASSERT(variable != CNFVar::undefinedVariable,
              "The variable must be smaller than CNFVar::undefinedVariable");
   m_value = (variable.getRawValue() << 1) | static_cast<int>(sign);
