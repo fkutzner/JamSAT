@@ -38,7 +38,7 @@ else()
 endif()
 
 if(COMPILING_WITH_GNULIKE)
-  add_definitions(-std=c++11 -Wall -Wextra)
+  add_definitions(-std=c++11 -Wall -Wextra -pedantic-errors)
 
   if(JAMSAT_DISABLE_OPTIMIZATIONS)
     add_definitions(-fno-inline -O0)
