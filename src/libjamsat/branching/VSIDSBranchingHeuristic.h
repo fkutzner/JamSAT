@@ -52,7 +52,7 @@ public:
                    static_cast<CNFVar::RawVariable>(m_activity.size()),
                "Index out of bounds");
 
-    return m_activity[lhs] <= m_activity[rhs];
+    return m_activity[lhs] < m_activity[rhs];
   }
 
 private:
