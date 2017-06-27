@@ -100,7 +100,7 @@ bool equalLits(const std::vector<CNFLit> &lhs, const std::vector<CNFLit> &rhs) {
 }
 }
 
-TEST(UnitSolver,
+/*TEST(UnitSolver,
      firstUIPLearningWithSinglePropagationOnCurrentLevelIs1ResolutionStep) {
   TestAssignmentProvider assignments;
   TestReasonProvider reasons;
@@ -134,5 +134,5 @@ TEST(UnitSolver,
   auto conflictClause = underTest.computeConflictClause(*conflictingClause);
   EXPECT_EQ(conflictClause.size(), 3ull);
   EXPECT_TRUE(equalLits(conflictClause, {lit[10], lit[16], ~lit[1]}));
-}
+}*/
 }
