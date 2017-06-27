@@ -25,8 +25,12 @@
 */
 
 #include "TestAssignmentProvider.h"
+#include <libjamsat/utils/Assert.h>
 
 namespace jamsat {
+
+TestAssignmentProvider::TestAssignmentProvider() { m_trail.reserve(1024); }
+
 TBool TestAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
   auto possibleAssgn = m_assignments.find(variable);
   if (possibleAssgn != m_assignments.end()) {
@@ -45,6 +49,8 @@ TBool TestAssignmentProvider::getAssignment(CNFLit literal) const noexcept {
 }
 
 void TestAssignmentProvider::addLiteral(CNFLit literal) noexcept {
+  JAM_ASSERT(literal.getVariable().getRawValue() < 1024,
+             "literal variable too large for TestAssignmentProvider");
   m_assignments[literal.getVariable()] =
       (literal.getSign() == CNFSign::POSITIVE ? TBool::TRUE : TBool::FALSE);
   m_trail.push_back(literal);
