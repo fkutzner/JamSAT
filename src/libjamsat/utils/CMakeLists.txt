@@ -3,4 +3,5 @@ add_library(jamsatUtils OBJECT
   Assert.cpp
   Truth.h
   BoundedMap.h
+  BoundedStack.h
 )
