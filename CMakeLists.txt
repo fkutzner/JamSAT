@@ -11,7 +11,8 @@ option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 
 ### Find libraries
 
-add_definitions(-DBOOST_LOG_DYN_LINK)
+add_definitions(-DBOOST_ALL_DYN_LINK)
+set(Boost_USE_STATIC_LIBS OFF)
 find_package(Boost
         1.63.0
         REQUIRED
@@ -47,7 +48,7 @@ if(COMPILING_WITH_GNULIKE)
   if(JAMSAT_ENABLE_SANITIZERS)
     if(COMPILING_WITH_CLANG)
       # Configure the ASAN suppression file to disable warnings in 3rd party libraries
-      configure_file(${PROJECT_SOURCE_DIR}/aux/asan.supp.in ${PROJECT_BINARY_DIR}/asan.supp)
+      configure_file(${PROJECT_SOURCE_DIR}/etc/asan.supp.in ${PROJECT_BINARY_DIR}/asan.supp)
       set(sanitizer_flags
           "-fsanitize-blacklist=${PROJECT_BINARY_DIR}/asan.supp -fsanitize=address -fsanitize=undefined")
       add_definitions(-fno-omit-frame-pointer ${sanitizer_flags})
@@ -69,7 +70,7 @@ if(COMPILING_WITH_GNULIKE)
   endif()
 
 elseif(COMPILING_WITH_MSVC)
-  message(ERROR "MSVC support is not implemented yet")
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 endif()
 
 ### Add JamSAT sources
