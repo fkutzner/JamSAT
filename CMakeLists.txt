@@ -14,7 +14,7 @@ option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 add_definitions(-DBOOST_ALL_DYN_LINK)
 set(Boost_USE_STATIC_LIBS OFF)
 find_package(Boost
-        1.63.0
+        1.61.0
         REQUIRED
         COMPONENTS
           container
