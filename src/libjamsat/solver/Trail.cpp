@@ -29,12 +29,11 @@
 
 namespace jamsat {
 Trail::Trail(CNFVar maxVar)
-    : m_trail({}), m_trailLimits({0}),
+    : m_trail(maxVar.getRawValue() + 1), m_trailLimits({0}),
       m_assignments(maxVar, TBool::INDETERMINATE), m_assignmentLevel(maxVar) {
   JAM_ASSERT(
       maxVar != CNFVar::undefinedVariable,
       "Trail cannot be instantiated with the undefined variable as maxVar");
-  m_trail.reserve(maxVar.getRawValue() + 1);
 }
 
 void Trail::newDecisionLevel() noexcept {
@@ -53,7 +52,7 @@ void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
     m_assignments[(*i).getVariable()] = TBool::INDETERMINATE;
   }
 
-  m_trail.resize(m_trailLimits[level]);
+  m_trail.pop_to(m_trailLimits[level]);
   m_trailLimits.resize(level + 1);
 }
 

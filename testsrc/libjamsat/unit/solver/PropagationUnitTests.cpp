@@ -166,27 +166,29 @@ TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
   CNFVar maxVar{4};
   Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
   underTest.registerClause(*ternaryClause);
+  underTest.registerClause(*ternaryClause2);
 
   size_t newFacts = 0xFFFF;
   assignments.addLiteral(~lit1);
   underTest.propagate(~lit1, newFacts);
-  EXPECT_EQ(newFacts, 0ull);
 
   assignments.addLiteral(~lit3);
-  auto conflictingClause = underTest.propagate(~lit2, newFacts);
-
+  auto conflictingClause = underTest.propagate(~lit3, newFacts);
+  EXPECT_EQ(newFacts, 1ull);
+  EXPECT_NE(conflictingClause, nullptr);
   EXPECT_TRUE(conflictingClause == ternaryClause.get() ||
               conflictingClause == ternaryClause2.get());
 
   // backtrack
-  assignments.clearLiteral(~lit3);
-  assignments.clearLiteral(lit2);
+  assignments.popLiteral();
+  assignments.popLiteral();
 
   // propagate something else
   assignments.addLiteral(~lit2);
   newFacts = 0xFFFF;
   conflictingClause = underTest.propagate(~lit2, newFacts);
   EXPECT_EQ(newFacts, 1ull);
+  EXPECT_EQ(conflictingClause, nullptr);
   EXPECT_EQ(assignments.getAssignment(lit3), TBool::TRUE);
 }
 

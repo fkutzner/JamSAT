@@ -29,7 +29,7 @@
 
 namespace jamsat {
 
-TestAssignmentProvider::TestAssignmentProvider() { m_trail.reserve(1024); }
+TestAssignmentProvider::TestAssignmentProvider() : m_trail(1024) {}
 
 TBool TestAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
   auto possibleAssgn = m_assignments.find(variable);
@@ -56,15 +56,10 @@ void TestAssignmentProvider::addLiteral(CNFLit literal) noexcept {
   m_trail.push_back(literal);
 }
 
-void TestAssignmentProvider::clearLiteral(CNFLit literal) noexcept {
-  if (m_assignments.find(literal.getVariable()) != m_assignments.end()) {
-    m_assignments.erase(literal.getVariable());
-
-    m_trail.erase(
-        std::find_if(m_trail.begin(), m_trail.end(), [literal](CNFLit &l) {
-          return l.getVariable() == literal.getVariable();
-        }));
-  }
+void TestAssignmentProvider::popLiteral() noexcept {
+  CNFLit poppedLiteral = m_trail.back();
+  m_trail.pop();
+  m_assignments.erase(poppedLiteral.getVariable());
 }
 
 size_t TestAssignmentProvider::getNumberOfAssignments() const noexcept {

@@ -31,6 +31,7 @@
 
 #include <boost/range.hpp>
 #include <libjamsat/utils/Truth.h>
+#include <libjamsat/utils/BoundedStack.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 
 namespace jamsat {
@@ -43,7 +44,7 @@ namespace jamsat {
     TBool getAssignment(CNFVar variable) const noexcept;
     TBool getAssignment(CNFLit literal) const noexcept;
     void addLiteral(CNFLit literal) noexcept;
-    void clearLiteral(CNFLit literal) noexcept;
+    void popLiteral() noexcept;
     size_t getNumberOfAssignments() const noexcept;
     boost::iterator_range<std::vector<CNFLit>::const_iterator>
     getAssignments(size_t index) const noexcept;
@@ -57,6 +58,6 @@ namespace jamsat {
     std::unordered_map<CNFVar, TBool> m_assignments;
     std::unordered_map<CNFVar, DecisionLevel> m_decisionLevels;
     DecisionLevel m_currentLevel;
-    std::vector<CNFLit> m_trail;
+    BoundedStack<CNFLit> m_trail;
   };
 }
