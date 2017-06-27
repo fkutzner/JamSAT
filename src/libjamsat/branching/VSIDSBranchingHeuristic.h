@@ -32,8 +32,8 @@
 
 #include <libjamsat/branching/BranchingHeuristicBase.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/utils/ArrayMap.h>
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -41,7 +41,7 @@ namespace detail {
 
 class CNFVarActivityOrder {
 public:
-  explicit CNFVarActivityOrder(ArrayMap<CNFVar, double> &activity)
+  explicit CNFVarActivityOrder(BoundedMap<CNFVar, double> &activity)
       : m_activity(activity){};
 
   bool operator()(const CNFVar &lhs, const CNFVar &rhs) const {
@@ -56,7 +56,7 @@ public:
   }
 
 private:
-  const ArrayMap<CNFVar, double> &m_activity;
+  const BoundedMap<CNFVar, double> &m_activity;
 };
 }
 
@@ -163,7 +163,7 @@ public:
 private:
   void scaleDownActivities();
 
-  ArrayMap<CNFVar, double> m_activity;
+  BoundedMap<CNFVar, double> m_activity;
   detail::CNFVarActivityOrder m_activityOrder;
 
   using HeapCompare = boost::heap::compare<detail::CNFVarActivityOrder>;
@@ -172,7 +172,7 @@ private:
   using VariableHeap =
       boost::heap::d_ary_heap<CNFVar, HeapCompare, HeapArity, HeapMutability>;
   VariableHeap m_variableOrder;
-  ArrayMap<CNFVar, VariableHeap::handle_type> m_heapVariableHandles;
+  BoundedMap<CNFVar, VariableHeap::handle_type> m_heapVariableHandles;
 
   const AssignmentProvider &m_assignmentProvider;
 

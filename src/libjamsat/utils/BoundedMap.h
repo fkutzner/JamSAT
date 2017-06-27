@@ -32,9 +32,9 @@ namespace jamsat {
 /**
  * \ingroup JamSAT_Utils
  *
- * \class jamsat::ArrayMap
+ * \class jamsat::BoundedMap
  *
- * \brief A noniterable map using a std::vector as a backend, with O(1) access
+ * \brief A noniterable map with a bounded index range with and O(1) access
  * times.
  *
  * \tparam K        The key type.
@@ -46,7 +46,7 @@ namespace jamsat {
  */
 template <typename K, typename V, typename KIndex = typename K::Index,
           typename Allocator = std::allocator<V>>
-class ArrayMap {
+class BoundedMap {
 private:
   using BackingType = std::vector<V, Allocator>;
 
@@ -60,10 +60,10 @@ public:
    * All keys from the one mapped to 0 up to the maximum key are initially
    * associated with an individual default-constructed value of V.
    *
-   * \param maxKey    The key with the maximum index supported by the map
-   * instance.
+   * \param maxKey    The key with the maximum index storable in the map
+   * instance. The instance will have a constant size in O(\param maxKey).
    */
-  explicit ArrayMap(K maxKey) : m_values(KIndex::getIndex(maxKey) + 1) {}
+  explicit BoundedMap(K maxKey) : m_values(KIndex::getIndex(maxKey) + 1) {}
 
   /**
    * \brief Constructs an ArrayBackedMap with the given default value and
@@ -76,7 +76,7 @@ public:
    * instance.
    * \param defaultValue  The default value of this map.
    */
-  ArrayMap(K maxKey, V defaultValue)
+  BoundedMap(K maxKey, V defaultValue)
       : m_values(KIndex::getIndex(maxKey) + 1, defaultValue) {}
 
   /**

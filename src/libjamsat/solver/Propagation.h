@@ -29,7 +29,7 @@
 #include "Clause.h"
 #include "Watcher.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/utils/ArrayMap.h>
+#include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -144,7 +144,7 @@ public:
 
 private:
   AssignmentProvider &m_assignmentProvider;
-  ArrayMap<CNFVar, const Clause *> m_reasons;
+  BoundedMap<CNFVar, const Clause *> m_reasons;
 
   /**
    * \internal

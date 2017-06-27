@@ -30,7 +30,7 @@
 
 #include <boost/range.hpp>
 
-#include "libjamsat/utils/ArrayMap.h"
+#include "libjamsat/utils/BoundedMap.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Truth.h>
 
@@ -53,8 +53,8 @@ class Trail {
 private:
   std::vector<CNFLit> m_trail;
   std::vector<decltype(m_trail)::size_type> m_trailLimits;
-  ArrayMap<CNFVar, TBool> m_assignments;
-  ArrayMap<CNFVar, decltype(m_trailLimits)::size_type> m_assignmentLevel;
+  BoundedMap<CNFVar, TBool> m_assignments;
+  BoundedMap<CNFVar, decltype(m_trailLimits)::size_type> m_assignmentLevel;
 
 public:
   using size_type = decltype(m_trail)::size_type;

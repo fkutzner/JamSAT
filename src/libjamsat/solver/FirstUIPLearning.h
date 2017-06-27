@@ -31,7 +31,7 @@
 #include "Clause.h"
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/utils/ArrayMap.h>
+#include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {

@@ -27,7 +27,7 @@
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/utils/ArrayMap.h>
+#include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -70,6 +70,6 @@ public:
   bool isEligibleForDecisions(CNFVar variable) const noexcept;
 
 private:
-  ArrayMap<CNFVar, Bool> m_decisionVariables;
+  BoundedMap<CNFVar, Bool> m_decisionVariables;
 };
 }

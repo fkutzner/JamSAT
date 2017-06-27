@@ -32,8 +32,8 @@
 
 #include "Clause.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/utils/ArrayMap.h>
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/BoundedMap.h>
 
 namespace jamsat {
 namespace detail_propagation {
@@ -152,7 +152,7 @@ public:
   }
 
 private:
-  ArrayMap<CNFLit, WatcherList> m_watchers;
+  BoundedMap<CNFLit, WatcherList> m_watchers;
 };
 }
 }
