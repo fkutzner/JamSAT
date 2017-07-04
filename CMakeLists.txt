@@ -64,8 +64,8 @@ if(COMPILING_WITH_GNULIKE)
       if(COMPILING_WITH_CLANG AND JAMSAT_ENABLE_MEMORY_SANITIZER)
         # TODO: don't enable leak and address sanitizers in the first place since
         # they are not compatible with the memory sanitizer
-        string (REPLACE "-fsanitize=leak" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-        string (REPLACE "-fsanitize=address" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+        remove_definitions(-fsanitize=leak)
+        remove_definitions(-fsanitize=address)
         add_definitions(-fsanitize=memory)
       endif()
     else()
