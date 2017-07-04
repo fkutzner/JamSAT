@@ -10,9 +10,6 @@ os:
 dist: trusty
 sudo: required
 
-git:
-  depth: 1
-
 sudo: required
 
 addons:
