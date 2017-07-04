@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 3.2.2)
 # The default for all boolean options is "OFF".
 option(JAMSAT_ENABLE_SANITIZERS "Enable code sanitizers" OFF)
 option(JAMSAT_USE_SEPARATE_CLANG_SANITIZERS "Activate sanitizers separately for clang" OFF)
+option(JAMSAT_ENABLE_MEMORY_SANITIZER "When using sanitizers, also enable clang's memory sanitizer" OFF)
+
+
 option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
 option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
@@ -54,8 +57,16 @@ if(COMPILING_WITH_GNULIKE)
       add_definitions(-fno-omit-frame-pointer ${sanitizer_flags})
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${sanitizer_flags}")
 
-      if(JAMSAT_USE_SEPARATE_CLANG_SANITIZERS)
-        add_definitions(-fsanitize=memory -fsanitize=leak)
+      if(COMPILING_WITH_CLANG AND JAMSAT_USE_SEPARATE_CLANG_SANITIZERS)
+        add_definitions(-fsanitize=leak)
+      endif()
+
+      if(COMPILING_WITH_CLANG AND JAMSAT_ENABLE_MEMORY_SANITIZER)
+        # TODO: don't enable leak and address sanitizers in the first place since
+        # they are not compatible with the memory sanitizer
+        string (REPLACE "-fsanitize=leak" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+        string (REPLACE "-fsanitize=address" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+        add_definitions(-fsanitize=memory)
       endif()
     else()
       message(ERROR "GCC sanitizer support is not implemented yet")
