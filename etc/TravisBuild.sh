@@ -6,14 +6,25 @@ set -e
 
 if [ "${SONARSOURCE_SCAN}" != "1" ]
 then
+  echo "Building JamSAT in ${JAMSAT_MODE} mode."
+
   if [ "${JAMSAT_MODE}" = "COVERAGE" ]
   then
-    cmake -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_ENABLE_COVERAGE=ON ${TRAVIS_BUILD_DIR}
+    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_ENABLE_COVERAGE=ON -DJAMSAT_DISABLE_OPTIMIZATIONS=ON ${TRAVIS_BUILD_DIR}
+  elif [ "${JAMSAT_MODE}" = "SANITIZERS"]
+  then
+    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_ENABLE_SANITIZERS=ON -DJAMSAT_DISABLE_OPTIMIZATIONS=ON ${TRAVIS_BUILD_DIR}
   else
-    cmake -DCMAKE_BUILD_TYPE=Debug ${TRAVIS_BUILD_DIR}
+    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ${TRAVIS_BUILD_DIR}
   fi
 
+  echo "Compilation database:"
+  cat compile_commands.json
+
+  echo "Building..."
   cmake --build . -- -j2
+
+  echo "Testing..."
   ctest -V
 else
   cd ${TRAVIS_BUILD_DIR}

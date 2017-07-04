@@ -20,7 +20,7 @@ env:
   matrix:
     - JAMSAT_MODE=REGULAR
     - JAMSAT_MODE=COVERAGE
-
+    - JAMSAT_MODE=SANITIZERS
 
 matrix:
   include:
@@ -30,6 +30,11 @@ matrix:
   exclude:
     - os: osx
       env: JAMSAT_MODE=COVERAGE
+    - os: osx
+      env: JAMSAT_MODE=SANITIZERS
+    - os: linux
+      compiler: gcc
+      env: JAMSAT_MODE=SANITIZERS
     - os: linux
       compiler: clang
       env: JAMSAT_MODE=COVERAGE
