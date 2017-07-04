@@ -17,7 +17,6 @@ find_package(Boost
         1.54.0
         REQUIRED
         COMPONENTS
-          container
           log
 )
 
