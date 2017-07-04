@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.2.2)
 
 # The default for all boolean options is "OFF".
 option(JAMSAT_ENABLE_SANITIZERS "Enable code sanitizers" OFF)
+option(JAMSAT_USE_SEPARATE_CLANG_SANITIZERS "Activate sanitizers separately for clang" OFF)
 option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
 option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
@@ -52,6 +53,10 @@ if(COMPILING_WITH_GNULIKE)
           "-fsanitize-blacklist=${PROJECT_BINARY_DIR}/asan.supp -fsanitize=address -fsanitize=undefined")
       add_definitions(-fno-omit-frame-pointer ${sanitizer_flags})
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${sanitizer_flags}")
+
+      if(JAMSAT_USE_SEPARATE_CLANG_SANITIZERS)
+        add_definitions(-fsanitize=memory -fsanitize=leak)
+      endif()
     else()
       message(ERROR "GCC sanitizer support is not implemented yet")
     endif()
