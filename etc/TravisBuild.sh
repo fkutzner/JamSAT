@@ -4,14 +4,15 @@ set -e
 # For this script, it's assumed that the current working directory is an empty
 # directory where the build files can be placed.
 
-if [ "${TRAVIS_OS_NAME}" == "linux" ]
-then
-  sudo apt-get install -y libboost-all-dev
-fi
-
 if [ "${SONARSOURCE_SCAN}" != "1" ]
 then
-  cmake -DCMAKE_BUILD_TYPE=Debug ${TRAVIS_BUILD_DIR}
+  if [ "${JAMSAT_MODE}" = "COVERAGE" ]
+  then
+    cmake -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_ENABLE_COVERAGE=ON ${TRAVIS_BUILD_DIR}
+  else
+    cmake -DCMAKE_BUILD_TYPE=Debug ${TRAVIS_BUILD_DIR}
+  fi
+
   cmake --build . -- -j2
   ctest -V
 else
