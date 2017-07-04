@@ -4,19 +4,34 @@ compiler:
   - clang
 
 os:
-  # Having CI for Linux would be super, but the boost binaries provided for
-  # Ubuntu Trusty are just too old. Building boost takes too long.
-  # - linux
+  - linux
   - osx
+
+dist: trusty
+sudo: required
 
 git:
   depth: 1
 
 sudo: required
 
+addons:
+  sonarcloud:
+    organization: "fkutzner-github"
+    token:
+      secure: "HBxyKx5j70S0go0geJCv+fpUSYak4NY2z3JIfyyMVdtjz1HkCNlY5FLkVRjIWrUC5/HQP7FcMvjhI53XyXlVg5VgE8iX0YfsdIobuAo8s0LiEvOBjZzo3khNErv3Z8z3Bz4G4aquN9dtZgyDvRaF4vONDmcIXG29LEuEwEpJ6Cot3Xn82p8MgIt2D12LN0bGGdpUpssYrW1r6FbTIMkIOksifbjdsIZj75TUykkPgNHpN/58RE6vizK6gK5oZ4AFji6UuFYbH783KVaXF+rFuOcqHjvBUcEY23tvlkKxNU4hurkD0zNdLqOUK0kHf5w/xxeYaF2LLt0HxsT0IaBYIVncVeOISoZEutSQKA4+i9vNGB6tVJQyGsCkxk+78G+LDnof2pFDk6zimwZeud1cRMJRzZ8Ws5dzZCNAjAT312kIe/afWIw+vrFUJ0rzwiRp37bJGFcsZcSDXocx+UT9XmRa/De3ooMqiYem5rgRnallYr2o1rWa1FGFcvckagg2OG+qZqhNY7Sneiw1FImAVCWA3kSaYnqL68srSq4dyIQkuK/TkM/yH6i27sl9jT28ybyYsGFsI1ueyq7HjCERVojkdLdMCVprOEhrcLuexESfvO40dhsevHjFZ0+D0hljKbLbxEnCqvd7o8QiBQUDZ1ef20B945fIprmJmy9shV4="
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      env: SONARSOURCE_SCAN=1
+
 script:
   - mkdir -p ../build
   - cd ../build
-  - cmake -DCMAKE_BUILD_TYPE=Debug $TRAVIS_BUILD_DIR
-  - cmake --build . -- -j2
-  - ctest -V
+  - bash $TRAVIS_BUILD_DIR/etc/TravisBuild.sh
+
+cache:
+  directories:
+    - '$HOME/.sonar/cache'
