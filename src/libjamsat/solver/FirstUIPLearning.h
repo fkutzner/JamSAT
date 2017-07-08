@@ -122,7 +122,7 @@ template <class DLProvider, class ReasonProvider>
 int FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
     const Clause &conflictingClause, std::vector<CNFLit> &result,
     std::vector<CNFLit> &work) const {
-  int unresolvedCount;
+  int unresolvedCount = 0;
   addResolvent(conflictingClause, CNFLit::undefinedLiteral, result,
                unresolvedCount, work);
   return unresolvedCount;
@@ -226,8 +226,9 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
       }
 
       if (cursor == trailIterators.begin()) {
-        JAM_ASSERT(unresolvedCount == 1, "There must be exactly one unresolved "
-                                         "literal after traversing the trail");
+        JAM_ASSERT(unresolvedCount <= 1,
+                   "There may not be more than one "
+                   "unresolved literal after traversing the trail");
         break;
       }
       --cursor;
