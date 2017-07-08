@@ -107,7 +107,7 @@ bool isAllZero(const BoundedMap<CNFLit, char> &stamps, CNFVar maxVar) noexcept {
     result &= (stamps[CNFLit{CNFVar{v}, CNFSign::NEGATIVE}] == 0);
   }
   return result;
-};
+}
 }
 
 template <class DLProvider, class ReasonProvider>
