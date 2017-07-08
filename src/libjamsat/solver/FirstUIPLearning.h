@@ -87,9 +87,11 @@ private:
   std::vector<CNFLit>
   computeUnoptimizedConflictClause(Clause &conflictingClause) const;
   int initializeResult(const Clause &conflictingClause,
-                       std::vector<CNFLit> &result) const;
+                       std::vector<CNFLit> &result,
+                       std::vector<CNFLit> &work) const;
   void addResolvent(const Clause &reason, CNFLit assertingLit,
-                    std::vector<CNFLit> &result, int &unresolvedCount) const;
+                    std::vector<CNFLit> &result, int &unresolvedCount,
+                    std::vector<CNFLit> &work) const;
 
   const DLProvider &m_dlProvider;
   const ReasonProvider &m_reasonProvider;
@@ -119,16 +121,25 @@ bool isAllZero(const BoundedMap<CNFLit, char> &stamps, CNFVar maxVar) noexcept {
 
 template <class DLProvider, class ReasonProvider>
 int FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
-    const Clause &conflictingClause, std::vector<CNFLit> &result) const {
+    const Clause &conflictingClause, std::vector<CNFLit> &result,
+    std::vector<CNFLit> &work) const {
   const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
   uint32_t unresolvedCount = 0;
 
+  result.push_back(CNFLit::undefinedLiteral);
+
   for (auto lit : conflictingClause) {
     auto dl = m_dlProvider.getAssignmentDecisionLevel(lit.getVariable());
-    if (dl == currentLevel &&
-        m_reasonProvider.getAssignmentReason(lit.getVariable()) != nullptr) {
-      BOOST_LOG_TRIVIAL(trace) << "Adding work: " << lit;
-      ++unresolvedCount;
+    if (dl == currentLevel) {
+      if (m_reasonProvider.getAssignmentReason(lit.getVariable()) == nullptr) {
+        BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: " << lit;
+        result[0] = lit;
+        ++unresolvedCount;
+      } else {
+        BOOST_LOG_TRIVIAL(trace) << "Adding work: " << lit;
+        ++unresolvedCount;
+        work.push_back(lit);
+      }
     } else {
       BOOST_LOG_TRIVIAL(trace) << "Adding literal: " << lit;
       result.push_back(~lit);
@@ -140,7 +151,7 @@ int FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
     }
   }
 
-  JAM_ASSERT(unresolvedCount >= 2,
+  JAM_ASSERT(result[0] != CNFLit::undefinedLiteral || unresolvedCount >= 2,
              "Conflicting clauses need to contain at least 2"
              " literals on the current decision level");
 
@@ -150,19 +161,29 @@ int FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
 template <class DLProvider, class ReasonProvider>
 void FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(
     const Clause &reason, CNFLit assertingLit, std::vector<CNFLit> &result,
-    int &unresolvedCount) const {
+    int &unresolvedCount, std::vector<CNFLit> &work) const {
   const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
+
+  m_stamps[~assertingLit] = 0;
+  m_stamps[assertingLit] = 0;
 
   for (auto reasonLit : reason) {
     BOOST_LOG_TRIVIAL(trace) << "Looking at: " << reasonLit;
     if (reasonLit != assertingLit && m_stamps[~reasonLit] == 0) {
       m_stamps[~reasonLit] = 1;
       if (m_dlProvider.getAssignmentDecisionLevel(reasonLit.getVariable()) ==
-              currentLevel &&
-          m_reasonProvider.getAssignmentReason(reasonLit.getVariable()) !=
-              nullptr) {
-        BOOST_LOG_TRIVIAL(trace) << "Adding work: " << reasonLit;
-        ++unresolvedCount;
+          currentLevel) {
+        if (m_reasonProvider.getAssignmentReason(reasonLit.getVariable()) ==
+            nullptr) {
+          BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: "
+                                   << reasonLit;
+          result[0] = reasonLit;
+          ++unresolvedCount;
+        } else {
+          BOOST_LOG_TRIVIAL(trace) << "Adding work: " << reasonLit;
+          ++unresolvedCount;
+          work.push_back(reasonLit);
+        }
       } else {
         BOOST_LOG_TRIVIAL(trace) << "Adding literal: " << reasonLit;
         result.push_back(reasonLit);
@@ -187,6 +208,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
 
   try {
     std::vector<CNFLit> result;
+    std::vector<CNFLit> work;
     // perform resolution
 
     int unresolvedCount = 0;
@@ -197,7 +219,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
     // reason clauses for variables on the current decision level. They may
     // appear in those reason clauses with the same sign, though, which is why
     // we need to keep track of the literals already included in the result.
-    unresolvedCount = initializeResult(conflictingClause, result);
+    unresolvedCount = initializeResult(conflictingClause, result, work);
 
     CNFLit assertingLit = CNFLit::undefinedLiteral;
     auto trailIterators = m_dlProvider.getAssignments(0);
@@ -222,7 +244,10 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
           m_reasonProvider.getAssignmentReason(assertingLit.getVariable());
 
       if (reason != nullptr) {
-        addResolvent(*reason, assertingLit, result, unresolvedCount);
+        addResolvent(*reason, assertingLit, result, unresolvedCount, work);
+      } else {
+        m_stamps[assertingLit] = 0;
+        m_stamps[~assertingLit] = 0;
       }
 
       if (cursor == trailIterators.begin()) {
@@ -232,6 +257,23 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
       }
       --cursor;
     }
+
+    if (result[0] == CNFLit::undefinedLiteral) {
+      for (CNFLit w : work) {
+        if (m_stamps[~w] == 1) {
+          BOOST_LOG_TRIVIAL(trace) << "Processing work with stamp: " << w;
+          result[0] = w;
+          break;
+        }
+      }
+    }
+
+    for (auto l : result) {
+      m_stamps[~l] = 0;
+      m_stamps[l] = 0;
+    }
+
+    JAM_ASSERT(isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
 
     return result;
   } catch (std::bad_alloc &oomException) {
