@@ -52,7 +52,8 @@ then
 else
   cd ${TRAVIS_BUILD_DIR}
   cmake -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_ENABLE_COVERAGE=ON -DJAMSAT_DISABLE_OPTIMIZATIONS=ON .
-  build-wrapper-linux-x86-64 --out-dir bw-output make clean all check
+  build-wrapper-linux-x86-64 --out-dir bw-output make clean all
+  ctest -V
   find src -name "*.h" -or -name "*.cpp" | xargs -I% gcov --branch-probabilities --branch-counts % -o .
   sonar-scanner
 fi
