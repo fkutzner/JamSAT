@@ -78,7 +78,7 @@ public:
    *
    * \param variableValue  The non-negative raw variable identifier.
    */
-  explicit inline CNFVar(RawVariable variableValue) noexcept;
+  explicit CNFVar(RawVariable variableValue) noexcept;
 
   /**
    * \brief Constructs an undefined variable.
@@ -90,7 +90,7 @@ public:
    *
    * \returns the variable's raw value.
    */
-  inline RawVariable getRawValue() const noexcept;
+  RawVariable getRawValue() const noexcept;
 
   /**
    * \brief Equality operator for CNFVar.
@@ -98,7 +98,7 @@ public:
    * \param rhs   The right-hand-side variable.
    * \returns \p true iff this variable is equal to \p rhs.
    */
-  inline bool operator==(const CNFVar &rhs) const noexcept;
+  bool operator==(const CNFVar &rhs) const noexcept;
 
   /**
    * \brief Inquality operator for CNFVar.
@@ -106,7 +106,7 @@ public:
    * \param rhs   The right-hand-side variable.
    * \returns \p true iff this variable is inequal to \p rhs.
    */
-  inline bool operator!=(const CNFVar &rhs) const noexcept;
+  bool operator!=(const CNFVar &rhs) const noexcept;
 
   /**
    * \brief The undefined marker variable.
@@ -158,7 +158,7 @@ public:
    * nonnegative and smaller than CNFVar::undefinedVariable.
    * \param sign      The literal's sign.
    */
-  inline CNFLit(CNFVar variable, CNFSign sign) noexcept;
+  CNFLit(CNFVar variable, CNFSign sign) noexcept;
 
   /**
    * \brief Constructs an undefined literal.
@@ -170,21 +170,21 @@ public:
    *
    * \returns  The literal's variable.
    */
-  inline CNFVar getVariable() const noexcept;
+  CNFVar getVariable() const noexcept;
 
   /**
    * \brief Gets the literal's sign.
    *
    * \returns  The literal's sign.
    */
-  inline CNFSign getSign() const noexcept;
+  CNFSign getSign() const noexcept;
 
   /**
    * \brief Gets the literal's negate.
    *
    * \returns The literal's negate.
    */
-  inline CNFLit operator~() const noexcept;
+  CNFLit operator~() const noexcept;
 
   /**
    * \brief Equality operator for CNFVar.
@@ -192,7 +192,7 @@ public:
    * \param rhs   The right-hand-side literal.
    * \returns \p true iff this literal is equal to \p rhs.
    */
-  inline bool operator==(const CNFLit &rhs) const noexcept;
+  bool operator==(const CNFLit &rhs) const noexcept;
 
   /**
    * \brief Inequality operator for CNFVar.
@@ -200,7 +200,7 @@ public:
    * \param rhs   The right-hand-side literal.
    * \returns \p true iff this literal is inequal to \p rhs.
    */
-  inline bool operator!=(const CNFLit &rhs) const noexcept;
+  bool operator!=(const CNFLit &rhs) const noexcept;
 
   /**
    * \brief Gets the literal's raw value.
@@ -210,7 +210,7 @@ public:
    *
    * \returns the literal's raw value.
    */
-  inline RawLiteral getRawValue() const noexcept;
+  RawLiteral getRawValue() const noexcept;
 
   /**
    * \brief The undefined marker literal.
@@ -246,45 +246,52 @@ std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
 
 /********** Implementation ****************************** */
 
-CNFVar::CNFVar(RawVariable variableValue) noexcept : m_value(variableValue) {}
+inline CNFVar::CNFVar(RawVariable variableValue) noexcept
+    : m_value(variableValue) {}
 
-CNFVar::RawVariable CNFVar::getRawValue() const noexcept { return m_value; }
+inline CNFVar::RawVariable CNFVar::getRawValue() const noexcept {
+  return m_value;
+}
 
-bool CNFVar::operator==(const CNFVar &rhs) const noexcept {
+inline bool CNFVar::operator==(const CNFVar &rhs) const noexcept {
   return rhs.m_value == m_value;
 }
 
-bool CNFVar::operator!=(const CNFVar &rhs) const noexcept {
+inline bool CNFVar::operator!=(const CNFVar &rhs) const noexcept {
   return rhs.m_value != m_value;
 }
 
-CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept {
+inline CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept {
   JAM_ASSERT(variable != CNFVar::undefinedVariable,
              "The variable must be smaller than CNFVar::undefinedVariable");
   m_value = (variable.getRawValue() << 1) | static_cast<int>(sign);
 }
 
-CNFVar CNFLit::getVariable() const noexcept { return CNFVar{m_value >> 1}; }
+inline CNFVar CNFLit::getVariable() const noexcept {
+  return CNFVar{m_value >> 1};
+}
 
-CNFSign CNFLit::getSign() const noexcept {
+inline CNFSign CNFLit::getSign() const noexcept {
   return static_cast<CNFSign>(m_value & 1);
 }
 
-CNFLit CNFLit::operator~() const noexcept {
+inline CNFLit CNFLit::operator~() const noexcept {
   JAM_ASSERT(*this != CNFLit::undefinedLiteral,
              "Cannot negate an undefined literal");
   return CNFLit{getVariable(), invert(getSign())};
 }
 
-bool CNFLit::operator==(const CNFLit &rhs) const noexcept {
+inline bool CNFLit::operator==(const CNFLit &rhs) const noexcept {
   return rhs.m_value == m_value;
 }
 
-bool CNFLit::operator!=(const CNFLit &rhs) const noexcept {
+inline bool CNFLit::operator!=(const CNFLit &rhs) const noexcept {
   return !(*this == rhs);
 }
 
-CNFLit::RawLiteral CNFLit::getRawValue() const noexcept { return m_value; }
+inline CNFLit::RawLiteral CNFLit::getRawValue() const noexcept {
+  return m_value;
+}
 }
 
 namespace std {
