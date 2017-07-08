@@ -130,15 +130,9 @@ int FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
   for (auto lit : conflictingClause) {
     auto dl = m_dlProvider.getAssignmentDecisionLevel(lit.getVariable());
     if (dl == currentLevel) {
-      if (m_reasonProvider.getAssignmentReason(lit.getVariable()) == nullptr) {
-        BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: " << lit;
-        result[0] = lit;
-        ++unresolvedCount;
-      } else {
-        BOOST_LOG_TRIVIAL(trace) << "Adding work: " << lit;
-        ++unresolvedCount;
-        work.push_back(lit);
-      }
+      BOOST_LOG_TRIVIAL(trace) << "Adding work: " << lit;
+      ++unresolvedCount;
+      work.push_back(lit);
     } else {
       BOOST_LOG_TRIVIAL(trace) << "Adding literal: " << lit;
       result.push_back(~lit);
@@ -167,17 +161,9 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(
       m_stamps[reasonLit.getVariable()] = 1;
       if (m_dlProvider.getAssignmentDecisionLevel(reasonLit.getVariable()) ==
           currentLevel) {
-        if (m_reasonProvider.getAssignmentReason(reasonLit.getVariable()) ==
-            nullptr) {
-          BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: "
-                                   << reasonLit;
-          result[0] = reasonLit;
-          ++unresolvedCount;
-        } else {
-          BOOST_LOG_TRIVIAL(trace) << "Adding work: " << reasonLit;
-          ++unresolvedCount;
-          work.push_back(reasonLit);
-        }
+        BOOST_LOG_TRIVIAL(trace) << "Adding work: " << reasonLit;
+        ++unresolvedCount;
+        work.push_back(reasonLit);
       } else {
         BOOST_LOG_TRIVIAL(trace) << "Adding literal: " << reasonLit;
         result.push_back(reasonLit);
@@ -240,6 +226,9 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
       if (reason != nullptr) {
         addResolvent(*reason, assertingLit, result, unresolvedCount, work);
       } else {
+        BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: "
+                                 << assertingLit;
+        result[0] = assertingLit;
         m_stamps[assertingLit.getVariable()] = 0;
       }
 
