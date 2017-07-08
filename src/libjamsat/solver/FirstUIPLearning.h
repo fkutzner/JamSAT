@@ -98,7 +98,7 @@ private:
   const CNFVar m_maxVar;
 
   // Class invariant A: m_stamps[x] = 0 for all keys x
-  mutable BoundedMap<CNFLit, char> m_stamps;
+  mutable BoundedMap<CNFVar, char> m_stamps;
 };
 
 template <class DLProvider, class ReasonProvider>
@@ -106,14 +106,13 @@ FirstUIPLearning<DLProvider, ReasonProvider>::FirstUIPLearning(
     CNFVar maxVar, const DLProvider &dlProvider,
     const ReasonProvider &reasonProvider)
     : m_dlProvider(dlProvider), m_reasonProvider(reasonProvider),
-      m_maxVar(maxVar), m_stamps(CNFLit{maxVar, CNFSign::POSITIVE}) {}
+      m_maxVar(maxVar), m_stamps(maxVar) {}
 
 namespace {
-bool isAllZero(const BoundedMap<CNFLit, char> &stamps, CNFVar maxVar) noexcept {
+bool isAllZero(const BoundedMap<CNFVar, char> &stamps, CNFVar maxVar) noexcept {
   bool result = true;
   for (CNFVar::RawVariable v = 0; v <= maxVar.getRawValue(); ++v) {
-    result &= (stamps[CNFLit{CNFVar{v}, CNFSign::POSITIVE}] == 0);
-    result &= (stamps[CNFLit{CNFVar{v}, CNFSign::NEGATIVE}] == 0);
+    result &= (stamps[CNFVar{v}] == 0);
   }
   return result;
 }
@@ -144,11 +143,7 @@ int FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
       BOOST_LOG_TRIVIAL(trace) << "Adding literal: " << lit;
       result.push_back(~lit);
     }
-    if (m_reasonProvider.getAssignmentReason(lit.getVariable()) == nullptr) {
-      m_stamps[lit] = 1;
-    } else {
-      m_stamps[~lit] = 1;
-    }
+    m_stamps[lit.getVariable()] = 1;
   }
 
   JAM_ASSERT(result[0] != CNFLit::undefinedLiteral || unresolvedCount >= 2,
@@ -164,13 +159,12 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(
     int &unresolvedCount, std::vector<CNFLit> &work) const {
   const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
 
-  m_stamps[~assertingLit] = 0;
-  m_stamps[assertingLit] = 0;
+  m_stamps[assertingLit.getVariable()] = 0;
 
   for (auto reasonLit : reason) {
     BOOST_LOG_TRIVIAL(trace) << "Looking at: " << reasonLit;
-    if (reasonLit != assertingLit && m_stamps[~reasonLit] == 0) {
-      m_stamps[~reasonLit] = 1;
+    if (reasonLit != assertingLit && m_stamps[reasonLit.getVariable()] == 0) {
+      m_stamps[reasonLit.getVariable()] = 1;
       if (m_dlProvider.getAssignmentDecisionLevel(reasonLit.getVariable()) ==
           currentLevel) {
         if (m_reasonProvider.getAssignmentReason(reasonLit.getVariable()) ==
@@ -230,7 +224,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
     while (unresolvedCount > 1) {
       assertingLit = *cursor;
       BOOST_LOG_TRIVIAL(trace) << "Current asserting literal: " << *cursor;
-      if (m_stamps[assertingLit] == 0) {
+      if (m_stamps[assertingLit.getVariable()] == 0) {
         --cursor;
         continue;
       }
@@ -246,8 +240,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
       if (reason != nullptr) {
         addResolvent(*reason, assertingLit, result, unresolvedCount, work);
       } else {
-        m_stamps[assertingLit] = 0;
-        m_stamps[~assertingLit] = 0;
+        m_stamps[assertingLit.getVariable()] = 0;
       }
 
       if (cursor == trailIterators.begin()) {
@@ -260,7 +253,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
 
     if (result[0] == CNFLit::undefinedLiteral) {
       for (CNFLit w : work) {
-        if (m_stamps[~w] == 1) {
+        if (m_stamps[w.getVariable()] == 1) {
           BOOST_LOG_TRIVIAL(trace) << "Processing work with stamp: " << w;
           result[0] = w;
           break;
@@ -269,8 +262,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
     }
 
     for (auto l : result) {
-      m_stamps[~l] = 0;
-      m_stamps[l] = 0;
+      m_stamps[l.getVariable()] = 0;
     }
 
     JAM_ASSERT(isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
@@ -279,8 +271,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
   } catch (std::bad_alloc &oomException) {
     // clean up, throw on oomException
     for (CNFVar::RawVariable v = 0; v <= m_maxVar.getRawValue(); ++v) {
-      m_stamps[CNFLit{CNFVar{v}, CNFSign::POSITIVE}] = 0;
-      m_stamps[CNFLit{CNFVar{v}, CNFSign::NEGATIVE}] = 0;
+      m_stamps[CNFVar{v}] = 0;
     }
     throw oomException;
   }
