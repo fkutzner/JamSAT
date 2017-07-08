@@ -15,6 +15,12 @@ build_and_test() {
   ctest -V
 }
 
+process_coverage_results() {
+  lcov --directory . --capture --output-file coverage.info
+  lcov --remove coverage.info 'lib/*' 'testsrc/*' '/usr/*' --output-file coverage.info
+  lcov --list coverage.info
+}
+
 if [ "${SONARSOURCE_SCAN}" != "1" ]
 then
   echo "Building JamSAT in ${JAMSAT_MODE} mode."
@@ -23,6 +29,10 @@ then
   then
     cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_ENABLE_COVERAGE=ON -DJAMSAT_DISABLE_OPTIMIZATIONS=ON ${TRAVIS_BUILD_DIR}
     build_and_test
+    process_coverage_results
+    pushd $TRAVIS_BUILD_DIR
+    coveralls-lcov ../build/coverage.info
+    popd
 
   elif [ "${JAMSAT_MODE}" = "SANITIZERS" ]
   then
@@ -41,8 +51,8 @@ then
   fi
 else
   cd ${TRAVIS_BUILD_DIR}
-  cmake -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_ENABLE_COVERAGE=ON .
-  build-wrapper-linux-x86-64 --out-dir bw-output make clean all
-  ctest -V
+  cmake -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_ENABLE_COVERAGE=ON -DJAMSAT_DISABLE_OPTIMIZATIONS=ON .
+  build-wrapper-linux-x86-64 --out-dir bw-output make clean all check
+  find src -name "*.h" -or -name "*.cpp" | xargs -I% gcov --branch-probabilities --branch-counts % -o .
   sonar-scanner
 fi
