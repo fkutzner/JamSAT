@@ -36,6 +36,11 @@ CNFLit &Clause::operator[](size_type index) noexcept {
   return *(&m_anchor + index);
 }
 
+const CNFLit &Clause::operator[](size_type index) const noexcept {
+  JAM_ASSERT(index < m_size, "Index out of bounds");
+  return *(&m_anchor + index);
+}
+
 Clause::size_type Clause::getSize() const noexcept { return m_size; }
 
 void Clause::shrink(size_type newSize) noexcept {

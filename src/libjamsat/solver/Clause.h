@@ -41,7 +41,7 @@ namespace jamsat {
  */
 class Clause {
 public:
-  using size_type = size_t;
+  using size_type = uint32_t;
   using iterator = CNFLit *;
   using const_iterator = const CNFLit *;
 
@@ -53,6 +53,7 @@ public:
    * \returns A reference to the literal with index \p index.
    */
   CNFLit &operator[](size_type index) noexcept;
+  const CNFLit &operator[](size_type index) const noexcept;
 
   /**
    * \brief Returns the clause's size.
@@ -112,7 +113,7 @@ private:
    */
   explicit Clause(size_type size) noexcept;
 
-  uint32_t m_size;
+  size_type m_size;
   CNFLit m_anchor;
 };
 
