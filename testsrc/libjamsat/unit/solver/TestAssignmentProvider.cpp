@@ -72,7 +72,8 @@ TestAssignmentProvider::getAssignments(size_t index) const noexcept {
 }
 
 TestAssignmentProvider::DecisionLevel
-TestAssignmentProvider::getDecisionLevel(CNFVar variable) const noexcept {
+TestAssignmentProvider::getAssignmentDecisionLevel(CNFVar variable) const
+    noexcept {
   auto result = m_decisionLevels.find(variable);
   if (result != m_decisionLevels.end()) {
     return result->second;
@@ -80,8 +81,8 @@ TestAssignmentProvider::getDecisionLevel(CNFVar variable) const noexcept {
   return 0;
 }
 
-void TestAssignmentProvider::setDecisionLevel(CNFVar variable,
-                                              DecisionLevel level) noexcept {
+void TestAssignmentProvider::setAssignmentDecisionLevel(
+    CNFVar variable, DecisionLevel level) noexcept {
   m_decisionLevels[variable] = level;
 }
 

@@ -34,6 +34,7 @@
 #include <libjamsat/solver/FirstUIPLearning.h>
 
 namespace jamsat {
+namespace {
 class TestReasonProvider {
 public:
   void setAssignmentReason(CNFVar variable, Clause &reason) noexcept {
@@ -52,20 +53,6 @@ private:
   std::unordered_map<CNFVar, const Clause *> m_reasons;
 };
 
-TEST(UnitSolver, firstUIPLearningWithEmptyClauseProducesEmptyClause) {
-  TestAssignmentProvider assignments;
-  TestReasonProvider reasons;
-
-  CNFVar maxVar{16};
-  auto emptyClause = createHeapClause(0);
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider> underTest(
-      maxVar, assignments, reasons);
-
-  auto conflictClause = underTest.computeConflictClause(*emptyClause);
-  EXPECT_TRUE(conflictClause.empty());
-}
-
-namespace {
 std::unique_ptr<Clause> createClause(const std::vector<CNFLit> &literals) {
   auto result = createHeapClause(literals.size());
   for (Clause::size_type i = 0; i < literals.size(); ++i) {
@@ -100,39 +87,79 @@ bool equalLits(const std::vector<CNFLit> &lhs, const std::vector<CNFLit> &rhs) {
 }
 }
 
-/*TEST(UnitSolver,
-     firstUIPLearningWithSinglePropagationOnCurrentLevelIs1ResolutionStep) {
+TEST(UnitSolver, firstUIPLearningKnuthTest1) {
   TestAssignmentProvider assignments;
   TestReasonProvider reasons;
 
-  auto lit = createLiterals(0, 16);
+  auto waerden1 = createHeapClause(3);
+  (*waerden1)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+  (*waerden1)[1] = CNFLit{CNFVar{9}, CNFSign::POSITIVE};
+  (*waerden1)[2] = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
+
+  auto waerden2 = createHeapClause(3);
+  (*waerden2)[0] = CNFLit{CNFVar{5}, CNFSign::POSITIVE};
+  (*waerden2)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
+  (*waerden2)[2] = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
+
+  auto waerden3 = createHeapClause(3);
+  (*waerden3)[0] = CNFLit{CNFVar{8}, CNFSign::POSITIVE};
+  (*waerden3)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
+  (*waerden3)[2] = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
+
+  auto waerden4 = createHeapClause(3);
+  (*waerden4)[0] = CNFLit{CNFVar{2}, CNFSign::POSITIVE};
+  (*waerden4)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
+  (*waerden4)[2] = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
+
+  auto waerden5 = createHeapClause(3);
+  (*waerden5)[0] = CNFLit{CNFVar{7}, CNFSign::NEGATIVE};
+  (*waerden5)[1] = CNFLit{CNFVar{5}, CNFSign::NEGATIVE};
+  (*waerden5)[2] = CNFLit{CNFVar{3}, CNFSign::NEGATIVE};
+
+  auto waerden6 = createHeapClause(3);
+  (*waerden6)[0] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+  (*waerden6)[1] = CNFLit{CNFVar{5}, CNFSign::NEGATIVE};
+  (*waerden6)[2] = CNFLit{CNFVar{8}, CNFSign::NEGATIVE};
+
+  assignments.addLiteral(CNFLit{CNFVar{6}, CNFSign::NEGATIVE});
+  assignments.setAssignmentDecisionLevel(CNFVar{6}, 1);
+
+  assignments.addLiteral(CNFLit{CNFVar{9}, CNFSign::NEGATIVE});
+  assignments.setAssignmentDecisionLevel(CNFVar{9}, 2);
+
+  assignments.addLiteral(CNFLit{CNFVar{3}, CNFSign::POSITIVE});
+  assignments.setAssignmentDecisionLevel(CNFVar{3}, 2);
+  reasons.setAssignmentReason(CNFVar{3}, *waerden1);
+
+  assignments.addLiteral(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+  assignments.setAssignmentDecisionLevel(CNFVar{4}, 3);
+
+  assignments.addLiteral(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
+  assignments.setAssignmentDecisionLevel(CNFVar{5}, 3);
+  reasons.setAssignmentReason(CNFVar{5}, *waerden2);
+
+  assignments.addLiteral(CNFLit{CNFVar{8}, CNFSign::POSITIVE});
+  assignments.setAssignmentDecisionLevel(CNFVar{8}, 3);
+  reasons.setAssignmentReason(CNFVar{8}, *waerden3);
+
+  assignments.addLiteral(CNFLit{CNFVar{2}, CNFSign::POSITIVE});
+  assignments.setAssignmentDecisionLevel(CNFVar{2}, 3);
+  reasons.setAssignmentReason(CNFVar{2}, *waerden4);
+
+  assignments.addLiteral(CNFLit{CNFVar{7}, CNFSign::NEGATIVE});
+  assignments.setAssignmentDecisionLevel(CNFVar{7}, 3);
+  reasons.setAssignmentReason(CNFVar{7}, *waerden5);
+
+  assignments.setCurrentDecisionLevel(3);
 
   CNFVar maxVar{16};
   FirstUIPLearning<TestAssignmentProvider, TestReasonProvider> underTest(
       maxVar, assignments, reasons);
 
-  auto unrelatedClause = createClause({lit[0], lit[1], ~lit[4]});
-  auto distantReasonClause = createClause({lit[6], ~lit[1], lit[3], lit[7]});
-
-  auto conflictingClause = createClause({lit[10], lit[15], lit[16]});
-  auto reasonClause = createClause({lit[10], ~lit[1], ~lit[15]});
-
-  // Situation: ~lit[10] has been decided on level 3,
-  // ~lit[15] was a subsequent propagation,
-  // lit[16] has been assigned on level 2, all other on level 1.
-
-  for (auto literal : lit) {
-    assignments.setDecisionLevel(literal.getVariable(), 1);
-  }
-  assignments.setDecisionLevel(lit[10].getVariable(), 3);
-  assignments.setDecisionLevel(lit[15].getVariable(), 3);
-  assignments.setDecisionLevel(lit[16].getVariable(), 2);
-  reasons.setAssignmentReason(CNFVar{15}, *reasonClause);
-  reasons.setAssignmentReason(CNFVar{1}, *distantReasonClause);
-  reasons.setAssignmentReason(CNFVar{6}, *unrelatedClause);
-
-  auto conflictClause = underTest.computeConflictClause(*conflictingClause);
-  EXPECT_EQ(conflictClause.size(), 3ull);
-  EXPECT_TRUE(equalLits(conflictClause, {lit[10], lit[16], ~lit[1]}));
-}*/
+  auto conflictClause = underTest.computeConflictClause(*waerden6);
+  auto expectedClause =
+      std::vector<CNFLit>{CNFLit(CNFVar(4), CNFSign::POSITIVE),
+                          CNFLit(CNFVar(6), CNFSign::POSITIVE)};
+  EXPECT_EQ(conflictClause, expectedClause);
+}
 }

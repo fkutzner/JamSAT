@@ -26,11 +26,15 @@
 
 #pragma once
 
+#include <stdexcept>
 #include <vector>
 
 #include "Clause.h"
 
+#include <boost/log/trivial.hpp>
+
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/Truth.h>
 
@@ -66,8 +70,8 @@ public:
    * \param reasonProvider The assignment reason providing object. Needs to live
    * as long as the constructed object.
    */
-  FirstUIPLearning(CNFVar maxVar, DLProvider &dlProvider,
-                   ReasonProvider &reasonProvider);
+  FirstUIPLearning(CNFVar maxVar, const DLProvider &dlProvider,
+                   const ReasonProvider &reasonProvider);
 
   /**
    * \brief Given a conflicting clause, computes a conflict clause.
@@ -77,22 +81,147 @@ public:
    * \returns The conflict clause determined via resolutions of the conflicting
    * clause with reason clauses.
    */
-  std::vector<CNFLit> computeConflictClause(Clause &conflictingClause) noexcept;
+  std::vector<CNFLit> computeConflictClause(Clause &conflictingClause) const;
 
 private:
-  DLProvider &m_dlProvider;
-  ReasonProvider &m_reasonProvider;
+  const DLProvider &m_dlProvider;
+  const ReasonProvider &m_reasonProvider;
+  const CNFVar m_maxVar;
+
+  // Class invariant A: m_stamps[x] = 0 for all keys x
+  mutable BoundedMap<CNFLit, char> m_stamps;
 };
 
 template <class DLProvider, class ReasonProvider>
 FirstUIPLearning<DLProvider, ReasonProvider>::FirstUIPLearning(
-    CNFVar maxVar, DLProvider &dlProvider, ReasonProvider &reasonProvider)
-    : m_dlProvider(dlProvider), m_reasonProvider(reasonProvider) {}
+    CNFVar maxVar, const DLProvider &dlProvider,
+    const ReasonProvider &reasonProvider)
+    : m_dlProvider(dlProvider), m_reasonProvider(reasonProvider),
+      m_maxVar(maxVar), m_stamps(CNFLit{maxVar, CNFSign::POSITIVE}) {}
+
+namespace {
+bool isAllZero(const BoundedMap<CNFLit, char> &stamps, CNFVar maxVar) noexcept {
+  bool result = true;
+  for (CNFVar::RawVariable v = 0; v <= maxVar.getRawValue(); ++v) {
+    result &= (stamps[CNFLit{CNFVar{v}, CNFSign::POSITIVE}] == 0);
+    result &= (stamps[CNFLit{CNFVar{v}, CNFSign::NEGATIVE}] == 0);
+  }
+  return result;
+};
+}
 
 template <class DLProvider, class ReasonProvider>
 std::vector<CNFLit>
 FirstUIPLearning<DLProvider, ReasonProvider>::computeConflictClause(
-    Clause &conflictingClause) noexcept {
-  return {};
+    Clause &conflictingClause) const {
+  // See Donald Knuth's work on Satisfiability. This implementation deviates
+  // from its prosaic description by Knuth in that it goes down the trail not
+  // repeatedly, but only once, since all literals occuring in reason clauses
+  // with a negative value must occur further down the trail (otherwise, the
+  // propagation algorithm would need to have had knowledge of the future).
+
+  JAM_ASSERT(isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
+
+  // TODO: Short description of First-UIP clause learning and Knuth reference.
+
+  try {
+    std::vector<CNFLit> result;
+    // perform resolution
+
+    typename DLProvider::size_type unresolvedCount = 0;
+
+    // Stamp literals on the current decision level and mark them as resolution
+    // "work". All others already belong to the result: resolution is not
+    // performed at these literals, since none of their inverses can appear in
+    // reason clauses for variables on the current decision level. They may
+    // appear in those reason clauses with the same sign, though, which is why
+    // we need to keep track of the literals already included in the result.
+    const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
+    for (auto lit : conflictingClause) {
+      auto dl = m_dlProvider.getAssignmentDecisionLevel(lit.getVariable());
+      if (dl == currentLevel &&
+          m_reasonProvider.getAssignmentReason(lit.getVariable()) != nullptr) {
+        BOOST_LOG_TRIVIAL(trace) << "Adding work: " << lit;
+        ++unresolvedCount;
+      } else {
+        BOOST_LOG_TRIVIAL(trace) << "Adding literal: " << lit;
+        result.push_back(~lit);
+      }
+      if (m_reasonProvider.getAssignmentReason(lit.getVariable()) == nullptr) {
+        m_stamps[lit] = 1;
+      } else {
+        m_stamps[~lit] = 1;
+      }
+    }
+
+    JAM_ASSERT(unresolvedCount >= 2, "Conflicting clauses need to contain at "
+                                     "least 2 literals on the current decision "
+                                     "level");
+
+    CNFLit assertingLit = CNFLit::undefinedLiteral;
+    auto trailIterators = m_dlProvider.getAssignments(0);
+    auto span = trailIterators.end() - trailIterators.begin();
+    auto cursor = trailIterators.begin() + span - 1;
+
+    while (unresolvedCount > 1) {
+      assertingLit = *cursor;
+      BOOST_LOG_TRIVIAL(trace) << "Current asserting literal: " << *cursor;
+      if (m_stamps[assertingLit] == 0) {
+        --cursor;
+        continue;
+      }
+
+      if (m_dlProvider.getAssignmentDecisionLevel(assertingLit.getVariable()) ==
+          currentLevel) {
+        --unresolvedCount;
+      }
+
+      auto reason =
+          m_reasonProvider.getAssignmentReason(assertingLit.getVariable());
+
+      if (reason != nullptr) {
+
+        BOOST_LOG_TRIVIAL(trace)
+            << "Resolving at literal: " << *cursor << "(" << assertingLit << ")"
+            << " with reason clause " << (*reason)[0] << "," << (*reason)[1]
+            << "," << (*reason)[2];
+
+        for (auto reasonLit : *reason) {
+          BOOST_LOG_TRIVIAL(trace) << "Looking at: " << reasonLit;
+          if (reasonLit != assertingLit && m_stamps[~reasonLit] == 0) {
+            m_stamps[~reasonLit] = 1;
+            if (m_dlProvider.getAssignmentDecisionLevel(
+                    reasonLit.getVariable()) == currentLevel &&
+                m_reasonProvider.getAssignmentReason(reasonLit.getVariable()) !=
+                    nullptr) {
+              BOOST_LOG_TRIVIAL(trace) << "Adding work: " << reasonLit;
+              ++unresolvedCount;
+            } else {
+              BOOST_LOG_TRIVIAL(trace) << "Adding literal: " << reasonLit;
+              result.push_back(reasonLit);
+            }
+          }
+        }
+      }
+
+      if (cursor == trailIterators.begin()) {
+        break;
+      }
+
+      JAM_ASSERT(cursor != trailIterators.begin(), "Assumption that the trail "
+                                                   "needs to be traversed only "
+                                                   "once does not hold.");
+      --cursor;
+    }
+
+    return result;
+  } catch (std::bad_alloc &oomException) {
+    // clean up, throw on oomException
+    for (CNFVar::RawVariable v = 0; v <= m_maxVar.getRawValue(); ++v) {
+      m_stamps[CNFLit{CNFVar{v}, CNFSign::POSITIVE}] = 0;
+      m_stamps[CNFLit{CNFVar{v}, CNFSign::NEGATIVE}] = 0;
+    }
+    throw oomException;
+  }
 }
 }

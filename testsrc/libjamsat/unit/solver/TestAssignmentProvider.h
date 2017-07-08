@@ -38,6 +38,7 @@ namespace jamsat {
   class TestAssignmentProvider {
   public:
     using DecisionLevel = size_t;
+    using size_type = BoundedStack<CNFLit>::size_type;
 
     TestAssignmentProvider();
 
@@ -49,8 +50,8 @@ namespace jamsat {
     boost::iterator_range<std::vector<CNFLit>::const_iterator>
     getAssignments(size_t index) const noexcept;
 
-    DecisionLevel getDecisionLevel(CNFVar variable) const noexcept;
-    void setDecisionLevel(CNFVar variable, DecisionLevel level) noexcept;
+    DecisionLevel getAssignmentDecisionLevel(CNFVar variable) const noexcept;
+    void setAssignmentDecisionLevel(CNFVar variable, DecisionLevel level) noexcept;
     DecisionLevel getCurrentDecisionLevel() const noexcept;
     void setCurrentDecisionLevel(DecisionLevel level) noexcept;
 
