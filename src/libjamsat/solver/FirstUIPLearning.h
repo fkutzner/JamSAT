@@ -89,7 +89,7 @@ private:
   int initializeResult(const Clause &conflictingClause,
                        std::vector<CNFLit> &result,
                        std::vector<CNFLit> &work) const;
-  void addResolvent(const Clause &reason, CNFLit assertingLit,
+  void addResolvent(const Clause &reason, CNFLit resolveAtLit,
                     std::vector<CNFLit> &result, int &unresolvedCount,
                     std::vector<CNFLit> &work) const;
 
@@ -122,42 +122,33 @@ template <class DLProvider, class ReasonProvider>
 int FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
     const Clause &conflictingClause, std::vector<CNFLit> &result,
     std::vector<CNFLit> &work) const {
-  const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
-  uint32_t unresolvedCount = 0;
-
-  result.push_back(CNFLit::undefinedLiteral);
-
-  for (auto lit : conflictingClause) {
-    auto dl = m_dlProvider.getAssignmentDecisionLevel(lit.getVariable());
-    if (dl == currentLevel) {
-      BOOST_LOG_TRIVIAL(trace) << "Adding work: " << lit;
-      ++unresolvedCount;
-      work.push_back(lit);
-    } else {
-      BOOST_LOG_TRIVIAL(trace) << "Adding literal: " << lit;
-      result.push_back(~lit);
-    }
-    m_stamps[lit.getVariable()] = 1;
-  }
-
-  JAM_ASSERT(result[0] != CNFLit::undefinedLiteral || unresolvedCount >= 2,
-             "Conflicting clauses need to contain at least 2"
-             " literals on the current decision level");
-
+  int unresolvedCount;
+  addResolvent(conflictingClause, CNFLit::undefinedLiteral, result,
+               unresolvedCount, work);
   return unresolvedCount;
 }
 
 template <class DLProvider, class ReasonProvider>
 void FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(
-    const Clause &reason, CNFLit assertingLit, std::vector<CNFLit> &result,
+    const Clause &reason, CNFLit resolveAtLit, std::vector<CNFLit> &result,
     int &unresolvedCount, std::vector<CNFLit> &work) const {
+
+  // Stamp literals on the current decision level and mark them as resolution
+  // "work". All others already belong to the result: resolution is not
+  // performed at these literals, since none of their inverses can appear in
+  // reason clauses for variables on the current decision level. They may
+  // appear in those reason clauses with the same sign, though, which is why
+  // we need to keep track of the literals already included in the result.
+
   const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
 
-  m_stamps[assertingLit.getVariable()] = 0;
+  if (resolveAtLit != CNFLit::undefinedLiteral) {
+    m_stamps[resolveAtLit.getVariable()] = 0;
+  }
 
   for (auto reasonLit : reason) {
     BOOST_LOG_TRIVIAL(trace) << "Looking at: " << reasonLit;
-    if (reasonLit != assertingLit && m_stamps[reasonLit.getVariable()] == 0) {
+    if (reasonLit != resolveAtLit && m_stamps[reasonLit.getVariable()] == 0) {
       m_stamps[reasonLit.getVariable()] = 1;
       if (m_dlProvider.getAssignmentDecisionLevel(reasonLit.getVariable()) ==
           currentLevel) {
@@ -188,58 +179,64 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
 
   try {
     std::vector<CNFLit> result;
+
+    // The asserting literal will be stored as the first literal in the result.
+    // Until it has been determined, it is left undefined.
+    result.push_back(CNFLit::undefinedLiteral);
+
+    // The literals which are on the current decision level and which have been
+    // encountered during the resolution process are stored in this vector.
     std::vector<CNFLit> work;
-    // perform resolution
 
-    int unresolvedCount = 0;
+    int unresolvedCount = initializeResult(conflictingClause, result, work);
 
-    // Stamp literals on the current decision level and mark them as resolution
-    // "work". All others already belong to the result: resolution is not
-    // performed at these literals, since none of their inverses can appear in
-    // reason clauses for variables on the current decision level. They may
-    // appear in those reason clauses with the same sign, though, which is why
-    // we need to keep track of the literals already included in the result.
-    unresolvedCount = initializeResult(conflictingClause, result, work);
-
-    CNFLit assertingLit = CNFLit::undefinedLiteral;
     auto trailIterators = m_dlProvider.getAssignments(0);
     auto span = trailIterators.end() - trailIterators.begin();
     auto cursor = trailIterators.begin() + span - 1;
+
     const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
 
     while (unresolvedCount > 1) {
-      assertingLit = *cursor;
-      BOOST_LOG_TRIVIAL(trace) << "Current asserting literal: " << *cursor;
-      if (m_stamps[assertingLit.getVariable()] == 0) {
+      const CNFLit resolveAtLit = *cursor;
+      const CNFVar resolveAtVar = resolveAtLit.getVariable();
+      BOOST_LOG_TRIVIAL(trace) << "Current resolution candidate: " << *cursor;
+
+      if (m_stamps[resolveAtVar] == 0) {
         --cursor;
         continue;
       }
 
-      if (m_dlProvider.getAssignmentDecisionLevel(assertingLit.getVariable()) ==
+      if (m_dlProvider.getAssignmentDecisionLevel(resolveAtVar) ==
           currentLevel) {
+        auto reason = m_reasonProvider.getAssignmentReason(resolveAtVar);
+
+        if (reason != nullptr) {
+          addResolvent(*reason, resolveAtLit, result, unresolvedCount, work);
+        } else {
+          // resolveAtLit is on the current decision level and can't be
+          // removed from the result via resolution, so it must serve
+          // as the asserting literal.
+          BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: "
+                                   << resolveAtLit;
+          result[0] = ~resolveAtLit;
+          m_stamps[resolveAtVar] = 0;
+        }
+
         --unresolvedCount;
       }
 
-      auto reason =
-          m_reasonProvider.getAssignmentReason(assertingLit.getVariable());
-
-      if (reason != nullptr) {
-        addResolvent(*reason, assertingLit, result, unresolvedCount, work);
-      } else {
-        BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: "
-                                 << assertingLit;
-        result[0] = assertingLit;
-        m_stamps[assertingLit.getVariable()] = 0;
-      }
-
       if (cursor == trailIterators.begin()) {
-        JAM_ASSERT(unresolvedCount == 0,
-                   "Encountered unresolved literal after traversing the trail");
+        JAM_ASSERT(unresolvedCount == 1, "There must be exactly one unresolved "
+                                         "literal after traversing the trail");
         break;
       }
       --cursor;
     }
 
+    // If the first UIP is not a branching literal, result[0] is still not a
+    // defined literal. The asserting literal is now the single unresolved work
+    // item, i.e. the single literal on the current decision level which has
+    // been encountered in the resolution process, but not processed yet.
     if (result[0] == CNFLit::undefinedLiteral) {
       for (CNFLit w : work) {
         if (m_stamps[w.getVariable()] == 1) {
@@ -250,6 +247,9 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
       }
     }
 
+    // Satisfying class invariant A; the literals at which resolution
+    // has been performed have already been un-stamped in the addResolvent
+    // method.
     for (auto l : result) {
       m_stamps[l.getVariable()] = 0;
     }
