@@ -49,14 +49,9 @@ void Clause::shrink(size_type newSize) noexcept {
   m_size = newSize;
 }
 
-Clause::iterator Clause::begin() noexcept {
-  return const_cast<Clause::iterator>(
-      static_cast<const Clause *>(this)->begin());
-}
+Clause::iterator Clause::begin() noexcept { return &m_anchor; }
 
-Clause::iterator Clause::end() noexcept {
-  return const_cast<Clause::iterator>(static_cast<const Clause *>(this)->end());
-}
+Clause::iterator Clause::end() noexcept { return &m_anchor + m_size; }
 
 Clause::const_iterator Clause::begin() const noexcept { return &m_anchor; }
 
