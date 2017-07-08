@@ -101,22 +101,45 @@ TEST(UnitSolver, iterateOverEmptyClause) {
   ASSERT_FALSE(iterated);
 }
 
-TEST(UnitSolver, iterateOverClause) {
-  auto underTest = createHeapClause(11);
-  ASSERT_NE(underTest.get(), nullptr);
+namespace {
+void test_iterateOverClause_setup(Clause &underTest) {
   CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
   CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
-  (*underTest)[3] = testLiteral1;
-  (*underTest)[4] = testLiteral2;
+  underTest[0] = CNFLit::undefinedLiteral;
+  underTest[3] = testLiteral1;
+  underTest[4] = testLiteral2;
+}
+
+template <typename C> void test_iterateOverClause_check(C &underTest) {
+  CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
+  CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
+
+  EXPECT_EQ(underTest[0], CNFLit::undefinedLiteral);
 
   int i = 0;
-  for (auto &lit : *underTest) {
+  for (auto &lit : underTest) {
     if (i == 3) {
       EXPECT_EQ(lit, testLiteral1);
     } else if (i == 4) {
       EXPECT_EQ(lit, testLiteral2);
     }
+    ++i;
   }
+}
+}
+
+TEST(UnitSolver, iterateOverClause) {
+  auto underTest = createHeapClause(11);
+  ASSERT_NE(underTest.get(), nullptr);
+  test_iterateOverClause_setup(*underTest);
+  test_iterateOverClause_check(*underTest);
+}
+
+TEST(UnitSolver, iterateOverConstantClause) {
+  auto underTest = createHeapClause(8);
+  test_iterateOverClause_setup(*underTest);
+  const Clause &underTestConst = *underTest;
+  test_iterateOverClause_check(underTestConst);
 }
 
 TEST(UnitSolver, shrinkClause) {
