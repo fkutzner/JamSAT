@@ -25,5 +25,3 @@
 */
 
 #include "Assert.h"
-
-namespace jamsat {}
