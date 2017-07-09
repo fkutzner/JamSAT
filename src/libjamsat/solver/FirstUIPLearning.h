@@ -194,7 +194,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
     // encountered during the resolution process are stored in this vector.
     std::vector<CNFLit> work;
 
-    // unresolvedCount counts how many literals L are left to process on the
+    // unresolvedCount counts how many literals L are left to resolve on the
     // current decision level. Until unresolvedCount is 1, the algorithm
     // picks such a literal L and resolves the current result with the reason
     // of L, if ~L is not a branching literal. (If the latter holds, L occurs
@@ -203,11 +203,23 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
     // on the current decision level is the asserting literal.
     int unresolvedCount = initializeResult(conflictingClause, result, work);
 
-    auto trailIterators = m_dlProvider.getAssignments(0);
-    auto span = trailIterators.end() - trailIterators.begin();
-    auto cursor = trailIterators.begin() + span - 1;
+    // If unresolvedCount == 1, the single literal on the current decision level
+    // would have gotten a forced assignment on a lower decision level, which
+    // is impossible. If unresolvedCount == 0, the clause has no literals
+    // on the current decision level and could not have been part of the
+    // conflict
+    // in the first place, either.
+    JAM_ASSERT(
+        unresolvedCount >= 2,
+        "Implementation error: fewer than 2 literals on current lvl found"
+        " during initialization.");
 
     const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
+
+    auto trailIterators =
+        m_dlProvider.getDecisionLevelAssignments(currentLevel);
+    auto span = trailIterators.end() - trailIterators.begin();
+    auto cursor = trailIterators.begin() + span - 1;
 
     // Going down the trail backwards once, resolving the result with reason
     // clauses of items marked as "work" (i.e. literals occuring in the result
@@ -229,6 +241,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
 
         if (reason != nullptr) {
           addResolvent(*reason, resolveAtLit, result, unresolvedCount, work);
+          --unresolvedCount;
         } else {
           // resolveAtLit is on the current decision level and can't be
           // removed from the result via resolution, so it must serve
@@ -237,19 +250,24 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
                                    << resolveAtLit;
           result[0] = ~resolveAtLit;
           m_stamps[resolveAtVar] = 0;
-        }
 
-        --unresolvedCount;
+          // Not decreasing the unresolvedCount here, since this asserting
+          // literal cannot be resolved, and _all_ other literals on the current
+          // decision level need to be resolved.
+        }
       }
 
       if (cursor == trailIterators.begin()) {
-        JAM_ASSERT(unresolvedCount <= 1,
-                   "There may not be more than one "
-                   "unresolved literal after traversing the trail");
         break;
       }
       --cursor;
     }
+
+    BOOST_LOG_TRIVIAL(trace) << "unresolved count after resolution: "
+                             << unresolvedCount;
+    JAM_ASSERT(
+        unresolvedCount == 1,
+        "Implementation error: didn't find exactly one asserting literal");
 
     // If the first UIP is not a branching literal, result[0] is still not a
     // defined literal. The asserting literal is now the single unresolved work
@@ -264,6 +282,9 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
         }
       }
     }
+
+    JAM_ASSERT(result[0] != CNFLit::undefinedLiteral,
+               "Didn't find an asserting literal");
 
     // Satisfying class invariant A; the literals at which resolution
     // has been performed have already been un-stamped in the addResolvent

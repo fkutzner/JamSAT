@@ -67,6 +67,43 @@ size_t TestAssignmentProvider::getNumberOfAssignments() const noexcept {
 }
 
 boost::iterator_range<std::vector<CNFLit>::const_iterator>
+TestAssignmentProvider::getDecisionLevelAssignments(DecisionLevel level) const
+    noexcept {
+  decltype(m_trail)::size_type startIndex = 0;
+  decltype(m_trail)::size_type idx = 0;
+  bool foundStart = false;
+
+  for (auto currentLit : m_trail) {
+    auto currentVar = currentLit.getVariable();
+
+    auto dl = m_decisionLevels.find(currentVar);
+    JAM_ASSERT(dl != m_decisionLevels.end(),
+               "decision levels must be defined completely");
+
+    if (!foundStart && dl->second == level) {
+      startIndex = idx;
+      foundStart = true;
+    }
+
+    if (dl->second > level) {
+      break;
+    }
+
+    ++idx;
+  }
+
+  if (foundStart) {
+    if (idx != m_trail.size()) {
+      return boost::make_iterator_range(m_trail.begin() + startIndex,
+                                        m_trail.begin() + idx);
+    }
+    return boost::make_iterator_range(m_trail.begin() + startIndex,
+                                      m_trail.end());
+  }
+  return boost::make_iterator_range(m_trail.end(), m_trail.end());
+}
+
+boost::iterator_range<std::vector<CNFLit>::const_iterator>
 TestAssignmentProvider::getAssignments(size_t index) const noexcept {
   return boost::make_iterator_range(m_trail.begin() + index, m_trail.end());
 }

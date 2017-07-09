@@ -47,8 +47,12 @@ namespace jamsat {
     void addLiteral(CNFLit literal) noexcept;
     void popLiteral() noexcept;
     size_t getNumberOfAssignments() const noexcept;
+    
     boost::iterator_range<std::vector<CNFLit>::const_iterator>
     getAssignments(size_t index) const noexcept;
+    
+    boost::iterator_range<std::vector<CNFLit>::const_iterator>
+    getDecisionLevelAssignments(DecisionLevel level) const noexcept;
 
     DecisionLevel getAssignmentDecisionLevel(CNFVar variable) const noexcept;
     void setAssignmentDecisionLevel(CNFVar variable, DecisionLevel level) noexcept;
