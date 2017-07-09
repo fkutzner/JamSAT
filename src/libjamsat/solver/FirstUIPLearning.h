@@ -97,8 +97,13 @@ private:
   const ReasonProvider &m_reasonProvider;
   const CNFVar m_maxVar;
 
-  // Class invariant A: m_stamps[x] = 0 for all keys x
+  // Temporary storage for stamps, since we can't afford to allocate
+  // (and thus initialize) a vector of m_maxVar variables each time
+  // a conflict clause is computed. This member variable is governed
+  // by class invariant A.
   mutable BoundedMap<CNFVar, char> m_stamps;
+
+  // Class invariant A: m_stamps[x] = 0 for all keys x
 };
 
 template <class DLProvider, class ReasonProvider>
@@ -123,6 +128,12 @@ int FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
     const Clause &conflictingClause, std::vector<CNFLit> &result,
     std::vector<CNFLit> &work) const {
   int unresolvedCount = 0;
+
+  // Mark the literals on the current decision levels as work, put
+  // the rest into the result, stamp them all - this can be done
+  // by resolving the conflicting clause with an empty clause and
+  // adding an imaginary literal L rsp. ~L to the two clauses. The
+  // imaginary literal is CNFLit::undefinedLiteral, in this case.
   addResolvent(conflictingClause, CNFLit::undefinedLiteral, result,
                unresolvedCount, work);
   return unresolvedCount;
@@ -167,27 +178,29 @@ template <class DLProvider, class ReasonProvider>
 std::vector<CNFLit>
 FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
     Clause &conflictingClause) const {
-  // See Donald Knuth's work on Satisfiability. This implementation deviates
-  // from its prosaic description by Knuth in that it goes down the trail not
-  // repeatedly, but only once, since all literals occuring in reason clauses
-  // with a negative value must occur further down the trail (otherwise, the
-  // propagation algorithm would need to have had knowledge of the future).
+  // This implementation closely follows Donald Knuth's prosaic description
+  // of first-UIP clause learning. See TAOCP, chapter 7.2.2.2.
 
   JAM_ASSERT(isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
-
-  // TODO: Short description of First-UIP clause learning and Knuth reference.
 
   try {
     std::vector<CNFLit> result;
 
     // The asserting literal will be stored as the first literal in the result.
-    // Until it has been determined, it is left undefined.
+    // Until the asserting literal has been determined, it is left undefined.
     result.push_back(CNFLit::undefinedLiteral);
 
     // The literals which are on the current decision level and which have been
     // encountered during the resolution process are stored in this vector.
     std::vector<CNFLit> work;
 
+    // unresolvedCount counts how many literals L are left to process on the
+    // current decision level. Until unresolvedCount is 1, the algorithm
+    // picks such a literal L and resolves the current result with the reason
+    // of L, if ~L is not a branching literal. (If the latter holds, L occurs
+    // in the result and ~L occurs on the trail, making the resolution
+    // possible.) When unresolvedCount == 1, the single remaining literal L
+    // on the current decision level is the asserting literal.
     int unresolvedCount = initializeResult(conflictingClause, result, work);
 
     auto trailIterators = m_dlProvider.getAssignments(0);
@@ -196,18 +209,22 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
 
     const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
 
+    // Going down the trail backwards once, resolving the result with reason
+    // clauses of items marked as "work" (i.e. literals occuring in the result
+    // which are on the current decision level). This suffices, since given a
+    // literal L at the i'th position of the trail whose assignment has been
+    // forced by propagation, the reason clause of L can only contain literals
+    // which occur on the trail at indices j <= i. Thus, if the reason of L
+    // contains resolution work, it's guaranteed that the algorithm will visit
+    // L later on.
     while (unresolvedCount > 1) {
       const CNFLit resolveAtLit = *cursor;
       const CNFVar resolveAtVar = resolveAtLit.getVariable();
       BOOST_LOG_TRIVIAL(trace) << "Current resolution candidate: " << *cursor;
 
-      if (m_stamps[resolveAtVar] == 0) {
-        --cursor;
-        continue;
-      }
-
-      if (m_dlProvider.getAssignmentDecisionLevel(resolveAtVar) ==
-          currentLevel) {
+      if (m_stamps[resolveAtVar] != 0 &&
+          m_dlProvider.getAssignmentDecisionLevel(resolveAtVar) ==
+              currentLevel) {
         auto reason = m_reasonProvider.getAssignmentReason(resolveAtVar);
 
         if (reason != nullptr) {
@@ -259,7 +276,7 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
 
     return result;
   } catch (std::bad_alloc &oomException) {
-    // clean up, throw on oomException
+    // Restore class invariant A before throwing on the exception.
     for (CNFVar::RawVariable v = 0; v <= m_maxVar.getRawValue(); ++v) {
       m_stamps[CNFVar{v}] = 0;
     }
