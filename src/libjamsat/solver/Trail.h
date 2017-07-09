@@ -56,6 +56,7 @@ private:
   std::vector<decltype(m_trail)::size_type> m_trailLimits;
   BoundedMap<CNFVar, TBool> m_assignments;
   BoundedMap<CNFVar, decltype(m_trailLimits)::size_type> m_assignmentLevel;
+  BoundedMap<CNFVar, TBool> m_phases;
 
 public:
   using size_type = decltype(m_trail)::size_type;
@@ -166,5 +167,16 @@ public:
    * addLiteral(...) if \p level is the current decision level.
    */
   boost::iterator_range<const_iterator> getAssignments(size_type beginIndex);
+
+  /**
+   * \brief Gets the value of the given variable's last assignment.
+   *
+   * \param variable The target variable. Must not be greater than \p maxVar
+   * passed to the constructor. \p variable must be a variable with a
+   * determinate truth value.
+   * \returns the value of the last assignment of \p variable . If \p variable
+   * has not been assigned yet, the result is TBool::FALSE.
+   */
+  TBool getPhase(CNFVar variable) const noexcept;
 };
 }

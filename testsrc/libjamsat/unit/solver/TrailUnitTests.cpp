@@ -243,4 +243,18 @@ TEST(UnitSolver, assignmentRangeIteratorsRemainValidAfterAdd) {
 
   EXPECT_EQ(dl0IteratorsPre.begin(), dl0IteratorsPost.begin());
 }
+
+TEST(UnitSolver, variablePhaseIsNegativeByDefault) {
+  Trail underTest{CNFVar{16384}};
+  EXPECT_EQ(underTest.getPhase(CNFVar{1024}), TBool::FALSE);
+}
+
+TEST(UnitSolver, variablePhaseIsSavedInTrail) {
+  Trail underTest{CNFVar{24}};
+  underTest.addLiteral(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
+  EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBool::TRUE);
+  underTest.shrinkToDecisionLevel(0);
+  EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
+  EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBool::TRUE);
+}
 }

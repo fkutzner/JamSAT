@@ -30,7 +30,8 @@
 namespace jamsat {
 Trail::Trail(CNFVar maxVar)
     : m_trail(maxVar.getRawValue() + 1), m_trailLimits({0}),
-      m_assignments(maxVar, TBool::INDETERMINATE), m_assignmentLevel(maxVar) {
+      m_assignments(maxVar, TBool::INDETERMINATE), m_assignmentLevel(maxVar),
+      m_phases(maxVar, TBool::FALSE) {
   JAM_ASSERT(
       maxVar != CNFVar::undefinedVariable,
       "Trail cannot be instantiated with the undefined variable as maxVar");
@@ -68,6 +69,7 @@ void Trail::addLiteral(CNFLit literal) noexcept {
   TBool value = static_cast<TBool>(literal.getSign());
   m_assignments[literal.getVariable()] = value;
   m_assignmentLevel[literal.getVariable()] = getCurrentDecisionLevel();
+  m_phases[literal.getVariable()] = value;
 }
 
 Trail::size_type Trail::getNumberOfAssignments() const noexcept {
@@ -122,5 +124,9 @@ TBool Trail::getAssignment(CNFLit literal) const noexcept {
     return variableAssignment;
   }
   return variableAssignment == TBool::FALSE ? TBool::TRUE : TBool::FALSE;
+}
+
+TBool Trail::getPhase(CNFVar variable) const noexcept {
+  return m_phases[variable];
 }
 }
