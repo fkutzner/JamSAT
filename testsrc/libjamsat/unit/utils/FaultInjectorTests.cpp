@@ -36,6 +36,7 @@ TEST(UnitUtils, noTestFaultThrowsAreInjectedByDefault) {
 }
 
 TEST(UnitUtils, enabledTestFaultThrowsAreExecuted) {
+  FaultInjectorResetRAII faultInjectorResetter;
   auto &faultInjector = FaultInjector::getInstance();
   faultInjector.enableFaults("logic errors");
   EXPECT_TRUE(faultInjector.isFaultEnabled("logic errors"));
@@ -51,6 +52,8 @@ TEST(UnitUtils, enabledTestFaultThrowsAreExecuted) {
 }
 
 TEST(UnitUtils, faultInjectorResetRAIIRestoresEnabledFaults) {
+  FaultInjectorResetRAII faultInjectorResetter;
+
   auto &faultInjector = FaultInjector::getInstance();
   faultInjector.enableFaults("fooFaults");
 
@@ -60,6 +63,8 @@ TEST(UnitUtils, faultInjectorResetRAIIRestoresEnabledFaults) {
   }
 
   ASSERT_NE(faultInjector.begin(), faultInjector.end());
+  auto faultInjectorIter = faultInjector.begin();
+  EXPECT_EQ(++faultInjectorIter, faultInjector.end());
   EXPECT_EQ(*(faultInjector.begin()), std::string{"fooFaults"});
 }
 }
