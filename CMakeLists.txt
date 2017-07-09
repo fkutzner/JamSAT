@@ -87,6 +87,7 @@ if(COMPILING_WITH_GNULIKE)
 
 elseif(COMPILING_WITH_MSVC)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  add_definitions(/EHsc)
 endif()
 
 ### Add JamSAT sources
