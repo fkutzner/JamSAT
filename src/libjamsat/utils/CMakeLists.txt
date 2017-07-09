@@ -4,4 +4,6 @@ add_library(jamsatUtils OBJECT
   Truth.h
   BoundedMap.h
   BoundedStack.h
+  FaultInjector.h
+  FaultInjector.cpp
 )
