@@ -26,12 +26,14 @@
 
 #include <gtest/gtest.h>
 
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 
 #include "TestAssignmentProvider.h"
 #include <libjamsat/solver/Clause.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
+#include <libjamsat/utils/FaultInjector.h>
 
 namespace jamsat {
 namespace {
@@ -90,6 +92,14 @@ bool equalLits(const std::vector<CNFLit> &lhs, const std::vector<CNFLit> &rhs) {
 // TODO: cover the following scenarios:
 // - the algorithm is used again after failing due to a bad_alloc
 
+TEST(UnitSolver, classInvariantsSatisfiedAfterFirstUIPLearningConstruction) {
+  TestAssignmentProvider assignments;
+  TestReasonProvider reasons;
+  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider> underTest(
+      CNFVar{10}, assignments, reasons);
+  underTest.test_assertClassInvariantsSatisfied();
+}
+
 TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
   TestAssignmentProvider assignments;
   TestReasonProvider reasons;
@@ -135,6 +145,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
   auto assertingLiteral = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
   EXPECT_EQ(result[0], assertingLiteral);
   EXPECT_TRUE(equalLits(result, expectedClause));
+
+  underTest.test_assertClassInvariantsSatisfied();
 }
 
 TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
@@ -182,9 +194,17 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
   // Check that the asserting literal is the first one
   EXPECT_EQ(result[0], ~assertingLit);
   EXPECT_TRUE(equalLits(result, expectedClause));
+
+  underTest.test_assertClassInvariantsSatisfied();
 }
 
-TEST(UnitSolver, firstUIPIsFoundWhenAllLiteralsAreOnSameLevel) {
+namespace {
+void test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(bool simulateOOM) {
+  FaultInjectorResetRAII faultInjectorResetter;
+
+  if (simulateOOM) {
+    FaultInjector::getInstance().enableFaults("FirstUIPLearning/low_memory");
+  }
 
   CNFLit decisionLit{CNFVar{0}, CNFSign::POSITIVE};
   CNFLit intermediateLit{CNFVar{1}, CNFSign::POSITIVE};
@@ -211,10 +231,32 @@ TEST(UnitSolver, firstUIPIsFoundWhenAllLiteralsAreOnSameLevel) {
   CNFVar maxVar{2};
   FirstUIPLearning<TestAssignmentProvider, TestReasonProvider> underTest(
       maxVar, assignments, reasons);
-  auto result = underTest.computeConflictClause(*conflictingClause);
-  // Check that the asserting literal is the first one
-  EXPECT_EQ(result[0], ~decisionLit);
-  EXPECT_EQ(result.size(), 1ull);
+
+  if (!simulateOOM) {
+    auto result = underTest.computeConflictClause(*conflictingClause);
+    // Check that the asserting literal is the first one
+    EXPECT_EQ(result[0], ~decisionLit);
+    EXPECT_EQ(result.size(), 1ull);
+  } else {
+    try {
+      underTest.computeConflictClause(*conflictingClause);
+      FAIL() << "Expected a bad_alloc exception to be thrown";
+    } catch (const std::bad_alloc &exception) {
+    } catch (...) {
+      FAIL() << "Catched exception of unexpected type";
+    }
+  }
+
+  underTest.test_assertClassInvariantsSatisfied();
+}
+}
+
+TEST(UnitSolver, firstUIPIsFoundWhenAllLiteralsAreOnSameLevel) {
+  test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(false);
+}
+
+TEST(UnitSolver, firstUIPLearningSatisfiesClassInvariantsAfterOutOfMemory) {
+  test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(true);
 }
 
 TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
@@ -294,5 +336,7 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
       std::vector<CNFLit>{CNFLit(CNFVar(4), CNFSign::POSITIVE),
                           CNFLit(CNFVar(6), CNFSign::POSITIVE)};
   EXPECT_EQ(conflictClause, expectedClause);
+
+  underTest.test_assertClassInvariantsSatisfied();
 }
 }

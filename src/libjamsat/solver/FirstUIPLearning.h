@@ -36,6 +36,7 @@
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
+#include <libjamsat/utils/FaultInjector.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -82,6 +83,8 @@ public:
    * clause with reason clauses.
    */
   std::vector<CNFLit> computeConflictClause(Clause &conflictingClause) const;
+
+  void test_assertClassInvariantsSatisfied() const noexcept;
 
 private:
   std::vector<CNFLit>
@@ -136,6 +139,11 @@ int FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
   // imaginary literal is CNFLit::undefinedLiteral, in this case.
   addResolvent(conflictingClause, CNFLit::undefinedLiteral, result,
                unresolvedCount, work);
+
+  // m_stamps is in a dirty state now, simulating out of memory conditions
+  // for testing purposes (if enabled via FaultInjector)
+  throwOnInjectedTestFault<std::bad_alloc>("FirstUIPLearning/low_memory");
+
   return unresolvedCount;
 }
 
@@ -172,6 +180,10 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(
       }
     }
   }
+
+  // m_stamps may be in a dirty state, simulating out of memory conditions
+  // for testing purposes (if enabled via FaultInjector)
+  throwOnInjectedTestFault<std::bad_alloc>("FirstUIPLearning/low_memory");
 }
 
 template <class DLProvider, class ReasonProvider>
@@ -310,5 +322,12 @@ std::vector<CNFLit>
 FirstUIPLearning<DLProvider, ReasonProvider>::computeConflictClause(
     Clause &conflictingClause) const {
   return computeUnoptimizedConflictClause(conflictingClause);
+}
+
+template <class DLProvider, class ReasonProvider>
+void FirstUIPLearning<
+    DLProvider, ReasonProvider>::test_assertClassInvariantsSatisfied() const
+    noexcept {
+  JAM_ASSERT(isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
 }
 }
