@@ -143,7 +143,10 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
 
   // Check that the asserting literal is the first one
   auto assertingLiteral = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
+  ASSERT_EQ(result.size(), 4ull);
   EXPECT_EQ(result[0], assertingLiteral);
+  EXPECT_EQ(assignments.getAssignmentDecisionLevel(result[1].getVariable()),
+            3ull);
   EXPECT_TRUE(equalLits(result, expectedClause));
 
   underTest.test_assertClassInvariantsSatisfied();
@@ -192,7 +195,10 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
       std::vector<CNFLit>{~filler[1], ~filler[2], ~filler[3], ~assertingLit};
 
   // Check that the asserting literal is the first one
+  ASSERT_EQ(result.size(), 4ull);
   EXPECT_EQ(result[0], ~assertingLit);
+  EXPECT_EQ(assignments.getAssignmentDecisionLevel(result[1].getVariable()),
+            1ull);
   EXPECT_TRUE(equalLits(result, expectedClause));
 
   underTest.test_assertClassInvariantsSatisfied();
@@ -235,8 +241,8 @@ void test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(bool simulateOOM) {
   if (!simulateOOM) {
     auto result = underTest.computeConflictClause(*conflictingClause);
     // Check that the asserting literal is the first one
+    ASSERT_EQ(result.size(), 1ull);
     EXPECT_EQ(result[0], ~decisionLit);
-    EXPECT_EQ(result.size(), 1ull);
   } else {
     try {
       underTest.computeConflictClause(*conflictingClause);
@@ -335,6 +341,11 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
   auto expectedClause =
       std::vector<CNFLit>{CNFLit(CNFVar(4), CNFSign::POSITIVE),
                           CNFLit(CNFVar(6), CNFSign::POSITIVE)};
+  ASSERT_EQ(conflictClause.size(), 2ull);
+  EXPECT_EQ(conflictClause[0], CNFLit(CNFVar(4), CNFSign::POSITIVE));
+  EXPECT_EQ(
+      assignments.getAssignmentDecisionLevel(conflictClause[1].getVariable()),
+      1ull);
   EXPECT_EQ(conflictClause, expectedClause);
 
   underTest.test_assertClassInvariantsSatisfied();

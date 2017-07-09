@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
@@ -80,7 +81,10 @@ public:
    * \param conflictingClause  The conflicting clause, ie. a clause being
    * falsified through propagation under the current assignment.
    * \returns The conflict clause determined via resolutions of the conflicting
-   * clause with reason clauses.
+   * clause with reason clauses. The asserting literal is placed first in the
+   * result, followed either by a literal on the highest decision level occuring
+   * in the result which is not the current decision level or, if no such
+   * literal exists, by a literal on the current decision level.
    */
   std::vector<CNFLit> computeConflictClause(Clause &conflictingClause) const;
 
@@ -298,11 +302,24 @@ FirstUIPLearning<DLProvider, ReasonProvider>::computeUnoptimizedConflictClause(
     JAM_ASSERT(result[0] != CNFLit::undefinedLiteral,
                "Didn't find an asserting literal");
 
-    // Satisfying class invariant A; the literals at which resolution
+    // Class invariant A gets satisfied here; the literals at which resolution
     // has been performed have already been un-stamped in the addResolvent
-    // method.
-    for (auto l : result) {
-      m_stamps[l.getVariable()] = 0;
+    // method. Also, if applicable, the literal at the next-lowest decision
+    // level is moved to second place in the result.
+    decltype(result)::size_type nextLevelIndex = 0;
+    typename DLProvider::DecisionLevel maxFoundDecisionLevel = 0;
+    for (decltype(result)::size_type i = 0; i < result.size(); ++i) {
+      const auto lVariable = result[i].getVariable();
+      m_stamps[lVariable] = 0;
+
+      const auto lLevel = m_dlProvider.getAssignmentDecisionLevel(lVariable);
+      if (lLevel > maxFoundDecisionLevel && lLevel < currentLevel) {
+        nextLevelIndex = i;
+        maxFoundDecisionLevel = lLevel;
+      }
+    }
+    if (nextLevelIndex >= 2 && result.size() > 2) {
+      std::swap(result[1], result[nextLevelIndex]);
     }
 
     JAM_ASSERT(isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
