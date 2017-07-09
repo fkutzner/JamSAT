@@ -51,11 +51,25 @@ public:
 
   void setAssignment(CNFVar variable, TBool assignment) {
     m_assignments[variable] = assignment;
+    m_phases[variable] = assignment;
+  }
+
+  void setPhase(CNFVar variable, TBool assignment) {
+    m_phases[variable] = assignment;
+  }
+
+  TBool getPhase(CNFVar variable) const noexcept {
+    auto result = m_phases.find(variable);
+    if (result == m_phases.end()) {
+      return TBool::FALSE;
+    }
+    return result->second;
   }
 
 private:
   TBool m_defaultAssignment;
   std::unordered_map<CNFVar, TBool> m_assignments;
+  std::unordered_map<CNFVar, TBool> m_phases;
 };
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_allAssignedCausesUndefToBePicked) {
@@ -107,6 +121,16 @@ void expectVariableSequence(Heuristic &underTest,
     EXPECT_EQ(pickedVar, var);
   }
 }
+
+template <typename Heuristic>
+void expectLiteralSequence(Heuristic &underTest,
+                           const std::vector<CNFLit> &expectedSequence) {
+  for (auto lit : expectedSequence) {
+    CNFLit pick = underTest.pickBranchLiteral();
+    EXPECT_EQ(pick, lit);
+  }
+}
+
 template <typename Heuristic>
 void addDefaultConflictSequence(Heuristic &underTest) {
   for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
@@ -178,6 +202,22 @@ TEST(UnitBranching,
   underTest.seenInConflict(CNFVar{3});
 
   expectVariableSequence(underTest, {CNFVar{3}, CNFVar{4}, CNFVar{5}});
+}
+
+TEST(UnitBranching, VSIDSBranchingHeuristic_signsAreSelectedByPhase) {
+  CNFVar maxVar{10};
+  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
+      maxVar, fakeAssignmentProvider};
+  addDefaultConflictSequence(underTest);
+
+  fakeAssignmentProvider.setPhase(CNFVar{5}, TBool::TRUE);
+  fakeAssignmentProvider.setPhase(CNFVar{4}, TBool::TRUE);
+  fakeAssignmentProvider.setPhase(CNFVar{3}, TBool::FALSE);
+
+  expectLiteralSequence(underTest, {CNFLit{CNFVar{5}, CNFSign::POSITIVE},
+                                    CNFLit{CNFVar{4}, CNFSign::POSITIVE},
+                                    CNFLit{CNFVar{3}, CNFSign::NEGATIVE}});
 }
 
 // TODO: unit tests for decay and bumping

@@ -206,7 +206,9 @@ VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept {
     if (m_assignmentProvider.getAssignment(branchingVar) ==
             TBool::INDETERMINATE &&
         isEligibleForDecisions(branchingVar)) {
-      return CNFLit{branchingVar, CNFSign::POSITIVE};
+      CNFSign sign =
+          static_cast<CNFSign>(m_assignmentProvider.getPhase(branchingVar));
+      return CNFLit{branchingVar, sign};
     }
   };
 
