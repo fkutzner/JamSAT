@@ -134,7 +134,7 @@ private:
 class Watchers {
 public:
   explicit Watchers(CNFVar maxVar)
-      : m_watchers(CNFLit{maxVar, CNFSign::POSITIVE}) {}
+      : m_maxVar(maxVar), m_watchers(CNFLit{maxVar, CNFSign::POSITIVE}) {}
 
   WatcherTraversal getWatchers(CNFLit literal) noexcept {
     JAM_ASSERT(literal.getRawValue() <
@@ -144,14 +144,22 @@ public:
     return WatcherTraversal{&m_watchers[literal]};
   }
 
-  void addWatcher(CNFLit literal, Watcher watcher) noexcept {
+  void addWatcher(CNFLit literal, Watcher watcher) {
     JAM_ASSERT(literal.getRawValue() <
                    static_cast<CNFLit::RawLiteral>(m_watchers.size()),
                "literal out of bounds");
     m_watchers[literal].push_back(watcher);
   }
 
+  void clear() noexcept {
+    for (CNFLit::RawLiteral i = 0; i <= m_maxVar.getRawValue(); ++i) {
+      m_watchers[CNFLit{CNFVar{i}, CNFSign::NEGATIVE}].clear();
+      m_watchers[CNFLit{CNFVar{i}, CNFSign::POSITIVE}].clear();
+    }
+  }
+
 private:
+  const CNFVar m_maxVar;
   BoundedMap<CNFLit, WatcherList> m_watchers;
 };
 }

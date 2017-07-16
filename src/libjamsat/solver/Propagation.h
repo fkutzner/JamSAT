@@ -81,12 +81,9 @@ public:
   Clause *registerClause(Clause &clause);
 
   /**
-   * \brief Unregisters a clause in the propagation system.
-   *
-   * \param clause    A clause that had previously been registered. After this
-   * method returns, the clause may be destroyed.
+   * \brief Unregisters all clauses from the propagation system.
    */
-  void unregisterClause(Clause &clause);
+  void clear() noexcept;
 
   /**
    * \brief Propagates the given fact wrt. the clauses registered in the
@@ -332,5 +329,10 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
 
   watcherListTraversal.finishedTraversal();
   return nullptr;
+}
+
+template <class AssignmentProvider>
+void Propagation<AssignmentProvider>::clear() noexcept {
+  m_watchers.clear();
 }
 }
