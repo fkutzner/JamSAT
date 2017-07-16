@@ -145,8 +145,6 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
   auto assertingLiteral = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
   ASSERT_EQ(result.size(), 4ull);
   EXPECT_EQ(result[0], assertingLiteral);
-  EXPECT_EQ(assignments.getAssignmentDecisionLevel(result[1].getVariable()),
-            3ull);
   EXPECT_TRUE(equalLits(result, expectedClause));
 
   underTest.test_assertClassInvariantsSatisfied();
@@ -197,8 +195,6 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
   // Check that the asserting literal is the first one
   ASSERT_EQ(result.size(), 4ull);
   EXPECT_EQ(result[0], ~assertingLit);
-  EXPECT_EQ(assignments.getAssignmentDecisionLevel(result[1].getVariable()),
-            1ull);
   EXPECT_TRUE(equalLits(result, expectedClause));
 
   underTest.test_assertClassInvariantsSatisfied();
@@ -343,9 +339,6 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
                           CNFLit(CNFVar(6), CNFSign::POSITIVE)};
   ASSERT_EQ(conflictClause.size(), 2ull);
   EXPECT_EQ(conflictClause[0], CNFLit(CNFVar(4), CNFSign::POSITIVE));
-  EXPECT_EQ(
-      assignments.getAssignmentDecisionLevel(conflictClause[1].getVariable()),
-      1ull);
   EXPECT_EQ(conflictClause, expectedClause);
 
   underTest.test_assertClassInvariantsSatisfied();
