@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.2.2)
 option(JAMSAT_ENABLE_SANITIZERS "Enable code sanitizers" OFF)
 option(JAMSAT_USE_SEPARATE_CLANG_SANITIZERS "Activate sanitizers separately for clang" OFF)
 option(JAMSAT_ENABLE_MEMORY_SANITIZER "When using sanitizers, also enable clang's memory sanitizer" OFF)
-
+option(JAMSAT_ENABLE_AFL_FUZZER "Use afl-clang rsp. afl-gcc for compilation and build the fuzzing targets for AFL" OFF)
 
 option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
 option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
@@ -23,6 +23,7 @@ find_package(Boost
         COMPONENTS
           system
           log
+          iostreams
 )
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
