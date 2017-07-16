@@ -26,18 +26,13 @@
 
 #include "FuzzerEntryPoint.h"
 
-#include <fstream>
+#include <iostream>
 
 // This file contains the generic fuzzer adapter, defining its own main()
-// function expecting exactly one argument, namely the path to the file
-// containing the fuzzer-generated input. This adapter can be used eg. for
-// fuzzing with afl-fuzz.
+// function passing stdin on to the JamSAT fuzzer entry point. This adapter
+// can eg. be used with afl-fuzz.
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    return 1;
-  }
-  std::ifstream fuzzData{argv[1]};
-  jamsat::JamSATFuzzerEntryPoint(fuzzData);
+int main(int, char **) {
+  jamsat::JamSATFuzzerEntryPoint(std::cin);
   return 0;
 }
