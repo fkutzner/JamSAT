@@ -14,4 +14,4 @@ add_library(
 )
 
 
-target_link_libraries(jamcore ${Boost_LIBRARIES})
+target_link_libraries(jamcore ${JAMSAT_LIB_DEPS})

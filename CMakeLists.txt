@@ -28,6 +28,12 @@ find_package(Boost
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
+set(JAMSAT_LIB_DEPS ${Boost_LIBRARIES})
+if(UNIX)
+  # TODO: use single-threaded Boost if possible
+  set(JAMSAT_LIB_DEPS ${JAMSAT_LIB_DEPS} pthread)
+endif()
+
 
 ### Compiler arguments
 
