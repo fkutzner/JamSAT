@@ -24,7 +24,7 @@
 
 */
 
-#include "FuzzerEntryPoint.h"
+#include "FuzzingEntryPoint.h"
 
 #include <iostream>
 
@@ -33,6 +33,6 @@
 // can eg. be used with afl-fuzz.
 
 int main(int, char **) {
-  jamsat::JamSATFuzzerEntryPoint(std::cin);
+  jamsat::JamSATFuzzingEntryPoint(std::cin);
   return 0;
 }

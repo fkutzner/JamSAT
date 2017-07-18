@@ -24,12 +24,17 @@
 
 */
 
-#include <toolbox/fuzz/FuzzerEntryPoint.h>
+#include <libjamsat/cnfproblem/CNFProblem.h>
+#include <toolbox/fuzz/FuzzingEntryPoint.h>
 
 #include <iostream>
 
+// This file contains a fuzzing target for CNF problem parsing.
+
 namespace jamsat {
-void JamSATFuzzerEntryPoint(std::istream &) {
-  std::cout << "Trivial fuzz target, for manual testing purposes" << std::endl;
+void JamSATFuzzingEntryPoint(std::istream &fuzzInput) {
+  CNFProblem underTest;
+  fuzzInput >> underTest;
+  std::cout << underTest << std::endl;
 }
 }

@@ -24,7 +24,7 @@
 
 */
 
-#include "FuzzerEntryPoint.h"
+#include "FuzzingEntryPoint.h"
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <cstring>
@@ -41,7 +41,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   char *streamBase = reinterpret_cast<char *>(workingCopy);
 
   FuzzStream fuzzerInput{streamBase, size};
-  jamsat::JamSATFuzzerEntryPoint(fuzzerInput);
+  jamsat::JamSATFuzzingEntryPoint(fuzzerInput);
   delete[] workingCopy;
   return 0;
 }
