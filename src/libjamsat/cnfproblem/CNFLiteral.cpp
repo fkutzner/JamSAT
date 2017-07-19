@@ -36,6 +36,8 @@ CNFVar::CNFVar() noexcept : m_value(std::numeric_limits<int>::max() >> 1) {}
 
 const CNFLit CNFLit::undefinedLiteral = CNFLit{};
 const CNFVar CNFVar::undefinedVariable = CNFVar{};
+const CNFVar::RawVariable CNFVar::maxRawValue =
+    CNFVar::undefinedVariable.getRawValue() - 1;
 
 std::ostream &operator<<(std::ostream &stream, const CNFVar &variable) {
   stream << (variable.getRawValue() + 1);

@@ -110,11 +110,13 @@ public:
 
   /**
    * \brief The undefined marker variable.
-   *
-   * \param rhs   The right-hand-side variable.
-   * \returns \p true iff this variable is equal to \p rhs.
    */
   static const CNFVar undefinedVariable;
+
+  /**
+   * \brief The maximal raw value a regular variable can have.
+   */
+  static const RawVariable maxRawValue;
 
   /**
    * \ingroup JamSAT_CNFProblem
