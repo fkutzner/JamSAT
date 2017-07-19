@@ -26,6 +26,7 @@
 
 #include "CNFProblem.h"
 #include <boost/log/trivial.hpp>
+#include <boost/optional.hpp>
 #include <istream>
 #include <sstream>
 
@@ -141,9 +142,9 @@ DIMACSHeader readDIMACSHeader(std::istream &input) {
     result.valid &= (result.variableCount <= CNFVar::maxRawValue);
 
     return result;
-  } else {
-    BOOST_LOG_TRIVIAL(warning) << "Could not find the DIMACS header";
   }
+
+  BOOST_LOG_TRIVIAL(warning) << "Could not find the DIMACS header";
   return {false, 0, 0};
 }
 
@@ -188,6 +189,36 @@ std::istream &operator>>(std::istream &input, CNFProblem &problem) {
 }
 
 namespace {
+/**
+ * \brief Decodes a DIMACS-encoded literal.
+ *
+ * \param encodedLiteral    The literal to be encoded.
+ * \returns   an optional value containing the decoded literal iff decoding
+ * encodedLiteral succeeded (ie. iff encodedLiteral is within the legal range of
+ * literals).
+ */
+boost::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
+  if (encodedLiteral == std::numeric_limits<int>::min()) {
+    BOOST_LOG_TRIVIAL(warning) << "Illegally large variable: "
+                               << encodedLiteral;
+    return boost::optional<CNFLit>{};
+  }
+
+  CNFSign literalSign =
+      encodedLiteral > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
+  auto rawVariable =
+      static_cast<CNFVar::RawVariable>(std::abs(encodedLiteral) - 1);
+
+  if (rawVariable > CNFVar::maxRawValue) {
+    BOOST_LOG_TRIVIAL(warning) << "Illegally large variable: "
+                               << encodedLiteral;
+    return boost::optional<CNFLit>{};
+  }
+
+  CNFVar literalVariable{rawVariable};
+  return CNFLit{literalVariable, literalSign};
+}
+
 void parsingFailed(CNFClause &clause, std::istream &source) {
   source.setstate(std::ios::failbit);
   clause.clear();
@@ -224,25 +255,12 @@ std::istream &operator>>(std::istream &input, CNFClause &clause) {
       return input;
     }
 
-    if (encodedLiteral == std::numeric_limits<int>::min()) {
-      // Need to reject the literal since we can't pass encodedLiteral to abs()
-      parsingFailed(clause, input);
-      BOOST_LOG_TRIVIAL(warning) << "Illegally large variable: " << buffer;
-      return input;
-    }
-
-    CNFSign literalSign =
-        encodedLiteral > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
-    auto rawVariable =
-        static_cast<CNFVar::RawVariable>(std::abs(encodedLiteral) - 1);
-
-    if (rawVariable > CNFVar::maxRawValue) {
+    boost::optional<CNFLit> decodedLiteral = decodeCNFLit(encodedLiteral);
+    if (!decodedLiteral) {
       parsingFailed(clause, input);
       return input;
     }
-
-    CNFVar literalVariable{rawVariable};
-    clause.push_back(CNFLit{literalVariable, literalSign});
+    clause.push_back(*decodedLiteral);
   }
 
   // This can only be reached if the clause is not properly terminated.
