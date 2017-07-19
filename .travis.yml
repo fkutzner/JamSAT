@@ -32,6 +32,8 @@ matrix:
       env: JAMSAT_MODE=COVERAGE
     - os: osx
       env: JAMSAT_MODE=SANITIZERS
+    - os: osx
+      compiler: gcc
     - os: linux
       compiler: gcc
       env: JAMSAT_MODE=SANITIZERS
