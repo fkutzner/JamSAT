@@ -138,6 +138,8 @@ DIMACSHeader readDIMACSHeader(std::istream &input) {
     headerLine >> result.clauseCount;
     result.valid &= !headerLine.fail();
 
+    result.valid &= (result.variableCount <= CNFVar::maxRawValue);
+
     return result;
   } else {
     BOOST_LOG_TRIVIAL(warning) << "Could not find the DIMACS header";
@@ -185,6 +187,13 @@ std::istream &operator>>(std::istream &input, CNFProblem &problem) {
   return readDIMACSClauses(input, dimacsHeader, problem);
 }
 
+namespace {
+void parsingFailed(CNFClause &clause, std::istream &source) {
+  source.setstate(std::ios::failbit);
+  clause.clear();
+}
+}
+
 std::istream &operator>>(std::istream &input, CNFClause &clause) {
   std::string buffer;
   auto originalClauseSize = clause.size();
@@ -205,9 +214,8 @@ std::istream &operator>>(std::istream &input, CNFClause &clause) {
         std::getline(input, buffer);
         continue;
       }
-      input.setstate(std::ios::failbit);
+      parsingFailed(clause, input);
       BOOST_LOG_TRIVIAL(warning) << "Illegal token in clause: " << buffer;
-      clause.resize(originalClauseSize);
       return input;
     }
 
@@ -215,10 +223,24 @@ std::istream &operator>>(std::istream &input, CNFClause &clause) {
     if (encodedLiteral == 0) {
       return input;
     }
+
+    if (encodedLiteral == std::numeric_limits<int>::min()) {
+      // Need to reject the literal since we can't pass encodedLiteral to abs()
+      parsingFailed(clause, input);
+      BOOST_LOG_TRIVIAL(warning) << "Illegally large variable: " << buffer;
+      return input;
+    }
+
     CNFSign literalSign =
         encodedLiteral > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
     auto rawVariable =
         static_cast<CNFVar::RawVariable>(std::abs(encodedLiteral) - 1);
+
+    if (rawVariable > CNFVar::maxRawValue) {
+      parsingFailed(clause, input);
+      return input;
+    }
+
     CNFVar literalVariable{rawVariable};
     clause.push_back(CNFLit{literalVariable, literalSign});
   }

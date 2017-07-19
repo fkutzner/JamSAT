@@ -25,6 +25,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -474,6 +475,55 @@ TEST(UnitCNFProblem, parseCNFProblemWithIllegallyHighVariableFails) {
   conduit << "1 2 0" << std::endl;
   conduit << "1 9 0" << std::endl;
   conduit << "5 7 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.isEmpty());
+}
+
+TEST(UnitCNFProblem, rejectsCNFProblemWithUnstorableVariableCount) {
+  SuppressLoggedWarningsRAII suppressWarnings;
+  std::stringstream conduit;
+  conduit << "p cnf " << std::numeric_limits<CNFVar::RawVariable>::max() << "0";
+  conduit << " 1 " << std::endl << "1 2 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.isEmpty());
+}
+
+TEST(UnitCNFProblem, rejectsCNFProblemWithReservedVariable) {
+  SuppressLoggedWarningsRAII suppressWarnings;
+  std::stringstream conduit;
+  conduit << "p cnf " << std::numeric_limits<CNFVar::RawVariable>::max();
+  conduit << " 1 " << std::endl << "1 4 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.isEmpty());
+}
+
+TEST(UnitCNFProblem, rejectsCNFProblemWithMinimalReservedVariable) {
+  SuppressLoggedWarningsRAII suppressWarnings;
+  std::stringstream conduit;
+  conduit << "p cnf " << (CNFVar::maxRawValue + 1);
+  conduit << " 1 " << std::endl << "1 4 0" << std::endl;
+
+  CNFProblem underTest;
+  conduit >> underTest;
+  EXPECT_TRUE(conduit.fail());
+  EXPECT_TRUE(underTest.isEmpty());
+}
+
+TEST(UnitCNFProblem, rejectsCNFProblemWithLargestNegativeLiteral) {
+  SuppressLoggedWarningsRAII suppressWarnings;
+  std::stringstream conduit;
+  conduit << "p cnf " << (CNFVar::maxRawValue) << " 1 " << std::endl;
+  conduit << "1 " << std::numeric_limits<int>::min();
+  conduit << " 4 0" << std::endl;
 
   CNFProblem underTest;
   conduit >> underTest;
