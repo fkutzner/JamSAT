@@ -299,16 +299,21 @@ TEST(UnitCNFProblem, parseCommentContainingCNFClause) {
   EXPECT_EQ(underTest, expected);
 }
 
+namespace {
+void expectCNFClauseParseFailure(std::stringstream &dimacsInput) {
+  CNFClause underTest;
+  dimacsInput >> underTest;
+  EXPECT_TRUE(dimacsInput.fail());
+  EXPECT_TRUE(underTest.empty());
+}
+}
+
 TEST(UnitCNFProblem, parseGarbageContainingCNFClauseFails) {
   SuppressLoggedWarningsRAII suppressWarnings;
 
   std::stringstream conduit;
   conduit << "-2 4 this is garbage" << std::endl << "1 0";
-
-  CNFClause underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.empty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, parseUnterminatedCNFClauseFails) {
@@ -328,10 +333,7 @@ TEST(UnitCNFProblem, parseEmptyDIMACSProblemInputFails) {
 
   std::string testData = " ";
   std::stringstream conduit{testData};
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, parseCommentOnlyDIMACSProblemFails) {
@@ -340,21 +342,13 @@ TEST(UnitCNFProblem, parseCommentOnlyDIMACSProblemFails) {
   std::stringstream conduit;
   conduit << "c Foo" << std::endl;
   conduit << "c" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, parseEmptyDIMACSProblem) {
   std::stringstream conduit;
   conduit << "p cnf 0 0" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  ASSERT_FALSE(conduit.fail());
-  ASSERT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, parseSingleClauseDIMACSProblem) {
@@ -412,11 +406,7 @@ TEST(UnitCNFProblem, parseDIMACSProblemWithBadClauseFails) {
   conduit << "1 2 0" << std::endl;
   conduit << "1 X 0" << std::endl;
   conduit << "5 6 0" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, parseDIMACSProblemWithCommentsAndWhitespace) {
@@ -439,33 +429,21 @@ TEST(UnitCNFProblem, parseIllegalDIMACSHeaderCNFFails) {
   SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
   conduit << "p illegal 0 0" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, parseIllegalDIMACSHeaderVarCountFails) {
   SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
   conduit << "p cnf illegal 0" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, parseIllegalDIMACSHeaderClauseCountCountFails) {
   SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
   conduit << "p cnf 0 illegal" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, parseCNFProblemWithIllegallyHighVariableFails) {
@@ -475,11 +453,7 @@ TEST(UnitCNFProblem, parseCNFProblemWithIllegallyHighVariableFails) {
   conduit << "1 2 0" << std::endl;
   conduit << "1 9 0" << std::endl;
   conduit << "5 7 0" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, rejectsCNFProblemWithUnstorableVariableCount) {
@@ -487,11 +461,7 @@ TEST(UnitCNFProblem, rejectsCNFProblemWithUnstorableVariableCount) {
   std::stringstream conduit;
   conduit << "p cnf " << std::numeric_limits<CNFVar::RawVariable>::max() << "0";
   conduit << " 1 " << std::endl << "1 2 0" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, rejectsCNFProblemWithReservedVariable) {
@@ -499,11 +469,7 @@ TEST(UnitCNFProblem, rejectsCNFProblemWithReservedVariable) {
   std::stringstream conduit;
   conduit << "p cnf " << std::numeric_limits<CNFVar::RawVariable>::max();
   conduit << " 1 " << std::endl << "1 4 0" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, rejectsCNFProblemWithMinimalReservedVariable) {
@@ -511,11 +477,7 @@ TEST(UnitCNFProblem, rejectsCNFProblemWithMinimalReservedVariable) {
   std::stringstream conduit;
   conduit << "p cnf " << (CNFVar::maxRawValue + 1);
   conduit << " 1 " << std::endl << "1 4 0" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 
 TEST(UnitCNFProblem, rejectsCNFProblemWithLargestNegativeLiteral) {
@@ -524,10 +486,6 @@ TEST(UnitCNFProblem, rejectsCNFProblemWithLargestNegativeLiteral) {
   conduit << "p cnf " << (CNFVar::maxRawValue) << " 1 " << std::endl;
   conduit << "1 " << std::numeric_limits<int>::min();
   conduit << " 4 0" << std::endl;
-
-  CNFProblem underTest;
-  conduit >> underTest;
-  EXPECT_TRUE(conduit.fail());
-  EXPECT_TRUE(underTest.isEmpty());
+  expectCNFClauseParseFailure(conduit);
 }
 }
