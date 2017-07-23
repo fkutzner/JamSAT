@@ -44,7 +44,7 @@ public:
 
   TBool getAssignment(CNFVar variable) const noexcept;
   TBool getAssignment(CNFLit literal) const noexcept;
-  void addLiteral(CNFLit literal) noexcept;
+  void addAssignment(CNFLit literal) noexcept;
   void popLiteral() noexcept;
   size_t getNumberOfAssignments() const noexcept;
 

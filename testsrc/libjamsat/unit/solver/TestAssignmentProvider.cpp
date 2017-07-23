@@ -48,7 +48,7 @@ TBool TestAssignmentProvider::getAssignment(CNFLit literal) const noexcept {
   return varAssgn == TBool::FALSE ? TBool::TRUE : TBool::FALSE;
 }
 
-void TestAssignmentProvider::addLiteral(CNFLit literal) noexcept {
+void TestAssignmentProvider::addAssignment(CNFLit literal) noexcept {
   JAM_ASSERT(literal.getVariable().getRawValue() < 1024,
              "literal variable too large for TestAssignmentProvider");
   m_assignments[literal.getVariable()] =

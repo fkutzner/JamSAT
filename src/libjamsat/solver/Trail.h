@@ -95,7 +95,7 @@ public:
    * \brief Adds a literal to the end of the trail. Note that this literal will
    * belong to the current decision level.
    */
-  void addLiteral(CNFLit literal) noexcept;
+  void addAssignment(CNFLit literal) noexcept;
 
   /**
    * \brief Gets the number of current variable assignments.
@@ -147,7 +147,7 @@ public:
    * remains valid until shrinkToDecisionLevel(x) is called with x < \p level.
    * The end iterator remains valid until shrinkToDecisionLevel(x) is called
    * with x < \p level and may be incremented once per subsequent call to
-   * addLiteral(...) if \p level is the current decision level.
+   * addAssignment(...) if \p level is the current decision level.
    */
   boost::iterator_range<const_iterator>
   getDecisionLevelAssignments(DecisionLevel level) const noexcept;
@@ -164,7 +164,7 @@ public:
    * remains valid until shrinkToDecisionLevel(x) is called with x < \p level.
    * The end iterator remains valid until shrinkToDecisionLevel(x) is called
    * with x < \p level and may be incremented once per subsequent call to
-   * addLiteral(...) if \p level is the current decision level.
+   * addAssignment(...) if \p level is the current decision level.
    */
   boost::iterator_range<const_iterator> getAssignments(size_type beginIndex);
 

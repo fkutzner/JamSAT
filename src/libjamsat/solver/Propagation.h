@@ -45,7 +45,7 @@ namespace jamsat {
  *
  * \tparam AssignmentProvider   A class type T having the method TBool
  * T::getAssignment(CNFLit x) which returns the current variable assignment of
- * x and a method T::addLiteral(CNFLit x) registering the assignment x within
+ * x and a method T::addAssignment(CNFLit x) registering the assignment x within
  * the assignment provider.
  */
 template <class AssignmentProvider> class Propagation {
@@ -91,7 +91,7 @@ public:
    * variable assignment  reaches a fixpoint.
    *
    * As soon as a new fact has been deduced, the assignment provider's
-   * addLiteral(l) method is called with l encoding the new fact. If the
+   * addAssignment(l) method is called with l encoding the new fact. If the
    * propagation leads to a conflict, a pointer to the clause falsified under
    * the current assignment is returned.
    *
@@ -104,7 +104,7 @@ public:
    * propagation object.
    *
    * As soon as a new fact has been deduced, the assignment provider's
-   * addLiteral(l) method is called with l encoding the new fact. If the
+   * addAssignment(l) method is called with l encoding the new fact. If the
    * propagation leads to a conflict, a pointer to the clause falsified under
    * the current assignment is returned.
    *
@@ -174,7 +174,7 @@ Clause *Propagation<AssignmentProvider>::registerClause(Clause &clause) {
   // By method contract, if secondLiteralAssignment != INDETERMINATE, we need
   // to propagate the first literal.
   if (secondLiteralAssignment != TBool::INDETERMINATE) {
-    m_assignmentProvider.addLiteral(clause[0]);
+    m_assignmentProvider.addAssignment(clause[0]);
     auto confl = propagateUntilFixpoint(clause[0]);
     // Fix the reason since this was not a decision:
     m_reasons[clause[0].getVariable()] = &clause;
@@ -317,7 +317,7 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
         // literal
         ++amountOfNewFacts;
         m_reasons[otherWatchedLit.getVariable()] = &clause;
-        m_assignmentProvider.addLiteral(otherWatchedLit);
+        m_assignmentProvider.addAssignment(otherWatchedLit);
       }
 
       // Only advancing the traversal if an action is forced, since otherwise

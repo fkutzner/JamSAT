@@ -68,7 +68,7 @@ TEST(UnitSolver, falsingSingleLiteralInBinaryClauseCausesPropagation) {
   Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
   underTest.registerClause(*binaryClause);
 
-  assignments.addLiteral(~lit2);
+  assignments.addAssignment(~lit2);
 
   size_t amntNewFacts = 0xFFFF;
   auto conflictingClause = underTest.propagate(~lit2, amntNewFacts);
@@ -89,7 +89,7 @@ TEST(UnitSolver, reasonsAreRecordedDuringPropagation) {
   Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
   underTest.registerClause(*binaryClause);
 
-  assignments.addLiteral(~lit2);
+  assignments.addAssignment(~lit2);
 
   size_t amntNewFacts = 0xFFFF;
   underTest.propagate(~lit2, amntNewFacts);
@@ -110,8 +110,8 @@ TEST(UnitSolver, propagateWithSingleTrueClauseCausesNoPropagation) {
   Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
   underTest.registerClause(*binaryClause);
 
-  assignments.addLiteral(lit1);
-  assignments.addLiteral(~lit2);
+  assignments.addAssignment(lit1);
+  assignments.addAssignment(~lit2);
 
   size_t amntNewFacts = 0xFFFF;
   auto conflictingClause = underTest.propagate(~lit2, amntNewFacts);
@@ -137,11 +137,11 @@ TEST(UnitSolver, propagateWithTernaryClause) {
   underTest.registerClause(*ternaryClause);
 
   size_t newFacts = 0xFFFF;
-  assignments.addLiteral(~lit1);
+  assignments.addAssignment(~lit1);
   underTest.propagate(~lit1, newFacts);
   EXPECT_EQ(newFacts, 0ull);
 
-  assignments.addLiteral(~lit2);
+  assignments.addAssignment(~lit2);
   underTest.propagate(~lit2, newFacts);
   EXPECT_EQ(newFacts, 1ull);
   EXPECT_EQ(assignments.getAssignment(lit3), TBool::TRUE);
@@ -169,10 +169,10 @@ TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
   underTest.registerClause(*ternaryClause2);
 
   size_t newFacts = 0xFFFF;
-  assignments.addLiteral(~lit1);
+  assignments.addAssignment(~lit1);
   underTest.propagate(~lit1, newFacts);
 
-  assignments.addLiteral(~lit3);
+  assignments.addAssignment(~lit3);
   auto conflictingClause = underTest.propagate(~lit3, newFacts);
   EXPECT_EQ(newFacts, 1ull);
   EXPECT_NE(conflictingClause, nullptr);
@@ -184,7 +184,7 @@ TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
   assignments.popLiteral();
 
   // propagate something else
-  assignments.addLiteral(~lit2);
+  assignments.addAssignment(~lit2);
   newFacts = 0xFFFF;
   conflictingClause = underTest.propagate(~lit2, newFacts);
   EXPECT_EQ(newFacts, 1ull);
@@ -223,8 +223,8 @@ TEST(UnitSolver, registerClauseWithAssignedLiteralsCausesPropagation) {
   (*ternaryClause)[2] = lit3;
 
   TestAssignmentProvider assignments;
-  assignments.addLiteral(~lit2);
-  assignments.addLiteral(~lit3);
+  assignments.addAssignment(~lit2);
+  assignments.addAssignment(~lit3);
 
   CNFVar maxVar{4};
   Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
@@ -270,7 +270,7 @@ TEST(UnitSolver, propagateUntilFixpointPropagatesTransitively) {
   underTest.registerClause(*midForcingClause2);
   underTest.registerClause(*lastForcingClause);
 
-  assignments.addLiteral(~lit1);
+  assignments.addAssignment(~lit1);
   auto conflictingClause = underTest.propagateUntilFixpoint(~lit1);
 
   EXPECT_EQ(conflictingClause, nullptr);
@@ -293,8 +293,8 @@ TEST(UnitSolver, propagateUntilFixpointReportsImmediateConflicts) {
   Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
   underTest.registerClause(*binaryClause);
 
-  assignments.addLiteral(~lit1);
-  assignments.addLiteral(~lit2);
+  assignments.addAssignment(~lit1);
+  assignments.addAssignment(~lit2);
 
   auto conflictingClause = underTest.propagateUntilFixpoint(~lit2);
   EXPECT_EQ(conflictingClause, binaryClause.get());
@@ -335,11 +335,11 @@ TEST(UnitSolver, propagateUntilFixpointReportsEnsuingConflicts) {
   underTest.registerClause(*midForcingClause2);
   underTest.registerClause(*lastForcingClause);
 
-  assignments.addLiteral(~lit5);
+  assignments.addAssignment(~lit5);
   auto conflictingClause = underTest.propagateUntilFixpoint(~lit5);
   EXPECT_EQ(conflictingClause, nullptr);
 
-  assignments.addLiteral(~lit1);
+  assignments.addAssignment(~lit1);
   conflictingClause = underTest.propagateUntilFixpoint(~lit1);
   EXPECT_TRUE(conflictingClause == midForcingClause1.get() ||
               conflictingClause == midForcingClause2.get() ||

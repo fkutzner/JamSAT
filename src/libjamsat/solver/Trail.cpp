@@ -57,7 +57,7 @@ void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
   m_trailLimits.resize(level + 1);
 }
 
-void Trail::addLiteral(CNFLit literal) noexcept {
+void Trail::addAssignment(CNFLit literal) noexcept {
   JAM_ASSERT(literal.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariable>(m_assignments.size()),
              "Variable out of bounds");
