@@ -3,6 +3,7 @@ add_library(utils_unit_tests OBJECT
   BoundedStackTests.cpp
   FaultInjectorTests.cpp
   TruthTests.cpp
+  ControlFlowTests.cpp
 )
 
 target_include_directories(utils_unit_tests PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include

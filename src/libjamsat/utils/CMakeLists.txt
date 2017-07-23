@@ -6,4 +6,5 @@ add_library(jamsatUtils OBJECT
   BoundedStack.h
   FaultInjector.h
   FaultInjector.cpp
+  ControlFlow.h
 )
