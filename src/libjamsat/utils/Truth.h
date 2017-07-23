@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <libjamsat/utils/Assert.h>
+
 namespace jamsat {
 /**
  * \ingroup JamSAT_Utils
@@ -76,4 +78,178 @@ enum class TBool : uint8_t {
   /// The indeterminate value.
   INDETERMINATE = 2
 };
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief Converts a TBool value to a bool value.
+ *
+ * \param value   The value to be converted. \p value must not be
+ * TBool::INDETERMINATE.
+ * \returns       true iff \p value equals TBool::TRUE.
+ */
+bool toBool(TBool value);
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief Checks if the given TBool value is determinate.
+ *
+ * \param value   The TBool value to be checked.
+ * \returns       true iff \p value == TBool::INDETERMINATE.
+ */
+bool isDeterminate(TBool value);
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief Converts a bool value to a TBool value.
+ *
+ * \param value   The bool value to be converted.
+ * \returns       TBool::TRUE iff \p value == true; TBool::FALSE otherwise.
+ */
+TBool toTBool(bool value);
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief Negates the given TBool value.
+ *
+ * This negation operator is defined as in Kleene's strong logic of
+ * indeterminacy.
+ *
+ * \param a   The value to be inverted.
+ * \returns   TBool::TRUE iff \p a == TBool::FALSE; TBool::FALSE iff \p a ==
+ * TBool::TRUE; TBool::INDETERMINATE otherwise.
+ */
+TBool negate(const TBool a);
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief AND operator for TBool values.
+ *
+ * This AND operator is defined as in Kleene's strong logic of indeterminacy.
+ *
+ * Note: Since overloading operator&& and operator|| would cause behaviour which
+ * would violate the principle of least surprise (non-bool return value, no
+ * short circuiting), the operators for three-valued logic are implemented using
+ * the common alternative notation ("*" for "and", "+" for "or")
+ *
+ * \param lhs   The left-hand-side argument.
+ * \param rhs   The right-hand-side argument.
+ * \returns     TBool::TRUE if both \p lhs and \p rhs are equal to TBool::TRUE;
+ * TBool::FALSE if any of \p lhs and \p rhs are equal to TBool::FALSE;
+ * TBool::INDETERMINATE otherwise.
+ */
+TBool operator*(const TBool lhs, const TBool rhs);
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief Compound assignment AND operator for TBool values.
+ *
+ * This operator assigns \p lhs * \p rhs to \p lhs.
+ *
+ * Note: Since overloading operator&& and operator|| would cause behaviour which
+ * would violate the principle of least surprise (non-bool return value, no
+ * short circuiting), the operators for three-valued logic are implemented using
+ * the common alternative notation ("*" for "and", "+" for "or")
+ *
+ * \param lhs   The left-hand-side argument.
+ * \param rhs   The right-hand-side argument.
+ * \returns     A reference to \p lhs.
+ */
+TBool &operator*=(const TBool &lhs, const TBool &rhs);
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief OR operator for TBool values.
+ *
+ * This OR operator is defined as in Kleene's strong logic of indeterminacy.
+ *
+ * Note: Since overloading operator&& and operator|| would cause behaviour which
+ * would violate the principle of least surprise (non-bool return value, no
+ * short circuiting), the operators for three-valued logic are implemented using
+ * the common alternative notation ("*" for "and", "+" for "or")
+ *
+ * \param lhs   The left-hand-side argument.
+ * \param rhs   The right-hand-side argument.
+ * \returns     TBool::TRUE if any of \p lhs and \p rhs are equal to
+ * TBool::TRUE; TBool::FALSE if both \p lhs and \p rhs are equal to
+ * TBool::FALSE; TBool::INDETERMINATE otherwise.
+ */
+TBool operator+(const TBool lhs, const TBool rhs);
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief Compound assignment OR operator for TBool values.
+ *
+ * This operator assigns \p lhs + \p rhs to \p lhs.
+ *
+ * Note: Since overloading operator&& and operator|| would cause behaviour which
+ * would violate the principle of least surprise (non-bool return value, no
+ * short circuiting), the operators for three-valued logic are implemented using
+ * the common alternative notation ("*" for "and", "+" for "or")
+ *
+ * \param lhs   The left-hand-side argument.
+ * \param rhs   The right-hand-side argument.
+ * \returns     A reference to \p lhs.
+ */
+TBool &operator+=(const TBool &lhs, const TBool &rhs);
+
+/********** Implementation ****************************** */
+
+inline bool toRawBool(TBool value) {
+  JAM_ASSERT(value != TBool::INDETERMINATE,
+             "Can't convert indeterminate TBool to bool");
+  return value == TBool::TRUE;
+}
+
+inline bool isDeterminate(TBool value) { return value != TBool::INDETERMINATE; }
+
+inline TBool toTBool(bool value) { return value ? TBool::TRUE : TBool::FALSE; }
+
+inline TBool negate(const TBool a) {
+  switch (a) {
+  case TBool::INDETERMINATE:
+    return TBool::INDETERMINATE;
+  case TBool::TRUE:
+    return TBool::FALSE;
+  case TBool::FALSE:
+    return TBool::TRUE;
+  }
+}
+
+inline TBool operator*(const TBool lhs, const TBool rhs) {
+  if (lhs == TBool::TRUE && rhs == TBool::TRUE) {
+    return TBool::TRUE;
+  }
+  if (lhs == TBool::FALSE || rhs == TBool::FALSE) {
+    return TBool::FALSE;
+  }
+  return TBool::INDETERMINATE;
+}
+
+inline TBool &operator*=(TBool &lhs, const TBool rhs) {
+  lhs = lhs * rhs;
+  return lhs;
+}
+
+inline TBool operator+(const TBool lhs, const TBool rhs) {
+  if (lhs == TBool::TRUE || rhs == TBool::TRUE) {
+    return TBool::TRUE;
+  }
+  if (lhs == TBool::FALSE && rhs == TBool::FALSE) {
+    return TBool::FALSE;
+  }
+  return TBool::INDETERMINATE;
+}
+
+inline TBool &operator+=(TBool &lhs, const TBool rhs) {
+  lhs = lhs + rhs;
+  return lhs;
+}
 }
