@@ -11,8 +11,15 @@ build_and_test() {
   echo "Building..."
   cmake --build . -- -j2
 
-  echo "Testing..."
-  ctest -V
+  echo -n "Testing "
+  if [ "$1" == "--only-unit-tests" ]
+  then
+    echo "(only unit tests)..."
+    ctest -V -R "libjamsat_unit_tests"
+  else
+    echo "..."
+    ctest -V
+  fi
 }
 
 process_coverage_results() {
@@ -28,7 +35,7 @@ then
   if [ "${JAMSAT_MODE}" = "COVERAGE" ]
   then
     cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_ENABLE_COVERAGE=ON -DJAMSAT_DISABLE_OPTIMIZATIONS=ON ${TRAVIS_BUILD_DIR}
-    build_and_test
+    build_and_test --only-unit-tests
     process_coverage_results
     pushd $TRAVIS_BUILD_DIR
     coveralls-lcov ../build/coverage.info
