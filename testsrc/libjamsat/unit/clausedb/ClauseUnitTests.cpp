@@ -25,18 +25,18 @@
 */
 
 #include <gtest/gtest.h>
-#include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/clausedb/Clause.h>
+#include <libjamsat/cnfproblem/CNFLiteral.h>
 
 namespace jamsat {
 
-TEST(UnitSolver, allocateClauseOnHeap) {
+TEST(UnitClauseDB, allocateClauseOnHeap) {
   auto allocatedClause = createHeapClause(11);
   ASSERT_NE(allocatedClause.get(), nullptr);
   EXPECT_EQ(allocatedClause->size(), 11ull);
 }
 
-TEST(UnitSolver, nonemptyHeapClausesHaveSufficientMemory) {
+TEST(UnitClauseDB, nonemptyHeapClausesHaveSufficientMemory) {
   auto allocatedClause = createHeapClause(11);
   ASSERT_NE(allocatedClause.get(), nullptr);
 
@@ -48,7 +48,7 @@ TEST(UnitSolver, nonemptyHeapClausesHaveSufficientMemory) {
   EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
 }
 
-TEST(UnitSolver, singleLitHeapClausesHaveSufficientMemory) {
+TEST(UnitClauseDB, singleLitHeapClausesHaveSufficientMemory) {
   auto allocatedClause = createHeapClause(1);
   ASSERT_NE(allocatedClause.get(), nullptr);
 
@@ -60,7 +60,7 @@ TEST(UnitSolver, singleLitHeapClausesHaveSufficientMemory) {
   EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
 }
 
-TEST(UnitSolver, emptyHeapClausesHaveSufficientMemory) {
+TEST(UnitClauseDB, emptyHeapClausesHaveSufficientMemory) {
   auto allocatedClause = createHeapClause(0);
   ASSERT_NE(allocatedClause.get(), nullptr);
 
@@ -74,7 +74,7 @@ TEST(UnitSolver, emptyHeapClausesHaveSufficientMemory) {
             addrJustBeyondClause - addrBeginClause + sizeof(CNFLit));
 }
 
-TEST(UnitSolver, freshHeapClauseContainsUndefinedLiterals) {
+TEST(UnitClauseDB, freshHeapClauseContainsUndefinedLiterals) {
   auto underTest = createHeapClause(11);
   ASSERT_NE(underTest.get(), nullptr);
   for (Clause::size_type i = 0; i < underTest->size(); ++i) {
@@ -82,7 +82,7 @@ TEST(UnitSolver, freshHeapClauseContainsUndefinedLiterals) {
   }
 }
 
-TEST(UnitSolver, heapClauseIsWritable) {
+TEST(UnitClauseDB, heapClauseIsWritable) {
   auto underTest = createHeapClause(11);
   ASSERT_NE(underTest.get(), nullptr);
   CNFLit testLiteral{CNFVar{3}, CNFSign::NEGATIVE};
@@ -90,7 +90,7 @@ TEST(UnitSolver, heapClauseIsWritable) {
   EXPECT_EQ((*underTest)[3], testLiteral);
 }
 
-TEST(UnitSolver, iterateOverEmptyClause) {
+TEST(UnitClauseDB, iterateOverEmptyClause) {
   auto underTest = createHeapClause(0);
   ASSERT_NE(underTest.get(), nullptr);
   bool iterated = false;
@@ -128,21 +128,21 @@ template <typename C> void test_iterateOverClause_check(C &underTest) {
 }
 }
 
-TEST(UnitSolver, iterateOverClause) {
+TEST(UnitClauseDB, iterateOverClause) {
   auto underTest = createHeapClause(11);
   ASSERT_NE(underTest.get(), nullptr);
   test_iterateOverClause_setup(*underTest);
   test_iterateOverClause_check(*underTest);
 }
 
-TEST(UnitSolver, iterateOverConstantClause) {
+TEST(UnitClauseDB, iterateOverConstantClause) {
   auto underTest = createHeapClause(8);
   test_iterateOverClause_setup(*underTest);
   const Clause &underTestConst = *underTest;
   test_iterateOverClause_check(underTestConst);
 }
 
-TEST(UnitSolver, shrinkClause) {
+TEST(UnitClauseDB, shrinkClause) {
   auto underTest = createHeapClause(11);
   ASSERT_NE(underTest.get(), nullptr);
   ASSERT_EQ(underTest->end() - underTest->begin(), 11);
