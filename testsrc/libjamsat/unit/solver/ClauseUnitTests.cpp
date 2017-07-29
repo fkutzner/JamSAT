@@ -33,7 +33,7 @@ namespace jamsat {
 TEST(UnitSolver, allocateClauseOnHeap) {
   auto allocatedClause = createHeapClause(11);
   ASSERT_NE(allocatedClause.get(), nullptr);
-  EXPECT_EQ(allocatedClause->getSize(), 11ull);
+  EXPECT_EQ(allocatedClause->size(), 11ull);
 }
 
 TEST(UnitSolver, nonemptyHeapClausesHaveSufficientMemory) {
@@ -77,7 +77,7 @@ TEST(UnitSolver, emptyHeapClausesHaveSufficientMemory) {
 TEST(UnitSolver, freshHeapClauseContainsUndefinedLiterals) {
   auto underTest = createHeapClause(11);
   ASSERT_NE(underTest.get(), nullptr);
-  for (Clause::size_type i = 0; i < underTest->getSize(); ++i) {
+  for (Clause::size_type i = 0; i < underTest->size(); ++i) {
     EXPECT_EQ((*underTest)[i], CNFLit::undefinedLiteral);
   }
 }
@@ -146,10 +146,10 @@ TEST(UnitSolver, shrinkClause) {
   auto underTest = createHeapClause(11);
   ASSERT_NE(underTest.get(), nullptr);
   ASSERT_EQ(underTest->end() - underTest->begin(), 11);
-  ASSERT_EQ(underTest->getSize(), 11ull);
+  ASSERT_EQ(underTest->size(), 11ull);
 
-  underTest->shrink(5);
+  underTest->resize(5);
   EXPECT_EQ(underTest->end() - underTest->begin(), 5);
-  EXPECT_EQ(underTest->getSize(), 5ull);
+  EXPECT_EQ(underTest->size(), 5ull);
 }
 }

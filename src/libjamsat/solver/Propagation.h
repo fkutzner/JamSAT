@@ -166,7 +166,7 @@ Propagation<AssignmentProvider, ClauseT>::Propagation(
 template <class AssignmentProvider, class ClauseT>
 ClauseT *
 Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause) {
-  JAM_ASSERT(clause.getSize() >= 2ull, "Illegally small clause argument");
+  JAM_ASSERT(clause.size() >= 2ull, "Illegally small clause argument");
   detail_propagation::Watcher<ClauseT> watcher1{clause, clause[0], 1};
   detail_propagation::Watcher<ClauseT> watcher2{clause, clause[1], 0};
   m_watchers.addWatcher(clause[0], watcher2);
@@ -284,7 +284,7 @@ Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
     // which is their index in m_watchers.
 
     bool actionIsForced = true;
-    for (typename ClauseT::size_type i = 2; i < clause.getSize(); ++i) {
+    for (typename ClauseT::size_type i = 2; i < clause.size(); ++i) {
       CNFLit currentLiteral = clause[i];
       if (m_assignmentProvider.getAssignment(currentLiteral) != TBool::FALSE) {
         // The FALSE literal is moved into the unwatched of the clause here,

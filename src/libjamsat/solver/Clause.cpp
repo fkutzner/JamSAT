@@ -41,9 +41,9 @@ const CNFLit &Clause::operator[](size_type index) const noexcept {
   return *(&m_anchor + index);
 }
 
-Clause::size_type Clause::getSize() const noexcept { return m_size; }
+Clause::size_type Clause::size() const noexcept { return m_size; }
 
-void Clause::shrink(size_type newSize) noexcept {
+void Clause::resize(size_type newSize) noexcept {
   JAM_ASSERT(newSize <= m_size,
              "newSize may not be larger than the current size");
   m_size = newSize;

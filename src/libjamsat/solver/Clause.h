@@ -60,7 +60,7 @@ public:
    *
    * \returns The clause's size.
    */
-  size_type getSize() const noexcept;
+  size_type size() const noexcept;
 
   /**
    * \brief Reduces the length of the clause to the given size.
@@ -68,7 +68,7 @@ public:
    * \param newSize  The clause's new size, which must not be larger than the
    * current size.
    */
-  void shrink(size_type newSize) noexcept;
+  void resize(size_type newSize) noexcept;
 
   /**
    * \brief Gets the begin random-access iterator for the literal list.

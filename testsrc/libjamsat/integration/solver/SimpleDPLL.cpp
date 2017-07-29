@@ -91,7 +91,7 @@ private:
 
   std::unique_ptr<Clause> createInternalClause(const CNFClause &from) {
     auto newClause = createHeapClause(from.size());
-    for (Clause::size_type i = 0; i < newClause->getSize(); ++i) {
+    for (Clause::size_type i = 0; i < newClause->size(); ++i) {
       (*newClause)[i] = from[i];
     }
     return newClause;
