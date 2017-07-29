@@ -44,7 +44,7 @@ TEST(UnitClauseDB, nonemptyHeapClausesHaveSufficientMemory) {
       reinterpret_cast<uintptr_t>(allocatedClause->end());
   auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
 
-  auto computedSize = getClauseAllocationSize(11);
+  auto computedSize = Clause::getAllocationSize(11);
   EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
 }
 
@@ -56,7 +56,7 @@ TEST(UnitClauseDB, singleLitHeapClausesHaveSufficientMemory) {
       reinterpret_cast<uintptr_t>(allocatedClause->end());
   auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
 
-  auto computedSize = getClauseAllocationSize(1);
+  auto computedSize = Clause::getAllocationSize(1);
   EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
 }
 

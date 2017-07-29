@@ -33,7 +33,11 @@
 
 namespace jamsat {
 /**
- * \ingroup JamSAT_Solver
+ * \defgroup JamSAT_ClauseDB.
+ */
+
+/**
+ * \ingroup JamSAT_ClauseDB
  *
  * \class jamsat::Clause
  *
@@ -100,6 +104,14 @@ public:
    */
   const_iterator end() const noexcept;
 
+  /**
+   * \brief Computes the size of a non-empty Clause object.
+   *
+   * \param clauseSize The nonzero length of the clause.
+   * \returns The size of a Clause object, in bytes.
+   */
+  static size_t getAllocationSize(size_type clauseSize);
+
   friend std::unique_ptr<Clause> createHeapClause(size_type size);
 
 private:
@@ -118,18 +130,6 @@ private:
 };
 
 /**
- * \ingroup JamSAT_Solver
- *
- * \brief Computes the size of a non-empty Clause object.
- *
- * \param clauseSize The nonzero length of the clause.
- * \returns The size of a Clause object, in bytes.
- */
-size_t getClauseAllocationSize(Clause::size_type clauseSize);
-
-/**
- * \ingroup JamSAT_Solver
- *
  * \brief Allocates a clause of the given size on the heap.
  *
  * \param size The clause's size.
