@@ -31,68 +31,75 @@
 
 namespace jamsat {
 namespace detail_propagation {
-TEST(UnitSolver, watchersStoreClausesAndOtherLit) {
-  auto testClause = createHeapClause(0);
-  CNFLit otherLiteral{CNFVar{10}, CNFSign::NEGATIVE};
-  Watcher underTest{*testClause, otherLiteral};
 
-  EXPECT_EQ(&(underTest.getClause()), testClause.get());
+using TrivialClause = std::vector<CNFLit>;
+using TestWatcher = Watcher<TrivialClause>;
+using TestWatchers = Watchers<TrivialClause>;
+using TestWatcherTraversal = WatcherTraversal<TestWatcher>;
+using TestWatcherList = TestWatcherTraversal::WatcherList;
+
+TEST(UnitSolver, watchersStoreClausesAndOtherLit) {
+  TrivialClause testClause;
+  CNFLit otherLiteral{CNFVar{10}, CNFSign::NEGATIVE};
+  TestWatcher underTest{testClause, otherLiteral};
+
+  EXPECT_EQ(&(underTest.getClause()), &testClause);
   EXPECT_EQ(underTest.getOtherWatchedLiteral(), otherLiteral);
 }
 
 TEST(UnitSolver, watchersWithSameClauseAndOtherLitAreEqual) {
-  auto testClause = createHeapClause(0);
-  Watcher underTest1{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  Watcher underTest2{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TrivialClause testClause;
+  TestWatcher underTest1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcher underTest2{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
 
   EXPECT_TRUE(underTest1 == underTest2);
   EXPECT_FALSE(underTest1 != underTest2);
 }
 
 TEST(UnitSolver, watchersWithSameClauseAndDifferentLitAreInequal) {
-  auto testClause = createHeapClause(0);
-  Watcher underTest1{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  Watcher underTest2{*testClause, CNFLit{CNFVar{11}, CNFSign::POSITIVE}};
+  TrivialClause testClause;
+  TestWatcher underTest1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcher underTest2{testClause, CNFLit{CNFVar{11}, CNFSign::POSITIVE}};
 
   EXPECT_TRUE(underTest1 != underTest2);
   EXPECT_FALSE(underTest1 == underTest2);
 }
 
 TEST(UnitSolver, watchersWithDifferentClausesAreInequal) {
-  auto testClause1 = createHeapClause(0);
-  auto testClause2 = createHeapClause(0);
-  Watcher underTest1{*testClause1, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  Watcher underTest2{*testClause2, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TrivialClause testClause1;
+  TrivialClause testClause2;
+  TestWatcher underTest1{testClause1, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcher underTest2{testClause2, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
 
   EXPECT_TRUE(underTest1 != underTest2);
   EXPECT_FALSE(underTest1 == underTest2);
 }
 
 TEST(UnitSolver, traverseEmptyWatcherList) {
-  WatcherList empty;
-  WatcherTraversal underTest{&empty};
+  TestWatcherList empty;
+  TestWatcherTraversal underTest{&empty};
   EXPECT_TRUE(underTest.hasFinishedTraversal());
 }
 
 TEST(UnitSolver, dereferenceWatcherTraversal) {
-  auto testClause = createHeapClause(0);
+  TrivialClause testClause;
 
-  Watcher watcher1{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  WatcherList watchers{watcher1};
+  TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcherList watchers{watcher1};
 
-  WatcherTraversal underTest{&watchers};
+  TestWatcherTraversal underTest{&watchers};
   ASSERT_FALSE(underTest.hasFinishedTraversal());
-  EXPECT_EQ(&((*underTest).getClause()), testClause.get());
-  EXPECT_EQ(&(underTest->getClause()), testClause.get());
+  EXPECT_EQ(&((*underTest).getClause()), &testClause);
+  EXPECT_EQ(&(underTest->getClause()), &testClause);
 }
 
 TEST(UnitSolver, traverseWatcherListWithSingleElement) {
-  auto testClause = createHeapClause(0);
+  TrivialClause testClause;
 
-  Watcher watcher1{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  WatcherList watchers{watcher1};
+  TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcherList watchers{watcher1};
 
-  WatcherTraversal underTest{&watchers};
+  TestWatcherTraversal underTest{&watchers};
   ASSERT_FALSE(underTest.hasFinishedTraversal());
   EXPECT_EQ(&(*underTest), &watchers[0]);
 
@@ -101,14 +108,14 @@ TEST(UnitSolver, traverseWatcherListWithSingleElement) {
 }
 
 TEST(UnitSolver, traverseWatcherListWithThreeElements) {
-  auto testClause = createHeapClause(0);
+  TrivialClause testClause;
 
-  Watcher watcher1{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  Watcher watcher2{*testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
-  Watcher watcher3{*testClause, CNFLit{CNFVar{12}, CNFSign::NEGATIVE}};
-  WatcherList watchers{watcher1, watcher2, watcher3};
+  TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcher watcher2{testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
+  TestWatcher watcher3{testClause, CNFLit{CNFVar{12}, CNFSign::NEGATIVE}};
+  TestWatcherList watchers{watcher1, watcher2, watcher3};
 
-  WatcherTraversal underTest{&watchers};
+  TestWatcherTraversal underTest{&watchers};
   ASSERT_FALSE(underTest.hasFinishedTraversal());
   EXPECT_EQ(&(*underTest), &watchers[0]);
 
@@ -125,12 +132,12 @@ TEST(UnitSolver, traverseWatcherListWithThreeElements) {
 }
 
 TEST(UnitSolver, removeElementInSingleElementWatcherList) {
-  auto testClause = createHeapClause(0);
+  TrivialClause testClause;
 
-  Watcher watcher1{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  WatcherList watchers{watcher1};
+  TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcherList watchers{watcher1};
 
-  WatcherTraversal underTest{&watchers};
+  TestWatcherTraversal underTest{&watchers};
   underTest.removeCurrent();
 
   ASSERT_TRUE(underTest.hasFinishedTraversal());
@@ -139,14 +146,14 @@ TEST(UnitSolver, removeElementInSingleElementWatcherList) {
 }
 
 TEST(UnitSolver, removeSingleElementInWatcherListWithThreeElements) {
-  auto testClause = createHeapClause(0);
+  TrivialClause testClause;
 
-  Watcher watcher1{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  Watcher watcher2{*testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
-  Watcher watcher3{*testClause, CNFLit{CNFVar{12}, CNFSign::NEGATIVE}};
-  WatcherList watchers{watcher1, watcher2, watcher3};
+  TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcher watcher2{testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
+  TestWatcher watcher3{testClause, CNFLit{CNFVar{12}, CNFSign::NEGATIVE}};
+  TestWatcherList watchers{watcher1, watcher2, watcher3};
 
-  WatcherTraversal underTest{&watchers};
+  TestWatcherTraversal underTest{&watchers};
   ++underTest;
   underTest.removeCurrent();
 
@@ -154,19 +161,19 @@ TEST(UnitSolver, removeSingleElementInWatcherListWithThreeElements) {
   EXPECT_EQ(&(*underTest), &watchers[1]);
 
   underTest.finishedTraversal();
-  WatcherList expectedWatchers{watcher1, watcher3};
+  TestWatcherList expectedWatchers{watcher1, watcher3};
   EXPECT_EQ(watchers, expectedWatchers);
 }
 
 TEST(UnitSolver, removeAllElementsInWatcherListWithThreeElements) {
-  auto testClause = createHeapClause(0);
+  TrivialClause testClause;
 
-  Watcher watcher1{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  Watcher watcher2{*testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
-  Watcher watcher3{*testClause, CNFLit{CNFVar{12}, CNFSign::NEGATIVE}};
-  WatcherList watchers{watcher1, watcher2, watcher3};
+  TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcher watcher2{testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
+  TestWatcher watcher3{testClause, CNFLit{CNFVar{12}, CNFSign::NEGATIVE}};
+  TestWatcherList watchers{watcher1, watcher2, watcher3};
 
-  WatcherTraversal underTest{&watchers};
+  TestWatcherTraversal underTest{&watchers};
   underTest.removeCurrent();
   underTest.removeCurrent();
   underTest.removeCurrent();
@@ -174,19 +181,19 @@ TEST(UnitSolver, removeAllElementsInWatcherListWithThreeElements) {
   ASSERT_TRUE(underTest.hasFinishedTraversal());
 
   underTest.finishedTraversal();
-  WatcherList expectedWatchers{};
+  TestWatcherList expectedWatchers{};
   EXPECT_EQ(watchers, expectedWatchers);
 }
 
 TEST(UnitSolver, compareWatcherListTraversals) {
-  auto testClause = createHeapClause(0);
+  TrivialClause testClause;
 
-  Watcher watcher1{*testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-  Watcher watcher2{*testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
-  WatcherList watchers{watcher1, watcher2};
+  TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+  TestWatcher watcher2{testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
+  TestWatcherList watchers{watcher1, watcher2};
 
-  WatcherTraversal lhs{&watchers};
-  WatcherTraversal rhs{&watchers};
+  TestWatcherTraversal lhs{&watchers};
+  TestWatcherTraversal rhs{&watchers};
 
   EXPECT_TRUE(lhs == rhs);
   EXPECT_FALSE(lhs != rhs);
@@ -205,7 +212,7 @@ TEST(UnitSolver, compareWatcherListTraversals) {
 }
 
 TEST(UnitSolver, emptyWatchersProducesEmptyTraversals) {
-  Watchers underTest{CNFVar{10}};
+  TestWatchers underTest{CNFVar{10}};
   for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
     auto probeNeg = underTest.getWatchers(CNFLit{CNFVar{i}, CNFSign::NEGATIVE});
     EXPECT_TRUE(probeNeg.hasFinishedTraversal());
@@ -216,10 +223,10 @@ TEST(UnitSolver, emptyWatchersProducesEmptyTraversals) {
 
 TEST(UnitSolver, addedWatcherIsContainedInTraversal) {
   CNFLit secondWatchedLiteral{CNFVar{9}, CNFSign::POSITIVE};
-  auto testClause = createHeapClause(0);
-  Watcher watcher{*testClause, secondWatchedLiteral};
+  TrivialClause testClause;
+  TestWatcher watcher{testClause, secondWatchedLiteral};
 
-  Watchers underTest{CNFVar{10}};
+  TestWatchers underTest{CNFVar{10}};
   CNFLit watchedLiteral{CNFVar{10}, CNFSign::POSITIVE};
   underTest.addWatcher(watchedLiteral, watcher);
 

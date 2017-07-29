@@ -30,6 +30,7 @@
 #include <vector>
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
+#include <libjamsat/solver/Clause.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/ControlFlow.h>
@@ -154,7 +155,7 @@ private:
   }
 
   Trail m_trail;
-  Propagation<Trail> m_propagation;
+  Propagation<Trail, Clause> m_propagation;
   std::vector<std::unique_ptr<Clause>> m_clauses;
   CNFVar m_maxVar;
 };

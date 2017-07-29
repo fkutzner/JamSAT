@@ -30,7 +30,6 @@
 #include <boost/range.hpp>
 #include <vector>
 
-#include "Clause.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
@@ -40,13 +39,13 @@ namespace detail_propagation {
 
 // TODO: documentation, with \internal flag.
 
-class Watcher {
+template <class ClauseT> class Watcher {
 public:
-  Watcher(Clause &watchedClause, CNFLit otherWatchedLiteral, int index = 0)
+  Watcher(ClauseT &watchedClause, CNFLit otherWatchedLiteral, int index = 0)
       : m_clause(&watchedClause), m_otherWatchedLiteral(otherWatchedLiteral),
         m_index(index) {}
 
-  Clause &getClause() noexcept { return *m_clause; }
+  ClauseT &getClause() noexcept { return *m_clause; }
 
   CNFLit getOtherWatchedLiteral() const noexcept {
     return m_otherWatchedLiteral;
@@ -69,15 +68,15 @@ public:
   }
 
 private:
-  Clause *m_clause;
+  ClauseT *m_clause;
   CNFLit m_otherWatchedLiteral;
   int m_index;
 };
 
-using WatcherList = std::vector<Watcher>;
-
-class WatcherTraversal {
+template <class WatcherT> class WatcherTraversal {
 public:
+  using WatcherList = std::vector<WatcherT>;
+
   explicit WatcherTraversal(WatcherList *iteratee) noexcept
       : m_iteratee(iteratee), m_current(iteratee->begin()),
         m_toTraverse(iteratee->size()) {}
@@ -113,13 +112,13 @@ public:
     return m_current != rhs.m_current || m_iteratee != rhs.m_iteratee;
   }
 
-  Watcher &operator*() noexcept {
+  WatcherT &operator*() noexcept {
     JAM_ASSERT(m_current != m_iteratee->end(),
                "Iterator is not pointing to a valid element");
     return *m_current;
   }
 
-  Watcher *operator->() noexcept {
+  WatcherT *operator->() noexcept {
     JAM_ASSERT(m_current != m_iteratee->end(),
                "Iterator is not pointing to a valid element");
     return &(*m_current);
@@ -127,24 +126,26 @@ public:
 
 private:
   WatcherList *m_iteratee;
-  WatcherList::iterator m_current;
-  WatcherList::size_type m_toTraverse;
+  typename WatcherList::iterator m_current;
+  typename WatcherList::size_type m_toTraverse;
 };
 
-class Watchers {
+template <class ClauseT> class Watchers {
 public:
+  using WatcherT = Watcher<ClauseT>;
+
   explicit Watchers(CNFVar maxVar)
       : m_maxVar(maxVar), m_watchers(CNFLit{maxVar, CNFSign::POSITIVE}) {}
 
-  WatcherTraversal getWatchers(CNFLit literal) noexcept {
+  WatcherTraversal<WatcherT> getWatchers(CNFLit literal) noexcept {
     JAM_ASSERT(literal.getRawValue() <
                    static_cast<CNFLit::RawLiteral>(m_watchers.size()),
                "literal out of bounds");
 
-    return WatcherTraversal{&m_watchers[literal]};
+    return WatcherTraversal<WatcherT>{&m_watchers[literal]};
   }
 
-  void addWatcher(CNFLit literal, Watcher watcher) {
+  void addWatcher(CNFLit literal, Watcher<ClauseT> watcher) {
     JAM_ASSERT(literal.getRawValue() <
                    static_cast<CNFLit::RawLiteral>(m_watchers.size()),
                "literal out of bounds");
@@ -159,6 +160,7 @@ public:
   }
 
 private:
+  using WatcherList = std::vector<Watcher<ClauseT>>;
   const CNFVar m_maxVar;
   BoundedMap<CNFLit, WatcherList> m_watchers;
 };

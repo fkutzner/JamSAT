@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include "Clause.h"
 #include "Watcher.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/BoundedMap.h>
@@ -47,8 +46,10 @@ namespace jamsat {
  * T::getAssignment(CNFLit x) which returns the current variable assignment of
  * x and a method T::addAssignment(CNFLit x) registering the assignment x within
  * the assignment provider.
+ * \tparam ClauseT              The clause type. ClauseT must satisfy the Clause
+ * interface defined in Clause.h.
  */
-template <class AssignmentProvider> class Propagation {
+template <class AssignmentProvider, class ClauseT> class Propagation {
 public:
   /**
    * \brief Constructs a new Propagation instance.
@@ -78,7 +79,7 @@ public:
    * \returns         A conflicting clause if adding \clause caused a
    * propagation and a conflict occured; nullptr otherwise.
    */
-  Clause *registerClause(Clause &clause);
+  ClauseT *registerClause(ClauseT &clause);
 
   /**
    * \brief Unregisters all clauses from the propagation system.
@@ -97,7 +98,7 @@ public:
    *
    * \param toPropagate       The fact to propagate, encoded as a literal.
    */
-  Clause *propagateUntilFixpoint(CNFLit toPropagate);
+  ClauseT *propagateUntilFixpoint(CNFLit toPropagate);
 
   /**
    * \brief Propagates the given fact wrt. the clauses registered in the
@@ -115,7 +116,7 @@ public:
    * being falsified; otherwise, the pointer to a clause falsified under the
    * current assignment is returned.
    */
-  Clause *propagate(CNFLit toPropagate, size_t &amountOfNewFacts);
+  ClauseT *propagate(CNFLit toPropagate, size_t &amountOfNewFacts);
 
   /**
    * \brief Determines whether the given variable as a forced assignment.
@@ -137,11 +138,11 @@ public:
    * If the assignment was not forced due to propagation, \p nullptr is returned
    * instead.
    */
-  const Clause *getAssignmentReason(CNFVar variable) const noexcept;
+  const ClauseT *getAssignmentReason(CNFVar variable) const noexcept;
 
 private:
   AssignmentProvider &m_assignmentProvider;
-  BoundedMap<CNFVar, const Clause *> m_reasons;
+  BoundedMap<CNFVar, const ClauseT *> m_reasons;
 
   /**
    * \internal
@@ -151,22 +152,23 @@ private:
    *  - the lists \p m_watchers.getWatchers(C[0]) and \p
    * m_watchers.getWatchers(C[1]) each contain a watcher pointing to C.
    */
-  detail_propagation::Watchers m_watchers;
+  detail_propagation::Watchers<ClauseT> m_watchers;
 };
 
 /********** Implementation ****************************** */
 
-template <class AssignmentProvider>
-Propagation<AssignmentProvider>::Propagation(
+template <class AssignmentProvider, class ClauseT>
+Propagation<AssignmentProvider, ClauseT>::Propagation(
     CNFVar maxVar, AssignmentProvider &assignmentProvider)
     : m_assignmentProvider(assignmentProvider), m_reasons(maxVar),
       m_watchers(maxVar) {}
 
-template <class AssignmentProvider>
-Clause *Propagation<AssignmentProvider>::registerClause(Clause &clause) {
+template <class AssignmentProvider, class ClauseT>
+ClauseT *
+Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause) {
   JAM_ASSERT(clause.getSize() >= 2ull, "Illegally small clause argument");
-  detail_propagation::Watcher watcher1{clause, clause[0], 1};
-  detail_propagation::Watcher watcher2{clause, clause[1], 0};
+  detail_propagation::Watcher<ClauseT> watcher1{clause, clause[0], 1};
+  detail_propagation::Watcher<ClauseT> watcher2{clause, clause[1], 0};
   m_watchers.addWatcher(clause[0], watcher2);
   m_watchers.addWatcher(clause[1], watcher1);
 
@@ -183,28 +185,27 @@ Clause *Propagation<AssignmentProvider>::registerClause(Clause &clause) {
   return nullptr;
 }
 
-template <class AssignmentProvider>
-const Clause *
-Propagation<AssignmentProvider>::getAssignmentReason(CNFVar variable) const
-    noexcept {
+template <class AssignmentProvider, class ClauseT>
+const ClauseT *Propagation<AssignmentProvider, ClauseT>::getAssignmentReason(
+    CNFVar variable) const noexcept {
   JAM_ASSERT(variable.getRawValue() <
                  static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Variable out of bounds");
   return m_reasons[variable];
 }
 
-template <class AssignmentProvider>
-bool Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const
-    noexcept {
+template <class AssignmentProvider, class ClauseT>
+bool Propagation<AssignmentProvider, ClauseT>::hasForcedAssignment(
+    CNFVar variable) const noexcept {
   JAM_ASSERT(variable.getRawValue() <
                  static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Variable out of bounds");
   return m_reasons[variable] != nullptr;
 }
 
-template <class AssignmentProvider>
-Clause *
-Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate) {
+template <class AssignmentProvider, class ClauseT>
+ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(
+    CNFLit toPropagate) {
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Literal variable out of bounds");
@@ -216,7 +217,7 @@ Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate) {
   auto propagationQueue = m_assignmentProvider.getAssignments(trailEndIndex);
 
   size_t amountOfNewFacts = 0;
-  Clause *conflictingClause = propagate(toPropagate, amountOfNewFacts);
+  ClauseT *conflictingClause = propagate(toPropagate, amountOfNewFacts);
   if (conflictingClause) {
     return conflictingClause;
   }
@@ -240,9 +241,10 @@ Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate) {
   return nullptr;
 }
 
-template <class AssignmentProvider>
-Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
-                                                   size_t &amountOfNewFacts) {
+template <class AssignmentProvider, class ClauseT>
+ClauseT *
+Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
+                                                    size_t &amountOfNewFacts) {
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Literal variable out of bounds");
@@ -282,7 +284,7 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
     // which is their index in m_watchers.
 
     bool actionIsForced = true;
-    for (Clause::size_type i = 2; i < clause.getSize(); ++i) {
+    for (typename ClauseT::size_type i = 2; i < clause.getSize(); ++i) {
       CNFLit currentLiteral = clause[i];
       if (m_assignmentProvider.getAssignment(currentLiteral) != TBool::FALSE) {
         // The FALSE literal is moved into the unwatched of the clause here,
@@ -331,8 +333,8 @@ Clause *Propagation<AssignmentProvider>::propagate(CNFLit toPropagate,
   return nullptr;
 }
 
-template <class AssignmentProvider>
-void Propagation<AssignmentProvider>::clear() noexcept {
+template <class AssignmentProvider, class ClauseT>
+void Propagation<AssignmentProvider, ClauseT>::clear() noexcept {
   m_watchers.clear();
 }
 }

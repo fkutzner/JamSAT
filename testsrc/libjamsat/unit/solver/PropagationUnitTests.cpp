@@ -27,13 +27,14 @@
 #include <gtest/gtest.h>
 
 #include "TestAssignmentProvider.h"
+#include <libjamsat/solver/Clause.h>
 #include <libjamsat/solver/Propagation.h>
 
 namespace jamsat {
 TEST(UnitSolver, propagateWithoutClausesIsNoop) {
   TestAssignmentProvider assignments;
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
 
   size_t amntNewFacts = 0xFFFF;
   CNFLit propagatedLit = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
@@ -47,7 +48,7 @@ TEST(UnitSolver, propagateWithoutClausesIsNoop) {
 TEST(UnitSolver, propagateToFixpointWithoutClausesIsNoop) {
   TestAssignmentProvider assignments;
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
 
   CNFLit propagatedLit = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
   auto conflictingClause = underTest.propagateUntilFixpoint(propagatedLit);
@@ -65,7 +66,7 @@ TEST(UnitSolver, falsingSingleLiteralInBinaryClauseCausesPropagation) {
 
   TestAssignmentProvider assignments;
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*binaryClause);
 
   assignments.addAssignment(~lit2);
@@ -86,7 +87,7 @@ TEST(UnitSolver, reasonsAreRecordedDuringPropagation) {
 
   TestAssignmentProvider assignments;
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*binaryClause);
 
   assignments.addAssignment(~lit2);
@@ -107,7 +108,7 @@ TEST(UnitSolver, propagateWithSingleTrueClauseCausesNoPropagation) {
 
   TestAssignmentProvider assignments;
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*binaryClause);
 
   assignments.addAssignment(lit1);
@@ -133,7 +134,7 @@ TEST(UnitSolver, propagateWithTernaryClause) {
 
   TestAssignmentProvider assignments;
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*ternaryClause);
 
   size_t newFacts = 0xFFFF;
@@ -164,7 +165,7 @@ TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
 
   TestAssignmentProvider assignments;
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*ternaryClause);
   underTest.registerClause(*ternaryClause2);
 
@@ -204,7 +205,7 @@ TEST(UnitSolver, registerClauseWithUnassignedLiteralsCausesNoPropagation) {
 
   TestAssignmentProvider assignments;
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*ternaryClause);
 
   EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBool::INDETERMINATE);
@@ -227,7 +228,7 @@ TEST(UnitSolver, registerClauseWithAssignedLiteralsCausesPropagation) {
   assignments.addAssignment(~lit3);
 
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*ternaryClause);
 
   EXPECT_EQ(assignments.getAssignment(lit1), TBool::TRUE);
@@ -264,7 +265,7 @@ TEST(UnitSolver, propagateUntilFixpointPropagatesTransitively) {
   TestAssignmentProvider assignments;
 
   CNFVar maxVar{5};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*firstForcingClause);
   underTest.registerClause(*midForcingClause1);
   underTest.registerClause(*midForcingClause2);
@@ -290,7 +291,7 @@ TEST(UnitSolver, propagateUntilFixpointReportsImmediateConflicts) {
 
   TestAssignmentProvider assignments;
   CNFVar maxVar{4};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*binaryClause);
 
   assignments.addAssignment(~lit1);
@@ -329,7 +330,7 @@ TEST(UnitSolver, propagateUntilFixpointReportsEnsuingConflicts) {
   TestAssignmentProvider assignments;
 
   CNFVar maxVar{5};
-  Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+  Propagation<TestAssignmentProvider, Clause> underTest(maxVar, assignments);
   underTest.registerClause(*firstForcingClause);
   underTest.registerClause(*midForcingClause1);
   underTest.registerClause(*midForcingClause2);
