@@ -26,7 +26,6 @@
 
 #include <gtest/gtest.h>
 
-#include <libjamsat/solver/Clause.h>
 #include <libjamsat/solver/Watcher.h>
 
 namespace jamsat {

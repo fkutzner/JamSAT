@@ -1,7 +1,6 @@
 add_library(solver_unit_tests OBJECT
   TrailUnitTests.cpp
   VariableStateUnitTests.cpp
-  ClauseUnitTests.cpp
   PropagationUnitTests.cpp
   WatcherUnitTests.cpp
   FirstUIPLearningUnitTests.cpp

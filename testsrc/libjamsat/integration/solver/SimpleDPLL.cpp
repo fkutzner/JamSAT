@@ -29,8 +29,8 @@
 #include <boost/log/trivial.hpp>
 #include <vector>
 
+#include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
-#include <libjamsat/solver/Clause.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/ControlFlow.h>

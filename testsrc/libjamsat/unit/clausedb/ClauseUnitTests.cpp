@@ -26,7 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/solver/Clause.h>
+#include <libjamsat/clausedb/Clause.h>
 
 namespace jamsat {
 
