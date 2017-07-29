@@ -69,7 +69,15 @@ public:
   }
 
   TBool solve() {
-    return toTBool(solve(CNFSign::NEGATIVE) || solve(CNFSign::POSITIVE));
+    if (allVariablesAssigned()) {
+      return TBool::TRUE;
+    }
+
+    CNFVar firstBranchingVariable = getBranchingVariable();
+    JAM_ASSERT(firstBranchingVariable != CNFVar::undefinedVariable,
+               "Illegal branching variable");
+    CNFLit firstBranchingLit{firstBranchingVariable, CNFSign::NEGATIVE};
+    return toTBool(solve(firstBranchingLit) || solve(~firstBranchingLit));
   }
 
 private:
@@ -118,11 +126,17 @@ private:
     return m_trail.getNumberOfAssignments() == m_maxVar.getRawValue() + 1;
   }
 
-  bool solve(CNFSign nextBranchingSign) {
+  bool solve(CNFLit branchingLit) {
     auto currentDecisionLevel = m_trail.getCurrentDecisionLevel();
     OnExitScope autoBacktrack{[this, currentDecisionLevel]() {
       this->m_trail.shrinkToDecisionLevel(currentDecisionLevel);
     }};
+
+    m_trail.addAssignment(branchingLit);
+    if (m_propagation.propagateUntilFixpoint(branchingLit)) {
+      // conflicting clause found -> current assignment falsifies the formula
+      return false;
+    }
 
     if (allVariablesAssigned()) {
       // all variables assignmend without conflicts -> current assignment
@@ -133,16 +147,10 @@ private:
     CNFVar branchingVariable = getBranchingVariable();
     JAM_ASSERT(branchingVariable != CNFVar::undefinedVariable,
                "Illegal branching variable");
-    CNFLit branchingLit{branchingVariable, nextBranchingSign};
-
-    m_trail.addAssignment(branchingLit);
-    if (m_propagation.propagateUntilFixpoint(branchingLit)) {
-      // conflicting clause found -> current assignment falsifies the formula
-      return false;
-    }
+    CNFLit nextBranchingLit{branchingVariable, CNFSign::NEGATIVE};
 
     m_trail.newDecisionLevel();
-    return solve(CNFSign::NEGATIVE) || solve(CNFSign::POSITIVE);
+    return solve(nextBranchingLit) || solve(~nextBranchingLit);
   }
 
   Trail m_trail;
