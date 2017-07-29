@@ -220,6 +220,8 @@ inline TBool negate(const TBool a) {
     return TBool::FALSE;
   case TBool::FALSE:
     return TBool::TRUE;
+  default:
+    JAM_ASSERT(false, "Detected 4th TBool value when only 3 should exist");
   }
 }
 
