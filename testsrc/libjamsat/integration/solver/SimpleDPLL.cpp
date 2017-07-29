@@ -37,7 +37,7 @@
 
 /*
  * This file contains a simple implementation of a DPLL SAT solver, serving as
- * an integration test of the Trail and Propagation classes.
+ * an integration test of the Trail, Clause and Propagation classes.
  */
 
 namespace jamsat {
