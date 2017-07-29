@@ -95,8 +95,8 @@ bool equalLits(const std::vector<CNFLit> &lhs, const std::vector<CNFLit> &rhs) {
 TEST(UnitSolver, classInvariantsSatisfiedAfterFirstUIPLearningConstruction) {
   TestAssignmentProvider assignments;
   TestReasonProvider reasons;
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider> underTest(
-      CNFVar{10}, assignments, reasons);
+  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, Clause>
+      underTest(CNFVar{10}, assignments, reasons);
   underTest.test_assertClassInvariantsSatisfied();
 }
 
@@ -132,8 +132,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
   assignments.setCurrentDecisionLevel(4);
 
   CNFVar maxVar{9};
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider> underTest(
-      maxVar, assignments, reasons);
+  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, Clause>
+      underTest(maxVar, assignments, reasons);
   auto result = underTest.computeConflictClause(*conflictingClause);
   auto expectedClause =
       std::vector<CNFLit>{CNFLit(CNFVar{4}, CNFSign::NEGATIVE),
@@ -186,8 +186,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
   assignments.setCurrentDecisionLevel(2);
 
   CNFVar maxVar{7};
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider> underTest(
-      maxVar, assignments, reasons);
+  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, Clause>
+      underTest(maxVar, assignments, reasons);
   auto result = underTest.computeConflictClause(*conflictingClause);
   auto expectedClause =
       std::vector<CNFLit>{~filler[1], ~filler[2], ~filler[3], ~assertingLit};
@@ -231,8 +231,8 @@ void test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(bool simulateOOM) {
   assignments.setCurrentDecisionLevel(1);
 
   CNFVar maxVar{2};
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider> underTest(
-      maxVar, assignments, reasons);
+  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, Clause>
+      underTest(maxVar, assignments, reasons);
 
   if (!simulateOOM) {
     auto result = underTest.computeConflictClause(*conflictingClause);
@@ -330,8 +330,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
   assignments.setCurrentDecisionLevel(3);
 
   CNFVar maxVar{16};
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider> underTest(
-      maxVar, assignments, reasons);
+  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, Clause>
+      underTest(maxVar, assignments, reasons);
 
   auto conflictClause = underTest.computeConflictClause(*waerden6);
   auto expectedClause =
