@@ -1,5 +1,6 @@
 add_library(clausedb_unit_tests OBJECT
   ClauseUnitTests.cpp
+  HeapClauseDBTests.cpp
 )
 
 target_include_directories(clausedb_unit_tests PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include
