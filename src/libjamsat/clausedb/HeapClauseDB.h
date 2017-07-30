@@ -168,7 +168,7 @@ heapAllocateClause(typename ClauseT::size_type size) {
 }
 
 template <class ClauseT>
-HeapClauseDB<ClauseT>::HeapClauseDB() : m_clauses(), m_deleted(){};
+HeapClauseDB<ClauseT>::HeapClauseDB() : m_clauses(), m_deleted() {}
 
 template <class ClauseT>
 template <typename ForwardRange>
