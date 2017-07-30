@@ -112,6 +112,18 @@ public:
    */
   static size_t getAllocationSize(size_type clauseSize);
 
+  /**
+   * \brief Constructs a clause in the memory region pointed to by \p target.
+   *
+   * \param target    The pointer to the first byte of a memory region M where
+   * the clause shall be constructed. The size of M must be at least \p
+   * Clause::getAllocationSize(size) bytes.
+   * \param size      The non-zero size (in literals) of the clause to be
+   * constructed.
+   * \returns         The pointer to the constructed clause.
+   */
+  static Clause *constructIn(void *target, size_type size);
+
   friend std::unique_ptr<Clause> createHeapClause(size_type size);
 
 private:

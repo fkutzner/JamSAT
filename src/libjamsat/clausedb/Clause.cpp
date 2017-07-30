@@ -64,6 +64,10 @@ size_t Clause::getAllocationSize(Clause::size_type clauseSize) {
   return sizeof(Clause) + (clauseSize - 1) * sizeof(CNFLit);
 }
 
+Clause *Clause::constructIn(void *target, size_type size) {
+  return new (target) Clause(size);
+}
+
 std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
   Clause *result;
   if (size == 0) {
@@ -71,7 +75,7 @@ std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
   } else {
     auto memorySize = Clause::getAllocationSize(size);
     void *rawMemory = operator new(memorySize);
-    result = new (rawMemory) Clause(size);
+    result = Clause::constructIn(rawMemory, size);
   }
 
   for (auto &lit : *result) {
