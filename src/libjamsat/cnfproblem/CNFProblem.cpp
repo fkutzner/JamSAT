@@ -128,18 +128,19 @@ DIMACSHeader readDIMACSHeader(std::istream &input) {
 
     // Read "p"
     headerLine >> cnfToken;
-    result.valid &= !headerLine.fail() && cnfToken == "p";
+    result.valid = result.valid && !headerLine.fail() && cnfToken == "p";
 
     // Read "cnf"
     headerLine >> cnfToken;
-    result.valid &= !headerLine.fail() && cnfToken == "cnf";
+    result.valid = result.valid && !headerLine.fail() && cnfToken == "cnf";
 
     headerLine >> result.variableCount;
-    result.valid &= !headerLine.fail();
+    result.valid = result.valid && !headerLine.fail();
     headerLine >> result.clauseCount;
-    result.valid &= !headerLine.fail();
+    result.valid = result.valid && !headerLine.fail();
 
-    result.valid &= (result.variableCount <= CNFVar::maxRawValue);
+    result.valid =
+        result.valid && (result.variableCount <= CNFVar::maxRawValue);
 
     return result;
   }
