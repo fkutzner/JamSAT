@@ -205,7 +205,8 @@ FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::FirstUIPLearning(
     : m_dlProvider(dlProvider), m_reasonProvider(reasonProvider),
       m_maxVar(maxVar), m_stamps(maxVar) {}
 
-namespace {
+#if defined(JAM_ASSERT_ENABLED)
+namespace detail_solver {
 bool isAllZero(const BoundedMap<CNFVar, char> &stamps, CNFVar maxVar) noexcept {
   bool result = true;
   for (CNFVar::RawVariable v = 0; v <= maxVar.getRawValue(); ++v) {
@@ -214,6 +215,7 @@ bool isAllZero(const BoundedMap<CNFVar, char> &stamps, CNFVar maxVar) noexcept {
   return result;
 }
 }
+#endif
 
 template <class DLProvider, class ReasonProvider, class ClauseT>
 void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::initializeResult(
@@ -385,7 +387,8 @@ FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::computeConflictClause(
   // This implementation closely follows Donald Knuth's prosaic description
   // of first-UIP clause learning. See TAOCP, chapter 7.2.2.2.
 
-  JAM_ASSERT(isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
+  JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar),
+             "Class inv. A violated");
 
   try {
     std::vector<CNFLit> result;
@@ -413,7 +416,8 @@ FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::computeConflictClause(
     // method.
     clearStamps(result);
 
-    JAM_ASSERT(isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
+    JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar),
+               "Class invariant A violated");
 
     return result;
   } catch (std::bad_alloc &oomException) {
@@ -429,6 +433,7 @@ template <class DLProvider, class ReasonProvider, class ClauseT>
 void FirstUIPLearning<DLProvider, ReasonProvider,
                       ClauseT>::test_assertClassInvariantsSatisfied() const
     noexcept {
-  JAM_ASSERT(isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
+  JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar),
+             "Class invariant A violated");
 }
 }

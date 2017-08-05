@@ -33,3 +33,7 @@
  */
 
 #define JAM_ASSERT(x, message) assert(x &&message)
+
+#if !defined(NDEBUG)
+#define JAM_ASSERT_ENABLED
+#endif
