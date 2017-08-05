@@ -30,6 +30,8 @@
 #include <boost/range.hpp>
 #include <vector>
 
+#include <state_ptr/state_ptr.hpp>
+
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
@@ -41,9 +43,10 @@ namespace detail_propagation {
 
 template <class ClauseT> class Watcher {
 public:
-  Watcher(ClauseT &watchedClause, CNFLit otherWatchedLiteral, int index = 0)
-      : m_clause(&watchedClause), m_otherWatchedLiteral(otherWatchedLiteral),
-        m_index(index) {}
+  Watcher(ClauseT &watchedClause, CNFLit otherWatchedLiteral,
+          unsigned int index = 0) noexcept
+      : m_clause(&watchedClause, index),
+        m_otherWatchedLiteral(otherWatchedLiteral) {}
 
   ClauseT &getClause() noexcept { return *m_clause; }
 
@@ -51,7 +54,10 @@ public:
     return m_otherWatchedLiteral;
   }
 
-  int getIndex() const noexcept { return m_index; }
+  unsigned int getIndex() const noexcept {
+    // Only using 1 bit of state so far, so no masking is required yet
+    return m_clause.get_state();
+  }
 
   void setOtherWatchedLiteral(CNFLit literal) noexcept {
     m_otherWatchedLiteral = literal;
@@ -68,9 +74,15 @@ public:
   }
 
 private:
-  ClauseT *m_clause;
+  static_assert(putl::state_ptr<ClauseT>::state_bits >= 1,
+                "Unsafe use of state_ptr");
+
+  // m_clause is a state pointer with at least one bit of state.
+  // Its least significant state bit contains the watcher's index
+  // (i.e. the index of the literal it is supposed to watch within
+  // the rsp. clause).
+  putl::state_ptr<ClauseT> m_clause;
   CNFLit m_otherWatchedLiteral;
-  int m_index;
 };
 
 template <class WatcherT> class WatcherTraversal {

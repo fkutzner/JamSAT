@@ -1,3 +1,6 @@
 [submodule "lib/googletest"]
 	path = lib/googletest
 	url = https://github.com/google/googletest.git
+[submodule "lib/state_ptr"]
+	path = lib/state_ptr
+	url = https://github.com/robbepop/state_ptr
