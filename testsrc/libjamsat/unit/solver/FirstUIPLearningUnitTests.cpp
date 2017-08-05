@@ -61,7 +61,7 @@ std::vector<CNFLit> createLiterals(CNFVar::RawVariable min,
   std::vector<CNFLit> result;
 
   for (CNFVar::RawVariable i = min; i <= max; ++i) {
-    result.push_back(CNFLit{CNFVar{i}, CNFSign::POSITIVE});
+    result.emplace_back(CNFVar{i}, CNFSign::POSITIVE);
   }
 
   return result;

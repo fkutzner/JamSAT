@@ -27,6 +27,7 @@
 #include <gtest/gtest.h>
 
 #include <boost/log/trivial.hpp>
+#include <boost/range/algorithm/copy.hpp>
 #include <vector>
 
 #include <libjamsat/clausedb/Clause.h>
@@ -91,9 +92,7 @@ private:
 
   std::unique_ptr<Clause> createInternalClause(const CNFClause &from) {
     auto newClause = createHeapClause(from.size());
-    for (Clause::size_type i = 0; i < newClause->size(); ++i) {
-      (*newClause)[i] = from[i];
-    }
+    boost::copy(from, newClause->begin());
     return newClause;
   }
 
@@ -124,7 +123,9 @@ private:
   }
 
   bool allVariablesAssigned() {
-    return m_trail.getNumberOfAssignments() == m_maxVar.getRawValue() + 1;
+    auto maxAssignments =
+        static_cast<Trail::size_type>(m_maxVar.getRawValue()) + 1;
+    return m_trail.getNumberOfAssignments() == maxAssignments;
   }
 
   bool solve(CNFLit branchingLit) {
@@ -134,7 +135,7 @@ private:
     }};
 
     m_trail.addAssignment(branchingLit);
-    if (m_propagation.propagateUntilFixpoint(branchingLit)) {
+    if (m_propagation.propagateUntilFixpoint(branchingLit) != nullptr) {
       // conflicting clause found -> current assignment falsifies the formula
       return false;
     }

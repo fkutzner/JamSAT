@@ -36,7 +36,7 @@ using FuzzStream = boost::iostreams::stream<boost::iostreams::array_source>;
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   // TODO: make this nicer by getting rid of the copy and the reinterpret_cast.
-  uint8_t *workingCopy = new uint8_t[size];
+  auto *workingCopy = new uint8_t[size];
   std::memcpy(workingCopy, data, size);
   char *streamBase = reinterpret_cast<char *>(workingCopy);
 

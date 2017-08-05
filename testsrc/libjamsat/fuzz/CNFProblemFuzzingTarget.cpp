@@ -32,9 +32,9 @@
 // This file contains a fuzzing target for CNF problem parsing.
 
 namespace jamsat {
-void JamSATFuzzingEntryPoint(std::istream &fuzzInput) {
+void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
   CNFProblem underTest;
-  fuzzInput >> underTest;
+  fuzzerInput >> underTest;
   std::cout << underTest << std::endl;
 }
 }

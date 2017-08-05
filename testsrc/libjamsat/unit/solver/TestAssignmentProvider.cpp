@@ -29,7 +29,8 @@
 
 namespace jamsat {
 
-TestAssignmentProvider::TestAssignmentProvider() : m_trail(1024) {}
+TestAssignmentProvider::TestAssignmentProvider()
+    : m_assignments(), m_decisionLevels(), m_currentLevel(0), m_trail(1024) {}
 
 TBool TestAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
   auto possibleAssgn = m_assignments.find(variable);

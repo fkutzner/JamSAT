@@ -82,13 +82,12 @@ Trail::getDecisionLevelAssignments(DecisionLevel level) const noexcept {
     return boost::make_iterator_range(m_trail.end(), m_trail.end());
   }
 
-  const_iterator begin = m_trail.begin() + m_trailLimits[level];
+  auto begin = m_trail.begin() + m_trailLimits[level];
   if (level + 1 == m_trailLimits.size()) {
     return boost::make_iterator_range(begin, m_trail.end());
-  } else {
-    const_iterator end = m_trail.begin() + m_trailLimits[level + 1];
-    return boost::make_iterator_range(begin, end);
   }
+  auto end = m_trail.begin() + m_trailLimits[level + 1];
+  return boost::make_iterator_range(begin, end);
 }
 
 boost::iterator_range<Trail::const_iterator>
