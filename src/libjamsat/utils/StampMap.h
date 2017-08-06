@@ -212,7 +212,7 @@ public:
 /********** Implementation ****************************** */
 
 template <typename T>
-StampMapBase<T>::StampMapBase(StampMapBase<T>::size_type maxKey)
+StampMapBase<T>::StampMapBase(typename StampMapBase<T>::size_type maxKey)
     : m_stamps(maxKey + 1), m_currentStamp(T{} + 1), m_contextActive(false) {}
 
 template <typename T>
