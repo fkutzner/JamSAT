@@ -57,7 +57,8 @@ using LBD = uint32_t;
  */
 template <typename ForwardRange, typename DLProvider, typename StampMapT>
 LBD getLBD(const ForwardRange &literals,
-           const DLProvider &decisionLevelProvider, StampMapT &tempStamps) {
+           const DLProvider &decisionLevelProvider,
+           StampMapT &tempStamps) noexcept {
 
   auto stampContext = tempStamps.createContext();
   auto stamp = stampContext.getStamp();

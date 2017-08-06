@@ -99,14 +99,6 @@ public:
   };
 
   /**
-   * \brief Constructs a StampMapBase instance.
-   *
-   * \param maxKey    The maximum internal key which can be stored in the stamp
-   * map.
-   */
-  StampMapBase(size_type maxKey);
-
-  /**
    * \brief Creates a stamping context.
    *
    * A stamping context provides a stamp with which items can be stamped, and
@@ -115,9 +107,17 @@ public:
    *
    * \returns a stamping context.
    */
-  StampingContext createContext();
+  StampingContext createContext() noexcept;
 
 protected:
+  /**
+   * \brief Constructs a StampMapBase instance.
+   *
+   * \param maxKey    The maximum internal key which can be stored in the stamp
+   * map.
+   */
+  explicit StampMapBase(size_type maxKey);
+
   void clear() noexcept;
   std::vector<T> m_stamps;
   T m_currentStamp;
@@ -141,7 +141,7 @@ public:
    * \param maxKey    The maximum internal key which can be stored in the stamp
    * map.
    */
-  StampMap<T>(typename StampMapBase<T>::size_type maxKey)
+  explicit StampMap<T>(typename StampMapBase<T>::size_type maxKey)
       : StampMapBase<T>(maxKey) {}
 };
 
@@ -180,7 +180,7 @@ public:
    * \param maxKey    The maximum internal key which can be stored in the stamp
    * map.
    */
-  StampMap<T, K, Ks...>(typename StampMapBase<T>::size_type maxKey)
+  explicit StampMap<T, K, Ks...>(typename StampMapBase<T>::size_type maxKey)
       : StampMap<T, Ks...>(maxKey) {}
 
   /**
@@ -216,7 +216,8 @@ StampMapBase<T>::StampMapBase(typename StampMapBase<T>::size_type maxKey)
     : m_stamps(maxKey + 1), m_currentStamp(T{} + 1), m_contextActive(false) {}
 
 template <typename T>
-typename StampMapBase<T>::StampingContext StampMapBase<T>::createContext() {
+typename StampMapBase<T>::StampingContext
+StampMapBase<T>::createContext() noexcept {
   JAM_ASSERT(!m_contextActive, "StampMap does not support concurrent contexts");
   m_contextActive = true;
   return StampingContext(*this, StampMapBase<T>::Stamp{m_currentStamp});
@@ -224,10 +225,11 @@ typename StampMapBase<T>::StampingContext StampMapBase<T>::createContext() {
 
 template <typename T> void StampMapBase<T>::clear() noexcept {
   if (m_currentStamp == std::numeric_limits<T>::max()) {
-    m_currentStamp = std::numeric_limits<T>::min();
+    auto clearValue = std::numeric_limits<T>::min();
     for (auto &x : m_stamps) {
-      x = m_currentStamp;
+      x = clearValue;
     }
+    m_currentStamp = clearValue;
   }
   ++m_currentStamp;
   m_contextActive = false;
