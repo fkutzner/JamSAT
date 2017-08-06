@@ -4,6 +4,7 @@ add_library(utils_unit_tests OBJECT
   FaultInjectorTests.cpp
   TruthTests.cpp
   ControlFlowTests.cpp
+  StampMapTests.cpp
 )
 
 target_include_directories(utils_unit_tests PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include

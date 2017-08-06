@@ -7,4 +7,5 @@ add_library(jamsatUtils OBJECT
   FaultInjector.h
   FaultInjector.cpp
   ControlFlow.h
+  StampMap.h
 )
