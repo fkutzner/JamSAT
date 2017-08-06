@@ -39,4 +39,31 @@ TEST(UnitControlFlow, OnExitScopeExitsWhenExitingScope) {
 
   EXPECT_EQ(result, true);
 }
+
+TEST(UnitControlFlow, OnExitScopeCorrectAfterMoveAssignment) {
+  int callCount = 0;
+
+  {
+    OnExitScope setResultToTrue([&callCount]() { ++callCount; });
+    EXPECT_EQ(callCount, 0);
+    OnExitScope moveTarget([]() {});
+    moveTarget = std::move(setResultToTrue);
+    EXPECT_EQ(callCount, 0);
+  }
+
+  EXPECT_EQ(callCount, 1);
+}
+
+TEST(UnitControlFlow, OnExitScopeCorrectAfterMoveConstruction) {
+  int callCount = 0;
+
+  {
+    OnExitScope setResultToTrue([&callCount]() { ++callCount; });
+    EXPECT_EQ(callCount, 0);
+    OnExitScope moveTarget{std::move(setResultToTrue)};
+    EXPECT_EQ(callCount, 0);
+  }
+
+  EXPECT_EQ(callCount, 1);
+}
 }
