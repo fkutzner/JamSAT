@@ -6,4 +6,5 @@ add_library(jamsatSolver OBJECT
   Propagation.h
   Watcher.h
   FirstUIPLearning.h
+  LiteralBlockDistance.h
 )
