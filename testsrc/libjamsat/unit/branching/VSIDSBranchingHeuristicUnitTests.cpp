@@ -77,7 +77,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_allAssignedCausesUndefToBePicked) {
   FakeAssignmentProvider fakeAssignmentProvider{TBool::TRUE};
   VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
       maxVar, fakeAssignmentProvider};
-  EXPECT_EQ(underTest.pickBranchLiteral(), CNFLit::undefinedLiteral);
+  EXPECT_EQ(underTest.pickBranchLiteral(), CNFLit::getUndefinedLiteral());
 }
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_singleVariableGetsPicked) {
@@ -106,7 +106,7 @@ TEST(UnitBranching,
   underTest.seenInConflict(CNFVar{4});
 
   CNFLit result = underTest.pickBranchLiteral();
-  EXPECT_NE(result, CNFLit::undefinedLiteral);
+  EXPECT_NE(result, CNFLit::getUndefinedLiteral());
   EXPECT_EQ(result.getVariable(), CNFVar{4});
 }
 
@@ -116,7 +116,7 @@ void expectVariableSequence(Heuristic &underTest,
                             const std::vector<CNFVar> &expectedSequence) {
   for (auto var : expectedSequence) {
     CNFLit pick = underTest.pickBranchLiteral();
-    EXPECT_NE(pick, CNFLit::undefinedLiteral);
+    EXPECT_NE(pick, CNFLit::getUndefinedLiteral());
     auto pickedVar = pick.getVariable();
     EXPECT_EQ(pickedVar, var);
   }

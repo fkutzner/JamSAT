@@ -32,7 +32,8 @@
 
 namespace jamsat {
 
-CNFProblem::CNFProblem() : m_clauses({}), m_maxVar(CNFVar::undefinedVariable) {}
+CNFProblem::CNFProblem()
+    : m_clauses({}), m_maxVar(CNFVar::getUndefinedVariable()) {}
 
 void CNFProblem::addClause(const CNFClause &clause) noexcept {
   for (auto literal : clause) {
@@ -68,14 +69,14 @@ bool CNFProblem::isEmpty() const noexcept { return m_clauses.empty(); }
 
 CNFVar CNFProblem::getMaxVar() const noexcept {
   if (isEmpty()) {
-    return CNFVar::undefinedVariable;
+    return CNFVar::getUndefinedVariable();
   }
   return m_maxVar;
 }
 
 void CNFProblem::clear() noexcept {
   m_clauses.clear();
-  m_maxVar = CNFVar::undefinedVariable;
+  m_maxVar = CNFVar::getUndefinedVariable();
 }
 
 std::ostream &operator<<(std::ostream &output, const CNFProblem &problem) {
@@ -140,7 +141,7 @@ DIMACSHeader readDIMACSHeader(std::istream &input) {
     result.valid = result.valid && !headerLine.fail();
 
     result.valid =
-        result.valid && (result.variableCount <= CNFVar::maxRawValue);
+        result.valid && (result.variableCount <= CNFVar::getMaxRawValue());
 
     return result;
   }
@@ -210,7 +211,7 @@ boost::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
   auto rawVariable =
       static_cast<CNFVar::RawVariable>(std::abs(encodedLiteral) - 1);
 
-  if (rawVariable > CNFVar::maxRawValue) {
+  if (rawVariable > CNFVar::getMaxRawValue()) {
     BOOST_LOG_TRIVIAL(warning) << "Illegally large variable: "
                                << encodedLiteral;
     return boost::optional<CNFLit>{};

@@ -33,7 +33,7 @@ Trail::Trail(CNFVar maxVar)
       m_assignments(maxVar, TBool::INDETERMINATE), m_assignmentLevel(maxVar),
       m_phases(maxVar, TBool::FALSE) {
   JAM_ASSERT(
-      maxVar != CNFVar::undefinedVariable,
+      maxVar != CNFVar::getUndefinedVariable(),
       "Trail cannot be instantiated with the undefined variable as maxVar");
 }
 

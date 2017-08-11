@@ -57,7 +57,7 @@ enum class CNFSign {
  * \param sign      The sign to be inverted.
  * \returns         The inverted sign.
  */
-inline CNFSign invert(CNFSign sign) noexcept {
+constexpr CNFSign invert(CNFSign sign) noexcept {
   int rawSign = static_cast<int>(sign);
   return static_cast<CNFSign>(1 - rawSign);
 }
@@ -78,45 +78,33 @@ public:
    *
    * \param variableValue  The non-negative raw variable identifier.
    */
-  explicit CNFVar(RawVariable variableValue) noexcept;
+  constexpr explicit CNFVar(RawVariable variableValue) noexcept;
 
   /**
    * \brief Constructs an undefined variable.
    */
-  CNFVar() noexcept;
+  constexpr CNFVar() noexcept;
 
   /**
    * \brief Gets the variable's raw value.
    *
    * \returns the variable's raw value.
    */
-  RawVariable getRawValue() const noexcept;
+  constexpr RawVariable getRawValue() const noexcept;
 
   /**
-   * \brief Equality operator for CNFVar.
+   * \brief Gets the "undefined" marker variable
    *
-   * \param rhs   The right-hand-side variable.
-   * \returns \p true iff this variable is equal to \p rhs.
+   * \returns The undefined marker variable.
    */
-  bool operator==(const CNFVar &rhs) const noexcept;
+  static constexpr CNFVar getUndefinedVariable() noexcept;
 
   /**
-   * \brief Inquality operator for CNFVar.
+   * \brief Gets the maximal raw value a regular variable can have.
    *
-   * \param rhs   The right-hand-side variable.
-   * \returns \p true iff this variable is inequal to \p rhs.
+   * \returns The maximal raw value a regular variable can have.
    */
-  bool operator!=(const CNFVar &rhs) const noexcept;
-
-  /**
-   * \brief The undefined marker variable.
-   */
-  static const CNFVar undefinedVariable;
-
-  /**
-   * \brief The maximal raw value a regular variable can have.
-   */
-  static const RawVariable maxRawValue;
+  static constexpr RawVariable getMaxRawValue() noexcept;
 
   /**
    * \ingroup JamSAT_CNFProblem
@@ -133,10 +121,15 @@ public:
      * \param variable    A variable.
      * \returns           The variable's raw value, to be used for indexing.
      */
-    static inline CNFVar::RawVariable getIndex(CNFVar variable) {
+    static constexpr CNFVar::RawVariable getIndex(CNFVar variable) {
       return variable.getRawValue();
     }
   };
+
+  CNFVar(const CNFVar &other) = default;
+  CNFVar &operator=(const CNFVar &other) = default;
+  CNFVar(CNFVar &&other) = default;
+  CNFVar &operator=(CNFVar &&other) = default;
 
 private:
   RawVariable m_value;
@@ -160,33 +153,33 @@ public:
    * nonnegative and smaller than CNFVar::undefinedVariable.
    * \param sign      The literal's sign.
    */
-  CNFLit(CNFVar variable, CNFSign sign) noexcept;
+  constexpr CNFLit(CNFVar variable, CNFSign sign) noexcept;
 
   /**
    * \brief Constructs an undefined literal.
    */
-  CNFLit() noexcept;
+  constexpr CNFLit() noexcept;
 
   /**
    * \brief Gets the literal's variable.
    *
    * \returns  The literal's variable.
    */
-  CNFVar getVariable() const noexcept;
+  constexpr CNFVar getVariable() const noexcept;
 
   /**
    * \brief Gets the literal's sign.
    *
    * \returns  The literal's sign.
    */
-  CNFSign getSign() const noexcept;
+  constexpr CNFSign getSign() const noexcept;
 
   /**
    * \brief Gets the literal's negate.
    *
    * \returns The literal's negate.
    */
-  CNFLit operator~() const noexcept;
+  constexpr CNFLit operator~() const noexcept;
 
   /**
    * \brief Equality operator for CNFVar.
@@ -194,7 +187,7 @@ public:
    * \param rhs   The right-hand-side literal.
    * \returns \p true iff this literal is equal to \p rhs.
    */
-  bool operator==(const CNFLit &rhs) const noexcept;
+  constexpr bool operator==(const CNFLit &rhs) const noexcept;
 
   /**
    * \brief Inequality operator for CNFVar.
@@ -202,7 +195,7 @@ public:
    * \param rhs   The right-hand-side literal.
    * \returns \p true iff this literal is inequal to \p rhs.
    */
-  bool operator!=(const CNFLit &rhs) const noexcept;
+  constexpr bool operator!=(const CNFLit &rhs) const noexcept;
 
   /**
    * \brief Gets the literal's raw value.
@@ -212,12 +205,12 @@ public:
    *
    * \returns the literal's raw value.
    */
-  RawLiteral getRawValue() const noexcept;
+  constexpr RawLiteral getRawValue() const noexcept;
 
   /**
    * \brief The undefined marker literal.
    */
-  static const CNFLit undefinedLiteral;
+  static constexpr CNFLit getUndefinedLiteral() noexcept;
 
   /**
    * \ingroup JamSAT_CNFProblem
@@ -234,10 +227,15 @@ public:
      * \param literal    A literal.
      * \returns           The literal's raw value, to be used for indexing.
      */
-    static inline CNFLit::RawLiteral getIndex(CNFLit literal) {
+    static constexpr CNFLit::RawLiteral getIndex(CNFLit literal) {
       return literal.getRawValue();
     }
   };
+
+  CNFLit(const CNFLit &other) = default;
+  CNFLit &operator=(const CNFLit &other) = default;
+  CNFLit(CNFLit &&other) = default;
+  CNFLit &operator=(CNFLit &&other) = default;
 
 private:
   CNFLit::RawLiteral m_value;
@@ -246,54 +244,71 @@ private:
 std::ostream &operator<<(std::ostream &stream, const CNFVar &variable);
 std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
 
+constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+constexpr bool operator!=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+
 /********** Implementation ****************************** */
 
-inline CNFVar::CNFVar(RawVariable variableValue) noexcept
+constexpr CNFVar::CNFVar() noexcept
+    : m_value(std::numeric_limits<int>::max() >> 1) {}
+
+constexpr CNFVar::CNFVar(RawVariable variableValue) noexcept
     : m_value(variableValue) {}
 
-inline CNFVar::RawVariable CNFVar::getRawValue() const noexcept {
+constexpr CNFVar::RawVariable CNFVar::getRawValue() const noexcept {
   return m_value;
 }
 
-inline bool CNFVar::operator==(const CNFVar &rhs) const noexcept {
-  return rhs.m_value == m_value;
+constexpr CNFVar CNFVar::getUndefinedVariable() noexcept { return CNFVar{}; }
+
+constexpr CNFVar::RawVariable CNFVar::getMaxRawValue() noexcept {
+  return CNFVar::getUndefinedVariable().getRawValue() - 1;
 }
 
-inline bool CNFVar::operator!=(const CNFVar &rhs) const noexcept {
-  return rhs.m_value != m_value;
+constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+  return lhs.getRawValue() == rhs.getRawValue();
 }
 
-inline CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept {
-  JAM_ASSERT(variable != CNFVar::undefinedVariable,
+constexpr bool operator!=(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+  return lhs.getRawValue() != rhs.getRawValue();
+}
+
+constexpr CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept
+    : m_value((variable.getRawValue() << 1) | static_cast<int>(sign)) {
+  JAM_ASSERT(variable != CNFVar::getUndefinedVariable(),
              "The variable must be smaller than CNFVar::undefinedVariable");
-  m_value = (variable.getRawValue() << 1) | static_cast<int>(sign);
 }
 
-inline CNFVar CNFLit::getVariable() const noexcept {
+constexpr CNFLit::CNFLit() noexcept
+    : m_value(std::numeric_limits<int>::max()) {}
+
+constexpr CNFVar CNFLit::getVariable() const noexcept {
   return CNFVar{m_value >> 1};
 }
 
-inline CNFSign CNFLit::getSign() const noexcept {
+constexpr CNFSign CNFLit::getSign() const noexcept {
   return static_cast<CNFSign>(m_value & 1);
 }
 
-inline CNFLit CNFLit::operator~() const noexcept {
-  JAM_ASSERT(*this != CNFLit::undefinedLiteral,
+constexpr CNFLit CNFLit::operator~() const noexcept {
+  JAM_ASSERT(*this != CNFLit::getUndefinedLiteral(),
              "Cannot negate an undefined literal");
   return CNFLit{getVariable(), invert(getSign())};
 }
 
-inline bool CNFLit::operator==(const CNFLit &rhs) const noexcept {
+constexpr bool CNFLit::operator==(const CNFLit &rhs) const noexcept {
   return rhs.m_value == m_value;
 }
 
-inline bool CNFLit::operator!=(const CNFLit &rhs) const noexcept {
+constexpr bool CNFLit::operator!=(const CNFLit &rhs) const noexcept {
   return !(*this == rhs);
 }
 
-inline CNFLit::RawLiteral CNFLit::getRawValue() const noexcept {
+constexpr CNFLit::RawLiteral CNFLit::getRawValue() const noexcept {
   return m_value;
 }
+
+constexpr CNFLit CNFLit::getUndefinedLiteral() noexcept { return CNFLit{}; }
 }
 
 namespace std {

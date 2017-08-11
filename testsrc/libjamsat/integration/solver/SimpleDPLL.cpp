@@ -76,7 +76,7 @@ public:
     }
 
     CNFVar firstBranchingVariable = getBranchingVariable();
-    JAM_ASSERT(firstBranchingVariable != CNFVar::undefinedVariable,
+    JAM_ASSERT(firstBranchingVariable != CNFVar::getUndefinedVariable(),
                "Illegal branching variable");
     CNFLit firstBranchingLit{firstBranchingVariable, CNFSign::NEGATIVE};
     return toTBool(solve(firstBranchingLit) || solve(~firstBranchingLit));
@@ -116,7 +116,7 @@ private:
 
     if (result.getRawValue() > m_maxVar.getRawValue() ||
         isDeterminate(m_trail.getAssignment(result))) {
-      return CNFVar::undefinedVariable;
+      return CNFVar::getUndefinedVariable();
     }
 
     return result;
@@ -147,7 +147,7 @@ private:
     }
 
     CNFVar branchingVariable = getBranchingVariable();
-    JAM_ASSERT(branchingVariable != CNFVar::undefinedVariable,
+    JAM_ASSERT(branchingVariable != CNFVar::getUndefinedVariable(),
                "Illegal branching variable");
     CNFLit nextBranchingLit{branchingVariable, CNFSign::NEGATIVE};
 

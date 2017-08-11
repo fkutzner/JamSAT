@@ -61,7 +61,7 @@ TEST(UnitCNFProblem, emptyCNFProblemIsMarkedEmpty) {
 
 TEST(UnitCNFProblem, emptyCNFProblemMaxVarIsUndefined) {
   CNFProblem underTest;
-  ASSERT_EQ(underTest.getMaxVar(), CNFVar::undefinedVariable);
+  ASSERT_EQ(underTest.getMaxVar(), CNFVar::getUndefinedVariable());
 }
 
 TEST(UnitCNFProblem, emptyCNFProblemHasNoClauses) {
@@ -509,7 +509,7 @@ TEST(UnitCNFProblem, rejectsCNFProblemWithReservedVariable) {
 TEST(UnitCNFProblem, rejectsCNFProblemWithMinimalReservedVariable) {
   SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
-  conduit << "p cnf " << (CNFVar::maxRawValue + 1);
+  conduit << "p cnf " << (CNFVar::getMaxRawValue() + 1);
   conduit << " 1 " << std::endl << "1 4 0" << std::endl;
 
   CNFProblem underTest;
@@ -521,7 +521,7 @@ TEST(UnitCNFProblem, rejectsCNFProblemWithMinimalReservedVariable) {
 TEST(UnitCNFProblem, rejectsCNFProblemWithLargestNegativeLiteral) {
   SuppressLoggedWarningsRAII suppressWarnings;
   std::stringstream conduit;
-  conduit << "p cnf " << (CNFVar::maxRawValue) << " 1 " << std::endl;
+  conduit << "p cnf " << (CNFVar::getMaxRawValue()) << " 1 " << std::endl;
   conduit << "1 " << std::numeric_limits<int>::min();
   conduit << " 4 0" << std::endl;
 

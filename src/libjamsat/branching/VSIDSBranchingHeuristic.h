@@ -108,7 +108,7 @@ public:
    * \returns If a branching decision can be performed, this method returns a
    * literal \p L with variable \p v and sign \p s such that the solver can
    * assign \p v to the value corresponding to \p s as a branching decision.
-   * Otherwise, CNFLit::undefinedLiteral is returned.
+   * Otherwise, CNFLit::getUndefinedLiteral() is returned.
    */
   CNFLit pickBranchLiteral() noexcept;
 
@@ -198,7 +198,7 @@ VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
 template <class AssignmentProvider>
 CNFLit
 VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept {
-  CNFVar branchingVar = CNFVar::undefinedVariable;
+  CNFVar branchingVar = CNFVar::getUndefinedVariable();
   while (!m_variableOrder.empty()) {
     branchingVar = m_variableOrder.top();
     m_variableOrder.pop();
@@ -212,7 +212,7 @@ VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept {
     }
   };
 
-  return CNFLit::undefinedLiteral;
+  return CNFLit::getUndefinedLiteral();
 }
 
 template <class AssignmentProvider>

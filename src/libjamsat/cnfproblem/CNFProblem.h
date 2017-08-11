@@ -88,7 +88,7 @@ public:
    * \brief Gets the largest variable occurring in the problem instance.
    *
    * \returns the largest variable occurring in the problem instance if the
-   * instance is not empty; CNFVar::undefinedVariable otherwise.
+   * instance is not empty; CNFVar::getUndefinedVariable() otherwise.
    */
   CNFVar getMaxVar() const noexcept;
 

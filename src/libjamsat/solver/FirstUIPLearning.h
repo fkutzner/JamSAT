@@ -171,7 +171,8 @@ private:
    * \param lits    A vector of literals.
    *
    * \returns The first literal in \p lits whose variable \p v is stamped, i.e.
-   * \p{m_stamps[v] == 1}; if no such literal exists, CNFLit::undefinedLiteral
+   * \p{m_stamps[v] == 1}; if no such literal exists,
+   * CNFLit::getUndefinedLiteral()
    * is returned instead.
    */
   CNFLit findStampedLiteral(const std::vector<CNFLit> &lits) const noexcept;
@@ -223,15 +224,15 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::initializeResult(
     std::vector<CNFLit> &work) const {
   int unresolvedCount = 0;
 
-  result.push_back(CNFLit::undefinedLiteral);
+  result.push_back(CNFLit::getUndefinedLiteral());
 
   // Mark the literals on the current decision levels as work, put
   // the rest into the result, stamp them all - this can be done
   // by resolving the conflicting clause with an empty clause and
   // adding an imaginary literal L rsp. ~L to the two clauses. The
-  // imaginary literal is CNFLit::undefinedLiteral, in this case.
-  unresolvedCount =
-      addResolvent(conflictingClause, CNFLit::undefinedLiteral, result, work);
+  // imaginary literal is CNFLit::getUndefinedLiteral(), in this case.
+  unresolvedCount = addResolvent(conflictingClause,
+                                 CNFLit::getUndefinedLiteral(), result, work);
 
   // m_stamps is in a dirty state now, simulating out of memory conditions
   // for testing purposes (if enabled via FaultInjector)
@@ -265,7 +266,7 @@ int FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::addResolvent(
 
   const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
 
-  if (resolveAtLit != CNFLit::undefinedLiteral) {
+  if (resolveAtLit != CNFLit::getUndefinedLiteral()) {
     m_stamps[resolveAtLit.getVariable()] = 0;
   }
 
@@ -361,7 +362,7 @@ template <class DLProvider, class ReasonProvider, class ClauseT>
 CNFLit
 FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::findStampedLiteral(
     const std::vector<CNFLit> &lits) const noexcept {
-  CNFLit result = CNFLit::undefinedLiteral;
+  CNFLit result = CNFLit::getUndefinedLiteral();
   for (CNFLit w : lits) {
     if (m_stamps[w.getVariable()] == 1) {
       BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: " << w;
@@ -404,11 +405,11 @@ FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::computeConflictClause(
     // defined literal. The asserting literal is now the single unresolved work
     // item, i.e. the single literal on the current decision level which has
     // been encountered in the resolution process, but not processed yet.
-    if (result[0] == CNFLit::undefinedLiteral) {
+    if (result[0] == CNFLit::getUndefinedLiteral()) {
       result[0] = findStampedLiteral(work);
     }
 
-    JAM_ASSERT(result[0] != CNFLit::undefinedLiteral,
+    JAM_ASSERT(result[0] != CNFLit::getUndefinedLiteral(),
                "Didn't find an asserting literal");
 
     // Class invariant A gets satisfied here; the literals at which resolution

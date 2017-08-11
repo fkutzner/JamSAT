@@ -78,7 +78,7 @@ TEST(UnitClauseDB, freshHeapClauseContainsUndefinedLiterals) {
   auto underTest = createHeapClause(11);
   ASSERT_NE(underTest.get(), nullptr);
   for (Clause::size_type i = 0; i < underTest->size(); ++i) {
-    EXPECT_EQ((*underTest)[i], CNFLit::undefinedLiteral);
+    EXPECT_EQ((*underTest)[i], CNFLit::getUndefinedLiteral());
   }
 }
 
@@ -105,7 +105,7 @@ namespace {
 void test_iterateOverClause_setup(Clause &underTest) {
   CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
   CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
-  underTest[0] = CNFLit::undefinedLiteral;
+  underTest[0] = CNFLit::getUndefinedLiteral();
   underTest[3] = testLiteral1;
   underTest[4] = testLiteral2;
 }
@@ -114,7 +114,7 @@ template <typename C> void test_iterateOverClause_check(C &underTest) {
   CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
   CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
 
-  EXPECT_EQ(underTest[0], CNFLit::undefinedLiteral);
+  EXPECT_EQ(underTest[0], CNFLit::getUndefinedLiteral());
 
   int i = 0;
   for (auto &lit : underTest) {

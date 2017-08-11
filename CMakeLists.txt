@@ -52,7 +52,7 @@ else()
 endif()
 
 if(COMPILING_WITH_GNULIKE)
-  add_definitions(-std=c++11 -Wall -Wextra -pedantic-errors)
+  add_definitions(-std=c++14 -Wall -Wextra -pedantic-errors)
 
   if(JAMSAT_DISABLE_OPTIMIZATIONS)
     add_definitions(-fno-inline -O0)
@@ -134,7 +134,7 @@ add_custom_target(
         -I ${PROJECT_SOURCE_DIR}/testsrc
         --enable=all
         --suppress=missingIncludeSystem
-        --std=c++11
+        --std=c++14
         --verbose
         ${ALL_SOURCE_FILES}
 )

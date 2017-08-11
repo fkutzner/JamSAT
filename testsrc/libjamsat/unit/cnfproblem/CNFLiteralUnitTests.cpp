@@ -86,13 +86,13 @@ TEST(UnitCNFProblem, printPositiveLiteral) {
 }
 
 TEST(UnitCNFProblem, variableOfUndefinedLiteralIsUndefiend) {
-  CNFVar undefinedLiteralVar = CNFLit::undefinedLiteral.getVariable();
-  EXPECT_EQ(undefinedLiteralVar, CNFVar::undefinedVariable);
+  CNFVar undefinedLiteralVar = CNFLit::getUndefinedLiteral().getVariable();
+  EXPECT_EQ(undefinedLiteralVar, CNFVar::getUndefinedVariable());
 }
 
 #if !defined(NDEBUG)
 TEST(UnitCNFProblem, cannotNegateUndefinedLiteral) {
-  CNFLit underTest = CNFLit::undefinedLiteral;
+  CNFLit underTest = CNFLit::getUndefinedLiteral();
   ASSERT_DEATH(~underTest, ".*");
 }
 #endif
