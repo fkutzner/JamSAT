@@ -15,15 +15,17 @@ option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 
 ### Find libraries
 
-add_definitions(-DBOOST_ALL_DYN_LINK)
-set(Boost_USE_STATIC_LIBS OFF)
+#add_definitions(-DBOOST_ALL_DYN_LINK)
+set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost
         1.54.0
         REQUIRED
         COMPONENTS
-          system
           log
+          log_setup
           iostreams
+          thread
+          system
 )
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
@@ -52,7 +54,7 @@ else()
 endif()
 
 if(COMPILING_WITH_GNULIKE)
-  add_definitions(-std=c++14 -Wall -Wextra -pedantic-errors)
+  add_definitions(-std=c++14 -Wall -Wextra -pedantic-errors -fvisibility=hidden)
 
   if(JAMSAT_DISABLE_OPTIMIZATIONS)
     add_definitions(-fno-inline -O0)
