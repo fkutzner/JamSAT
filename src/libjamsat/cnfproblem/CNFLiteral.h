@@ -27,6 +27,7 @@
 #pragma once
 
 #include <functional>
+#include <limits>
 #include <ostream>
 
 #include <libjamsat/utils/Assert.h>
