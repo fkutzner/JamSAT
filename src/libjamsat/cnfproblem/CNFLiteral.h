@@ -182,22 +182,6 @@ public:
   constexpr CNFLit operator~() const noexcept;
 
   /**
-   * \brief Equality operator for CNFVar.
-   *
-   * \param rhs   The right-hand-side literal.
-   * \returns \p true iff this literal is equal to \p rhs.
-   */
-  constexpr bool operator==(const CNFLit &rhs) const noexcept;
-
-  /**
-   * \brief Inequality operator for CNFVar.
-   *
-   * \param rhs   The right-hand-side literal.
-   * \returns \p true iff this literal is inequal to \p rhs.
-   */
-  constexpr bool operator!=(const CNFLit &rhs) const noexcept;
-
-  /**
    * \brief Gets the literal's raw value.
    *
    * Literal raw values are monotonically increasing wrt. the raw value of the
@@ -244,8 +228,51 @@ private:
 std::ostream &operator<<(std::ostream &stream, const CNFVar &variable);
 std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
 
+/**
+ * \brief Equality operator for CNFVar.
+ *
+ * Two variables are considered equal iff their raw values are equal.
+ *
+ * \param lhs   The light-hand-side literal.
+ * \param rhs   The right-hand-side literal.
+ * \returns \p true iff \p lhs is equal to \p rhs.
+ */
 constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+
+/**
+ * \brief Equality operator for CNFVar.
+ *
+ * Two variables are considered inequal iff their raw values are inequal.
+ *
+ * \param lhs   The light-hand-side literal.
+ * \param rhs   The right-hand-side literal.
+ * \returns \p false iff \p lhs is equal to \p rhs.
+ */
 constexpr bool operator!=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+
+/**
+ * \brief Equality operator for CNFLit.
+ *
+ * Two literals are considered equal iff they have equal signs and equal
+ * variables.
+ *
+ * \param lhs   The light-hand-side literal.
+ * \param rhs   The right-hand-side literal.
+ * \returns \p true iff \p lhs is equal to \p rhs.
+ */
+constexpr bool operator==(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+
+/**
+ * \brief Inequality operator for CNFLit.
+ *
+ * Two literals are considered inequal iff they have inequal signs or inequal
+ * variables.
+ *
+ * \param lhs   The light-hand-side literal.
+ * \param rhs   The right-hand-side literal.
+ * \returns \p false iff \p lhs is equal to \p rhs.
+ */
+constexpr bool operator!=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 
 /********** Implementation ****************************** */
 
@@ -296,19 +323,19 @@ constexpr CNFLit CNFLit::operator~() const noexcept {
   return CNFLit{getVariable(), invert(getSign())};
 }
 
-constexpr bool CNFLit::operator==(const CNFLit &rhs) const noexcept {
-  return rhs.m_value == m_value;
-}
-
-constexpr bool CNFLit::operator!=(const CNFLit &rhs) const noexcept {
-  return !(*this == rhs);
-}
-
 constexpr CNFLit::RawLiteral CNFLit::getRawValue() const noexcept {
   return m_value;
 }
 
 constexpr CNFLit CNFLit::getUndefinedLiteral() noexcept { return CNFLit{}; }
+
+constexpr bool operator==(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+  return lhs.getRawValue() == rhs.getRawValue();
+}
+
+constexpr bool operator!=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+  return !(lhs == rhs);
+}
 }
 
 namespace std {
