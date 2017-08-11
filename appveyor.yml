@@ -35,7 +35,7 @@ build_script:
   - git submodule update
   - mkdir ..\build
   - cd ..\build
-  - cmake -G %CMAKE_GENERATOR% -DBoost_USE_STATIC_LIBS=ON -DCMAKE_INSTALL_PREFIX=%INSTALLATION_DIR% -DCMAKE_PREFIX_PATH=%INSTALLATION_DIR% ..\JamSAT
+  - cmake -G %CMAKE_GENERATOR% -DCMAKE_INSTALL_PREFIX=%INSTALLATION_DIR% -DCMAKE_PREFIX_PATH=%INSTALLATION_DIR% ..\JamSAT
   - cmake --build . --config %CONFIGURATION%
   - ctest -V -C %CONFIGURATION%
 
