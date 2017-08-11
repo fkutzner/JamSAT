@@ -67,6 +67,8 @@ constexpr CNFSign invert(CNFSign sign) noexcept {
  *
  * \class jamsat::CNFVar
  * \brief A CNF variable class.
+ *
+ * CNFVar is a regular type.
  */
 class CNFVar {
 public:
@@ -140,6 +142,8 @@ private:
  *
  * \class jamsat::CNFLit
  * \brief A CNF literal class.
+ *
+ * CNFLit is a regular type.
  */
 class CNFLit {
 public:
@@ -233,8 +237,8 @@ std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
  *
  * Two variables are considered equal iff their raw values are equal.
  *
- * \param lhs   The light-hand-side literal.
- * \param rhs   The right-hand-side literal.
+ * \param lhs   The light-hand-side variable.
+ * \param rhs   The right-hand-side variable.
  * \returns \p true iff \p lhs is equal to \p rhs.
  */
 constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept;
@@ -244,17 +248,64 @@ constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept;
  *
  * Two variables are considered inequal iff their raw values are inequal.
  *
- * \param lhs   The light-hand-side literal.
- * \param rhs   The right-hand-side literal.
+ * \param lhs   The light-hand-side variable.
+ * \param rhs   The right-hand-side variable.
  * \returns \p false iff \p lhs is equal to \p rhs.
  */
 constexpr bool operator!=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
 
 /**
+ * \brief Less-than operator for CNFVar.
+ *
+ * For any two literals \p x and \p y, we have <tt>x < y</tt> iff the raw value
+ * of \p x is smaller than the raw value of \p y .
+ *
+ * Each CNFVar which is not the undefined variable is less than the undefined
+ * variable.
+ *
+ * This operator establishes a strict weak ordering for CNFLit.
+ *
+ * \param lhs   The light-hand-side variable.
+ * \param rhs   The right-hand-side variable.
+ * \returns \p true iff \p lhs less than \p rhs .
+ */
+constexpr bool operator<(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+
+/**
+ * \brief Greater-than operator for CNFVar.
+ *
+ * For any two CNFVar \p x and \p y, we have <tt>x > y</tt> iff <tt>x != y</tt>
+ * and not \p <tt>x < y</tt>.
+ *
+ * \param lhs   The light-hand-side variable.
+ * \param rhs   The right-hand-side variable.
+ * \returns \p true iff \p lhs greater than \p rhs .
+ */
+constexpr bool operator>(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+
+/**
+ * \brief Smaller-than-or-equal-to operator for CNFVar.
+ *
+ * \param lhs   The light-hand-side variable.
+ * \param rhs   The right-hand-side variable.
+ * \returns \p true iff \p lhs smaller than or equal to \p rhs .
+ */
+constexpr bool operator<=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+
+/**
+ * \brief Greater-than-or-equal-to operator for CNFVar.
+ *
+ * \param lhs   The light-hand-side variable.
+ * \param rhs   The right-hand-side variable.
+ * \returns \p true iff \p lhs greater than or equal to \p rhs .
+ */
+constexpr bool operator>=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+
+/**
  * \brief Equality operator for CNFLit.
  *
  * Two literals are considered equal iff they have equal signs and equal
- * variables.
+ * variables. The undefined literal is inequal to each other literal.
  *
  * \param lhs   The light-hand-side literal.
  * \param rhs   The right-hand-side literal.
@@ -273,6 +324,59 @@ constexpr bool operator==(const CNFLit &lhs, const CNFLit &rhs) noexcept;
  * \returns \p false iff \p lhs is equal to \p rhs.
  */
 constexpr bool operator!=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+
+/**
+ * \brief Less-than operator for CNFLit.
+ *
+ * For any two literals \p x and \p y, we have <tt>x < y</tt> iff either of the
+ * following is true:
+ *   - The variables of \p x and \p y are inequal, and the variable of \p x is
+ * smaller than the variable of \p y .
+ *   - The variables of \p x and \p y are equal, and \p x has a negative sign
+ * and \p y has a positive sign.
+ *
+ * Each literal which is not the undefined literal is less than the undefined
+ * literal.
+ *
+ * This operator establishes a strict weak ordering for CNFLit.
+ *
+ * \param lhs   The light-hand-side literal.
+ * \param rhs   The right-hand-side literal.
+ * \returns \p true iff \p lhs less than \p rhs .
+ */
+constexpr bool operator<(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+
+/**
+ * \brief Greater-than operator for CNFLit.
+ *
+ * For any two literals \p x and \p y, we have <tt>x > y</tt> iff <tt>x !=
+ * y</tt> and not \p <tt>x < y</tt>.
+ *
+ * \param lhs   The light-hand-side literal.
+ * \param rhs   The right-hand-side literal.
+ * \returns \p true iff \p lhs greater than \p rhs .
+ */
+constexpr bool operator>(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+
+/**
+ * \brief Less-than-or-equal-to operator for CNFLit.
+ *
+ *
+ * \param lhs   The light-hand-side literal.
+ * \param rhs   The right-hand-side literal.
+ * \returns \p true iff \p lhs less than or equal to \p rhs .
+ */
+constexpr bool operator<=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+
+/**
+ * \brief Greater-than-or-equal-to operator for CNFLit.
+ *
+ *
+ * \param lhs   The light-hand-side literal.
+ * \param rhs   The right-hand-side literal.
+ * \returns \p true iff \p lhs greater than or equal to \p rhs .
+ */
+constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 
 /********** Implementation ****************************** */
 
@@ -298,6 +402,22 @@ constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept {
 
 constexpr bool operator!=(const CNFVar &lhs, const CNFVar &rhs) noexcept {
   return lhs.getRawValue() != rhs.getRawValue();
+}
+
+constexpr bool operator<(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+  return lhs.getRawValue() < rhs.getRawValue();
+}
+
+constexpr bool operator>(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+  return lhs.getRawValue() > rhs.getRawValue();
+}
+
+constexpr bool operator<=(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+  return lhs.getRawValue() <= rhs.getRawValue();
+}
+
+constexpr bool operator>=(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+  return lhs.getRawValue() >= rhs.getRawValue();
 }
 
 constexpr CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept
@@ -335,6 +455,22 @@ constexpr bool operator==(const CNFLit &lhs, const CNFLit &rhs) noexcept {
 
 constexpr bool operator!=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
   return !(lhs == rhs);
+}
+
+constexpr bool operator<(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+  return lhs.getRawValue() < rhs.getRawValue();
+}
+
+constexpr bool operator>(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+  return lhs.getRawValue() > rhs.getRawValue();
+}
+
+constexpr bool operator<=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+  return lhs.getRawValue() <= rhs.getRawValue();
+}
+
+constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+  return lhs.getRawValue() >= rhs.getRawValue();
 }
 }
 

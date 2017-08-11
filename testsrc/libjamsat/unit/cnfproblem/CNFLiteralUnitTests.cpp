@@ -30,9 +30,53 @@
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 
 namespace jamsat {
+TEST(UnitCNFProblem, CNFVarHasStrictWeakOrdering) {
+  CNFVar varA{5};
+  CNFVar varB{6};
+  CNFVar varC{5};
+
+  EXPECT_TRUE(varA == varC);
+  EXPECT_FALSE(varA < varC);
+  EXPECT_FALSE(varA > varC);
+
+  EXPECT_TRUE(varA != varB);
+  EXPECT_TRUE(varA < varB);
+  EXPECT_TRUE(varB > varA);
+
+  EXPECT_TRUE(varA == varA);
+}
+
+TEST(UnitCNFProblem, undefinedCNFVarGreaterThanAllOtherVars) {
+  CNFVar max{CNFVar::getMaxRawValue()};
+  EXPECT_TRUE(max < CNFVar::getUndefinedVariable());
+}
+
 TEST(UnitCNFProblem, invertSign) {
   CNFSign positiveSign = CNFSign::POSITIVE;
   EXPECT_EQ(invert(positiveSign), CNFSign::NEGATIVE);
+}
+
+TEST(UnitCNFProblem, CNFLitHasStrictWeakOrdering) {
+  CNFLit litA{CNFVar{5}, CNFSign::NEGATIVE};
+  CNFLit litB{CNFVar{6}, CNFSign::POSITIVE};
+  CNFLit litC{CNFVar{5}, CNFSign::NEGATIVE};
+  CNFLit litD{CNFVar{5}, CNFSign::POSITIVE};
+
+  EXPECT_TRUE(litA == litC);
+  EXPECT_FALSE(litA < litC);
+  EXPECT_FALSE(litA > litC);
+
+  EXPECT_TRUE(litA != litB);
+  EXPECT_TRUE(litA < litB);
+  EXPECT_TRUE(litB > litA);
+
+  EXPECT_TRUE(litA == litA);
+  EXPECT_TRUE(litA < litD);
+}
+
+TEST(UnitCNFProblem, undefinedCNFLitGreaterThanAllOtherLits) {
+  CNFLit max{CNFVar{CNFVar::getMaxRawValue()}, CNFSign::POSITIVE};
+  EXPECT_TRUE(max < CNFLit::getUndefinedLiteral());
 }
 
 TEST(UnitCNFProblem, negateLiteral) {
