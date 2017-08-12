@@ -35,16 +35,17 @@
 #include <libjamsat/solver/ClauseMinimization.h>
 #include <libjamsat/utils/StampMap.h>
 
+#include "TestAssignmentProvider.h"
 #include "TestReasonProvider.h"
 
 namespace jamsat {
 using TrivialClause = std::vector<CNFLit>;
 
-struct CNFLitKey {
-  using Type = CNFLit;
+struct CNFVarKey {
+  using Type = CNFVar;
 
-  static size_t getIndex(CNFLit literal) {
-    return static_cast<size_t>(literal.getRawValue());
+  static size_t getIndex(CNFVar variable) {
+    return static_cast<size_t>(variable.getRawValue());
   }
 };
 
@@ -58,16 +59,19 @@ bool isPermutation(const Container &c1, const Container &c2) {
 
 TEST(UnitSolver, eraseRedundantLiterals_fixpointOnEmptyClause) {
   TestReasonProvider<TrivialClause> reasonProvider;
-  TrivialClause emptyClause;
-  StampMap<int, CNFLitKey> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
 
-  eraseRedundantLiterals(emptyClause, reasonProvider, tempStamps);
+  TrivialClause emptyClause;
+  StampMap<int, CNFVarKey> tempStamps{1024};
+
+  eraseRedundantLiterals(emptyClause, reasonProvider, dlProvider, tempStamps);
 
   EXPECT_TRUE(emptyClause.empty());
 }
 
 TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancy) {
   TestReasonProvider<TrivialClause> reasonProvider;
+
   TrivialClause reasonFor3{
       CNFLit{CNFVar{3}, CNFSign::POSITIVE},
       CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
@@ -78,12 +82,138 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancy) {
                          CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
                          CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
 
-  StampMap<int, CNFLitKey> tempStamps{1024};
-
-  eraseRedundantLiterals(testData, reasonProvider, tempStamps);
+  StampMap<int, CNFVarKey> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
 
   TrivialClause expected = testData;
   boost::remove_erase(expected, CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
+
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+
+  EXPECT_TRUE(isPermutation(testData, expected));
+}
+
+TEST(UnitSolver, eraseRedundantLiterals_removesTwoLevelRedundancy) {
+  TestReasonProvider<TrivialClause> reasonProvider;
+
+  TrivialClause reasonFor3{
+      CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+      CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
+  };
+  reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
+
+  TrivialClause reasonFor5{
+      CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{8}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{9}, CNFSign::NEGATIVE},
+  };
+  reasonProvider.setAssignmentReason(CNFVar{5}, reasonFor5);
+
+  TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+                         CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+                         CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+                         CNFLit{CNFVar{8}, CNFSign::NEGATIVE},
+                         CNFLit{CNFVar{9}, CNFSign::POSITIVE}};
+
+  StampMap<int, CNFVarKey> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  for (CNFVar::RawVariable i = 1; i < 10; ++i) {
+    dlProvider.setAssignmentDecisionLevel(CNFVar{i}, 1);
+  }
+
+  TrivialClause expected = testData;
+  boost::remove_erase(expected, CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
+
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+
+  EXPECT_TRUE(isPermutation(testData, expected));
+}
+
+TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancyWithUnit) {
+  TestReasonProvider<TrivialClause> reasonProvider;
+
+  TrivialClause reasonFor3{
+      CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+      CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
+  };
+  reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
+
+  TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+                         CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+                         CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+
+  StampMap<int, CNFVarKey> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{5}, 0);
+
+  TrivialClause expected = testData;
+  boost::remove_erase(expected, CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
+
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+
+  EXPECT_TRUE(isPermutation(testData, expected));
+}
+
+TEST(UnitSolver, eraseRedundantLiterals_removesUnitLiteral) {
+  TestReasonProvider<TrivialClause> reasonProvider;
+
+  TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+                         CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+                         CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+
+  StampMap<int, CNFVarKey> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 0);
+
+  TrivialClause expected = testData;
+  boost::remove_erase(expected, CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+
+  EXPECT_TRUE(isPermutation(testData, expected));
+}
+
+TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveNonredundantLiteral) {
+  TestReasonProvider<TrivialClause> reasonProvider;
+
+  TrivialClause reasonFor3{CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+                           CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+                           CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+  reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
+
+  TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+                         CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+                         CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+
+  StampMap<int, CNFVarKey> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{5}, 1);
+
+  // Literal 3 is not redundant since literal 5 does not occur
+  // in testData and is a decision literal (has no reason clause).
+
+  TrivialClause expected = testData;
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
   EXPECT_TRUE(isPermutation(testData, expected));
 }
