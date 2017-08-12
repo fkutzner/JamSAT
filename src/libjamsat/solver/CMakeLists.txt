@@ -7,4 +7,5 @@ add_library(jamsatSolver OBJECT
   Watcher.h
   FirstUIPLearning.h
   LiteralBlockDistance.h
+  ClauseMinimization.h
 )

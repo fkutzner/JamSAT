@@ -7,6 +7,8 @@ add_library(solver_unit_tests OBJECT
   TestAssignmentProvider.cpp
   TestAssignmentProvider.h
   LiteralBlockDistanceUnitTests.cpp
+  ClauseMinimizationUnitTests.cpp
+  TestReasonProvider.h
 )
 
 target_include_directories(solver_unit_tests PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include
