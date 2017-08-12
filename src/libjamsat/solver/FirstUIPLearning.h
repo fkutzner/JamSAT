@@ -30,8 +30,6 @@
 #include <stdexcept>
 #include <vector>
 
-#include <boost/log/trivial.hpp>
-
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
@@ -271,16 +269,13 @@ int FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::addResolvent(
   }
 
   for (auto reasonLit : reason) {
-    BOOST_LOG_TRIVIAL(trace) << "Looking at: " << reasonLit;
     if (reasonLit != resolveAtLit && m_stamps[reasonLit.getVariable()] == 0) {
       m_stamps[reasonLit.getVariable()] = 1;
       if (m_dlProvider.getAssignmentDecisionLevel(reasonLit.getVariable()) ==
           currentLevel) {
-        BOOST_LOG_TRIVIAL(trace) << "Adding work: " << reasonLit;
         ++unresolvedCount;
         work.push_back(reasonLit);
       } else {
-        BOOST_LOG_TRIVIAL(trace) << "Adding literal: " << reasonLit;
         result.push_back(reasonLit);
       }
     }
@@ -322,7 +317,6 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
   while (unresolvedCount > 1) {
     const CNFLit resolveAtLit = *cursor;
     const CNFVar resolveAtVar = resolveAtLit.getVariable();
-    BOOST_LOG_TRIVIAL(trace) << "Current resolution candidate: " << *cursor;
 
     if (m_stamps[resolveAtVar] != 0 &&
         m_dlProvider.getAssignmentDecisionLevel(resolveAtVar) == currentLevel) {
@@ -335,8 +329,6 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
         // resolveAtLit is on the current decision level and can't be
         // removed from the result via resolution, so it must serve
         // as the asserting literal.
-        BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: "
-                                 << resolveAtLit;
         result[0] = ~resolveAtLit;
         m_stamps[resolveAtVar] = 0;
 
@@ -352,8 +344,6 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
     --cursor;
   }
 
-  BOOST_LOG_TRIVIAL(trace) << "unresolved count after resolution: "
-                           << unresolvedCount;
   JAM_ASSERT(unresolvedCount == 1,
              "Implementation error: didn't find exactly one asserting literal");
 }
@@ -365,7 +355,6 @@ FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::findStampedLiteral(
   CNFLit result = CNFLit::getUndefinedLiteral();
   for (CNFLit w : lits) {
     if (m_stamps[w.getVariable()] == 1) {
-      BOOST_LOG_TRIVIAL(trace) << "Found the asserting literal: " << w;
       result = w;
       break;
     }
