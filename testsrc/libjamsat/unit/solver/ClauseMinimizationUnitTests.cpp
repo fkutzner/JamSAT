@@ -24,11 +24,11 @@
 
 */
 
+#include <algorithm>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <vector>
 
-#include <boost/algorithm/cxx14/is_permutation.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
@@ -51,10 +51,7 @@ struct CNFVarKey {
 
 template <typename Container>
 bool isPermutation(const Container &c1, const Container &c2) {
-  if (c1.size() != c2.size()) {
-    return false;
-  }
-  return boost::algorithm::is_permutation(c1, c2.begin());
+  return std::is_permutation(c1.begin(), c1.end(), c2.begin(), c2.end());
 }
 
 TEST(UnitSolver, eraseRedundantLiterals_fixpointOnEmptyClause) {
