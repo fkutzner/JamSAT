@@ -214,4 +214,28 @@ TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveNonredundantLiteral) {
 
   EXPECT_TRUE(isPermutation(testData, expected));
 }
+
+TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveLiteralsOnCurrentLevel) {
+  TestReasonProvider<TrivialClause> reasonProvider;
+
+  TrivialClause reasonFor1{CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
+                           CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+  reasonProvider.setAssignmentReason(CNFVar{1}, reasonFor1);
+
+  TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+                         CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+                         CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+
+  StampMap<int, CNFVarKey> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
+
+  TrivialClause expected = testData;
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+
+  EXPECT_TRUE(isPermutation(testData, expected));
+}
 }

@@ -38,8 +38,8 @@ namespace jamsat {
  *
  * \brief Erases redundant literals from the given clause.
  *
- * Erases literals from \p clause which are redundant wrt. reason clauses given
- * via \p reasonProvider .
+ * Erases literals from \p literals which are redundant wrt. reason clauses
+ * given  via \p reasonProvider .
  *
  * A literal l is said to be <i>redundant</i> if l has an assigned value, and
  * either
@@ -49,13 +49,19 @@ namespace jamsat {
  *
  * [Knuth, The Art of Computer Programming, chapter 7.2.2.2, exercise 257]
  *
+ * Literals on the current decision level are not checked for being redundant.
+ * (Note that if a clause has been learnt via first-UIP clause learning, it
+ * contains a single literal on the current decision level, and that literal
+ * cannot be redundant.) Literals occurring on other decision levels than the
+ * current one must currently be assignmened to FALSE.
+ *
  * Usage example: Remove redundant literals from a conflicting clause returned
- * by conflict analysis, using Propagation as an assignment reason provider and
- * Trail as a decision level provider.
+ * by first-UIP conflict analysis, using Propagation as an assignment reason
+ * provider and Trail as a decision level provider.
  *
  *
- * \param[in,out] clause      The clause from which redundant literals should be
- * erased.
+ * \param[in,out] literals    The container of CNFLits in which redundant
+ * literals should be erased.
  * \param[in] reasonProvider  An assignment reason provider (TODO: document
  * assignment reason provider concept)
  * \param[in] dlProvider      A decision level provider (TODO: document decision
@@ -65,10 +71,12 @@ namespace jamsat {
  * function returns, \p tempStamps is clean.
  *
  * TODO: document template parameters
+ *
+ * TODO: document that LiteralContainer must support erasing
  */
-template <class ClauseT, class ReasonProvider, class DecisionLevelProvider,
-          class StampMapT>
-void eraseRedundantLiterals(ClauseT &clause,
+template <class LiteralContainer, class ReasonProvider,
+          class DecisionLevelProvider, class StampMapT>
+void eraseRedundantLiterals(LiteralContainer &literals,
                             const ReasonProvider &reasonProvider,
                             const DecisionLevelProvider &dlProvider,
                             StampMapT &tempStamps) noexcept;
@@ -80,6 +88,7 @@ template <class ReasonProvider, class DecisionLevelProvider, class StampMapT>
 bool isRedundant(CNFLit literal, const ReasonProvider &reasonProvider,
                  const DecisionLevelProvider &dlProvider, StampMapT &tempStamps,
                  typename StampMapT::Stamp currentStamp) {
+
   if (dlProvider.getAssignmentDecisionLevel(literal.getVariable()) ==
       dlProvider.getCurrentDecisionLevel()) {
     return false;
@@ -116,16 +125,16 @@ bool isRedundant(CNFLit literal, const ReasonProvider &reasonProvider,
 }
 }
 
-template <class ClauseT, class ReasonProvider, class DecisionLevelProvider,
-          class StampMapT>
-void eraseRedundantLiterals(ClauseT &clause,
+template <class LiteralContainer, class ReasonProvider,
+          class DecisionLevelProvider, class StampMapT>
+void eraseRedundantLiterals(LiteralContainer &literals,
                             const ReasonProvider &reasonProvider,
                             const DecisionLevelProvider &dlProvider,
                             StampMapT &tempStamps) noexcept {
   const auto stampContext = tempStamps.createContext();
   const auto stamp = stampContext.getStamp();
 
-  for (auto literal : clause) {
+  for (auto literal : literals) {
     tempStamps.setStamped(literal.getVariable(), stamp, true);
   }
 
@@ -139,6 +148,6 @@ void eraseRedundantLiterals(ClauseT &clause,
     return dlProvider.getAssignmentDecisionLevel(literal.getVariable()) == 0;
   };
 
-  boost::remove_erase_if(clause, isRedundant);
+  boost::remove_erase_if(literals, isRedundant);
 }
 }
