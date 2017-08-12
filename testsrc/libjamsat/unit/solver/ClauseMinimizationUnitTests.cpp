@@ -28,7 +28,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include <boost/algorithm/cxx11/is_permutation.hpp>
+#include <boost/algorithm/cxx14/is_permutation.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
