@@ -33,6 +33,48 @@
 
 namespace jamsat {
 
+/**
+ * \ingroup JamSAT_Solver
+ *
+ * \brief Erases redundant literals from the given clause.
+ *
+ * Erases literals from \p clause which are redundant wrt. reason clauses given
+ * via \p reasonProvider .
+ *
+ * A literal l is said to be <i>redundant</i> if l has an assigned value, and
+ * either
+ *  - occurs on decision level 0 or
+ *  - l is not a decision literal and every false-assigned literal in l's reason
+ * is either contained in \p clause or is redundant.
+ *
+ * [Knuth, The Art of Computer Programming, chapter 7.2.2.2, exercise 257]
+ *
+ * Usage example: Remove redundant literals from a conflicting clause returned
+ * by conflict analysis, using Propagation as an assignment reason provider and
+ * Trail as a decision level provider.
+ *
+ *
+ * \param[in,out] clause      The clause from which redundant literals should be
+ * erased.
+ * \param[in] reasonProvider  An assignment reason provider (TODO: document
+ * assignment reason provider concept)
+ * \param[in] dlProvider      A decision level provider (TODO: document decision
+ * level provider concept)
+ * \param[in,out] tempStamps  a clean StampMap supporting stamping CNFVar values
+ * occuring in \p clause and any reason clause in \p reasonProvider . When this
+ * function returns, \p tempStamps is clean.
+ *
+ * TODO: document template parameters
+ */
+template <class ClauseT, class ReasonProvider, class DecisionLevelProvider,
+          class StampMapT>
+void eraseRedundantLiterals(ClauseT &clause,
+                            const ReasonProvider &reasonProvider,
+                            const DecisionLevelProvider &dlProvider,
+                            StampMapT &tempStamps) noexcept;
+
+/********** Implementation ****************************** */
+
 namespace erl_detail {
 template <class ReasonProvider, class DecisionLevelProvider, class StampMapT>
 bool isRedundant(CNFLit literal, const ReasonProvider &reasonProvider,
@@ -74,39 +116,6 @@ bool isRedundant(CNFLit literal, const ReasonProvider &reasonProvider,
 }
 }
 
-/**
- * \ingroup JamSAT_Solver
- *
- * \brief Erases redundant literals from the given clause.
- *
- * Erases literals from \p clause which are redundant wrt. reason clauses given
- * via \p reasonProvider .
- *
- * A literal l is said to be <i>redundant</i> if l has an assigned value, and
- * either
- *  - occurs on decision level 0 or
- *  - l is not a decision literal and every false-assigned literal in l's reason
- * is either contained in \p clause or is redundant.
- *
- * [Knuth, The Art of Computer Programming, chapter 7.2.2.2, exercise 257]
- *
- * Usage example: Remove redundant literals from a conflicting clause returned
- * by conflict analysis, using Propagation as an assignment reason provider and
- * Trail as a decision level provider.
- *
- *
- * \param[in,out] clause      The clause from which redundant literals should be
- * erased.
- * \param[in] reasonProvider  An assignment reason provider (TODO: document
- * assignment reason provider concept)
- * \param[in] dlProvider      A decision level provider (TODO: document decision
- * level provider concept)
- * \param[in,out] tempStamps  a clean StampMap supporting stamping CNFVar values
- * occuring in \p clause and any reason clause in \p reasonProvider . When this
- * function returns, \p tempStamps is clean.
- *
- * TODO: document template parameters
- */
 template <class ClauseT, class ReasonProvider, class DecisionLevelProvider,
           class StampMapT>
 void eraseRedundantLiterals(ClauseT &clause,
