@@ -27,34 +27,18 @@
 #include <gtest/gtest.h>
 
 #include <stdexcept>
-#include <unordered_map>
 #include <unordered_set>
 
 #include "TestAssignmentProvider.h"
+#include "TestReasonProvider.h"
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/utils/FaultInjector.h>
 
 namespace jamsat {
-namespace {
 using TrivialClause = std::vector<CNFLit>;
 
-class TestReasonProvider {
-public:
-  void setAssignmentReason(CNFVar variable, TrivialClause &reason) noexcept {
-    m_reasons[variable] = &reason;
-  }
-
-  const TrivialClause *getAssignmentReason(CNFVar variable) const noexcept {
-    auto reason = m_reasons.find(variable);
-    if (reason != m_reasons.end()) {
-      return reason->second;
-    }
-    return nullptr;
-  }
-
-private:
-  std::unordered_map<CNFVar, const TrivialClause *> m_reasons;
-};
+namespace {
+using DummyReasonProvider = TestReasonProvider<TrivialClause>;
 
 std::vector<CNFLit> createLiterals(CNFVar::RawVariable min,
                                    CNFVar::RawVariable max) {
@@ -87,15 +71,15 @@ bool equalLits(const std::vector<CNFLit> &lhs, const std::vector<CNFLit> &rhs) {
 
 TEST(UnitSolver, classInvariantsSatisfiedAfterFirstUIPLearningConstruction) {
   TestAssignmentProvider assignments;
-  TestReasonProvider reasons;
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, TrivialClause>
+  DummyReasonProvider reasons;
+  FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause>
       underTest(CNFVar{10}, assignments, reasons);
   underTest.test_assertClassInvariantsSatisfied();
 }
 
 TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
   TestAssignmentProvider assignments;
-  TestReasonProvider reasons;
+  DummyReasonProvider reasons;
 
   TrivialClause dummyReasonClause{CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
                                   CNFLit{CNFVar{1}, CNFSign::NEGATIVE}};
@@ -122,7 +106,7 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
   assignments.setCurrentDecisionLevel(4);
 
   CNFVar maxVar{9};
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, TrivialClause>
+  FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause>
       underTest(maxVar, assignments, reasons);
   auto result = underTest.computeConflictClause(conflictingClause);
   auto expectedClause =
@@ -154,7 +138,7 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
   TrivialClause conflictingClause{~prop1, ~prop2};
 
   TestAssignmentProvider assignments;
-  TestReasonProvider reasons;
+  DummyReasonProvider reasons;
 
   for (auto lit : filler) {
     assignments.addAssignment(lit);
@@ -176,7 +160,7 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
   assignments.setCurrentDecisionLevel(2);
 
   CNFVar maxVar{7};
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, TrivialClause>
+  FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause>
       underTest(maxVar, assignments, reasons);
   auto result = underTest.computeConflictClause(conflictingClause);
   auto expectedClause =
@@ -207,7 +191,7 @@ void test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(bool simulateOOM) {
   TrivialClause conflictingClause{~decisionLit, ~intermediateLit, ~conflLit};
 
   TestAssignmentProvider assignments;
-  TestReasonProvider reasons;
+  DummyReasonProvider reasons;
 
   assignments.addAssignment(decisionLit);
   assignments.setAssignmentDecisionLevel(decisionLit.getVariable(), 1);
@@ -220,7 +204,7 @@ void test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(bool simulateOOM) {
   assignments.setCurrentDecisionLevel(1);
 
   CNFVar maxVar{2};
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, TrivialClause>
+  FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause>
       underTest(maxVar, assignments, reasons);
 
   if (!simulateOOM) {
@@ -255,7 +239,7 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
   // 7.2.2.2
 
   TestAssignmentProvider assignments;
-  TestReasonProvider reasons;
+  DummyReasonProvider reasons;
 
   TrivialClause waerden1{CNFLit{CNFVar{3}, CNFSign::POSITIVE},
                          CNFLit{CNFVar{9}, CNFSign::POSITIVE},
@@ -313,7 +297,7 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
   assignments.setCurrentDecisionLevel(3);
 
   CNFVar maxVar{16};
-  FirstUIPLearning<TestAssignmentProvider, TestReasonProvider, TrivialClause>
+  FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause>
       underTest(maxVar, assignments, reasons);
 
   auto conflictClause = underTest.computeConflictClause(waerden6);
