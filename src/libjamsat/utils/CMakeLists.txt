@@ -8,4 +8,5 @@ add_library(jamsatUtils OBJECT
   FaultInjector.cpp
   ControlFlow.h
   StampMap.h
+  SimpleMovingAverage.h
 )
