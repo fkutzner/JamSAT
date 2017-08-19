@@ -114,7 +114,7 @@ void eraseRedundantLiterals(LiteralContainer &literals,
 template <class LiteralContainer, class BinaryClausesProvider, class StampMapT>
 void resolveWithBinaries(LiteralContainer &literals,
                          const BinaryClausesProvider &binaryClauses,
-                         CNFLit resolveAt, StampMapT &tempStamps);
+                         CNFLit resolveAt, StampMapT &tempStamps) noexcept;
 
 /********** Implementation ****************************** */
 
@@ -189,7 +189,7 @@ void eraseRedundantLiterals(LiteralContainer &literals,
 template <class LiteralContainer, class BinaryClausesProvider, class StampMapT>
 void resolveWithBinaries(LiteralContainer &literals,
                          const BinaryClausesProvider &binaryClauses,
-                         CNFLit resolveAt, StampMapT &tempStamps) {
+                         CNFLit resolveAt, StampMapT &tempStamps) noexcept {
   const auto stampContext = tempStamps.createContext();
   const auto stamp = stampContext.getStamp();
 
