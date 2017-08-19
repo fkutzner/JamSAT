@@ -36,7 +36,7 @@ if(UNIX)
   set(JAMSAT_LIB_DEPS ${JAMSAT_LIB_DEPS} pthread)
 endif()
 
-include_directories(SYSTEM lib)
+include_directories(SYSTEM lib/state_ptr/include)
 
 
 ### Compiler arguments

@@ -30,7 +30,7 @@
 #include <boost/range.hpp>
 #include <vector>
 
-#include <state_ptr/state_ptr.hpp>
+#include <putl/state_ptr.hpp>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Assert.h>
@@ -48,7 +48,12 @@ public:
       : m_clause(&watchedClause, index),
         m_otherWatchedLiteral(otherWatchedLiteral) {}
 
-  ClauseT &getClause() noexcept { return *m_clause; }
+  ClauseT &getClause() noexcept {
+    // TODO: operator* of state_ptr has const issues, so a workaround is
+    // used here.
+    ClauseT *clausePtr = m_clause.get_ptr();
+    return *clausePtr;
+  }
 
   CNFLit getOtherWatchedLiteral() const noexcept {
     return m_otherWatchedLiteral;
@@ -74,14 +79,11 @@ public:
   }
 
 private:
-  static_assert(putl::state_ptr<ClauseT>::state_bits >= 1,
-                "Unsafe use of state_ptr");
-
   // m_clause is a state pointer with at least one bit of state.
   // Its least significant state bit contains the watcher's index
   // (i.e. the index of the literal it is supposed to watch within
   // the rsp. clause).
-  putl::state_ptr<ClauseT> m_clause;
+  putl::state_ptr<ClauseT, uint32_t, 1> m_clause;
   CNFLit m_otherWatchedLiteral;
 };
 
