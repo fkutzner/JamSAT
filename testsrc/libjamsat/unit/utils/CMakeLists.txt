@@ -6,6 +6,7 @@ add_library(utils_unit_tests OBJECT
   ControlFlowTests.cpp
   StampMapTests.cpp
   SimpleMovingAverageTests.cpp
+  LubySequenceTests.cpp
 )
 
 target_include_directories(utils_unit_tests PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include

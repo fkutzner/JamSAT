@@ -9,4 +9,5 @@ add_library(jamsatUtils OBJECT
   ControlFlow.h
   StampMap.h
   SimpleMovingAverage.h
+  LubySequence.h
 )
