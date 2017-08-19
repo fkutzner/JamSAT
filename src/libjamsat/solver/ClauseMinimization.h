@@ -67,8 +67,8 @@ namespace jamsat {
  * \param[in] dlProvider      A decision level provider (TODO: document decision
  * level provider concept)
  * \param[in,out] tempStamps  a clean StampMap supporting stamping CNFVar values
- * occuring in \p clause and any reason clause in \p reasonProvider . When this
- * function returns, \p tempStamps is clean.
+ * occuring in \p literals and any reason clause in \p reasonProvider . When
+ * this function returns, \p tempStamps is clean.
  *
  * TODO: document template parameters
  *
@@ -80,6 +80,41 @@ void eraseRedundantLiterals(LiteralContainer &literals,
                             const ReasonProvider &reasonProvider,
                             const DecisionLevelProvider &dlProvider,
                             StampMapT &tempStamps) noexcept;
+
+/**
+ * \ingroup JamSAT_Solver
+ *
+ * \brief Erases literals from the given clause which can be removed via
+ * resolution with binary clauses.
+ *
+ * Example: Given a clause \p literals =  (a, b, c, d) as \p literals and \p
+ * resolveAt = d, removes literals a and b from \p literals if there are binary
+ * clauses (c, -a) and (c, -b).
+ *
+ * Usage example: Use this function to minimize conflicting clauses (e.g. with
+ * \p resolveAt being the asserting literal) before using these clause as learnt
+ * clauses.
+ *
+ * \param[in,out] literals      The container of CNFLit values in which literals
+ * removable via resolution with \p resolveAt should be removed.
+ * \param[in] binaryClauses     A map mapping CNFLit values l to containers of
+ * CNFLit m1, ..., mN values representing the binary clauses (l, m1), ..., (l,
+ * mN). The map must not contain the binary any of the clauses (l, l) and (l,
+ * -l).
+ * \param[in] resolveAt         The literal at which resolution should be
+ * performed. \p resolveAt must be contained in \p literals .
+ * \param[in,out] tempStamps    a clean StampMap supporting stamping CNFVar
+ * values occuring in \p literals and any reason clause in \p reasonProvider .
+ * When this function returns, \p tempStamps is clean.
+ *
+ * \tparam LiteralContainer         TODO
+ * \tparam BinaryClausesProvider    TODO
+ * \tparam StampMapT                TODO
+ */
+template <class LiteralContainer, class BinaryClausesProvider, class StampMapT>
+void resolveWithBinaries(LiteralContainer &literals,
+                         const BinaryClausesProvider &binaryClauses,
+                         CNFLit resolveAt, StampMapT &tempStamps);
 
 /********** Implementation ****************************** */
 
@@ -149,5 +184,28 @@ void eraseRedundantLiterals(LiteralContainer &literals,
   };
 
   boost::remove_erase_if(literals, isRedundant);
+}
+
+template <class LiteralContainer, class BinaryClausesProvider, class StampMapT>
+void resolveWithBinaries(LiteralContainer &literals,
+                         const BinaryClausesProvider &binaryClauses,
+                         CNFLit resolveAt, StampMapT &tempStamps) {
+  const auto stampContext = tempStamps.createContext();
+  const auto stamp = stampContext.getStamp();
+
+  auto binaryClausesIter = binaryClauses.find(resolveAt);
+  if (binaryClausesIter == binaryClauses.end()) {
+    return;
+  }
+
+  for (auto secondLiteral : binaryClausesIter->second) {
+    tempStamps.setStamped(secondLiteral, stamp, true);
+  }
+
+  auto mayRemoveByResolution = [&tempStamps, resolveAt, stamp](CNFLit literal) {
+    return tempStamps.isStamped(~literal, stamp);
+  };
+
+  boost::remove_erase_if(literals, mayRemoveByResolution);
 }
 }

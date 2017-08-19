@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/range/algorithm_ext/erase.hpp>
@@ -46,6 +47,14 @@ struct CNFVarKey {
 
   static size_t getIndex(CNFVar variable) {
     return static_cast<size_t>(variable.getRawValue());
+  }
+};
+
+struct CNFLitKey {
+  using Type = CNFLit;
+
+  static size_t getIndex(CNFLit literal) {
+    return static_cast<size_t>(literal.getRawValue());
   }
 };
 
@@ -235,6 +244,84 @@ TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveLiteralsOnCurrentLevel) {
 
   TrivialClause expected = testData;
   eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+
+  EXPECT_TRUE(isPermutation(testData, expected));
+}
+
+TEST(UnitSolver, resolveWithBinaries_emptyClauseIsFixpoint) {
+  CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
+  // representing binary clauses as a map from first literals to a list of
+  // second literals
+  std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
+  binaryClauses[resolveAt] = {CNFLit{CNFVar{9}, CNFSign::POSITIVE},
+                              CNFLit{CNFVar{8}, CNFSign::POSITIVE}};
+
+  TrivialClause empty;
+  StampMap<int, CNFLitKey> tempStamps{1024};
+
+  resolveWithBinaries(empty, binaryClauses, resolveAt, tempStamps);
+
+  EXPECT_TRUE(empty.empty());
+}
+
+TEST(UnitSolver, resolveWithBinaries_clauseWithoutResOpportunityIsFixpoint) {
+  CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
+  // representing binary clauses as a map from first literals to a list of
+  // second literals
+  std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
+  binaryClauses[resolveAt] = {CNFLit{CNFVar{12}, CNFSign::POSITIVE},
+                              CNFLit{CNFVar{13}, CNFSign::POSITIVE}};
+
+  TrivialClause noResPossible{CNFLit{CNFVar{7}, CNFSign::POSITIVE},
+                              CNFLit{CNFVar{10}, CNFSign::POSITIVE},
+                              CNFLit{CNFVar{11}, CNFSign::POSITIVE}};
+  StampMap<int, CNFLitKey> tempStamps{1024};
+  TrivialClause expected = noResPossible;
+  resolveWithBinaries(noResPossible, binaryClauses, resolveAt, tempStamps);
+
+  EXPECT_TRUE(isPermutation(noResPossible, expected));
+}
+
+TEST(UnitSolver, resolveWithBinaries_noResolutionWhenNoBinaryClauses) {
+  CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
+  // representing binary clauses as a map from first literals to a list of
+  // second literals
+  std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
+
+  TrivialClause noResPossible{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+                              CNFLit{CNFVar{2}, CNFSign::POSITIVE}};
+  StampMap<int, CNFLitKey> tempStamps{1024};
+  TrivialClause expected = noResPossible;
+  resolveWithBinaries(noResPossible, binaryClauses, resolveAt, tempStamps);
+
+  EXPECT_TRUE(isPermutation(noResPossible, expected));
+}
+
+TEST(UnitSolver, resolveWithBinaries_allResolutionOpportunitiesAreUsed) {
+  CNFLit resolveAt{CNFVar{5}, CNFSign::POSITIVE};
+  // representing binary clauses as a map from first literals to a list of
+  // second literals
+  std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
+  binaryClauses[resolveAt] = {
+      CNFLit{CNFVar{12}, CNFSign::POSITIVE},
+      CNFLit{CNFVar{15}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{17}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{30}, CNFSign::POSITIVE},
+  };
+
+  TrivialClause testData{
+      CNFLit{CNFVar{12}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{15}, CNFSign::POSITIVE},
+      CNFLit{CNFVar{30}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+      CNFLit{CNFVar{5}, CNFSign::POSITIVE},
+  };
+
+  StampMap<int, CNFLitKey> tempStamps{1024};
+  TrivialClause expected = {CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+                            CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+
+  resolveWithBinaries(testData, binaryClauses, resolveAt, tempStamps);
 
   EXPECT_TRUE(isPermutation(testData, expected));
 }
