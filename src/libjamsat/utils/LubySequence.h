@@ -52,7 +52,7 @@ public:
    * \brief Returns the next element of the Luby sequence.
    *
    * \returns the (N+1)th element of the Luby sequence iff next() has been
-   * called exactly N times before.
+   * called exactly N times (including the current call).
    */
   Element next() noexcept;
 
@@ -76,6 +76,7 @@ private:
 inline LubySequence::LubySequence() noexcept : m_state({1, 1}) {}
 
 inline LubySequence::Element LubySequence::next() noexcept {
+  // See Knuth, The Art of Computer Programming, Section 7.2.2.2
   Element u = m_state.u;
   Element v = m_state.v;
   m_state = ((u & -u) == v) ? LubyState{u + 1, 1} : LubyState{u, 2 * v};
