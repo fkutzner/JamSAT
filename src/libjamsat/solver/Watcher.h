@@ -48,12 +48,7 @@ public:
       : m_clause(&watchedClause, index),
         m_otherWatchedLiteral(otherWatchedLiteral) {}
 
-  ClauseT &getClause() noexcept {
-    // TODO: operator* of state_ptr has const issues, so a workaround is
-    // used here.
-    ClauseT *clausePtr = m_clause.get_ptr();
-    return *clausePtr;
-  }
+  ClauseT &getClause() noexcept { return *m_clause; }
 
   CNFLit getOtherWatchedLiteral() const noexcept {
     return m_otherWatchedLiteral;
