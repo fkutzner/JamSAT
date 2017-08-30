@@ -51,4 +51,23 @@ void LubyRestartPolicy::registerRestart() noexcept {
 bool LubyRestartPolicy::shouldRestart() const noexcept {
   return m_conflictsUntilRestart == 0;
 }
+
+GlucoseRestartPolicy::GlucoseRestartPolicy(
+    const GlucoseRestartPolicy::Options &options) noexcept
+    : m_averageLBD(options.movingAverageWindowSize), m_K(options.K),
+      m_sumLBD(0.0f), m_conflictCount(0ull) {}
+
+void GlucoseRestartPolicy::registerConflict(
+    GlucoseRestartPolicy::RegisterConflictArgs &&args) noexcept {
+  ++m_conflictCount;
+  m_sumLBD += args.learntClauseLBD;
+  m_averageLBD.add(args.learntClauseLBD);
+}
+
+void GlucoseRestartPolicy::registerRestart() noexcept { m_averageLBD.clear(); }
+
+bool GlucoseRestartPolicy::shouldRestart() const noexcept {
+  return m_averageLBD.isFull() &&
+         ((m_averageLBD.getAverage() * m_K) > (m_sumLBD / m_conflictCount));
+}
 }

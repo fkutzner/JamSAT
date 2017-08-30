@@ -30,8 +30,55 @@
 
 #include <libjamsat/solver/LiteralBlockDistance.h>
 #include <libjamsat/utils/LubySequence.h>
+#include <libjamsat/utils/SimpleMovingAverage.h>
 
 namespace jamsat {
+
+class GlucoseRestartPolicy {
+public:
+  struct Options {
+    uint64_t movingAverageWindowSize = 5000;
+    double K = 0.8f;
+  };
+
+  struct RegisterConflictArgs {
+    LBD learntClauseLBD;
+  };
+
+  /**
+   * \brief Constructs a GlucoseRestartPolicy instance.
+   *
+   * \param[in] options   the configuration of the restart policy.
+   */
+  GlucoseRestartPolicy(const Options &options) noexcept;
+
+  /**
+   * \brief Notifies the restart policy that the client has handled a conflict.
+   *
+   * \param[in] args      client state just after handling the conflict. See
+   * GlucoseRestartPolicy::RegisterConflictArgs.
+   */
+  void registerConflict(RegisterConflictArgs &&args) noexcept;
+
+  /**
+   * \brief Notifies the restart policy that the client has handled a restart.
+   */
+  void registerRestart() noexcept;
+
+  /**
+   * \brief Indicates whether the client should restart.
+   *
+   * \returns true iff the client should restart.
+   */
+  bool shouldRestart() const noexcept;
+
+private:
+  SimpleMovingAverage<LBD> m_averageLBD;
+  double m_K;
+  double m_sumLBD;
+  uint64_t m_conflictCount;
+};
+
 /**
  * \ingroup JamSAT_Solver
  *

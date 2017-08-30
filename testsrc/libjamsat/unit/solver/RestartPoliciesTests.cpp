@@ -120,4 +120,52 @@ TEST(UnitSolver, LubyRestartPolicy_scaleFactorScalesSequence) {
   EXPECT_EQ(failureAt, -1)
       << "Detected luby restart sequence failure at conflict " << failureAt;
 }
+
+TEST(UnitSolver, GlucoseRestartPolicy_noRestartWhenTooFewConflicts) {
+  GlucoseRestartPolicy::Options options;
+  options.movingAverageWindowSize = 10ull;
+  GlucoseRestartPolicy underTest{options};
+
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{10});
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
+  EXPECT_FALSE(underTest.shouldRestart());
+}
+
+TEST(UnitSolver,
+     GlucoseRestartPolicy_noRestartWhenTooFewConflictsSinceLastRestart) {
+  GlucoseRestartPolicy::Options options;
+  options.movingAverageWindowSize = 3ull;
+  options.K = 10.0f;
+  GlucoseRestartPolicy underTest{options};
+
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{10});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
+  EXPECT_TRUE(underTest.shouldRestart());
+  underTest.registerRestart();
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
+  EXPECT_FALSE(underTest.shouldRestart());
+}
+
+TEST(UnitSolver, GlucoseRestartPolicy_restartWhenAverageLBDTooBad) {
+  GlucoseRestartPolicy::Options options;
+  options.movingAverageWindowSize = 3ull;
+  options.K = 0.8f;
+  GlucoseRestartPolicy underTest{options};
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{2});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{2});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{2});
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{40});
+  EXPECT_TRUE(underTest.shouldRestart());
+}
 }
