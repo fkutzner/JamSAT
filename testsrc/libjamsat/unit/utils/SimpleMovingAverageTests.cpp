@@ -96,4 +96,17 @@ TEST(UnitUtils, SimpleMovingAverage_bufferIsEmptyAfterClear) {
   underTest.add(17);
   EXPECT_EQ(underTest.getAverage(), 15);
 }
+
+TEST(UnitUtils, SimpleMovingAverage_indicatesFullnessIffFull) {
+  SimpleMovingAverage<int, int> underTest{2};
+  EXPECT_FALSE(underTest.isFull());
+  underTest.add(0);
+  EXPECT_FALSE(underTest.isFull());
+  underTest.add(1);
+  EXPECT_TRUE(underTest.isFull());
+  underTest.add(2);
+  EXPECT_TRUE(underTest.isFull());
+  underTest.clear();
+  EXPECT_FALSE(underTest.isFull());
+}
 }
