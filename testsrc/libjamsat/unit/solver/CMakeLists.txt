@@ -8,6 +8,7 @@ add_library(solver_unit_tests OBJECT
   TestAssignmentProvider.h
   LiteralBlockDistanceUnitTests.cpp
   ClauseMinimizationUnitTests.cpp
+  RestartPoliciesTests.cpp
   TestReasonProvider.h
 )
 

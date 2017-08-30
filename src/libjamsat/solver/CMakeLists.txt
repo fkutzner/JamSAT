@@ -8,4 +8,6 @@ add_library(jamsatSolver OBJECT
   FirstUIPLearning.h
   LiteralBlockDistance.h
   ClauseMinimization.h
+  RestartPolicies.h
+  RestartPolicies.cpp
 )
