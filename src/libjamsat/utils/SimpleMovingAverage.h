@@ -92,7 +92,7 @@ public:
    * \returns true iff the amount of elements currently taken into account has
    * reached the instance's horizon.
    */
-  capacity_type isFull() const noexcept;
+  bool isFull() const noexcept;
 
 private:
   Storage m_values;
@@ -134,8 +134,7 @@ void SimpleMovingAverage<T, Average>::clear() noexcept {
 }
 
 template <typename T, typename Average>
-typename SimpleMovingAverage<T, Average>::capacity_type
-SimpleMovingAverage<T, Average>::isFull() const noexcept {
+bool SimpleMovingAverage<T, Average>::isFull() const noexcept {
   return m_values.size() == m_values.capacity();
 }
 }
