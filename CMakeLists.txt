@@ -121,6 +121,8 @@ file(GLOB_RECURSE SRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOU
 file(GLOB_RECURSE TESTSRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/testsrc/*.cpp ${PROJECT_SOURCE_DIR}/testsrc/*.h)
 set(ALL_SOURCE_FILES ${SRC_SOURCE_FILES} ${TESTSRC_SOURCE_FILES})
 
+set(JAMSAT_MAINTENANCE_TARGET_FOLDER "Maintenance Targets")
+
 add_custom_target(
         format-src
         COMMAND clang-format
@@ -128,6 +130,7 @@ add_custom_target(
         -i
         ${ALL_SOURCE_FILES}
 )
+set_property(TARGET format-src PROPERTY FOLDER ${JAMSAT_MAINTENANCE_TARGET_FOLDER})
 
 add_custom_target(
         cppcheck
@@ -140,3 +143,4 @@ add_custom_target(
         --verbose
         ${ALL_SOURCE_FILES}
 )
+set_property(TARGET cppcheck PROPERTY FOLDER ${JAMSAT_MAINTENANCE_TARGET_FOLDER})
