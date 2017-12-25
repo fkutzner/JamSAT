@@ -1,4 +1,4 @@
-add_library(jamsatSolver OBJECT
+add_jamsat_core_library(jamsatSolver
   Trail.cpp
   Trail.h
   VariableState.h

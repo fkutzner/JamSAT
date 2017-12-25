@@ -1,4 +1,4 @@
-add_library(jamsatUtils OBJECT
+add_jamsat_core_library(jamsatUtils
   Assert.h
   Assert.cpp
   Truth.h
