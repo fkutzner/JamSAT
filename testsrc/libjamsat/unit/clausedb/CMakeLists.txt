@@ -1,9 +1,4 @@
-add_library(clausedb_unit_tests OBJECT
+add_jamsat_core_unittest_library(clausedb_unit_tests
   ClauseUnitTests.cpp
   HeapClauseDBTests.cpp
 )
-
-target_include_directories(clausedb_unit_tests PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include
-                                                      ${PROJECT_SOURCE_DIR}/lib/googletest/googlemock/include)
-target_include_directories(clausedb_unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/testsrc
-                                                       ${PROJECT_SOURCE_DIR}/src)
