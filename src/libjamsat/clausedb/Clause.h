@@ -48,6 +48,7 @@ public:
   using size_type = uint32_t;
   using iterator = CNFLit *;
   using const_iterator = const CNFLit *;
+  using lbd_type = uint16_t;
 
   /**
    * \brief Returns a reference to a literal within the clause.
@@ -65,6 +66,26 @@ public:
    * \returns The clause's size.
    */
   size_type size() const noexcept;
+
+  /**
+   * \brief Returns the clause's LBD value.
+   *
+   * Note: if the clause's LBD value is larger than the maximum value
+   * of LBDType, the maximum value of LBDType is returned.
+   *
+   * \returns the clause's LBD value.
+   */
+  template <typename LBDType> auto getLBD() const noexcept -> LBDType;
+
+  /**
+   * \brief Sets the clause's LBD value.
+   *
+   * Note: if the \p LBD is larger than the maximum LBD value storable
+   * by the clause, that maximum is stored instead.
+   *
+   * \param LBD  the clause's new LBD value.
+   */
+  template <typename LBDType> void setLBD(LBDType LBD) noexcept;
 
   /**
    * \brief Reduces the length of the clause to the given size.
@@ -138,6 +159,7 @@ private:
   explicit Clause(size_type size) noexcept;
 
   size_type m_size;
+  lbd_type m_lbd;
   CNFLit m_anchor;
 };
 
@@ -149,4 +171,21 @@ private:
  * Ownership of this object is transferred to the caller.
  */
 std::unique_ptr<Clause> createHeapClause(Clause::size_type size);
+
+template <typename LBDType> auto Clause::getLBD() const noexcept -> LBDType {
+  if (m_lbd <= std::numeric_limits<LBDType>::max()) {
+    return static_cast<LBDType>(m_lbd);
+  } else {
+    return std::numeric_limits<LBDType>::max();
+  }
+}
+
+template <typename LBDType> void Clause::setLBD(LBDType LBD) noexcept {
+  JAM_ASSERT(LBD >= 0, "LBD out of range");
+  if (LBD <= std::numeric_limits<decltype(m_lbd)>::max()) {
+    m_lbd = static_cast<decltype(m_lbd)>(LBD);
+  } else {
+    m_lbd = std::numeric_limits<decltype(m_lbd)>::max();
+  }
+}
 }

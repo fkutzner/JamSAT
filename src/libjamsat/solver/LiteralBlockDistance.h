@@ -30,7 +30,6 @@
 
 namespace jamsat {
 using LBD = uint32_t;
-
 /**
  * \ingroup JamSAT_Solver
  *
@@ -54,6 +53,8 @@ using LBD = uint32_t;
  * above)
  * \tparam StampMapT              A StampMap specialization supporting stamping
  * of the decision levels.
+ * \tparam LBD                    The literal block distance type, an integral
+ * type.
  */
 template <typename ForwardRange, typename DLProvider, typename StampMapT>
 LBD getLBD(const ForwardRange &literals,

@@ -152,4 +152,24 @@ TEST(UnitClauseDB, shrinkClause) {
   EXPECT_EQ(underTest->end() - underTest->begin(), 5);
   EXPECT_EQ(underTest->size(), 5ull);
 }
+
+TEST(UnitClauseDB, tooLargeLBDValueIsCapped) {
+  uint64_t largeLBDValue = std::numeric_limits<Clause::lbd_type>::max();
+  ++largeLBDValue;
+
+  auto underTest = createHeapClause(1);
+  underTest->setLBD(largeLBDValue);
+
+  EXPECT_EQ(underTest->getLBD<uint64_t>(),
+            std::numeric_limits<Clause::lbd_type>::max());
+}
+
+TEST(UnitClauseDB, notTooLargeLBDValueIsStored) {
+  uint64_t smallLBDValue = 10;
+
+  auto underTest = createHeapClause(1);
+  underTest->setLBD(smallLBDValue);
+
+  EXPECT_EQ(underTest->getLBD<uint64_t>(), smallLBDValue);
+}
 }
