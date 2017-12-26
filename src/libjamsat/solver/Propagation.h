@@ -33,7 +33,7 @@
 
 #if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_PROPAGATION_LOGGING)
 #include <boost/log/trivial.hpp>
-#define JAM_LOG_PROPAGATION(x, y) BOOST_LOG_TRIVIAL(x) << y
+#define JAM_LOG_PROPAGATION(x, y) BOOST_LOG_TRIVIAL(x) << "[propgt] " << y
 #else
 #define JAM_LOG_PROPAGATION(x, y)
 #endif
@@ -174,6 +174,8 @@ template <class AssignmentProvider, class ClauseT>
 ClauseT *
 Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause) {
   JAM_ASSERT(clause.size() >= 2ull, "Illegally small clause argument");
+  JAM_LOG_PROPAGATION(info, "Registering clause " << &clause
+                                                  << " for propagation.");
   detail_propagation::Watcher<ClauseT> watcher1{clause, clause[0], 1};
   detail_propagation::Watcher<ClauseT> watcher2{clause, clause[1], 0};
   m_watchers.addWatcher(clause[0], watcher2);
@@ -213,7 +215,8 @@ bool Propagation<AssignmentProvider, ClauseT>::hasForcedAssignment(
 template <class AssignmentProvider, class ClauseT>
 ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(
     CNFLit toPropagate) {
-  JAM_LOG_PROPAGATION(info, "Propagating until fixpoint: " << toPropagate);
+  JAM_LOG_PROPAGATION(info,
+                      "Propagating assignment until fixpoint: " << toPropagate);
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Literal variable out of bounds");
@@ -236,7 +239,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(
   auto pqBegin = propagationQueue.begin();
   auto pqEnd = propagationQueue.end() + amountOfNewFacts;
   while (pqBegin != pqEnd) {
-    JAM_LOG_PROPAGATION(info, "Propagating until fixpoint: "
+    JAM_LOG_PROPAGATION(info, "  Propagating until fixpoint: "
                                   << amountOfNewFacts
                                   << " assignments pending");
     size_t localNewFacts = 0;
@@ -248,7 +251,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(
     ++pqBegin;
   }
 
-  JAM_LOG_PROPAGATION(info, "Done propagating to fixpoint.");
+  JAM_LOG_PROPAGATION(info, "  Done propagating to fixpoint.");
   // No more forced assignments can be propagated => fixpoint reached.
   return nullptr;
 }
@@ -257,12 +260,12 @@ template <class AssignmentProvider, class ClauseT>
 ClauseT *
 Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
                                                     size_t &amountOfNewFacts) {
-  JAM_LOG_PROPAGATION(info, "Propagating literal: " << toPropagate);
+  JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Literal variable out of bounds");
 
-  m_reasons[toPropagate.getVariable()] = nullptr;
+  // m_reasons[toPropagate.getVariable()] = nullptr;
   amountOfNewFacts = 0;
   CNFLit negatedToPropagate = ~toPropagate;
 
@@ -326,14 +329,18 @@ Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
       if (assignment == TBool::FALSE) {
         // Conflict case: all literals are FALSE. Return the conflicting clause.
         watcherListTraversal.finishedTraversal();
-        JAM_LOG_PROPAGATION(info, "Current assignment is conflicting.");
+        JAM_LOG_PROPAGATION(info,
+                            "  Current assignment is conflicting at clause "
+                                << &clause << ".");
         return &clause;
       } else {
         // Propagation case: otherWatchedLit is the only remaining unassigned
         // literal
         ++amountOfNewFacts;
         m_reasons[otherWatchedLit.getVariable()] = &clause;
-        JAM_LOG_PROPAGATION(info, "Forced assignment: " << otherWatchedLit);
+        JAM_LOG_PROPAGATION(info,
+                            "  Forced assignment: " << otherWatchedLit
+                                                    << " Reason: " << &clause);
         m_assignmentProvider.addAssignment(otherWatchedLit);
       }
 
