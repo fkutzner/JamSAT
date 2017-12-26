@@ -74,10 +74,9 @@ namespace jamsat {
  *
  * TODO: document that LiteralContainer must support erasing
  */
-template <class LiteralContainer, class ReasonProvider,
-          class DecisionLevelProvider, class StampMapT>
-void eraseRedundantLiterals(LiteralContainer &literals,
-                            const ReasonProvider &reasonProvider,
+template <class LiteralContainer, class ReasonProvider, class DecisionLevelProvider,
+          class StampMapT>
+void eraseRedundantLiterals(LiteralContainer &literals, const ReasonProvider &reasonProvider,
                             const DecisionLevelProvider &dlProvider,
                             StampMapT &tempStamps) noexcept;
 
@@ -112,8 +111,7 @@ void eraseRedundantLiterals(LiteralContainer &literals,
  * \tparam StampMapT                TODO
  */
 template <class LiteralContainer, class BinaryClausesProvider, class StampMapT>
-void resolveWithBinaries(LiteralContainer &literals,
-                         const BinaryClausesProvider &binaryClauses,
+void resolveWithBinaries(LiteralContainer &literals, const BinaryClausesProvider &binaryClauses,
                          CNFLit resolveAt, StampMapT &tempStamps) noexcept;
 
 /********** Implementation ****************************** */
@@ -124,88 +122,83 @@ bool isRedundant(CNFLit literal, const ReasonProvider &reasonProvider,
                  const DecisionLevelProvider &dlProvider, StampMapT &tempStamps,
                  typename StampMapT::Stamp currentStamp) {
 
-  if (dlProvider.getAssignmentDecisionLevel(literal.getVariable()) ==
-      dlProvider.getCurrentDecisionLevel()) {
-    return false;
-  }
-
-  std::vector<CNFVar> work{literal.getVariable()};
-
-  while (!work.empty()) {
-    CNFVar workItem = work.back();
-    work.pop_back();
-
-    auto clausePtr = reasonProvider.getAssignmentReason(workItem);
-    JAM_ASSERT(clausePtr != nullptr,
-               "Can't determine redundancy of reasonless literals");
-
-    for (CNFLit lit : *clausePtr) {
-      CNFVar var = lit.getVariable();
-      auto varLevel = dlProvider.getAssignmentDecisionLevel(var);
-
-      if (varLevel == 0 || tempStamps.isStamped(var, currentStamp)) {
-        continue;
-      }
-
-      if (reasonProvider.getAssignmentReason(var) != nullptr) {
-        tempStamps.setStamped(var, currentStamp, true);
-        work.push_back(var);
-      } else {
+    if (dlProvider.getAssignmentDecisionLevel(literal.getVariable()) ==
+        dlProvider.getCurrentDecisionLevel()) {
         return false;
-      }
     }
-  }
 
-  return true;
+    std::vector<CNFVar> work{literal.getVariable()};
+
+    while (!work.empty()) {
+        CNFVar workItem = work.back();
+        work.pop_back();
+
+        auto clausePtr = reasonProvider.getAssignmentReason(workItem);
+        JAM_ASSERT(clausePtr != nullptr, "Can't determine redundancy of reasonless literals");
+
+        for (CNFLit lit : *clausePtr) {
+            CNFVar var = lit.getVariable();
+            auto varLevel = dlProvider.getAssignmentDecisionLevel(var);
+
+            if (varLevel == 0 || tempStamps.isStamped(var, currentStamp)) {
+                continue;
+            }
+
+            if (reasonProvider.getAssignmentReason(var) != nullptr) {
+                tempStamps.setStamped(var, currentStamp, true);
+                work.push_back(var);
+            } else {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 }
 
-template <class LiteralContainer, class ReasonProvider,
-          class DecisionLevelProvider, class StampMapT>
-void eraseRedundantLiterals(LiteralContainer &literals,
-                            const ReasonProvider &reasonProvider,
+template <class LiteralContainer, class ReasonProvider, class DecisionLevelProvider,
+          class StampMapT>
+void eraseRedundantLiterals(LiteralContainer &literals, const ReasonProvider &reasonProvider,
                             const DecisionLevelProvider &dlProvider,
                             StampMapT &tempStamps) noexcept {
-  const auto stampContext = tempStamps.createContext();
-  const auto stamp = stampContext.getStamp();
+    const auto stampContext = tempStamps.createContext();
+    const auto stamp = stampContext.getStamp();
 
-  for (auto literal : literals) {
-    tempStamps.setStamped(literal.getVariable(), stamp, true);
-  }
-
-  auto isRedundant = [&reasonProvider, &dlProvider, &tempStamps,
-                      &stamp](CNFLit literal) {
-    auto reason = reasonProvider.getAssignmentReason(literal.getVariable());
-    if (reason != nullptr) {
-      return erl_detail::isRedundant(literal, reasonProvider, dlProvider,
-                                     tempStamps, stamp);
+    for (auto literal : literals) {
+        tempStamps.setStamped(literal.getVariable(), stamp, true);
     }
-    return dlProvider.getAssignmentDecisionLevel(literal.getVariable()) == 0;
-  };
 
-  boost::remove_erase_if(literals, isRedundant);
+    auto isRedundant = [&reasonProvider, &dlProvider, &tempStamps, &stamp](CNFLit literal) {
+        auto reason = reasonProvider.getAssignmentReason(literal.getVariable());
+        if (reason != nullptr) {
+            return erl_detail::isRedundant(literal, reasonProvider, dlProvider, tempStamps, stamp);
+        }
+        return dlProvider.getAssignmentDecisionLevel(literal.getVariable()) == 0;
+    };
+
+    boost::remove_erase_if(literals, isRedundant);
 }
 
 template <class LiteralContainer, class BinaryClausesProvider, class StampMapT>
-void resolveWithBinaries(LiteralContainer &literals,
-                         const BinaryClausesProvider &binaryClauses,
+void resolveWithBinaries(LiteralContainer &literals, const BinaryClausesProvider &binaryClauses,
                          CNFLit resolveAt, StampMapT &tempStamps) noexcept {
-  const auto stampContext = tempStamps.createContext();
-  const auto stamp = stampContext.getStamp();
+    const auto stampContext = tempStamps.createContext();
+    const auto stamp = stampContext.getStamp();
 
-  auto binaryClausesIter = binaryClauses.find(resolveAt);
-  if (binaryClausesIter == binaryClauses.end()) {
-    return;
-  }
+    auto binaryClausesIter = binaryClauses.find(resolveAt);
+    if (binaryClausesIter == binaryClauses.end()) {
+        return;
+    }
 
-  for (auto secondLiteral : binaryClausesIter->second) {
-    tempStamps.setStamped(secondLiteral, stamp, true);
-  }
+    for (auto secondLiteral : binaryClausesIter->second) {
+        tempStamps.setStamped(secondLiteral, stamp, true);
+    }
 
-  auto mayRemoveByResolution = [&tempStamps, resolveAt, stamp](CNFLit literal) {
-    return tempStamps.isStamped(~literal, stamp);
-  };
+    auto mayRemoveByResolution = [&tempStamps, resolveAt, stamp](CNFLit literal) {
+        return tempStamps.isStamped(~literal, stamp);
+    };
 
-  boost::remove_erase_if(literals, mayRemoveByResolution);
+    boost::remove_erase_if(literals, mayRemoveByResolution);
 }
 }

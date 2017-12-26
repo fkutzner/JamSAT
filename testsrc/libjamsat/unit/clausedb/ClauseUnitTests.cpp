@@ -31,145 +31,141 @@
 namespace jamsat {
 
 TEST(UnitClauseDB, allocateClauseOnHeap) {
-  auto allocatedClause = createHeapClause(11);
-  ASSERT_NE(allocatedClause.get(), nullptr);
-  EXPECT_EQ(allocatedClause->size(), 11ull);
+    auto allocatedClause = createHeapClause(11);
+    ASSERT_NE(allocatedClause.get(), nullptr);
+    EXPECT_EQ(allocatedClause->size(), 11ull);
 }
 
 TEST(UnitClauseDB, nonemptyHeapClausesHaveSufficientMemory) {
-  auto allocatedClause = createHeapClause(11);
-  ASSERT_NE(allocatedClause.get(), nullptr);
+    auto allocatedClause = createHeapClause(11);
+    ASSERT_NE(allocatedClause.get(), nullptr);
 
-  auto addrJustBeyondClause =
-      reinterpret_cast<uintptr_t>(allocatedClause->end());
-  auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
+    auto addrJustBeyondClause = reinterpret_cast<uintptr_t>(allocatedClause->end());
+    auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
 
-  auto computedSize = Clause::getAllocationSize(11);
-  EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
+    auto computedSize = Clause::getAllocationSize(11);
+    EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
 }
 
 TEST(UnitClauseDB, singleLitHeapClausesHaveSufficientMemory) {
-  auto allocatedClause = createHeapClause(1);
-  ASSERT_NE(allocatedClause.get(), nullptr);
+    auto allocatedClause = createHeapClause(1);
+    ASSERT_NE(allocatedClause.get(), nullptr);
 
-  auto addrJustBeyondClause =
-      reinterpret_cast<uintptr_t>(allocatedClause->end());
-  auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
+    auto addrJustBeyondClause = reinterpret_cast<uintptr_t>(allocatedClause->end());
+    auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
 
-  auto computedSize = Clause::getAllocationSize(1);
-  EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
+    auto computedSize = Clause::getAllocationSize(1);
+    EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
 }
 
 TEST(UnitClauseDB, emptyHeapClausesHaveSufficientMemory) {
-  auto allocatedClause = createHeapClause(0);
-  ASSERT_NE(allocatedClause.get(), nullptr);
+    auto allocatedClause = createHeapClause(0);
+    ASSERT_NE(allocatedClause.get(), nullptr);
 
-  auto addrJustBeyondClause =
-      reinterpret_cast<uintptr_t>(allocatedClause->end());
-  auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
+    auto addrJustBeyondClause = reinterpret_cast<uintptr_t>(allocatedClause->end());
+    auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
 
-  // The struct is trailed by a CNFLit whose memory does not get accessed in
-  // size-0 clauses.
-  EXPECT_LE(sizeof(Clause),
-            addrJustBeyondClause - addrBeginClause + sizeof(CNFLit));
+    // The struct is trailed by a CNFLit whose memory does not get accessed in
+    // size-0 clauses.
+    EXPECT_LE(sizeof(Clause), addrJustBeyondClause - addrBeginClause + sizeof(CNFLit));
 }
 
 TEST(UnitClauseDB, freshHeapClauseContainsUndefinedLiterals) {
-  auto underTest = createHeapClause(11);
-  ASSERT_NE(underTest.get(), nullptr);
-  for (Clause::size_type i = 0; i < underTest->size(); ++i) {
-    EXPECT_EQ((*underTest)[i], CNFLit::getUndefinedLiteral());
-  }
+    auto underTest = createHeapClause(11);
+    ASSERT_NE(underTest.get(), nullptr);
+    for (Clause::size_type i = 0; i < underTest->size(); ++i) {
+        EXPECT_EQ((*underTest)[i], CNFLit::getUndefinedLiteral());
+    }
 }
 
 TEST(UnitClauseDB, heapClauseIsWritable) {
-  auto underTest = createHeapClause(11);
-  ASSERT_NE(underTest.get(), nullptr);
-  CNFLit testLiteral{CNFVar{3}, CNFSign::NEGATIVE};
-  (*underTest)[3] = testLiteral;
-  EXPECT_EQ((*underTest)[3], testLiteral);
+    auto underTest = createHeapClause(11);
+    ASSERT_NE(underTest.get(), nullptr);
+    CNFLit testLiteral{CNFVar{3}, CNFSign::NEGATIVE};
+    (*underTest)[3] = testLiteral;
+    EXPECT_EQ((*underTest)[3], testLiteral);
 }
 
 TEST(UnitClauseDB, iterateOverEmptyClause) {
-  auto underTest = createHeapClause(0);
-  ASSERT_NE(underTest.get(), nullptr);
-  bool iterated = false;
-  for (auto &lit : *underTest) {
-    (void)lit;
-    iterated = true;
-  }
-  ASSERT_FALSE(iterated);
+    auto underTest = createHeapClause(0);
+    ASSERT_NE(underTest.get(), nullptr);
+    bool iterated = false;
+    for (auto &lit : *underTest) {
+        (void)lit;
+        iterated = true;
+    }
+    ASSERT_FALSE(iterated);
 }
 
 namespace {
 void test_iterateOverClause_setup(Clause &underTest) {
-  CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
-  CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
-  underTest[0] = CNFLit::getUndefinedLiteral();
-  underTest[3] = testLiteral1;
-  underTest[4] = testLiteral2;
+    CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
+    CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
+    underTest[0] = CNFLit::getUndefinedLiteral();
+    underTest[3] = testLiteral1;
+    underTest[4] = testLiteral2;
 }
 
-template <typename C> void test_iterateOverClause_check(C &underTest) {
-  CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
-  CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
+template <typename C>
+void test_iterateOverClause_check(C &underTest) {
+    CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
+    CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
 
-  EXPECT_EQ(underTest[0], CNFLit::getUndefinedLiteral());
+    EXPECT_EQ(underTest[0], CNFLit::getUndefinedLiteral());
 
-  int i = 0;
-  for (auto &lit : underTest) {
-    if (i == 3) {
-      EXPECT_EQ(lit, testLiteral1);
-    } else if (i == 4) {
-      EXPECT_EQ(lit, testLiteral2);
+    int i = 0;
+    for (auto &lit : underTest) {
+        if (i == 3) {
+            EXPECT_EQ(lit, testLiteral1);
+        } else if (i == 4) {
+            EXPECT_EQ(lit, testLiteral2);
+        }
+        ++i;
     }
-    ++i;
-  }
 }
 }
 
 TEST(UnitClauseDB, iterateOverClause) {
-  auto underTest = createHeapClause(11);
-  ASSERT_NE(underTest.get(), nullptr);
-  test_iterateOverClause_setup(*underTest);
-  test_iterateOverClause_check(*underTest);
+    auto underTest = createHeapClause(11);
+    ASSERT_NE(underTest.get(), nullptr);
+    test_iterateOverClause_setup(*underTest);
+    test_iterateOverClause_check(*underTest);
 }
 
 TEST(UnitClauseDB, iterateOverConstantClause) {
-  auto underTest = createHeapClause(8);
-  test_iterateOverClause_setup(*underTest);
-  const Clause &underTestConst = *underTest;
-  test_iterateOverClause_check(underTestConst);
+    auto underTest = createHeapClause(8);
+    test_iterateOverClause_setup(*underTest);
+    const Clause &underTestConst = *underTest;
+    test_iterateOverClause_check(underTestConst);
 }
 
 TEST(UnitClauseDB, shrinkClause) {
-  auto underTest = createHeapClause(11);
-  ASSERT_NE(underTest.get(), nullptr);
-  ASSERT_EQ(underTest->end() - underTest->begin(), 11);
-  ASSERT_EQ(underTest->size(), 11ull);
+    auto underTest = createHeapClause(11);
+    ASSERT_NE(underTest.get(), nullptr);
+    ASSERT_EQ(underTest->end() - underTest->begin(), 11);
+    ASSERT_EQ(underTest->size(), 11ull);
 
-  underTest->resize(5);
-  EXPECT_EQ(underTest->end() - underTest->begin(), 5);
-  EXPECT_EQ(underTest->size(), 5ull);
+    underTest->resize(5);
+    EXPECT_EQ(underTest->end() - underTest->begin(), 5);
+    EXPECT_EQ(underTest->size(), 5ull);
 }
 
 TEST(UnitClauseDB, tooLargeLBDValueIsCapped) {
-  uint64_t largeLBDValue = std::numeric_limits<Clause::lbd_type>::max();
-  ++largeLBDValue;
+    uint64_t largeLBDValue = std::numeric_limits<Clause::lbd_type>::max();
+    ++largeLBDValue;
 
-  auto underTest = createHeapClause(1);
-  underTest->setLBD(largeLBDValue);
+    auto underTest = createHeapClause(1);
+    underTest->setLBD(largeLBDValue);
 
-  EXPECT_EQ(underTest->getLBD<uint64_t>(),
-            std::numeric_limits<Clause::lbd_type>::max());
+    EXPECT_EQ(underTest->getLBD<uint64_t>(), std::numeric_limits<Clause::lbd_type>::max());
 }
 
 TEST(UnitClauseDB, notTooLargeLBDValueIsStored) {
-  uint64_t smallLBDValue = 10;
+    uint64_t smallLBDValue = 10;
 
-  auto underTest = createHeapClause(1);
-  underTest->setLBD(smallLBDValue);
+    auto underTest = createHeapClause(1);
+    underTest->setLBD(smallLBDValue);
 
-  EXPECT_EQ(underTest->getLBD<uint64_t>(), smallLBDValue);
+    EXPECT_EQ(underTest->getLBD<uint64_t>(), smallLBDValue);
 }
 }

@@ -36,11 +36,11 @@ namespace jamsat {
  * \brief A byte-based boolean datatype.
  */
 enum class Bool : uint8_t {
-  /// The "false" value.
-  FALSE = 0,
+    /// The "false" value.
+    FALSE = 0,
 
-  /// The "true" value.
-  TRUE = 1
+    /// The "true" value.
+    TRUE = 1
 };
 
 /**
@@ -49,7 +49,9 @@ enum class Bool : uint8_t {
  * \param value The value to be converted.
  * \returns Bool::TRUE iff value == true, Bool::FALSE otherwise.
  */
-inline bool toRawBool(Bool value) { return value == Bool::TRUE ? true : false; }
+inline bool toRawBool(Bool value) {
+    return value == Bool::TRUE ? true : false;
+}
 
 /**
  * \brief Converts a bool value to a Bool value.
@@ -58,7 +60,7 @@ inline bool toRawBool(Bool value) { return value == Bool::TRUE ? true : false; }
  * \returns true iff value == Bool::TRUE, false otherwise.
  */
 inline Bool toBool(bool rawValue) {
-  return rawValue ? Bool::TRUE : Bool::FALSE;
+    return rawValue ? Bool::TRUE : Bool::FALSE;
 }
 
 /**
@@ -69,14 +71,14 @@ inline Bool toBool(bool rawValue) {
  * \brief Values of three-valued logic: TRUE, FALSE and INDETERMINATE.
  */
 enum class TBool : uint8_t {
-  /// The "false" value.
-  FALSE = 0,
+    /// The "false" value.
+    FALSE = 0,
 
-  /// The "true" value.
-  TRUE = 1,
+    /// The "true" value.
+    TRUE = 1,
 
-  /// The indeterminate value.
-  INDETERMINATE = 2
+    /// The indeterminate value.
+    INDETERMINATE = 2
 };
 
 /**
@@ -203,55 +205,58 @@ TBool &operator+=(const TBool &lhs, const TBool &rhs);
 /********** Implementation ****************************** */
 
 inline bool toRawBool(TBool value) {
-  JAM_ASSERT(value != TBool::INDETERMINATE,
-             "Can't convert indeterminate TBool to bool");
-  return value == TBool::TRUE;
+    JAM_ASSERT(value != TBool::INDETERMINATE, "Can't convert indeterminate TBool to bool");
+    return value == TBool::TRUE;
 }
 
-inline bool isDeterminate(TBool value) { return value != TBool::INDETERMINATE; }
+inline bool isDeterminate(TBool value) {
+    return value != TBool::INDETERMINATE;
+}
 
-inline TBool toTBool(bool value) { return value ? TBool::TRUE : TBool::FALSE; }
+inline TBool toTBool(bool value) {
+    return value ? TBool::TRUE : TBool::FALSE;
+}
 
 inline TBool negate(const TBool a) {
-  switch (a) {
-  case TBool::INDETERMINATE:
-    return TBool::INDETERMINATE;
-  case TBool::TRUE:
-    return TBool::FALSE;
-  case TBool::FALSE:
-    return TBool::TRUE;
-  default:
-    JAM_ASSERT(false, "Detected 4th TBool value when only 3 should exist");
-  }
+    switch (a) {
+    case TBool::INDETERMINATE:
+        return TBool::INDETERMINATE;
+    case TBool::TRUE:
+        return TBool::FALSE;
+    case TBool::FALSE:
+        return TBool::TRUE;
+    default:
+        JAM_ASSERT(false, "Detected 4th TBool value when only 3 should exist");
+    }
 }
 
 inline TBool operator*(const TBool lhs, const TBool rhs) {
-  if (lhs == TBool::TRUE && rhs == TBool::TRUE) {
-    return TBool::TRUE;
-  }
-  if (lhs == TBool::FALSE || rhs == TBool::FALSE) {
-    return TBool::FALSE;
-  }
-  return TBool::INDETERMINATE;
+    if (lhs == TBool::TRUE && rhs == TBool::TRUE) {
+        return TBool::TRUE;
+    }
+    if (lhs == TBool::FALSE || rhs == TBool::FALSE) {
+        return TBool::FALSE;
+    }
+    return TBool::INDETERMINATE;
 }
 
 inline TBool &operator*=(TBool &lhs, const TBool rhs) {
-  lhs = lhs * rhs;
-  return lhs;
+    lhs = lhs * rhs;
+    return lhs;
 }
 
 inline TBool operator+(const TBool lhs, const TBool rhs) {
-  if (lhs == TBool::TRUE || rhs == TBool::TRUE) {
-    return TBool::TRUE;
-  }
-  if (lhs == TBool::FALSE && rhs == TBool::FALSE) {
-    return TBool::FALSE;
-  }
-  return TBool::INDETERMINATE;
+    if (lhs == TBool::TRUE || rhs == TBool::TRUE) {
+        return TBool::TRUE;
+    }
+    if (lhs == TBool::FALSE && rhs == TBool::FALSE) {
+        return TBool::FALSE;
+    }
+    return TBool::INDETERMINATE;
 }
 
 inline TBool &operator+=(TBool &lhs, const TBool rhs) {
-  lhs = lhs + rhs;
-  return lhs;
+    lhs = lhs + rhs;
+    return lhs;
 }
 }

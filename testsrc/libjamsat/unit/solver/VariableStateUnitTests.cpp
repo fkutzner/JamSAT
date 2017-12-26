@@ -31,13 +31,13 @@
 namespace jamsat {
 
 TEST(UnitSolver, variablesAreNotEliminatedByDefault) {
-  VariableState underTest{CNFVar{10}};
-  EXPECT_EQ(underTest.isEliminated(CNFVar{3}), false);
+    VariableState underTest{CNFVar{10}};
+    EXPECT_EQ(underTest.isEliminated(CNFVar{3}), false);
 }
 
 TEST(UnitSolver, variableEliminationIsStored) {
-  VariableState underTest{CNFVar{10}};
-  underTest.setEliminated(CNFVar{3});
-  EXPECT_EQ(underTest.isEliminated(CNFVar{3}), true);
+    VariableState underTest{CNFVar{10}};
+    underTest.setEliminated(CNFVar{3});
+    EXPECT_EQ(underTest.isEliminated(CNFVar{3}), true);
 }
 }

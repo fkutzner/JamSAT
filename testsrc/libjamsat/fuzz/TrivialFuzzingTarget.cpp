@@ -30,6 +30,6 @@
 
 namespace jamsat {
 void JamSATFuzzingEntryPoint(std::istream &) {
-  std::cout << "Trivial fuzz target, for manual testing purposes" << std::endl;
+    std::cout << "Trivial fuzz target, for manual testing purposes" << std::endl;
 }
 }

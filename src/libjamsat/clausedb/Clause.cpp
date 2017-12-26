@@ -28,69 +28,75 @@
 #include <libjamsat/utils/Assert.h>
 
 namespace jamsat {
-Clause::Clause(size_type size) noexcept
-    : m_size(size), m_anchor(CNFLit::getUndefinedLiteral()) {}
+Clause::Clause(size_type size) noexcept : m_size(size), m_anchor(CNFLit::getUndefinedLiteral()) {}
 
 CNFLit &Clause::operator[](size_type index) noexcept {
-  JAM_ASSERT(index < m_size, "Index out of bounds");
-  return *(&m_anchor + index);
+    JAM_ASSERT(index < m_size, "Index out of bounds");
+    return *(&m_anchor + index);
 }
 
 const CNFLit &Clause::operator[](size_type index) const noexcept {
-  JAM_ASSERT(index < m_size, "Index out of bounds");
-  return *(&m_anchor + index);
+    JAM_ASSERT(index < m_size, "Index out of bounds");
+    return *(&m_anchor + index);
 }
 
-Clause::size_type Clause::size() const noexcept { return m_size; }
+Clause::size_type Clause::size() const noexcept {
+    return m_size;
+}
 
 void Clause::resize(size_type newSize) noexcept {
-  JAM_ASSERT(newSize <= m_size,
-             "newSize may not be larger than the current size");
-  m_size = newSize;
+    JAM_ASSERT(newSize <= m_size, "newSize may not be larger than the current size");
+    m_size = newSize;
 }
 
-Clause::iterator Clause::begin() noexcept { return &m_anchor; }
+Clause::iterator Clause::begin() noexcept {
+    return &m_anchor;
+}
 
-Clause::iterator Clause::end() noexcept { return &m_anchor + m_size; }
+Clause::iterator Clause::end() noexcept {
+    return &m_anchor + m_size;
+}
 
-Clause::const_iterator Clause::begin() const noexcept { return &m_anchor; }
+Clause::const_iterator Clause::begin() const noexcept {
+    return &m_anchor;
+}
 
 Clause::const_iterator Clause::end() const noexcept {
-  return &m_anchor + m_size;
+    return &m_anchor + m_size;
 }
 
 size_t Clause::getAllocationSize(Clause::size_type clauseSize) {
-  JAM_ASSERT(clauseSize > 0, "clauseSize must be nonzero");
-  return sizeof(Clause) + (clauseSize - 1) * sizeof(CNFLit);
+    JAM_ASSERT(clauseSize > 0, "clauseSize must be nonzero");
+    return sizeof(Clause) + (clauseSize - 1) * sizeof(CNFLit);
 }
 
 Clause *Clause::constructIn(void *target, size_type size) {
-  return new (target) Clause(size);
+    return new (target) Clause(size);
 }
 
 std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
-  Clause *result;
-  if (size == 0) {
-    result = new Clause(0);
-  } else {
-    auto memorySize = Clause::getAllocationSize(size);
-    void *rawMemory = operator new(memorySize);
-    result = Clause::constructIn(rawMemory, size);
-  }
+    Clause *result;
+    if (size == 0) {
+        result = new Clause(0);
+    } else {
+        auto memorySize = Clause::getAllocationSize(size);
+        void *rawMemory = operator new(memorySize);
+        result = Clause::constructIn(rawMemory, size);
+    }
 
-  for (auto &lit : *result) {
-    lit = CNFLit::getUndefinedLiteral();
-  }
+    for (auto &lit : *result) {
+        lit = CNFLit::getUndefinedLiteral();
+    }
 
-  return std::unique_ptr<Clause>(result);
+    return std::unique_ptr<Clause>(result);
 }
 
 std::ostream &operator<<(std::ostream &stream, const Clause &clause) {
-  stream << "( ";
-  for (auto lit : clause) {
-    stream << lit << " ";
-  }
-  stream << ")";
-  return stream;
+    stream << "( ";
+    for (auto lit : clause) {
+        stream << lit << " ";
+    }
+    stream << ")";
+    return stream;
 }
 }

@@ -31,20 +31,19 @@
 
 namespace jamsat {
 TEST(UnitUtils, LubySequence_firstElementsMatchLubySequence) {
-  // reference data taken from https://oeis.org/search?q=luby
-  std::vector<LubySequence::Element> initialLubySegment = {
-      1, 1, 2, 1, 1, 2, 4, 1, 1, 2, 1, 1, 2, 4, 8,  1,
-      1, 2, 1, 1, 2, 4, 1, 1, 2, 1, 1, 2, 4, 8, 16, 1};
+    // reference data taken from https://oeis.org/search?q=luby
+    std::vector<LubySequence::Element> initialLubySegment = {1, 1, 2, 1, 1, 2, 4, 1, 1,  2, 1,
+                                                             1, 2, 4, 8, 1, 1, 2, 1, 1,  2, 4,
+                                                             1, 1, 2, 1, 1, 2, 4, 8, 16, 1};
 
-  LubySequence underTest;
-  std::vector<LubySequence::Element> result;
-  for (decltype(initialLubySegment)::size_type i = 0;
-       i < initialLubySegment.size(); ++i) {
-    result.push_back(underTest.current());
-    auto nextElement = underTest.next();
-    ASSERT_EQ(nextElement, underTest.current());
-  }
+    LubySequence underTest;
+    std::vector<LubySequence::Element> result;
+    for (decltype(initialLubySegment)::size_type i = 0; i < initialLubySegment.size(); ++i) {
+        result.push_back(underTest.current());
+        auto nextElement = underTest.next();
+        ASSERT_EQ(nextElement, underTest.current());
+    }
 
-  EXPECT_EQ(result, initialLubySegment);
+    EXPECT_EQ(result, initialLubySegment);
 }
 }

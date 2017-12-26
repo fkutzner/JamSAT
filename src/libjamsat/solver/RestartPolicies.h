@@ -36,47 +36,47 @@ namespace jamsat {
 
 class GlucoseRestartPolicy {
 public:
-  struct Options {
-    uint64_t movingAverageWindowSize = 5000;
-    double K = 0.8f;
-  };
+    struct Options {
+        uint64_t movingAverageWindowSize = 5000;
+        double K = 0.8f;
+    };
 
-  struct RegisterConflictArgs {
-    LBD learntClauseLBD;
-  };
+    struct RegisterConflictArgs {
+        LBD learntClauseLBD;
+    };
 
-  /**
-   * \brief Constructs a GlucoseRestartPolicy instance.
-   *
-   * \param[in] options   the configuration of the restart policy.
-   */
-  GlucoseRestartPolicy(const Options &options) noexcept;
+    /**
+     * \brief Constructs a GlucoseRestartPolicy instance.
+     *
+     * \param[in] options   the configuration of the restart policy.
+     */
+    GlucoseRestartPolicy(const Options &options) noexcept;
 
-  /**
-   * \brief Notifies the restart policy that the client has handled a conflict.
-   *
-   * \param[in] args      client state just after handling the conflict. See
-   * GlucoseRestartPolicy::RegisterConflictArgs.
-   */
-  void registerConflict(RegisterConflictArgs &&args) noexcept;
+    /**
+     * \brief Notifies the restart policy that the client has handled a conflict.
+     *
+     * \param[in] args      client state just after handling the conflict. See
+     * GlucoseRestartPolicy::RegisterConflictArgs.
+     */
+    void registerConflict(RegisterConflictArgs &&args) noexcept;
 
-  /**
-   * \brief Notifies the restart policy that the client has handled a restart.
-   */
-  void registerRestart() noexcept;
+    /**
+     * \brief Notifies the restart policy that the client has handled a restart.
+     */
+    void registerRestart() noexcept;
 
-  /**
-   * \brief Indicates whether the client should restart.
-   *
-   * \returns true iff the client should restart.
-   */
-  bool shouldRestart() const noexcept;
+    /**
+     * \brief Indicates whether the client should restart.
+     *
+     * \returns true iff the client should restart.
+     */
+    bool shouldRestart() const noexcept;
 
 private:
-  SimpleMovingAverage<LBD> m_averageLBD;
-  double m_K;
-  double m_sumLBD;
-  uint64_t m_conflictCount;
+    SimpleMovingAverage<LBD> m_averageLBD;
+    double m_K;
+    double m_sumLBD;
+    uint64_t m_conflictCount;
 };
 
 /**
@@ -86,51 +86,51 @@ private:
  */
 class LubyRestartPolicy {
 public:
-  struct Options {
-    /** The size of the first restart interval. */
-    uint64_t graceTime = 10000;
+    struct Options {
+        /** The size of the first restart interval. */
+        uint64_t graceTime = 10000;
+
+        /**
+         * The logarithm (to the base of 2) of the restart interval scale factor.
+         * If the Luby sequence is given as l1, l2, ..., lN, ..., restarts are
+         * issued after log2OfScaleFactor*l1, log2OfScaleFactor*(l1 + l2) , ...
+         * conflicts.
+         */
+        uint64_t log2OfScaleFactor = 7;
+    };
+
+    struct RegisterConflictArgs {};
 
     /**
-     * The logarithm (to the base of 2) of the restart interval scale factor.
-     * If the Luby sequence is given as l1, l2, ..., lN, ..., restarts are
-     * issued after log2OfScaleFactor*l1, log2OfScaleFactor*(l1 + l2) , ...
-     * conflicts.
+     * \brief Constructs a LubyRestart instance.
+     *
+     * \param[in] options   the configuration of the restart policy.
      */
-    uint64_t log2OfScaleFactor = 7;
-  };
+    LubyRestartPolicy(const Options &options) noexcept;
 
-  struct RegisterConflictArgs {};
+    /**
+     * \brief Notifies the restart policy that the client has handled a conflict.
+     *
+     * \param[in] args      client state just after handling the conflict. See
+     * LubyRestartPolicy::RegisterConflictArgs.
+     */
+    void registerConflict(RegisterConflictArgs &&args) noexcept;
 
-  /**
-   * \brief Constructs a LubyRestart instance.
-   *
-   * \param[in] options   the configuration of the restart policy.
-   */
-  LubyRestartPolicy(const Options &options) noexcept;
+    /**
+     * \brief Notifies the restart policy that the client has handled a restart.
+     */
+    void registerRestart() noexcept;
 
-  /**
-   * \brief Notifies the restart policy that the client has handled a conflict.
-   *
-   * \param[in] args      client state just after handling the conflict. See
-   * LubyRestartPolicy::RegisterConflictArgs.
-   */
-  void registerConflict(RegisterConflictArgs &&args) noexcept;
-
-  /**
-   * \brief Notifies the restart policy that the client has handled a restart.
-   */
-  void registerRestart() noexcept;
-
-  /**
-   * \brief Indicates whether the client should restart.
-   *
-   * \returns true iff the client should restart.
-   */
-  bool shouldRestart() const noexcept;
+    /**
+     * \brief Indicates whether the client should restart.
+     *
+     * \returns true iff the client should restart.
+     */
+    bool shouldRestart() const noexcept;
 
 private:
-  LubySequence m_lubySeq;
-  uint64_t m_conflictsUntilRestart;
-  const uint64_t m_log2OfScaleFactor;
+    LubySequence m_lubySeq;
+    uint64_t m_conflictsUntilRestart;
+    const uint64_t m_log2OfScaleFactor;
 };
 }

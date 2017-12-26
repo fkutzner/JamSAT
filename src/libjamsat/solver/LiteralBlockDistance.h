@@ -57,23 +57,22 @@ using LBD = uint32_t;
  * type.
  */
 template <typename ForwardRange, typename DLProvider, typename StampMapT>
-LBD getLBD(const ForwardRange &literals,
-           const DLProvider &decisionLevelProvider,
+LBD getLBD(const ForwardRange &literals, const DLProvider &decisionLevelProvider,
            StampMapT &tempStamps) noexcept {
 
-  auto stampContext = tempStamps.createContext();
-  auto stamp = stampContext.getStamp();
-  LBD result = 0;
+    auto stampContext = tempStamps.createContext();
+    auto stamp = stampContext.getStamp();
+    LBD result = 0;
 
-  for (auto &literal : literals) {
-    auto variable = literal.getVariable();
-    auto level = decisionLevelProvider.getAssignmentDecisionLevel(variable);
-    if (!tempStamps.isStamped(level, stamp)) {
-      tempStamps.setStamped(level, stamp, true);
-      ++result;
+    for (auto &literal : literals) {
+        auto variable = literal.getVariable();
+        auto level = decisionLevelProvider.getAssignmentDecisionLevel(variable);
+        if (!tempStamps.isStamped(level, stamp)) {
+            tempStamps.setStamped(level, stamp, true);
+            ++result;
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 }

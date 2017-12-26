@@ -48,67 +48,62 @@ template <typename K, typename V, typename KIndex = typename K::Index,
           typename Allocator = std::allocator<V>>
 class BoundedMap {
 private:
-  using BackingType = std::vector<V, Allocator>;
+    using BackingType = std::vector<V, Allocator>;
 
 public:
-  /// The size type.
-  using size_type = typename BackingType::size_type;
+    /// The size type.
+    using size_type = typename BackingType::size_type;
 
-  /**
-   * \brief Constructs an ArrayBackedMap with the given maximum key.
-   *
-   * All keys from the one mapped to 0 up to the maximum key are initially
-   * associated with an individual default-constructed value of V.
-   *
-   * \param maxKey    The key with the maximum index storable in the map
-   * instance. The instance will have a constant size in O(\param maxKey).
-   */
-  explicit BoundedMap(K maxKey) : m_values(KIndex::getIndex(maxKey) + 1) {}
+    /**
+     * \brief Constructs an ArrayBackedMap with the given maximum key.
+     *
+     * All keys from the one mapped to 0 up to the maximum key are initially
+     * associated with an individual default-constructed value of V.
+     *
+     * \param maxKey    The key with the maximum index storable in the map
+     * instance. The instance will have a constant size in O(\param maxKey).
+     */
+    explicit BoundedMap(K maxKey) : m_values(KIndex::getIndex(maxKey) + 1) {}
 
-  /**
-   * \brief Constructs an ArrayBackedMap with the given default value and
-   * maximum key.
-   *
-   * All keys from the one mapped to 0 up to the maximum key are initially
-   * associated with \p defaultValue.
-   *
-   * \param maxKey        The key with the maximum index supported by the map
-   * instance.
-   * \param defaultValue  The default value of this map.
-   */
-  BoundedMap(K maxKey, V defaultValue)
-      : m_values(KIndex::getIndex(maxKey) + 1, defaultValue) {}
+    /**
+     * \brief Constructs an ArrayBackedMap with the given default value and
+     * maximum key.
+     *
+     * All keys from the one mapped to 0 up to the maximum key are initially
+     * associated with \p defaultValue.
+     *
+     * \param maxKey        The key with the maximum index supported by the map
+     * instance.
+     * \param defaultValue  The default value of this map.
+     */
+    BoundedMap(K maxKey, V defaultValue) : m_values(KIndex::getIndex(maxKey) + 1, defaultValue) {}
 
-  /**
-   * \brief Gets a reference to the specified element.
-   *
-   * \param index   The index of the element to be looked up. \p index must not
-   * be larger than the maximum index storable in this map.
-   * \returns       A reference to the looked-up element.
-   */
-  V &operator[](const K &index) noexcept {
-    return m_values[KIndex::getIndex(index)];
-  }
+    /**
+     * \brief Gets a reference to the specified element.
+     *
+     * \param index   The index of the element to be looked up. \p index must not
+     * be larger than the maximum index storable in this map.
+     * \returns       A reference to the looked-up element.
+     */
+    V &operator[](const K &index) noexcept { return m_values[KIndex::getIndex(index)]; }
 
-  /**
-   * \brief Gets a reference to the specified element (const version).
-   *
-   * \param index   The index of the element to be looked up. \p index must not
-   * be larger than the maximum index storable in this map.
-   * \returns       A reference to the looked-up element.
-   */
-  const V &operator[](const K &index) const noexcept {
-    return m_values[KIndex::getIndex(index)];
-  }
+    /**
+     * \brief Gets a reference to the specified element (const version).
+     *
+     * \param index   The index of the element to be looked up. \p index must not
+     * be larger than the maximum index storable in this map.
+     * \returns       A reference to the looked-up element.
+     */
+    const V &operator[](const K &index) const noexcept { return m_values[KIndex::getIndex(index)]; }
 
-  /**
-   * \brief Gets the total size of this map (including default values).
-   *
-   * \returns       The total size of this map.
-   */
-  size_type size() const noexcept { return m_values.size(); }
+    /**
+     * \brief Gets the total size of this map (including default values).
+     *
+     * \returns       The total size of this map.
+     */
+    size_type size() const noexcept { return m_values.size(); }
 
 private:
-  BackingType m_values;
+    BackingType m_values;
 };
 }

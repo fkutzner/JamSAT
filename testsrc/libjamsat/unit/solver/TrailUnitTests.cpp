@@ -30,231 +30,229 @@
 
 namespace jamsat {
 TEST(UnitSolver, emptyTrailHasDecisionLevel0) {
-  Trail underTest{CNFVar{10}};
-  EXPECT_EQ(underTest.getCurrentDecisionLevel(), 0ull);
+    Trail underTest{CNFVar{10}};
+    EXPECT_EQ(underTest.getCurrentDecisionLevel(), 0ull);
 }
 
 TEST(UnitSolver, firstNewDecisionLevelIs1) {
-  Trail underTest{CNFVar{10}};
-  underTest.newDecisionLevel();
-  EXPECT_EQ(underTest.getCurrentDecisionLevel(), 1ull);
+    Trail underTest{CNFVar{10}};
+    underTest.newDecisionLevel();
+    EXPECT_EQ(underTest.getCurrentDecisionLevel(), 1ull);
 }
 
 TEST(UnitSolver, emptyTrailHasNoAssignments) {
-  Trail underTest{CNFVar{10}};
-  EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
+    Trail underTest{CNFVar{10}};
+    EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
 }
 
 TEST(UnitSolver, trailHasSingleAssignmentAfterSingleAdd) {
-  Trail underTest{CNFVar{10}};
-  underTest.addAssignment(CNFLit{CNFVar{3}, CNFSign::POSITIVE});
-  EXPECT_EQ(underTest.getNumberOfAssignments(), 1ull);
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{3}, CNFSign::POSITIVE});
+    EXPECT_EQ(underTest.getNumberOfAssignments(), 1ull);
 }
 
 TEST(UnitSolver, trailHasThreeAssignmentsAfterThreeAdds) {
-  Trail underTest{CNFVar{10}};
-  underTest.addAssignment(CNFLit{CNFVar{1}, CNFSign::POSITIVE});
-  underTest.addAssignment(CNFLit{CNFVar{2}, CNFSign::NEGATIVE});
-  underTest.addAssignment(CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
-  EXPECT_EQ(underTest.getNumberOfAssignments(), 3ull);
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{1}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{2}, CNFSign::NEGATIVE});
+    underTest.addAssignment(CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
+    EXPECT_EQ(underTest.getNumberOfAssignments(), 3ull);
 }
 
 TEST(UnitSolver, initialAddedLiteralsAreOnLevel0) {
-  Trail underTest{CNFVar{10}};
-  underTest.addAssignment(CNFLit{CNFVar{1}, CNFSign::POSITIVE});
-  underTest.addAssignment(CNFLit{CNFVar{2}, CNFSign::NEGATIVE});
-  underTest.addAssignment(CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
-  EXPECT_EQ(underTest.getCurrentDecisionLevel(), 0ull);
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{1}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{2}, CNFSign::NEGATIVE});
+    underTest.addAssignment(CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
+    EXPECT_EQ(underTest.getCurrentDecisionLevel(), 0ull);
 }
 
 TEST(UnitSolver, trailSeparatesLiteralsByDecisionLevels) {
-  CNFLit testLiteral1{CNFVar{1}, CNFSign::POSITIVE};
-  CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
-  CNFLit testLiteral3{CNFVar{3}, CNFSign::NEGATIVE};
+    CNFLit testLiteral1{CNFVar{1}, CNFSign::POSITIVE};
+    CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
+    CNFLit testLiteral3{CNFVar{3}, CNFSign::NEGATIVE};
 
-  Trail underTest{CNFVar{10}};
-  underTest.addAssignment(testLiteral1);
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(testLiteral1);
 
-  underTest.newDecisionLevel();
-  underTest.addAssignment(testLiteral2);
-  underTest.addAssignment(testLiteral3);
+    underTest.newDecisionLevel();
+    underTest.addAssignment(testLiteral2);
+    underTest.addAssignment(testLiteral3);
 
-  ASSERT_EQ(underTest.getCurrentDecisionLevel(), 1ull);
+    ASSERT_EQ(underTest.getCurrentDecisionLevel(), 1ull);
 
-  auto level0Iterator = underTest.getDecisionLevelAssignments(0);
-  EXPECT_EQ(level0Iterator.end() - level0Iterator.begin(), 1);
-  EXPECT_EQ(*(level0Iterator.begin()), testLiteral1);
+    auto level0Iterator = underTest.getDecisionLevelAssignments(0);
+    EXPECT_EQ(level0Iterator.end() - level0Iterator.begin(), 1);
+    EXPECT_EQ(*(level0Iterator.begin()), testLiteral1);
 
-  auto level1Iterator = underTest.getDecisionLevelAssignments(1);
-  EXPECT_EQ(level1Iterator.end() - level1Iterator.begin(), 2);
-  EXPECT_EQ(*(level1Iterator.begin()), testLiteral2);
-  EXPECT_EQ(*(level1Iterator.begin() + 1), testLiteral3);
+    auto level1Iterator = underTest.getDecisionLevelAssignments(1);
+    EXPECT_EQ(level1Iterator.end() - level1Iterator.begin(), 2);
+    EXPECT_EQ(*(level1Iterator.begin()), testLiteral2);
+    EXPECT_EQ(*(level1Iterator.begin() + 1), testLiteral3);
 
-  underTest.newDecisionLevel();
-  ASSERT_EQ(underTest.getCurrentDecisionLevel(), 2ull);
+    underTest.newDecisionLevel();
+    ASSERT_EQ(underTest.getCurrentDecisionLevel(), 2ull);
 
-  auto level2Iterator = underTest.getDecisionLevelAssignments(2);
-  EXPECT_EQ(level2Iterator.end(), level2Iterator.begin());
+    auto level2Iterator = underTest.getDecisionLevelAssignments(2);
+    EXPECT_EQ(level2Iterator.end(), level2Iterator.begin());
 
-  auto level3Iterator = underTest.getDecisionLevelAssignments(3);
-  EXPECT_EQ(level3Iterator.end(), level2Iterator.begin());
+    auto level3Iterator = underTest.getDecisionLevelAssignments(3);
+    EXPECT_EQ(level3Iterator.end(), level2Iterator.begin());
 }
 
 TEST(UnitSolver, trailIsEmptyAfterShrinkToLevel0) {
-  CNFLit testLiteral1{CNFVar{1}, CNFSign::POSITIVE};
-  CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
-  CNFLit testLiteral3{CNFVar{3}, CNFSign::NEGATIVE};
+    CNFLit testLiteral1{CNFVar{1}, CNFSign::POSITIVE};
+    CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
+    CNFLit testLiteral3{CNFVar{3}, CNFSign::NEGATIVE};
 
-  Trail underTest{CNFVar{10}};
-  underTest.addAssignment(testLiteral1);
-  underTest.newDecisionLevel();
-  underTest.addAssignment(testLiteral2);
-  underTest.addAssignment(testLiteral3);
-  underTest.newDecisionLevel();
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(testLiteral1);
+    underTest.newDecisionLevel();
+    underTest.addAssignment(testLiteral2);
+    underTest.addAssignment(testLiteral3);
+    underTest.newDecisionLevel();
 
-  underTest.shrinkToDecisionLevel(0);
-  EXPECT_EQ(underTest.getCurrentDecisionLevel(), 0ull);
-  EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
+    underTest.shrinkToDecisionLevel(0);
+    EXPECT_EQ(underTest.getCurrentDecisionLevel(), 0ull);
+    EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
 }
 
 TEST(UnitSolver, trailDecisionLevelIteratorsRemainValidAfterAdd) {
-  Trail underTest{CNFVar{16384}};
-  for (CNFVar::RawVariable v = 0; v < 10; ++v) {
-    underTest.addAssignment(CNFLit{CNFVar{v}, CNFSign::NEGATIVE});
-  }
+    Trail underTest{CNFVar{16384}};
+    for (CNFVar::RawVariable v = 0; v < 10; ++v) {
+        underTest.addAssignment(CNFLit{CNFVar{v}, CNFSign::NEGATIVE});
+    }
 
-  underTest.newDecisionLevel();
-  auto dl0IteratorsPre = underTest.getDecisionLevelAssignments(0);
+    underTest.newDecisionLevel();
+    auto dl0IteratorsPre = underTest.getDecisionLevelAssignments(0);
 
-  for (CNFVar::RawVariable v = 11; v < 16384; ++v) {
-    underTest.addAssignment(CNFLit{CNFVar{v}, CNFSign::NEGATIVE});
-  }
+    for (CNFVar::RawVariable v = 11; v < 16384; ++v) {
+        underTest.addAssignment(CNFLit{CNFVar{v}, CNFSign::NEGATIVE});
+    }
 
-  auto dl0IteratorsPost = underTest.getDecisionLevelAssignments(0);
+    auto dl0IteratorsPost = underTest.getDecisionLevelAssignments(0);
 
-  EXPECT_EQ(dl0IteratorsPre.begin(), dl0IteratorsPost.begin());
-  EXPECT_EQ(dl0IteratorsPre.end(), dl0IteratorsPost.end());
+    EXPECT_EQ(dl0IteratorsPre.begin(), dl0IteratorsPost.begin());
+    EXPECT_EQ(dl0IteratorsPre.end(), dl0IteratorsPost.end());
 }
 
 TEST(UnitSolver, emptyTrailHasIndeterminateAssignment) {
-  Trail underTest{CNFVar{10}};
-  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
-    EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBool::INDETERMINATE);
-    CNFLit iLit = CNFLit{CNFVar{i}, CNFSign::POSITIVE};
-    EXPECT_EQ(underTest.getAssignment(iLit), TBool::INDETERMINATE);
-    EXPECT_EQ(underTest.getAssignment(~iLit), TBool::INDETERMINATE);
-  }
+    Trail underTest{CNFVar{10}};
+    for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
+        EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBool::INDETERMINATE);
+        CNFLit iLit = CNFLit{CNFVar{i}, CNFSign::POSITIVE};
+        EXPECT_EQ(underTest.getAssignment(iLit), TBool::INDETERMINATE);
+        EXPECT_EQ(underTest.getAssignment(~iLit), TBool::INDETERMINATE);
+    }
 }
 
 TEST(UnitSolver, variablesOnTrailHaveAssignment) {
-  Trail underTest{CNFVar{10}};
-  underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
-  EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBool::FALSE);
-  EXPECT_EQ(underTest.getAssignment(CNFLit{CNFVar{4}, CNFSign::POSITIVE}),
-            TBool::FALSE);
-  EXPECT_EQ(underTest.getAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE}),
-            TBool::TRUE);
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+    EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBool::FALSE);
+    EXPECT_EQ(underTest.getAssignment(CNFLit{CNFVar{4}, CNFSign::POSITIVE}), TBool::FALSE);
+    EXPECT_EQ(underTest.getAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE}), TBool::TRUE);
 
-  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
-    if (i != 4) {
-      EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBool::INDETERMINATE);
+    for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
+        if (i != 4) {
+            EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBool::INDETERMINATE);
+        }
     }
-  }
 }
 
 TEST(UnitSolver, variablesOnTrailHaveCorrectDecisionLevel) {
-  Trail underTest{CNFVar{10}};
-  underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
-  underTest.newDecisionLevel();
-  underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
-  underTest.addAssignment(CNFLit{CNFVar{6}, CNFSign::POSITIVE});
-  underTest.newDecisionLevel();
-  underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{6}, CNFSign::POSITIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
 
-  EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{4}), 0ul);
-  EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{5}), 1ul);
-  EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{6}), 1ul);
-  EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{7}), 2ul);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{4}), 0ul);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{5}), 1ul);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{6}), 1ul);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{7}), 2ul);
 }
 
 TEST(UnitSolver, assignmentsBecomeIndeterminateOnShrink) {
-  Trail underTest{CNFVar{10}};
-  underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
-  underTest.newDecisionLevel();
-  underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
-  underTest.addAssignment(CNFLit{CNFVar{6}, CNFSign::POSITIVE});
-  underTest.newDecisionLevel();
-  underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{6}, CNFSign::POSITIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
 
-  underTest.shrinkToDecisionLevel(1);
-  EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBool::FALSE);
-  EXPECT_EQ(underTest.getAssignment(CNFVar{5}), TBool::INDETERMINATE);
-  EXPECT_EQ(underTest.getAssignment(CNFVar{6}), TBool::INDETERMINATE);
-  EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBool::INDETERMINATE);
+    underTest.shrinkToDecisionLevel(1);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBool::FALSE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{5}), TBool::INDETERMINATE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{6}), TBool::INDETERMINATE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBool::INDETERMINATE);
 }
 
 TEST(UnitSolver, unshrinkedDecisionLevelsRemainIntactAfterShrink) {
-  Trail underTest{CNFVar{10}};
-  underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
-  underTest.newDecisionLevel();
-  underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
-  underTest.addAssignment(CNFLit{CNFVar{6}, CNFSign::POSITIVE});
-  underTest.newDecisionLevel();
-  underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{6}, CNFSign::POSITIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
 
-  underTest.shrinkToDecisionLevel(2);
-  EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{4}), 0ul);
-  EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{5}), 1ul);
-  EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{6}), 1ul);
+    underTest.shrinkToDecisionLevel(2);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{4}), 0ul);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{5}), 1ul);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{6}), 1ul);
 }
 
 TEST(UnitSolver, assignmentRangeMatchesAssignment) {
-  Trail underTest{CNFVar{8}};
-  CNFLit lit1{CNFVar{4}, CNFSign::NEGATIVE};
-  CNFLit lit2{CNFVar{5}, CNFSign::POSITIVE};
-  CNFLit lit3{CNFVar{8}, CNFSign::POSITIVE};
+    Trail underTest{CNFVar{8}};
+    CNFLit lit1{CNFVar{4}, CNFSign::NEGATIVE};
+    CNFLit lit2{CNFVar{5}, CNFSign::POSITIVE};
+    CNFLit lit3{CNFVar{8}, CNFSign::POSITIVE};
 
-  underTest.addAssignment(lit1);
-  underTest.addAssignment(lit2);
-  underTest.addAssignment(lit3);
+    underTest.addAssignment(lit1);
+    underTest.addAssignment(lit2);
+    underTest.addAssignment(lit3);
 
-  auto assignmentRange = underTest.getAssignments(1ull);
-  ASSERT_EQ(assignmentRange.end() - assignmentRange.begin(), 2);
-  auto begin = assignmentRange.begin();
-  EXPECT_EQ(*begin, lit2);
-  EXPECT_EQ(*(begin + 1), lit3);
-  EXPECT_EQ(begin + 2, assignmentRange.end());
+    auto assignmentRange = underTest.getAssignments(1ull);
+    ASSERT_EQ(assignmentRange.end() - assignmentRange.begin(), 2);
+    auto begin = assignmentRange.begin();
+    EXPECT_EQ(*begin, lit2);
+    EXPECT_EQ(*(begin + 1), lit3);
+    EXPECT_EQ(begin + 2, assignmentRange.end());
 }
 
 TEST(UnitSolver, assignmentRangeIteratorsRemainValidAfterAdd) {
-  Trail underTest{CNFVar{16384}};
-  for (CNFVar::RawVariable v = 0; v < 10; ++v) {
-    underTest.addAssignment(CNFLit{CNFVar{v}, CNFSign::NEGATIVE});
-  }
+    Trail underTest{CNFVar{16384}};
+    for (CNFVar::RawVariable v = 0; v < 10; ++v) {
+        underTest.addAssignment(CNFLit{CNFVar{v}, CNFSign::NEGATIVE});
+    }
 
-  underTest.newDecisionLevel();
-  auto dl0IteratorsPre = underTest.getAssignments(10);
+    underTest.newDecisionLevel();
+    auto dl0IteratorsPre = underTest.getAssignments(10);
 
-  for (CNFVar::RawVariable v = 11; v < 16384; ++v) {
-    underTest.addAssignment(CNFLit{CNFVar{v}, CNFSign::NEGATIVE});
-  }
+    for (CNFVar::RawVariable v = 11; v < 16384; ++v) {
+        underTest.addAssignment(CNFLit{CNFVar{v}, CNFSign::NEGATIVE});
+    }
 
-  auto dl0IteratorsPost = underTest.getAssignments(10);
+    auto dl0IteratorsPost = underTest.getAssignments(10);
 
-  EXPECT_EQ(dl0IteratorsPre.begin(), dl0IteratorsPost.begin());
+    EXPECT_EQ(dl0IteratorsPre.begin(), dl0IteratorsPost.begin());
 }
 
 TEST(UnitSolver, variablePhaseIsNegativeByDefault) {
-  Trail underTest{CNFVar{16384}};
-  EXPECT_EQ(underTest.getPhase(CNFVar{1024}), TBool::FALSE);
+    Trail underTest{CNFVar{16384}};
+    EXPECT_EQ(underTest.getPhase(CNFVar{1024}), TBool::FALSE);
 }
 
 TEST(UnitSolver, variablePhaseIsSavedInTrail) {
-  Trail underTest{CNFVar{24}};
-  underTest.addAssignment(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
-  EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBool::TRUE);
-  underTest.shrinkToDecisionLevel(0);
-  EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
-  EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBool::TRUE);
+    Trail underTest{CNFVar{24}};
+    underTest.addAssignment(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
+    EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBool::TRUE);
+    underTest.shrinkToDecisionLevel(0);
+    EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
+    EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBool::TRUE);
 }
 }

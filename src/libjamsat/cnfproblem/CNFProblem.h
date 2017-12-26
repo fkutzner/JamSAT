@@ -41,65 +41,65 @@ using CNFClause = std::vector<CNFLit>;
  */
 class CNFProblem {
 public:
-  using size_type = std::vector<CNFClause>::size_type;
+    using size_type = std::vector<CNFClause>::size_type;
 
-  /**
-   * \brief Constructs an empty CNFProblem object.
-   */
-  CNFProblem();
+    /**
+     * \brief Constructs an empty CNFProblem object.
+     */
+    CNFProblem();
 
-  /**
-   * \brief Adds the given clause to the problem instance.
-   *
-   * \param clause    The clause to be added.
-   */
-  void addClause(const CNFClause &clause) noexcept;
+    /**
+     * \brief Adds the given clause to the problem instance.
+     *
+     * \param clause    The clause to be added.
+     */
+    void addClause(const CNFClause &clause) noexcept;
 
-  /**
-   * \brief Adds the given clause to the problem instance, transferring
-   * ownership.
-   *
-   * \param clause    The clause to be added.
-   */
-  void addClause(CNFClause &&clause) noexcept;
+    /**
+     * \brief Adds the given clause to the problem instance, transferring
+     * ownership.
+     *
+     * \param clause    The clause to be added.
+     */
+    void addClause(CNFClause &&clause) noexcept;
 
-  /**
-   * \brief Gets the problem instance's clauses.
-   *
-   * \returns A vector of clauses.
-   */
-  const std::vector<CNFClause> &getClauses() const noexcept;
+    /**
+     * \brief Gets the problem instance's clauses.
+     *
+     * \returns A vector of clauses.
+     */
+    const std::vector<CNFClause> &getClauses() const noexcept;
 
-  /**
-   * \brief Gets the number of clauses contained in the problem instance.
-   *
-   * \returns The number of clauses contained in the problem instance.
-   */
-  size_type getSize() const noexcept;
+    /**
+     * \brief Gets the number of clauses contained in the problem instance.
+     *
+     * \returns The number of clauses contained in the problem instance.
+     */
+    size_type getSize() const noexcept;
 
-  /**
-   * \brief Determines whether the problem instance is empty.
-   *
-   * \returns true iff the problem instance does not contain clauses.
-   */
-  bool isEmpty() const noexcept;
+    /**
+     * \brief Determines whether the problem instance is empty.
+     *
+     * \returns true iff the problem instance does not contain clauses.
+     */
+    bool isEmpty() const noexcept;
 
-  /**
-   * \brief Gets the largest variable occurring in the problem instance.
-   *
-   * \returns the largest variable occurring in the problem instance if the
-   * instance is not empty; CNFVar::getUndefinedVariable() otherwise.
-   */
-  CNFVar getMaxVar() const noexcept;
+    /**
+     * \brief Gets the largest variable occurring in the problem instance.
+     *
+     * \returns the largest variable occurring in the problem instance if the
+     * instance is not empty; CNFVar::getUndefinedVariable() otherwise.
+     */
+    CNFVar getMaxVar() const noexcept;
 
-  /**
-   * \brief Removes all clauses.
-   */
-  void clear() noexcept;
+    /**
+     * \brief Removes all clauses.
+     */
+    void clear() noexcept;
 
 private:
-  std::vector<CNFClause> m_clauses;
-  CNFVar m_maxVar;
+    std::vector<CNFClause> m_clauses;
+    CNFVar m_maxVar;
 };
 
 /**

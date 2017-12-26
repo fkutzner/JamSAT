@@ -31,77 +31,73 @@
 namespace jamsat {
 
 TEST(UnitUtils, TBoolInversionHasFixpointOnIndeterminates) {
-  EXPECT_EQ(negate(TBool::INDETERMINATE), TBool::INDETERMINATE);
+    EXPECT_EQ(negate(TBool::INDETERMINATE), TBool::INDETERMINATE);
 }
 
 TEST(UnitUtils, TBoolInversionIsDeterminateForDeterminateInputs) {
-  EXPECT_EQ(negate(TBool::TRUE), TBool::FALSE);
-  EXPECT_EQ(negate(TBool::FALSE), TBool::TRUE);
+    EXPECT_EQ(negate(TBool::TRUE), TBool::FALSE);
+    EXPECT_EQ(negate(TBool::FALSE), TBool::TRUE);
 }
 
 TEST(UnitUtils, TBoolANDIsAnalogousToMin) {
-  EXPECT_EQ(TBool::TRUE * TBool::TRUE, TBool::TRUE);
-  EXPECT_EQ(TBool::TRUE * TBool::INDETERMINATE, TBool::INDETERMINATE);
-  EXPECT_EQ(TBool::FALSE * TBool::INDETERMINATE, TBool::FALSE);
-  EXPECT_EQ(TBool::FALSE * TBool::FALSE, TBool::FALSE);
+    EXPECT_EQ(TBool::TRUE * TBool::TRUE, TBool::TRUE);
+    EXPECT_EQ(TBool::TRUE * TBool::INDETERMINATE, TBool::INDETERMINATE);
+    EXPECT_EQ(TBool::FALSE * TBool::INDETERMINATE, TBool::FALSE);
+    EXPECT_EQ(TBool::FALSE * TBool::FALSE, TBool::FALSE);
 }
 
 TEST(UnitUtils, TBoolANDIsCommutative) {
-  EXPECT_EQ(TBool::TRUE * TBool::INDETERMINATE,
-            TBool::INDETERMINATE * TBool::TRUE);
-  EXPECT_EQ(TBool::TRUE * TBool::FALSE, TBool::FALSE * TBool::TRUE);
-  EXPECT_EQ(TBool::FALSE * TBool::INDETERMINATE,
-            TBool::INDETERMINATE * TBool::FALSE);
+    EXPECT_EQ(TBool::TRUE * TBool::INDETERMINATE, TBool::INDETERMINATE * TBool::TRUE);
+    EXPECT_EQ(TBool::TRUE * TBool::FALSE, TBool::FALSE * TBool::TRUE);
+    EXPECT_EQ(TBool::FALSE * TBool::INDETERMINATE, TBool::INDETERMINATE * TBool::FALSE);
 }
 
 TEST(UnitUtils, TBoolORIsAnalogousToMax) {
-  EXPECT_EQ(TBool::TRUE + TBool::TRUE, TBool::TRUE);
-  EXPECT_EQ(TBool::TRUE + TBool::INDETERMINATE, TBool::TRUE);
-  EXPECT_EQ(TBool::FALSE + TBool::INDETERMINATE, TBool::INDETERMINATE);
-  EXPECT_EQ(TBool::FALSE + TBool::FALSE, TBool::FALSE);
+    EXPECT_EQ(TBool::TRUE + TBool::TRUE, TBool::TRUE);
+    EXPECT_EQ(TBool::TRUE + TBool::INDETERMINATE, TBool::TRUE);
+    EXPECT_EQ(TBool::FALSE + TBool::INDETERMINATE, TBool::INDETERMINATE);
+    EXPECT_EQ(TBool::FALSE + TBool::FALSE, TBool::FALSE);
 }
 
 TEST(UnitUtils, TBoolORIsCommutative) {
-  EXPECT_EQ(TBool::TRUE + TBool::INDETERMINATE,
-            TBool::INDETERMINATE + TBool::TRUE);
-  EXPECT_EQ(TBool::TRUE + TBool::FALSE, TBool::FALSE + TBool::TRUE);
-  EXPECT_EQ(TBool::FALSE + TBool::INDETERMINATE,
-            TBool::INDETERMINATE + TBool::FALSE);
+    EXPECT_EQ(TBool::TRUE + TBool::INDETERMINATE, TBool::INDETERMINATE + TBool::TRUE);
+    EXPECT_EQ(TBool::TRUE + TBool::FALSE, TBool::FALSE + TBool::TRUE);
+    EXPECT_EQ(TBool::FALSE + TBool::INDETERMINATE, TBool::INDETERMINATE + TBool::FALSE);
 }
 
 TEST(UnitUtils, TBoolIsConvertibleToRawBool) {
-  EXPECT_EQ(toRawBool(TBool::TRUE), true);
-  EXPECT_EQ(toRawBool(TBool::FALSE), false);
+    EXPECT_EQ(toRawBool(TBool::TRUE), true);
+    EXPECT_EQ(toRawBool(TBool::FALSE), false);
 }
 
 TEST(UnitUtils, RawBoolIsConvertibleToTBool) {
-  EXPECT_EQ(toTBool(true), TBool::TRUE);
-  EXPECT_EQ(toTBool(false), TBool::FALSE);
+    EXPECT_EQ(toTBool(true), TBool::TRUE);
+    EXPECT_EQ(toTBool(false), TBool::FALSE);
 }
 
 TEST(UnitUtils, TBoolCompoundAssignmentANDisAND) {
-  TBool lhs = TBool::TRUE;
-  lhs *= TBool::FALSE;
-  EXPECT_EQ(lhs, TBool::FALSE);
+    TBool lhs = TBool::TRUE;
+    lhs *= TBool::FALSE;
+    EXPECT_EQ(lhs, TBool::FALSE);
 
-  lhs = TBool::INDETERMINATE;
-  lhs *= TBool::TRUE;
-  EXPECT_EQ(lhs, TBool::INDETERMINATE);
+    lhs = TBool::INDETERMINATE;
+    lhs *= TBool::TRUE;
+    EXPECT_EQ(lhs, TBool::INDETERMINATE);
 }
 
 TEST(UnitUtils, TBoolCompoundAssignmentORisOR) {
-  TBool lhs = TBool::TRUE;
-  lhs += TBool::FALSE;
-  EXPECT_EQ(lhs, TBool::TRUE);
+    TBool lhs = TBool::TRUE;
+    lhs += TBool::FALSE;
+    EXPECT_EQ(lhs, TBool::TRUE);
 
-  lhs = TBool::INDETERMINATE;
-  lhs += TBool::FALSE;
-  EXPECT_EQ(lhs, TBool::INDETERMINATE);
+    lhs = TBool::INDETERMINATE;
+    lhs += TBool::FALSE;
+    EXPECT_EQ(lhs, TBool::INDETERMINATE);
 }
 
 TEST(UnitUtils, TBoolDeterminacyCheck) {
-  EXPECT_TRUE(isDeterminate(TBool::TRUE));
-  EXPECT_TRUE(isDeterminate(TBool::FALSE));
-  EXPECT_FALSE(isDeterminate(TBool::INDETERMINATE));
+    EXPECT_TRUE(isDeterminate(TBool::TRUE));
+    EXPECT_TRUE(isDeterminate(TBool::FALSE));
+    EXPECT_FALSE(isDeterminate(TBool::INDETERMINATE));
 }
 }

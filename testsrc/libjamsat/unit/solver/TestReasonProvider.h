@@ -32,21 +32,22 @@
 
 namespace jamsat {
 
-template <class ClauseT> class TestReasonProvider {
+template <class ClauseT>
+class TestReasonProvider {
 public:
-  void setAssignmentReason(CNFVar variable, ClauseT &reason) noexcept {
-    m_reasons[variable] = &reason;
-  }
-
-  const ClauseT *getAssignmentReason(CNFVar variable) const noexcept {
-    auto reason = m_reasons.find(variable);
-    if (reason != m_reasons.end()) {
-      return reason->second;
+    void setAssignmentReason(CNFVar variable, ClauseT &reason) noexcept {
+        m_reasons[variable] = &reason;
     }
-    return nullptr;
-  }
+
+    const ClauseT *getAssignmentReason(CNFVar variable) const noexcept {
+        auto reason = m_reasons.find(variable);
+        if (reason != m_reasons.end()) {
+            return reason->second;
+        }
+        return nullptr;
+    }
 
 private:
-  std::unordered_map<CNFVar, const ClauseT *> m_reasons;
+    std::unordered_map<CNFVar, const ClauseT *> m_reasons;
 };
 }

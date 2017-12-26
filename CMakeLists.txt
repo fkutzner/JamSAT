@@ -12,6 +12,7 @@ option(JAMSAT_ENABLE_AFL_FUZZER "Use afl-clang rsp. afl-gcc for compilation and 
 option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
 option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
+option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
 
 ### Find libraries
 
@@ -101,6 +102,13 @@ elseif(COMPILING_WITH_MSVC)
   add_definitions(/EHsc)
 endif()
 
+### Set preprocessor definitions
+if(JAMSAT_ENABLE_LOGGING)
+  add_definitions(-DJAM_ENABLE_LOGGING)
+  add_definitions(-DJAM_ENABLE_PROPAGATION_LOGGING)
+  add_definitions(-DJAM_ENABLE_CA_LOGGING)
+endif()
+
 ### Add JamSAT sources
 
 add_subdirectory(src)
@@ -126,7 +134,6 @@ set(JAMSAT_MAINTENANCE_TARGET_FOLDER "Maintenance Targets")
 add_custom_target(
         format-src
         COMMAND clang-format
-        -style=LLVM
         -i
         ${ALL_SOURCE_FILES}
 )

@@ -38,186 +38,169 @@
 namespace jamsat {
 class FakeAssignmentProvider {
 public:
-  FakeAssignmentProvider(TBool defaultAssignment)
-      : m_defaultAssignment(defaultAssignment) {}
+    FakeAssignmentProvider(TBool defaultAssignment) : m_defaultAssignment(defaultAssignment) {}
 
-  TBool getAssignment(CNFVar variable) const noexcept {
-    auto result = m_assignments.find(variable);
-    if (result == m_assignments.end()) {
-      return m_defaultAssignment;
+    TBool getAssignment(CNFVar variable) const noexcept {
+        auto result = m_assignments.find(variable);
+        if (result == m_assignments.end()) {
+            return m_defaultAssignment;
+        }
+        return result->second;
     }
-    return result->second;
-  }
 
-  void setAssignment(CNFVar variable, TBool assignment) {
-    m_assignments[variable] = assignment;
-    m_phases[variable] = assignment;
-  }
-
-  void setPhase(CNFVar variable, TBool assignment) {
-    m_phases[variable] = assignment;
-  }
-
-  TBool getPhase(CNFVar variable) const noexcept {
-    auto result = m_phases.find(variable);
-    if (result == m_phases.end()) {
-      return TBool::FALSE;
+    void setAssignment(CNFVar variable, TBool assignment) {
+        m_assignments[variable] = assignment;
+        m_phases[variable] = assignment;
     }
-    return result->second;
-  }
+
+    void setPhase(CNFVar variable, TBool assignment) { m_phases[variable] = assignment; }
+
+    TBool getPhase(CNFVar variable) const noexcept {
+        auto result = m_phases.find(variable);
+        if (result == m_phases.end()) {
+            return TBool::FALSE;
+        }
+        return result->second;
+    }
 
 private:
-  TBool m_defaultAssignment;
-  std::unordered_map<CNFVar, TBool> m_assignments;
-  std::unordered_map<CNFVar, TBool> m_phases;
+    TBool m_defaultAssignment;
+    std::unordered_map<CNFVar, TBool> m_assignments;
+    std::unordered_map<CNFVar, TBool> m_phases;
 };
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_allAssignedCausesUndefToBePicked) {
-  CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{TBool::TRUE};
-  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
-      maxVar, fakeAssignmentProvider};
-  EXPECT_EQ(underTest.pickBranchLiteral(), CNFLit::getUndefinedLiteral());
+    CNFVar maxVar{10};
+    FakeAssignmentProvider fakeAssignmentProvider{TBool::TRUE};
+    VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
+    EXPECT_EQ(underTest.pickBranchLiteral(), CNFLit::getUndefinedLiteral());
 }
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_singleVariableGetsPicked) {
-  CNFVar maxVar{0};
-  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
-  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
-      maxVar, fakeAssignmentProvider};
+    CNFVar maxVar{0};
+    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
-  underTest.setEligibleForDecisions(CNFVar{0}, true);
+    underTest.setEligibleForDecisions(CNFVar{0}, true);
 
-  CNFLit result = underTest.pickBranchLiteral();
-  EXPECT_EQ(result.getVariable(), CNFVar{0});
+    CNFLit result = underTest.pickBranchLiteral();
+    EXPECT_EQ(result.getVariable(), CNFVar{0});
 }
 
-TEST(UnitBranching,
-     VSIDSBranchingHeuristic_variablesInitiallyHaveSameActivities) {
-  CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
-  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
-      maxVar, fakeAssignmentProvider};
+TEST(UnitBranching, VSIDSBranchingHeuristic_variablesInitiallyHaveSameActivities) {
+    CNFVar maxVar{10};
+    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
-  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
-    underTest.setEligibleForDecisions(CNFVar{i}, true);
-  }
+    for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
+        underTest.setEligibleForDecisions(CNFVar{i}, true);
+    }
 
-  underTest.seenInConflict(CNFVar{4});
+    underTest.seenInConflict(CNFVar{4});
 
-  CNFLit result = underTest.pickBranchLiteral();
-  EXPECT_NE(result, CNFLit::getUndefinedLiteral());
-  EXPECT_EQ(result.getVariable(), CNFVar{4});
+    CNFLit result = underTest.pickBranchLiteral();
+    EXPECT_NE(result, CNFLit::getUndefinedLiteral());
+    EXPECT_EQ(result.getVariable(), CNFVar{4});
 }
 
 namespace {
 template <typename Heuristic>
-void expectVariableSequence(Heuristic &underTest,
-                            const std::vector<CNFVar> &expectedSequence) {
-  for (auto var : expectedSequence) {
-    CNFLit pick = underTest.pickBranchLiteral();
-    EXPECT_NE(pick, CNFLit::getUndefinedLiteral());
-    auto pickedVar = pick.getVariable();
-    EXPECT_EQ(pickedVar, var);
-  }
+void expectVariableSequence(Heuristic &underTest, const std::vector<CNFVar> &expectedSequence) {
+    for (auto var : expectedSequence) {
+        CNFLit pick = underTest.pickBranchLiteral();
+        EXPECT_NE(pick, CNFLit::getUndefinedLiteral());
+        auto pickedVar = pick.getVariable();
+        EXPECT_EQ(pickedVar, var);
+    }
 }
 
 template <typename Heuristic>
-void expectLiteralSequence(Heuristic &underTest,
-                           const std::vector<CNFLit> &expectedSequence) {
-  for (auto lit : expectedSequence) {
-    CNFLit pick = underTest.pickBranchLiteral();
-    EXPECT_EQ(pick, lit);
-  }
+void expectLiteralSequence(Heuristic &underTest, const std::vector<CNFLit> &expectedSequence) {
+    for (auto lit : expectedSequence) {
+        CNFLit pick = underTest.pickBranchLiteral();
+        EXPECT_EQ(pick, lit);
+    }
 }
 
 template <typename Heuristic>
 void addDefaultConflictSequence(Heuristic &underTest) {
-  for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
-    underTest.setEligibleForDecisions(CNFVar{i}, true);
-  }
+    for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
+        underTest.setEligibleForDecisions(CNFVar{i}, true);
+    }
 
-  underTest.seenInConflict(CNFVar{4});
-  underTest.seenInConflict(CNFVar{5});
-  underTest.seenInConflict(CNFVar{4});
-  underTest.seenInConflict(CNFVar{5});
-  underTest.seenInConflict(CNFVar{5});
-  underTest.seenInConflict(CNFVar{3});
+    underTest.seenInConflict(CNFVar{4});
+    underTest.seenInConflict(CNFVar{5});
+    underTest.seenInConflict(CNFVar{4});
+    underTest.seenInConflict(CNFVar{5});
+    underTest.seenInConflict(CNFVar{5});
+    underTest.seenInConflict(CNFVar{3});
 }
 }
 
-TEST(UnitBranching,
-     VSIDSBranchingHeuristic_usingVariablesInConflictCausesReordering) {
-  CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
-  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
-      maxVar, fakeAssignmentProvider};
+TEST(UnitBranching, VSIDSBranchingHeuristic_usingVariablesInConflictCausesReordering) {
+    CNFVar maxVar{10};
+    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
-  addDefaultConflictSequence(underTest);
+    addDefaultConflictSequence(underTest);
 
-  expectVariableSequence(underTest, {CNFVar{5}, CNFVar{4}, CNFVar{3}});
+    expectVariableSequence(underTest, {CNFVar{5}, CNFVar{4}, CNFVar{3}});
 }
 
-TEST(UnitBranching,
-     VSIDSBranchingHeuristic_ineligibleVariableDoesNotGetPicked) {
-  CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
-  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
-      maxVar, fakeAssignmentProvider};
+TEST(UnitBranching, VSIDSBranchingHeuristic_ineligibleVariableDoesNotGetPicked) {
+    CNFVar maxVar{10};
+    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
-  addDefaultConflictSequence(underTest);
-  underTest.setEligibleForDecisions(CNFVar{5}, false);
+    addDefaultConflictSequence(underTest);
+    underTest.setEligibleForDecisions(CNFVar{5}, false);
 
-  expectVariableSequence(underTest, {CNFVar{4}, CNFVar{3}});
+    expectVariableSequence(underTest, {CNFVar{4}, CNFVar{3}});
 }
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_assignedVariableDoesNotGetPicked) {
-  CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
-  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
-      maxVar, fakeAssignmentProvider};
+    CNFVar maxVar{10};
+    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
-  fakeAssignmentProvider.setAssignment(CNFVar{4}, TBool::TRUE);
-  addDefaultConflictSequence(underTest);
+    fakeAssignmentProvider.setAssignment(CNFVar{4}, TBool::TRUE);
+    addDefaultConflictSequence(underTest);
 
-  expectVariableSequence(underTest, {CNFVar{5}, CNFVar{3}});
+    expectVariableSequence(underTest, {CNFVar{5}, CNFVar{3}});
 }
 
-TEST(UnitBranching,
-     VSIDSBranchingHeuristic_variableActivityDecaysWhenTooLarge) {
-  CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
-  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
-      maxVar, fakeAssignmentProvider};
+TEST(UnitBranching, VSIDSBranchingHeuristic_variableActivityDecaysWhenTooLarge) {
+    CNFVar maxVar{10};
+    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
-  addDefaultConflictSequence(underTest);
+    addDefaultConflictSequence(underTest);
 
-  underTest.setActivityBumpDelta(0.5e100);
+    underTest.setActivityBumpDelta(0.5e100);
 
-  underTest.seenInConflict(CNFVar{4});
+    underTest.seenInConflict(CNFVar{4});
 
-  // After this call, the activities should get scaled down:
-  underTest.seenInConflict(CNFVar{4});
+    // After this call, the activities should get scaled down:
+    underTest.seenInConflict(CNFVar{4});
 
-  underTest.seenInConflict(CNFVar{3});
+    underTest.seenInConflict(CNFVar{3});
 
-  expectVariableSequence(underTest, {CNFVar{3}, CNFVar{4}, CNFVar{5}});
+    expectVariableSequence(underTest, {CNFVar{3}, CNFVar{4}, CNFVar{5}});
 }
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_signsAreSelectedByPhase) {
-  CNFVar maxVar{10};
-  FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
-  VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{
-      maxVar, fakeAssignmentProvider};
-  addDefaultConflictSequence(underTest);
+    CNFVar maxVar{10};
+    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
+    addDefaultConflictSequence(underTest);
 
-  fakeAssignmentProvider.setPhase(CNFVar{5}, TBool::TRUE);
-  fakeAssignmentProvider.setPhase(CNFVar{4}, TBool::TRUE);
-  fakeAssignmentProvider.setPhase(CNFVar{3}, TBool::FALSE);
+    fakeAssignmentProvider.setPhase(CNFVar{5}, TBool::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{4}, TBool::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{3}, TBool::FALSE);
 
-  expectLiteralSequence(underTest, {CNFLit{CNFVar{5}, CNFSign::POSITIVE},
-                                    CNFLit{CNFVar{4}, CNFSign::POSITIVE},
-                                    CNFLit{CNFVar{3}, CNFSign::NEGATIVE}});
+    expectLiteralSequence(underTest, {CNFLit{CNFVar{5}, CNFSign::POSITIVE},
+                                      CNFLit{CNFVar{4}, CNFSign::POSITIVE},
+                                      CNFLit{CNFVar{3}, CNFSign::NEGATIVE}});
 }
 
 // TODO: unit tests for decay and bumping

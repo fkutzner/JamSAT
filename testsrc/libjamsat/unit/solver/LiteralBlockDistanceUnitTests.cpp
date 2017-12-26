@@ -36,55 +36,52 @@
 
 namespace jamsat {
 struct DecisionLevelKey {
-  using Type = TestAssignmentProvider::DecisionLevel;
+    using Type = TestAssignmentProvider::DecisionLevel;
 
-  static size_t getIndex(TestAssignmentProvider::DecisionLevel level) {
-    return static_cast<size_t>(level);
-  }
+    static size_t getIndex(TestAssignmentProvider::DecisionLevel level) {
+        return static_cast<size_t>(level);
+    }
 };
 
 using TestStampMap = StampMap<unsigned int, DecisionLevelKey>;
 using TestClause = std::vector<CNFLit>;
 
 TEST(UnitSolver, getLBD_LBDofEmptyClauseIs0) {
-  TestStampMap tempStamps{128};
-  TestAssignmentProvider dlProvider;
-  TestClause empty;
+    TestStampMap tempStamps{128};
+    TestAssignmentProvider dlProvider;
+    TestClause empty;
 
-  LBD result = getLBD(empty, dlProvider, tempStamps);
-  EXPECT_EQ(result, 0ull);
+    LBD result = getLBD(empty, dlProvider, tempStamps);
+    EXPECT_EQ(result, 0ull);
 }
 
 TEST(UnitSolver, getLBD_LBDofUnaryClauseIs1) {
-  TestStampMap tempStamps{128};
-  TestAssignmentProvider dlProvider;
-  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 10);
-  TestClause unary{CNFLit{CNFVar{1}, CNFSign::NEGATIVE}};
+    TestStampMap tempStamps{128};
+    TestAssignmentProvider dlProvider;
+    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 10);
+    TestClause unary{CNFLit{CNFVar{1}, CNFSign::NEGATIVE}};
 
-  LBD result = getLBD(unary, dlProvider, tempStamps);
-  EXPECT_EQ(result, 1ull);
+    LBD result = getLBD(unary, dlProvider, tempStamps);
+    EXPECT_EQ(result, 1ull);
 }
 
 TEST(UnitSolver, getLBD_LBDofMultiLiteralClause) {
-  TestStampMap tempStamps{128};
-  TestAssignmentProvider dlProvider;
-  dlProvider.setAssignmentDecisionLevel(CNFVar{2}, 10);
-  dlProvider.setAssignmentDecisionLevel(CNFVar{5}, 9);
-  dlProvider.setAssignmentDecisionLevel(CNFVar{7}, 10);
-  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 8);
-  dlProvider.setAssignmentDecisionLevel(CNFVar{0}, 10);
-  dlProvider.setAssignmentDecisionLevel(CNFVar{10}, 9);
+    TestStampMap tempStamps{128};
+    TestAssignmentProvider dlProvider;
+    dlProvider.setAssignmentDecisionLevel(CNFVar{2}, 10);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{5}, 9);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{7}, 10);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 8);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{0}, 10);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{10}, 9);
 
-  TestClause testData{
-      CNFLit{CNFVar{2}, CNFSign::NEGATIVE},
-      CNFLit{CNFVar{5}, CNFSign::POSITIVE},
-      CNFLit{CNFVar{7}, CNFSign::NEGATIVE},
-      CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
-      CNFLit{CNFVar{0}, CNFSign::POSITIVE},
-      CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
-  };
+    TestClause testData{
+        CNFLit{CNFVar{2}, CNFSign::NEGATIVE}, CNFLit{CNFVar{5}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{7}, CNFSign::NEGATIVE}, CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
+    };
 
-  LBD result = getLBD(testData, dlProvider, tempStamps);
-  EXPECT_EQ(result, 3ull);
+    LBD result = getLBD(testData, dlProvider, tempStamps);
+    EXPECT_EQ(result, 3ull);
 }
 }

@@ -35,13 +35,13 @@ using FuzzStream = boost::iostreams::stream<boost::iostreams::array_source>;
 // http://llvm.org/docs/LibFuzzer.html
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  // TODO: make this nicer by getting rid of the copy and the reinterpret_cast.
-  auto *workingCopy = new uint8_t[size];
-  std::memcpy(workingCopy, data, size);
-  char *streamBase = reinterpret_cast<char *>(workingCopy);
+    // TODO: make this nicer by getting rid of the copy and the reinterpret_cast.
+    auto *workingCopy = new uint8_t[size];
+    std::memcpy(workingCopy, data, size);
+    char *streamBase = reinterpret_cast<char *>(workingCopy);
 
-  FuzzStream fuzzerInput{streamBase, size};
-  jamsat::JamSATFuzzingEntryPoint(fuzzerInput);
-  delete[] workingCopy;
-  return 0;
+    FuzzStream fuzzerInput{streamBase, size};
+    jamsat::JamSATFuzzingEntryPoint(fuzzerInput);
+    delete[] workingCopy;
+    return 0;
 }

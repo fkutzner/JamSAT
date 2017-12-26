@@ -32,29 +32,29 @@ namespace jamsat {
 namespace {
 class IntIndex {
 public:
-  static uint32_t getIndex(int i) { return static_cast<uint32_t>(i); }
+    static uint32_t getIndex(int i) { return static_cast<uint32_t>(i); }
 };
 }
 
 TEST(UnitUtils, boundedMapSizeIsIndependentOfInsertions) {
-  BoundedMap<int, double, IntIndex> underTest{99};
-  EXPECT_EQ(underTest.size(), 100ull);
-  underTest[1] = 2.0f;
-  EXPECT_EQ(underTest.size(), 100ull);
+    BoundedMap<int, double, IntIndex> underTest{99};
+    EXPECT_EQ(underTest.size(), 100ull);
+    underTest[1] = 2.0f;
+    EXPECT_EQ(underTest.size(), 100ull);
 }
 
 TEST(UnitUtils, boundedMapStoresValues) {
-  BoundedMap<int, double, IntIndex> underTest{10};
-  underTest[1] = 2.0f;
-  underTest[1] = 23.0f;
-  underTest[2] = 223.0f;
-  EXPECT_EQ(underTest[1], 23.0f);
-  EXPECT_EQ(underTest[2], 223.0f);
+    BoundedMap<int, double, IntIndex> underTest{10};
+    underTest[1] = 2.0f;
+    underTest[1] = 23.0f;
+    underTest[2] = 223.0f;
+    EXPECT_EQ(underTest[1], 23.0f);
+    EXPECT_EQ(underTest[2], 223.0f);
 }
 
 TEST(UnitUtils, boundedMapReturnsDefaultValueForUnusedKeys) {
-  BoundedMap<int, double, IntIndex> underTest{10};
-  EXPECT_EQ(underTest[1], 0.0f);
-  EXPECT_EQ(underTest[2], 0.0f);
+    BoundedMap<int, double, IntIndex> underTest{10};
+    EXPECT_EQ(underTest[1], 0.0f);
+    EXPECT_EQ(underTest[2], 0.0f);
 }
 }

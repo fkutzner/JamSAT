@@ -42,35 +42,35 @@ class Clause;
  */
 class VariableState {
 public:
-  /**
-   * \brief Constructs a new VariableState object with the given maximum amount
-   * of variables.
-   *
-   * \param maxVar  The maximum variable whose state will be represented by the
-   * VariableState object.
-   */
-  explicit VariableState(CNFVar maxVar);
+    /**
+     * \brief Constructs a new VariableState object with the given maximum amount
+     * of variables.
+     *
+     * \param maxVar  The maximum variable whose state will be represented by the
+     * VariableState object.
+     */
+    explicit VariableState(CNFVar maxVar);
 
-  /**
-   * \brief Marks the given variable as eliminated from the SAT problem instance
-   * being solved.
-   *
-   * \param variable The target variable. Must not be greater than \p maxVar
-   * passed to the constructor.
-   */
-  void setEliminated(CNFVar variable) noexcept;
+    /**
+     * \brief Marks the given variable as eliminated from the SAT problem instance
+     * being solved.
+     *
+     * \param variable The target variable. Must not be greater than \p maxVar
+     * passed to the constructor.
+     */
+    void setEliminated(CNFVar variable) noexcept;
 
-  /**
-   * \brief Determines whether the given variable as eliminated from the SAT
-   * problem instance being solved.
-   *
-   * \param variable The target variable. Must not be greater than \p maxVar
-   * passed to the constructor.
-   * \returns true iff setEliminated(\p variable) has been called before.
-   */
-  bool isEliminated(CNFVar variable) const noexcept;
+    /**
+     * \brief Determines whether the given variable as eliminated from the SAT
+     * problem instance being solved.
+     *
+     * \param variable The target variable. Must not be greater than \p maxVar
+     * passed to the constructor.
+     * \returns true iff setEliminated(\p variable) has been called before.
+     */
+    bool isEliminated(CNFVar variable) const noexcept;
 
 private:
-  BoundedMap<CNFVar, Bool> m_eliminatedVariables;
+    BoundedMap<CNFVar, Bool> m_eliminatedVariables;
 };
 }

@@ -37,33 +37,32 @@
 namespace jamsat {
 class TestAssignmentProvider {
 public:
-  using DecisionLevel = size_t;
-  using size_type = BoundedStack<CNFLit>::size_type;
+    using DecisionLevel = size_t;
+    using size_type = BoundedStack<CNFLit>::size_type;
 
-  TestAssignmentProvider();
+    TestAssignmentProvider();
 
-  TBool getAssignment(CNFVar variable) const noexcept;
-  TBool getAssignment(CNFLit literal) const noexcept;
-  void addAssignment(CNFLit literal) noexcept;
-  void popLiteral() noexcept;
-  size_t getNumberOfAssignments() const noexcept;
+    TBool getAssignment(CNFVar variable) const noexcept;
+    TBool getAssignment(CNFLit literal) const noexcept;
+    void addAssignment(CNFLit literal) noexcept;
+    void popLiteral() noexcept;
+    size_t getNumberOfAssignments() const noexcept;
 
-  boost::iterator_range<std::vector<CNFLit>::const_iterator>
-  getAssignments(size_t index) const noexcept;
+    boost::iterator_range<std::vector<CNFLit>::const_iterator> getAssignments(size_t index) const
+        noexcept;
 
-  boost::iterator_range<std::vector<CNFLit>::const_iterator>
-  getDecisionLevelAssignments(DecisionLevel level) const noexcept;
+    boost::iterator_range<std::vector<CNFLit>::const_iterator>
+    getDecisionLevelAssignments(DecisionLevel level) const noexcept;
 
-  DecisionLevel getAssignmentDecisionLevel(CNFVar variable) const noexcept;
-  void setAssignmentDecisionLevel(CNFVar variable,
-                                  DecisionLevel level) noexcept;
-  DecisionLevel getCurrentDecisionLevel() const noexcept;
-  void setCurrentDecisionLevel(DecisionLevel level) noexcept;
+    DecisionLevel getAssignmentDecisionLevel(CNFVar variable) const noexcept;
+    void setAssignmentDecisionLevel(CNFVar variable, DecisionLevel level) noexcept;
+    DecisionLevel getCurrentDecisionLevel() const noexcept;
+    void setCurrentDecisionLevel(DecisionLevel level) noexcept;
 
 private:
-  std::unordered_map<CNFVar, TBool> m_assignments;
-  std::unordered_map<CNFVar, DecisionLevel> m_decisionLevels;
-  DecisionLevel m_currentLevel;
-  BoundedStack<CNFLit> m_trail;
+    std::unordered_map<CNFVar, TBool> m_assignments;
+    std::unordered_map<CNFVar, DecisionLevel> m_decisionLevels;
+    DecisionLevel m_currentLevel;
+    BoundedStack<CNFLit> m_trail;
 };
 }

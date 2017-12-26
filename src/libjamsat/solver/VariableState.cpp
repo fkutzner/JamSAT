@@ -30,16 +30,16 @@ namespace jamsat {
 VariableState::VariableState(CNFVar maxVar) : m_eliminatedVariables(maxVar) {}
 
 bool VariableState::isEliminated(CNFVar variable) const noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariable>(m_eliminatedVariables.size()),
-             "Variable out of bounds");
-  return toRawBool(m_eliminatedVariables[variable]);
+    JAM_ASSERT(variable.getRawValue() <
+                   static_cast<CNFVar::RawVariable>(m_eliminatedVariables.size()),
+               "Variable out of bounds");
+    return toRawBool(m_eliminatedVariables[variable]);
 }
 
 void VariableState::setEliminated(CNFVar variable) noexcept {
-  JAM_ASSERT(variable.getRawValue() <
-                 static_cast<CNFVar::RawVariable>(m_eliminatedVariables.size()),
-             "Variable out of bounds");
-  m_eliminatedVariables[variable] = Bool::TRUE;
+    JAM_ASSERT(variable.getRawValue() <
+                   static_cast<CNFVar::RawVariable>(m_eliminatedVariables.size()),
+               "Variable out of bounds");
+    m_eliminatedVariables[variable] = Bool::TRUE;
 }
 }

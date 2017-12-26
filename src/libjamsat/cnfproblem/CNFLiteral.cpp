@@ -31,13 +31,13 @@
 namespace jamsat {
 
 std::ostream &operator<<(std::ostream &stream, const CNFVar &variable) {
-  stream << (variable.getRawValue() + 1);
-  return stream;
+    stream << (variable.getRawValue() + 1);
+    return stream;
 }
 
 std::ostream &operator<<(std::ostream &stream, const CNFLit &literal) {
-  stream << (literal.getSign() == CNFSign::POSITIVE ? " " : "-");
-  stream << literal.getVariable();
-  return stream;
+    stream << (literal.getSign() == CNFSign::POSITIVE ? " " : "-");
+    stream << literal.getVariable();
+    return stream;
 }
 }

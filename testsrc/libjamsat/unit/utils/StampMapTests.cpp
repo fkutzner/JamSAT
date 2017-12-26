@@ -34,86 +34,84 @@
 namespace jamsat {
 
 struct IntStampKey {
-  using Type = int;
-  static size_t getIndex(int x) { return (x >= 0) ? 2 * x : -2 * x + 1; }
+    using Type = int;
+    static size_t getIndex(int x) { return (x >= 0) ? 2 * x : -2 * x + 1; }
 };
 
 struct ComplexStampKey {
-  using Type = std::complex<char>;
-  static size_t getIndex(const Type &x) {
-    return 2 * x.real() + 2 * x.imag() + 1;
-  }
+    using Type = std::complex<char>;
+    static size_t getIndex(const Type &x) { return 2 * x.real() + 2 * x.imag() + 1; }
 };
 
 TEST(UnitUtils, StampMap_singleKeyTypeReadWrite) {
-  StampMap<uint64_t, IntStampKey> underTest{10};
-  auto stampContext = underTest.createContext();
-  auto stamp = stampContext.getStamp();
+    StampMap<uint64_t, IntStampKey> underTest{10};
+    auto stampContext = underTest.createContext();
+    auto stamp = stampContext.getStamp();
 
-  EXPECT_FALSE(underTest.isStamped(3, stamp));
-  EXPECT_FALSE(underTest.isStamped(4, stamp));
-  underTest.setStamped(3, stamp, true);
-  EXPECT_TRUE(underTest.isStamped(3, stamp));
-  EXPECT_FALSE(underTest.isStamped(4, stamp));
-  underTest.setStamped(3, stamp, false);
-  EXPECT_FALSE(underTest.isStamped(3, stamp));
-  EXPECT_FALSE(underTest.isStamped(4, stamp));
+    EXPECT_FALSE(underTest.isStamped(3, stamp));
+    EXPECT_FALSE(underTest.isStamped(4, stamp));
+    underTest.setStamped(3, stamp, true);
+    EXPECT_TRUE(underTest.isStamped(3, stamp));
+    EXPECT_FALSE(underTest.isStamped(4, stamp));
+    underTest.setStamped(3, stamp, false);
+    EXPECT_FALSE(underTest.isStamped(3, stamp));
+    EXPECT_FALSE(underTest.isStamped(4, stamp));
 }
 
 TEST(UnitUtils, StampMap_twoKeyTypesReadWrite) {
-  StampMap<uint64_t, ComplexStampKey, IntStampKey> underTest{32};
-  auto stampContext = underTest.createContext();
-  auto stamp = stampContext.getStamp();
+    StampMap<uint64_t, ComplexStampKey, IntStampKey> underTest{32};
+    auto stampContext = underTest.createContext();
+    auto stamp = stampContext.getStamp();
 
-  ComplexStampKey::Type testValue1{3, 0};
-  ComplexStampKey::Type testValue2{2, 5};
+    ComplexStampKey::Type testValue1{3, 0};
+    ComplexStampKey::Type testValue2{2, 5};
 
-  EXPECT_FALSE(underTest.isStamped(3, stamp));
-  EXPECT_FALSE(underTest.isStamped(testValue1, stamp));
-  EXPECT_FALSE(underTest.isStamped(testValue2, stamp));
+    EXPECT_FALSE(underTest.isStamped(3, stamp));
+    EXPECT_FALSE(underTest.isStamped(testValue1, stamp));
+    EXPECT_FALSE(underTest.isStamped(testValue2, stamp));
 
-  underTest.setStamped(testValue1, stamp, true);
-  EXPECT_TRUE(underTest.isStamped(testValue1, stamp));
-  EXPECT_TRUE(underTest.isStamped(3, stamp)); // mapped to same internal key
-  EXPECT_FALSE(underTest.isStamped(testValue2, stamp));
+    underTest.setStamped(testValue1, stamp, true);
+    EXPECT_TRUE(underTest.isStamped(testValue1, stamp));
+    EXPECT_TRUE(underTest.isStamped(3, stamp)); // mapped to same internal key
+    EXPECT_FALSE(underTest.isStamped(testValue2, stamp));
 }
 
 TEST(UnitUtils, StampMap_contextDestructionClearsStampMap) {
-  StampMap<uint8_t, ComplexStampKey, IntStampKey> underTest{32};
-  ComplexStampKey::Type testValue1{3, 0};
+    StampMap<uint8_t, ComplexStampKey, IntStampKey> underTest{32};
+    ComplexStampKey::Type testValue1{3, 0};
 
-  {
-    auto stampContext = underTest.createContext();
-    auto stamp = stampContext.getStamp();
-    underTest.setStamped(testValue1, stamp, true);
-    EXPECT_TRUE(underTest.isStamped(testValue1, stamp));
-    // stampContext should clean the stamps on destruction
-  }
+    {
+        auto stampContext = underTest.createContext();
+        auto stamp = stampContext.getStamp();
+        underTest.setStamped(testValue1, stamp, true);
+        EXPECT_TRUE(underTest.isStamped(testValue1, stamp));
+        // stampContext should clean the stamps on destruction
+    }
 
-  {
-    auto newContext = underTest.createContext();
-    auto newStamp = newContext.getStamp();
-    EXPECT_FALSE(underTest.isStamped(testValue1, newStamp));
-  }
+    {
+        auto newContext = underTest.createContext();
+        auto newStamp = newContext.getStamp();
+        EXPECT_FALSE(underTest.isStamped(testValue1, newStamp));
+    }
 }
 
 TEST(UnitUtils, StampMap_stampMapIsClearedOnInnerStampWraparound) {
-  StampMap<uint8_t, ComplexStampKey, IntStampKey> underTest{32};
-  ComplexStampKey::Type testValue1{3, 0};
-  {
-    auto stampContext = underTest.createContext();
-    auto stamp = stampContext.getStamp();
-    underTest.setStamped(testValue1, stamp, true);
-  }
+    StampMap<uint8_t, ComplexStampKey, IntStampKey> underTest{32};
+    ComplexStampKey::Type testValue1{3, 0};
+    {
+        auto stampContext = underTest.createContext();
+        auto stamp = stampContext.getStamp();
+        underTest.setStamped(testValue1, stamp, true);
+    }
 
-  // The inner stamp type is incremented for each new context, except
-  // when its maximum is reached - then, all saved stamping information
-  // needs to be cleared. underTest has a maximum inner stamp value of
-  // 255.
-  for (int i = 0; i < 384; ++i) {
-    auto stampContext = underTest.createContext();
-    auto stamp = stampContext.getStamp();
-    EXPECT_FALSE(underTest.isStamped(testValue1, stamp));
-  }
+    // The inner stamp type is incremented for each new context, except
+    // when its maximum is reached - then, all saved stamping information
+    // needs to be cleared. underTest has a maximum inner stamp value of
+    // 255.
+    for (int i = 0; i < 384; ++i) {
+        auto stampContext = underTest.createContext();
+        auto stamp = stampContext.getStamp();
+        EXPECT_FALSE(underTest.isStamped(testValue1, stamp));
+    }
 }
 }

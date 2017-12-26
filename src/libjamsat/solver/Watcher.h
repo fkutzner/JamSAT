@@ -41,137 +41,125 @@ namespace detail_propagation {
 
 // TODO: documentation, with \internal flag.
 
-template <class ClauseT> class Watcher {
+template <class ClauseT>
+class Watcher {
 public:
-  Watcher(ClauseT &watchedClause, CNFLit otherWatchedLiteral,
-          unsigned int index = 0) noexcept
-      : m_clause(&watchedClause, index),
-        m_otherWatchedLiteral(otherWatchedLiteral) {}
+    Watcher(ClauseT &watchedClause, CNFLit otherWatchedLiteral, unsigned int index = 0) noexcept
+      : m_clause(&watchedClause, index), m_otherWatchedLiteral(otherWatchedLiteral) {}
 
-  ClauseT &getClause() noexcept { return *m_clause; }
+    ClauseT &getClause() noexcept { return *m_clause; }
 
-  CNFLit getOtherWatchedLiteral() const noexcept {
-    return m_otherWatchedLiteral;
-  }
+    CNFLit getOtherWatchedLiteral() const noexcept { return m_otherWatchedLiteral; }
 
-  unsigned int getIndex() const noexcept {
-    // Only using 1 bit of state so far, so no masking is required yet
-    return m_clause.get_state();
-  }
-
-  void setOtherWatchedLiteral(CNFLit literal) noexcept {
-    m_otherWatchedLiteral = literal;
-  }
-
-  bool operator==(const Watcher &rhs) const {
-    return m_clause == rhs.m_clause &&
-           m_otherWatchedLiteral == rhs.m_otherWatchedLiteral;
-  }
-
-  bool operator!=(const Watcher &rhs) const {
-    return m_clause != rhs.m_clause ||
-           m_otherWatchedLiteral != rhs.m_otherWatchedLiteral;
-  }
-
-private:
-  // m_clause is a state pointer with at least one bit of state.
-  // Its least significant state bit contains the watcher's index
-  // (i.e. the index of the literal it is supposed to watch within
-  // the rsp. clause).
-  putl::state_ptr<ClauseT, uint32_t, 1> m_clause;
-  CNFLit m_otherWatchedLiteral;
-};
-
-template <class WatcherT> class WatcherTraversal {
-public:
-  using WatcherList = std::vector<WatcherT>;
-
-  explicit WatcherTraversal(WatcherList *iteratee) noexcept
-      : m_iteratee(iteratee), m_current(iteratee->begin()),
-        m_toTraverse(iteratee->size()) {}
-
-  void removeCurrent() noexcept {
-    JAM_ASSERT(m_current != m_iteratee->end(),
-               "Iterator is not pointing to a valid element");
-
-    if (m_current != m_iteratee->end()) {
-      *m_current = m_iteratee->back();
+    unsigned int getIndex() const noexcept {
+        // Only using 1 bit of state so far, so no masking is required yet
+        return m_clause.get_state();
     }
-    m_iteratee->pop_back();
-    --m_toTraverse;
-  }
 
-  bool hasFinishedTraversal() const noexcept { return m_toTraverse == 0ull; }
+    void setOtherWatchedLiteral(CNFLit literal) noexcept { m_otherWatchedLiteral = literal; }
 
-  void finishedTraversal() noexcept {}
+    bool operator==(const Watcher &rhs) const {
+        return m_clause == rhs.m_clause && m_otherWatchedLiteral == rhs.m_otherWatchedLiteral;
+    }
 
-  WatcherTraversal &operator++() noexcept {
-    JAM_ASSERT(m_toTraverse > 0ull,
-               "Tried to traverse beyond the watcher list");
-    ++m_current;
-    --m_toTraverse;
-    return *this;
-  }
-
-  bool operator==(const WatcherTraversal &rhs) const noexcept {
-    return m_current == rhs.m_current && m_iteratee == rhs.m_iteratee;
-  }
-
-  bool operator!=(const WatcherTraversal &rhs) const noexcept {
-    return m_current != rhs.m_current || m_iteratee != rhs.m_iteratee;
-  }
-
-  WatcherT &operator*() noexcept {
-    JAM_ASSERT(m_current != m_iteratee->end(),
-               "Iterator is not pointing to a valid element");
-    return *m_current;
-  }
-
-  WatcherT *operator->() noexcept {
-    JAM_ASSERT(m_current != m_iteratee->end(),
-               "Iterator is not pointing to a valid element");
-    return &(*m_current);
-  }
+    bool operator!=(const Watcher &rhs) const {
+        return m_clause != rhs.m_clause || m_otherWatchedLiteral != rhs.m_otherWatchedLiteral;
+    }
 
 private:
-  WatcherList *m_iteratee;
-  typename WatcherList::iterator m_current;
-  typename WatcherList::size_type m_toTraverse;
+    // m_clause is a state pointer with at least one bit of state.
+    // Its least significant state bit contains the watcher's index
+    // (i.e. the index of the literal it is supposed to watch within
+    // the rsp. clause).
+    putl::state_ptr<ClauseT, uint32_t, 1> m_clause;
+    CNFLit m_otherWatchedLiteral;
 };
 
-template <class ClauseT> class Watchers {
+template <class WatcherT>
+class WatcherTraversal {
 public:
-  using WatcherT = Watcher<ClauseT>;
+    using WatcherList = std::vector<WatcherT>;
 
-  explicit Watchers(CNFVar maxVar)
+    explicit WatcherTraversal(WatcherList *iteratee) noexcept
+      : m_iteratee(iteratee), m_current(iteratee->begin()), m_toTraverse(iteratee->size()) {}
+
+    void removeCurrent() noexcept {
+        JAM_ASSERT(m_current != m_iteratee->end(), "Iterator is not pointing to a valid element");
+
+        if (m_current != m_iteratee->end()) {
+            *m_current = m_iteratee->back();
+        }
+        m_iteratee->pop_back();
+        --m_toTraverse;
+    }
+
+    bool hasFinishedTraversal() const noexcept { return m_toTraverse == 0ull; }
+
+    void finishedTraversal() noexcept {}
+
+    WatcherTraversal &operator++() noexcept {
+        JAM_ASSERT(m_toTraverse > 0ull, "Tried to traverse beyond the watcher list");
+        ++m_current;
+        --m_toTraverse;
+        return *this;
+    }
+
+    bool operator==(const WatcherTraversal &rhs) const noexcept {
+        return m_current == rhs.m_current && m_iteratee == rhs.m_iteratee;
+    }
+
+    bool operator!=(const WatcherTraversal &rhs) const noexcept {
+        return m_current != rhs.m_current || m_iteratee != rhs.m_iteratee;
+    }
+
+    WatcherT &operator*() noexcept {
+        JAM_ASSERT(m_current != m_iteratee->end(), "Iterator is not pointing to a valid element");
+        return *m_current;
+    }
+
+    WatcherT *operator->() noexcept {
+        JAM_ASSERT(m_current != m_iteratee->end(), "Iterator is not pointing to a valid element");
+        return &(*m_current);
+    }
+
+private:
+    WatcherList *m_iteratee;
+    typename WatcherList::iterator m_current;
+    typename WatcherList::size_type m_toTraverse;
+};
+
+template <class ClauseT>
+class Watchers {
+public:
+    using WatcherT = Watcher<ClauseT>;
+
+    explicit Watchers(CNFVar maxVar)
       : m_maxVar(maxVar), m_watchers(CNFLit{maxVar, CNFSign::POSITIVE}) {}
 
-  WatcherTraversal<WatcherT> getWatchers(CNFLit literal) noexcept {
-    JAM_ASSERT(literal.getRawValue() <
-                   static_cast<CNFLit::RawLiteral>(m_watchers.size()),
-               "literal out of bounds");
+    WatcherTraversal<WatcherT> getWatchers(CNFLit literal) noexcept {
+        JAM_ASSERT(literal.getRawValue() < static_cast<CNFLit::RawLiteral>(m_watchers.size()),
+                   "literal out of bounds");
 
-    return WatcherTraversal<WatcherT>{&m_watchers[literal]};
-  }
-
-  void addWatcher(CNFLit literal, Watcher<ClauseT> watcher) {
-    JAM_ASSERT(literal.getRawValue() <
-                   static_cast<CNFLit::RawLiteral>(m_watchers.size()),
-               "literal out of bounds");
-    m_watchers[literal].push_back(watcher);
-  }
-
-  void clear() noexcept {
-    for (CNFLit::RawLiteral i = 0; i <= m_maxVar.getRawValue(); ++i) {
-      m_watchers[CNFLit{CNFVar{i}, CNFSign::NEGATIVE}].clear();
-      m_watchers[CNFLit{CNFVar{i}, CNFSign::POSITIVE}].clear();
+        return WatcherTraversal<WatcherT>{&m_watchers[literal]};
     }
-  }
+
+    void addWatcher(CNFLit literal, Watcher<ClauseT> watcher) {
+        JAM_ASSERT(literal.getRawValue() < static_cast<CNFLit::RawLiteral>(m_watchers.size()),
+                   "literal out of bounds");
+        m_watchers[literal].push_back(watcher);
+    }
+
+    void clear() noexcept {
+        for (CNFLit::RawLiteral i = 0; i <= m_maxVar.getRawValue(); ++i) {
+            m_watchers[CNFLit{CNFVar{i}, CNFSign::NEGATIVE}].clear();
+            m_watchers[CNFLit{CNFVar{i}, CNFSign::POSITIVE}].clear();
+        }
+    }
 
 private:
-  using WatcherList = std::vector<Watcher<ClauseT>>;
-  const CNFVar m_maxVar;
-  BoundedMap<CNFLit, WatcherList> m_watchers;
+    using WatcherList = std::vector<Watcher<ClauseT>>;
+    const CNFVar m_maxVar;
+    BoundedMap<CNFLit, WatcherList> m_watchers;
 };
 }
 }

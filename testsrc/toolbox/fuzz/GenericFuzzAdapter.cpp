@@ -33,9 +33,9 @@
 // can eg. be used with afl-fuzz.
 
 int main(int, char **) {
-  // JamSAT does not use C I/O
-  std::ios_base::sync_with_stdio(false);
+    // JamSAT does not use C I/O
+    std::ios_base::sync_with_stdio(false);
 
-  jamsat::JamSATFuzzingEntryPoint(std::cin);
-  return 0;
+    jamsat::JamSATFuzzingEntryPoint(std::cin);
+    return 0;
 }

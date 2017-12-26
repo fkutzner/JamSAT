@@ -30,40 +30,40 @@
 
 namespace jamsat {
 TEST(UnitControlFlow, OnExitScopeExitsWhenExitingScope) {
-  bool result = false;
+    bool result = false;
 
-  {
-    OnExitScope setResultToTrue([&result]() { result = true; });
-    EXPECT_EQ(result, false);
-  }
+    {
+        OnExitScope setResultToTrue([&result]() { result = true; });
+        EXPECT_EQ(result, false);
+    }
 
-  EXPECT_EQ(result, true);
+    EXPECT_EQ(result, true);
 }
 
 TEST(UnitControlFlow, OnExitScopeCorrectAfterMoveAssignment) {
-  int callCount = 0;
+    int callCount = 0;
 
-  {
-    OnExitScope setResultToTrue([&callCount]() { ++callCount; });
-    EXPECT_EQ(callCount, 0);
-    OnExitScope moveTarget([]() {});
-    moveTarget = std::move(setResultToTrue);
-    EXPECT_EQ(callCount, 0);
-  }
+    {
+        OnExitScope setResultToTrue([&callCount]() { ++callCount; });
+        EXPECT_EQ(callCount, 0);
+        OnExitScope moveTarget([]() {});
+        moveTarget = std::move(setResultToTrue);
+        EXPECT_EQ(callCount, 0);
+    }
 
-  EXPECT_EQ(callCount, 1);
+    EXPECT_EQ(callCount, 1);
 }
 
 TEST(UnitControlFlow, OnExitScopeCorrectAfterMoveConstruction) {
-  int callCount = 0;
+    int callCount = 0;
 
-  {
-    OnExitScope setResultToTrue([&callCount]() { ++callCount; });
-    EXPECT_EQ(callCount, 0);
-    OnExitScope moveTarget{std::move(setResultToTrue)};
-    EXPECT_EQ(callCount, 0);
-  }
+    {
+        OnExitScope setResultToTrue([&callCount]() { ++callCount; });
+        EXPECT_EQ(callCount, 0);
+        OnExitScope moveTarget{std::move(setResultToTrue)};
+        EXPECT_EQ(callCount, 0);
+    }
 
-  EXPECT_EQ(callCount, 1);
+    EXPECT_EQ(callCount, 1);
 }
 }

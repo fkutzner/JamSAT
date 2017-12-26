@@ -31,40 +31,38 @@
 
 namespace jamsat {
 TEST(UnitUtils, noTestFaultThrowsAreInjectedByDefault) {
-  throwOnInjectedTestFault<std::logic_error>("logic errors",
-                                             "exception_what_msg");
+    throwOnInjectedTestFault<std::logic_error>("logic errors", "exception_what_msg");
 }
 
 TEST(UnitUtils, enabledTestFaultThrowsAreExecuted) {
-  FaultInjectorResetRAII faultInjectorResetter;
-  auto &faultInjector = FaultInjector::getInstance();
-  faultInjector.enableFaults("logic errors");
-  EXPECT_TRUE(faultInjector.isFaultEnabled("logic errors"));
-  try {
-    throwOnInjectedTestFault<std::logic_error>("logic errors",
-                                               "exception_what_msg");
-    FAIL() << "Expected exception to be thrown";
-  } catch (std::logic_error &exception) {
-    EXPECT_EQ(exception.what(), std::string("exception_what_msg"));
-  } catch (...) {
-    FAIL() << "Wrong exception type";
-  }
+    FaultInjectorResetRAII faultInjectorResetter;
+    auto &faultInjector = FaultInjector::getInstance();
+    faultInjector.enableFaults("logic errors");
+    EXPECT_TRUE(faultInjector.isFaultEnabled("logic errors"));
+    try {
+        throwOnInjectedTestFault<std::logic_error>("logic errors", "exception_what_msg");
+        FAIL() << "Expected exception to be thrown";
+    } catch (std::logic_error &exception) {
+        EXPECT_EQ(exception.what(), std::string("exception_what_msg"));
+    } catch (...) {
+        FAIL() << "Wrong exception type";
+    }
 }
 
 TEST(UnitUtils, faultInjectorResetRAIIRestoresEnabledFaults) {
-  FaultInjectorResetRAII faultInjectorResetter;
+    FaultInjectorResetRAII faultInjectorResetter;
 
-  auto &faultInjector = FaultInjector::getInstance();
-  faultInjector.enableFaults("fooFaults");
+    auto &faultInjector = FaultInjector::getInstance();
+    faultInjector.enableFaults("fooFaults");
 
-  {
-    FaultInjectorResetRAII resetRAII;
-    faultInjector.reset();
-  }
+    {
+        FaultInjectorResetRAII resetRAII;
+        faultInjector.reset();
+    }
 
-  ASSERT_NE(faultInjector.begin(), faultInjector.end());
-  auto faultInjectorIter = faultInjector.begin();
-  EXPECT_EQ(++faultInjectorIter, faultInjector.end());
-  EXPECT_EQ(*(faultInjector.begin()), std::string{"fooFaults"});
+    ASSERT_NE(faultInjector.begin(), faultInjector.end());
+    auto faultInjectorIter = faultInjector.begin();
+    EXPECT_EQ(++faultInjectorIter, faultInjector.end());
+    EXPECT_EQ(*(faultInjector.begin()), std::string{"fooFaults"});
 }
 }

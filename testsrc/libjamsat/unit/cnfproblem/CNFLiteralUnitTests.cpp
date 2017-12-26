@@ -31,113 +31,113 @@
 
 namespace jamsat {
 TEST(UnitCNFProblem, CNFVarHasStrictWeakOrdering) {
-  CNFVar varA{5};
-  CNFVar varB{6};
-  CNFVar varC{5};
+    CNFVar varA{5};
+    CNFVar varB{6};
+    CNFVar varC{5};
 
-  EXPECT_TRUE(varA == varC);
-  EXPECT_FALSE(varA < varC);
-  EXPECT_FALSE(varA > varC);
+    EXPECT_TRUE(varA == varC);
+    EXPECT_FALSE(varA < varC);
+    EXPECT_FALSE(varA > varC);
 
-  EXPECT_TRUE(varA != varB);
-  EXPECT_TRUE(varA < varB);
-  EXPECT_TRUE(varB > varA);
+    EXPECT_TRUE(varA != varB);
+    EXPECT_TRUE(varA < varB);
+    EXPECT_TRUE(varB > varA);
 
-  EXPECT_TRUE(varA == varA);
+    EXPECT_TRUE(varA == varA);
 }
 
 TEST(UnitCNFProblem, undefinedCNFVarGreaterThanAllOtherVars) {
-  CNFVar max{CNFVar::getMaxRawValue()};
-  EXPECT_TRUE(max < CNFVar::getUndefinedVariable());
+    CNFVar max{CNFVar::getMaxRawValue()};
+    EXPECT_TRUE(max < CNFVar::getUndefinedVariable());
 }
 
 TEST(UnitCNFProblem, invertSign) {
-  CNFSign positiveSign = CNFSign::POSITIVE;
-  EXPECT_EQ(invert(positiveSign), CNFSign::NEGATIVE);
+    CNFSign positiveSign = CNFSign::POSITIVE;
+    EXPECT_EQ(invert(positiveSign), CNFSign::NEGATIVE);
 }
 
 TEST(UnitCNFProblem, CNFLitHasStrictWeakOrdering) {
-  CNFLit litA{CNFVar{5}, CNFSign::NEGATIVE};
-  CNFLit litB{CNFVar{6}, CNFSign::POSITIVE};
-  CNFLit litC{CNFVar{5}, CNFSign::NEGATIVE};
-  CNFLit litD{CNFVar{5}, CNFSign::POSITIVE};
+    CNFLit litA{CNFVar{5}, CNFSign::NEGATIVE};
+    CNFLit litB{CNFVar{6}, CNFSign::POSITIVE};
+    CNFLit litC{CNFVar{5}, CNFSign::NEGATIVE};
+    CNFLit litD{CNFVar{5}, CNFSign::POSITIVE};
 
-  EXPECT_TRUE(litA == litC);
-  EXPECT_FALSE(litA < litC);
-  EXPECT_FALSE(litA > litC);
+    EXPECT_TRUE(litA == litC);
+    EXPECT_FALSE(litA < litC);
+    EXPECT_FALSE(litA > litC);
 
-  EXPECT_TRUE(litA != litB);
-  EXPECT_TRUE(litA < litB);
-  EXPECT_TRUE(litB > litA);
+    EXPECT_TRUE(litA != litB);
+    EXPECT_TRUE(litA < litB);
+    EXPECT_TRUE(litB > litA);
 
-  EXPECT_TRUE(litA == litA);
-  EXPECT_TRUE(litA < litD);
+    EXPECT_TRUE(litA == litA);
+    EXPECT_TRUE(litA < litD);
 }
 
 TEST(UnitCNFProblem, undefinedCNFLitGreaterThanAllOtherLits) {
-  CNFLit max{CNFVar{CNFVar::getMaxRawValue()}, CNFSign::POSITIVE};
-  EXPECT_TRUE(max < CNFLit::getUndefinedLiteral());
+    CNFLit max{CNFVar{CNFVar::getMaxRawValue()}, CNFSign::POSITIVE};
+    EXPECT_TRUE(max < CNFLit::getUndefinedLiteral());
 }
 
 TEST(UnitCNFProblem, negateLiteral) {
-  CNFVar variable{5};
-  CNFLit underTest{variable, CNFSign::POSITIVE};
-  CNFLit negated = ~underTest;
+    CNFVar variable{5};
+    CNFLit underTest{variable, CNFSign::POSITIVE};
+    CNFLit negated = ~underTest;
 
-  EXPECT_EQ(negated.getSign(), CNFSign::NEGATIVE);
-  EXPECT_EQ(negated.getVariable(), variable);
+    EXPECT_EQ(negated.getSign(), CNFSign::NEGATIVE);
+    EXPECT_EQ(negated.getVariable(), variable);
 }
 
 TEST(UnitCNFProblem, literalEquivalency) {
-  CNFLit underTest{CNFVar{4}, CNFSign::POSITIVE};
-  CNFLit inequalToUnderTestByVar{CNFVar{5}, CNFSign::POSITIVE};
-  CNFLit inequalToUnderTestBySign{CNFVar{5}, CNFSign::POSITIVE};
-  CNFLit copyOfUnderTest = underTest;
+    CNFLit underTest{CNFVar{4}, CNFSign::POSITIVE};
+    CNFLit inequalToUnderTestByVar{CNFVar{5}, CNFSign::POSITIVE};
+    CNFLit inequalToUnderTestBySign{CNFVar{5}, CNFSign::POSITIVE};
+    CNFLit copyOfUnderTest = underTest;
 
-  EXPECT_NE(underTest, inequalToUnderTestByVar);
-  EXPECT_NE(underTest, inequalToUnderTestBySign);
-  EXPECT_EQ(underTest, copyOfUnderTest);
+    EXPECT_NE(underTest, inequalToUnderTestByVar);
+    EXPECT_NE(underTest, inequalToUnderTestBySign);
+    EXPECT_EQ(underTest, copyOfUnderTest);
 }
 
 TEST(UnitCNFProblem, printVariable) {
-  CNFVar underTest{5};
-  std::stringstream target;
-  target << underTest;
+    CNFVar underTest{5};
+    std::stringstream target;
+    target << underTest;
 
-  std::string printedVariable;
-  target >> printedVariable;
-  EXPECT_EQ(printedVariable, "6");
+    std::string printedVariable;
+    target >> printedVariable;
+    EXPECT_EQ(printedVariable, "6");
 }
 
 TEST(UnitCNFProblem, printNegativeLiteral) {
-  CNFLit underTest{CNFVar{5}, CNFSign::NEGATIVE};
-  std::stringstream target;
-  target << underTest;
+    CNFLit underTest{CNFVar{5}, CNFSign::NEGATIVE};
+    std::stringstream target;
+    target << underTest;
 
-  std::string printedVariable;
-  target >> printedVariable;
-  EXPECT_EQ(printedVariable, "-6");
+    std::string printedVariable;
+    target >> printedVariable;
+    EXPECT_EQ(printedVariable, "-6");
 }
 
 TEST(UnitCNFProblem, printPositiveLiteral) {
-  CNFLit underTest{CNFVar{5}, CNFSign::POSITIVE};
-  std::stringstream target;
-  target << underTest;
+    CNFLit underTest{CNFVar{5}, CNFSign::POSITIVE};
+    std::stringstream target;
+    target << underTest;
 
-  std::string printedVariable;
-  target >> printedVariable;
-  EXPECT_EQ(printedVariable, "6");
+    std::string printedVariable;
+    target >> printedVariable;
+    EXPECT_EQ(printedVariable, "6");
 }
 
 TEST(UnitCNFProblem, variableOfUndefinedLiteralIsUndefiend) {
-  CNFVar undefinedLiteralVar = CNFLit::getUndefinedLiteral().getVariable();
-  EXPECT_EQ(undefinedLiteralVar, CNFVar::getUndefinedVariable());
+    CNFVar undefinedLiteralVar = CNFLit::getUndefinedLiteral().getVariable();
+    EXPECT_EQ(undefinedLiteralVar, CNFVar::getUndefinedVariable());
 }
 
 #if !defined(NDEBUG)
 TEST(UnitCNFProblem, cannotNegateUndefinedLiteral) {
-  CNFLit underTest = CNFLit::getUndefinedLiteral();
-  ASSERT_DEATH(~underTest, ".*");
+    CNFLit underTest = CNFLit::getUndefinedLiteral();
+    ASSERT_DEATH(~underTest, ".*");
 }
 #endif
 }

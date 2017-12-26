@@ -48,134 +48,132 @@ namespace jamsat {
 template <typename T, typename Allocator = std::allocator<T>>
 class BoundedStack {
 private:
-  using BackingType = std::vector<T, Allocator>;
+    using BackingType = std::vector<T, Allocator>;
 
 public:
-  // The non-constant random-access iterator type.
-  using iterator = typename BackingType::iterator;
+    // The non-constant random-access iterator type.
+    using iterator = typename BackingType::iterator;
 
-  // The constant random-access iterator type.
-  using const_iterator = typename BackingType::const_iterator;
+    // The constant random-access iterator type.
+    using const_iterator = typename BackingType::const_iterator;
 
-  // The stack's size type.
-  using size_type = typename BackingType::size_type;
+    // The stack's size type.
+    using size_type = typename BackingType::size_type;
 
-  // The type of references to elements of the stack.
-  using reference = T &;
+    // The type of references to elements of the stack.
+    using reference = T &;
 
-  // The type of const references to elements of the stakc.
-  using const_reference = const T &;
+    // The type of const references to elements of the stakc.
+    using const_reference = const T &;
 
-  /**
-   * \brief Constructs a new BoundedStack instance.
-   *
-   * \param size    The stack's maximum size.
-   */
-  BoundedStack(size_type size) : m_stack(size), m_currentSize(0) {}
+    /**
+     * \brief Constructs a new BoundedStack instance.
+     *
+     * \param size    The stack's maximum size.
+     */
+    BoundedStack(size_type size) : m_stack(size), m_currentSize(0) {}
 
-  /**
-   * \brief Returns the topmost element of the stack.
-   *
-   * This method may only be called when the stack is empty.
-   */
-  reference back() noexcept {
-    JAM_ASSERT(!empty(), "Cannot access an empty stack");
-    return m_stack[m_currentSize - 1];
-  }
+    /**
+     * \brief Returns the topmost element of the stack.
+     *
+     * This method may only be called when the stack is empty.
+     */
+    reference back() noexcept {
+        JAM_ASSERT(!empty(), "Cannot access an empty stack");
+        return m_stack[m_currentSize - 1];
+    }
 
-  /**
-   * \brief Returns the topmost element of the stack (const version).
-   *
-   * This method may only be called when the stack is empty.
-   */
-  const_reference back() const noexcept {
-    JAM_ASSERT(!empty(), "Cannot access an empty stack");
-    return m_stack[m_currentSize - 1];
-  }
+    /**
+     * \brief Returns the topmost element of the stack (const version).
+     *
+     * This method may only be called when the stack is empty.
+     */
+    const_reference back() const noexcept {
+        JAM_ASSERT(!empty(), "Cannot access an empty stack");
+        return m_stack[m_currentSize - 1];
+    }
 
-  /**
-   * \brief Removes the topmost element from the stack.
-   *
-   * This method may only be called when the stack is empty.
-   */
-  void pop() noexcept {
-    JAM_ASSERT(!empty(), "Cannot pop() an empty stack");
-    --m_currentSize;
-  }
+    /**
+     * \brief Removes the topmost element from the stack.
+     *
+     * This method may only be called when the stack is empty.
+     */
+    void pop() noexcept {
+        JAM_ASSERT(!empty(), "Cannot pop() an empty stack");
+        --m_currentSize;
+    }
 
-  /**
-   * \brief Removes multiple elements from the stack.
-   *
-   * \param newSize   The amount of elements remaining in the stack. \p newSize
-   * must not be larger than the current size of the stack.
-   */
-  void pop_to(size_type newSize) noexcept {
-    JAM_ASSERT(newSize <= m_currentSize, "Cannot pop() an empty stack");
-    m_currentSize = newSize;
-  }
+    /**
+     * \brief Removes multiple elements from the stack.
+     *
+     * \param newSize   The amount of elements remaining in the stack. \p newSize
+     * must not be larger than the current size of the stack.
+     */
+    void pop_to(size_type newSize) noexcept {
+        JAM_ASSERT(newSize <= m_currentSize, "Cannot pop() an empty stack");
+        m_currentSize = newSize;
+    }
 
-  /**
-   * \brief Adds an element to the top of the stack by copying.
-   *
-   * This method may only be called when the stack is not full.
-   *
-   * \param item    The item to be copied to the stack.
-   */
-  void push_back(const_reference item) noexcept {
-    JAM_ASSERT(m_currentSize != m_stack.size(), "Exceeded stack bound");
-    m_stack[m_currentSize++] = item;
-  }
+    /**
+     * \brief Adds an element to the top of the stack by copying.
+     *
+     * This method may only be called when the stack is not full.
+     *
+     * \param item    The item to be copied to the stack.
+     */
+    void push_back(const_reference item) noexcept {
+        JAM_ASSERT(m_currentSize != m_stack.size(), "Exceeded stack bound");
+        m_stack[m_currentSize++] = item;
+    }
 
-  /**
-   * \brief Returns an iterator pointing to the bottom of the stack.
-   *
-   * \returns An iterator pointing to the least recently added element of the
-   * stack.
-   */
-  iterator begin() noexcept { return m_stack.begin(); }
+    /**
+     * \brief Returns an iterator pointing to the bottom of the stack.
+     *
+     * \returns An iterator pointing to the least recently added element of the
+     * stack.
+     */
+    iterator begin() noexcept { return m_stack.begin(); }
 
-  /**
-   * \brief Returns an iterator pointing to the bottom of the stack. (const
-   * version)
-   *
-   * \returns An iterator pointing to the least recently added element of the
-   * stack.
-   */
-  const_iterator begin() const noexcept { return m_stack.begin(); }
+    /**
+     * \brief Returns an iterator pointing to the bottom of the stack. (const
+     * version)
+     *
+     * \returns An iterator pointing to the least recently added element of the
+     * stack.
+     */
+    const_iterator begin() const noexcept { return m_stack.begin(); }
 
-  /**
-   * \brief Returns an iterator pointing to the top of the stack.
-   *
-   * \returns An iterator pointing the most recently added element of the stack.
-   */
-  iterator end() noexcept { return m_stack.begin() + m_currentSize; }
+    /**
+     * \brief Returns an iterator pointing to the top of the stack.
+     *
+     * \returns An iterator pointing the most recently added element of the stack.
+     */
+    iterator end() noexcept { return m_stack.begin() + m_currentSize; }
 
-  /**
-   * \brief Returns an iterator pointing to the top of the stack. (const
-   * version)
-   *
-   * \returns An iterator pointing the most recently added element of the stack.
-   */
-  const_iterator end() const noexcept {
-    return m_stack.begin() + m_currentSize;
-  }
+    /**
+     * \brief Returns an iterator pointing to the top of the stack. (const
+     * version)
+     *
+     * \returns An iterator pointing the most recently added element of the stack.
+     */
+    const_iterator end() const noexcept { return m_stack.begin() + m_currentSize; }
 
-  /**
-   * \brief Gets the amount of elements currently stored in the stack.
-   *
-   * \returns The amount of elements currently stored in the stack.
-   */
-  size_type size() const noexcept { return m_currentSize; }
+    /**
+     * \brief Gets the amount of elements currently stored in the stack.
+     *
+     * \returns The amount of elements currently stored in the stack.
+     */
+    size_type size() const noexcept { return m_currentSize; }
 
-  /**
-   * \brief Determines whether the stack is empty.
-   *
-   * \returns \p true iff the stack is empty.
-   */
-  bool empty() const noexcept { return m_currentSize == 0; }
+    /**
+     * \brief Determines whether the stack is empty.
+     *
+     * \returns \p true iff the stack is empty.
+     */
+    bool empty() const noexcept { return m_currentSize == 0; }
 
 private:
-  BackingType m_stack;
-  size_type m_currentSize;
+    BackingType m_stack;
+    size_type m_currentSize;
 };
 }

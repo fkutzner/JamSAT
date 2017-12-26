@@ -30,83 +30,83 @@
 
 namespace jamsat {
 TEST(UnitUtils, SimpleMovingAverage_avgWithHorizon0Is0) {
-  SimpleMovingAverage<int, double> underTest{0};
-  EXPECT_EQ(underTest.getAverage(), 0.0f);
-  underTest.add(4);
-  EXPECT_EQ(underTest.getAverage(), 0.0f);
+    SimpleMovingAverage<int, double> underTest{0};
+    EXPECT_EQ(underTest.getAverage(), 0.0f);
+    underTest.add(4);
+    EXPECT_EQ(underTest.getAverage(), 0.0f);
 }
 
 TEST(UnitUtils, SimpleMovingAverage_avgWithHorizon1IsLastValue) {
-  SimpleMovingAverage<int, int> underTest{1};
-  EXPECT_EQ(underTest.getAverage(), 0);
-  underTest.add(4);
-  EXPECT_EQ(underTest.getAverage(), 4);
-  underTest.add(5);
-  EXPECT_EQ(underTest.getAverage(), 5);
+    SimpleMovingAverage<int, int> underTest{1};
+    EXPECT_EQ(underTest.getAverage(), 0);
+    underTest.add(4);
+    EXPECT_EQ(underTest.getAverage(), 4);
+    underTest.add(5);
+    EXPECT_EQ(underTest.getAverage(), 5);
 }
 
 TEST(UnitUtils, SimpleMovingAverage_avgWithHorizon2IsMeanOfLastTwo) {
-  SimpleMovingAverage<int, int> underTest{2};
-  EXPECT_EQ(underTest.getAverage(), 0);
-  underTest.add(4);
-  EXPECT_EQ(underTest.getAverage(), 4);
-  underTest.add(8);
-  EXPECT_EQ(underTest.getAverage(), 6);
-  underTest.add(2);
-  EXPECT_EQ(underTest.getAverage(), 5);
+    SimpleMovingAverage<int, int> underTest{2};
+    EXPECT_EQ(underTest.getAverage(), 0);
+    underTest.add(4);
+    EXPECT_EQ(underTest.getAverage(), 4);
+    underTest.add(8);
+    EXPECT_EQ(underTest.getAverage(), 6);
+    underTest.add(2);
+    EXPECT_EQ(underTest.getAverage(), 5);
 }
 
 TEST(UnitUtils, SimpleMovingAverage_avgWithHorizon5IsMeanOfLastFive) {
-  SimpleMovingAverage<int, int> underTest{5};
-  EXPECT_EQ(underTest.getAverage(), 0);
+    SimpleMovingAverage<int, int> underTest{5};
+    EXPECT_EQ(underTest.getAverage(), 0);
 
-  underTest.add(2);
-  EXPECT_EQ(underTest.getAverage(), 2);
-  underTest.add(4);
-  EXPECT_EQ(underTest.getAverage(), 3);
-  underTest.add(6);
-  EXPECT_EQ(underTest.getAverage(), 4);
-  underTest.add(8);
-  EXPECT_EQ(underTest.getAverage(), 5);
-  underTest.add(10);
-  EXPECT_EQ(underTest.getAverage(), 6);
+    underTest.add(2);
+    EXPECT_EQ(underTest.getAverage(), 2);
+    underTest.add(4);
+    EXPECT_EQ(underTest.getAverage(), 3);
+    underTest.add(6);
+    EXPECT_EQ(underTest.getAverage(), 4);
+    underTest.add(8);
+    EXPECT_EQ(underTest.getAverage(), 5);
+    underTest.add(10);
+    EXPECT_EQ(underTest.getAverage(), 6);
 
-  underTest.add(22);
-  EXPECT_EQ(underTest.getAverage(), 10);
-  underTest.add(54);
-  EXPECT_EQ(underTest.getAverage(), 20);
+    underTest.add(22);
+    EXPECT_EQ(underTest.getAverage(), 10);
+    underTest.add(54);
+    EXPECT_EQ(underTest.getAverage(), 20);
 }
 
 TEST(UnitUtils, SimpleMovingAverage_avgIs0AfterClear) {
-  SimpleMovingAverage<int, int> underTest{2};
-  underTest.add(4);
-  ASSERT_EQ(underTest.getAverage(), 4);
-  underTest.clear();
-  EXPECT_EQ(underTest.getAverage(), 0);
+    SimpleMovingAverage<int, int> underTest{2};
+    underTest.add(4);
+    ASSERT_EQ(underTest.getAverage(), 4);
+    underTest.clear();
+    EXPECT_EQ(underTest.getAverage(), 0);
 }
 
 TEST(UnitUtils, SimpleMovingAverage_bufferIsEmptyAfterClear) {
-  SimpleMovingAverage<int, int> underTest{2};
-  underTest.add(4);
-  underTest.clear();
-  underTest.add(7);
-  EXPECT_EQ(underTest.getAverage(), 7);
-  underTest.add(13);
-  EXPECT_EQ(underTest.getAverage(), 10);
-  underTest.add(17);
-  EXPECT_EQ(underTest.getAverage(), 15);
+    SimpleMovingAverage<int, int> underTest{2};
+    underTest.add(4);
+    underTest.clear();
+    underTest.add(7);
+    EXPECT_EQ(underTest.getAverage(), 7);
+    underTest.add(13);
+    EXPECT_EQ(underTest.getAverage(), 10);
+    underTest.add(17);
+    EXPECT_EQ(underTest.getAverage(), 15);
 }
 
 TEST(UnitUtils, SimpleMovingAverage_indicatesFullnessIffFull) {
-  SimpleMovingAverage<int, int> underTest{2};
-  EXPECT_FALSE(underTest.isFull());
-  underTest.add(0);
-  EXPECT_FALSE(underTest.isFull());
-  underTest.add(1);
-  EXPECT_TRUE(underTest.isFull());
-  underTest.add(2);
-  EXPECT_TRUE(underTest.isFull());
-  underTest.clear();
-  EXPECT_FALSE(underTest.isFull());
+    SimpleMovingAverage<int, int> underTest{2};
+    EXPECT_FALSE(underTest.isFull());
+    underTest.add(0);
+    EXPECT_FALSE(underTest.isFull());
+    underTest.add(1);
+    EXPECT_TRUE(underTest.isFull());
+    underTest.add(2);
+    EXPECT_TRUE(underTest.isFull());
+    underTest.clear();
+    EXPECT_FALSE(underTest.isFull());
 }
 }

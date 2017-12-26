@@ -33,8 +33,8 @@
 
 namespace jamsat {
 void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
-  CNFProblem underTest;
-  fuzzerInput >> underTest;
-  std::cout << underTest << std::endl;
+    CNFProblem underTest;
+    fuzzerInput >> underTest;
+    std::cout << underTest << std::endl;
 }
 }
