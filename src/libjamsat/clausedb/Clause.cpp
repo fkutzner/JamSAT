@@ -84,4 +84,13 @@ std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
 
   return std::unique_ptr<Clause>(result);
 }
+
+std::ostream &operator<<(std::ostream &stream, const Clause &clause) {
+  stream << "( ";
+  for (auto lit : clause) {
+    stream << lit << " ";
+  }
+  stream << ")";
+  return stream;
+}
 }

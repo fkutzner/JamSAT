@@ -172,6 +172,8 @@ private:
  */
 std::unique_ptr<Clause> createHeapClause(Clause::size_type size);
 
+std::ostream &operator<<(std::ostream &stream, const Clause &clause);
+
 template <typename LBDType> auto Clause::getLBD() const noexcept -> LBDType {
   if (m_lbd <= std::numeric_limits<LBDType>::max()) {
     return static_cast<LBDType>(m_lbd);
