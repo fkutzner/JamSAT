@@ -36,6 +36,13 @@
 #include <libjamsat/utils/FaultInjector.h>
 #include <libjamsat/utils/Truth.h>
 
+#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_CA_LOGGING)
+#include <boost/log/trivial.hpp>
+#define JAM_LOG_CA(x, y) BOOST_LOG_TRIVIAL(x) << "[resolu] " << y
+#else
+#define JAM_LOG_CA(x, y)
+#endif
+
 namespace jamsat {
 /**
  * \ingroup JamSAT_Solver
@@ -301,6 +308,9 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
   // on the current decision level is the asserting literal.
   int unresolvedCount = work.size();
 
+  JAM_LOG_CA(info,
+             "  Resolving until UIP. Literals to resolve: " << unresolvedCount);
+
   const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
   auto trailIterators = m_dlProvider.getDecisionLevelAssignments(currentLevel);
   auto span = trailIterators.end() - trailIterators.begin();
@@ -317,6 +327,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
   while (unresolvedCount > 1) {
     const CNFLit resolveAtLit = *cursor;
     const CNFVar resolveAtVar = resolveAtLit.getVariable();
+    JAM_LOG_CA(info, "  Resolving at literal: " << resolveAtLit);
 
     if (m_stamps[resolveAtVar] != 0 &&
         m_dlProvider.getAssignmentDecisionLevel(resolveAtVar) == currentLevel) {
@@ -325,10 +336,17 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
       if (reason != nullptr) {
         unresolvedCount += addResolvent(*reason, resolveAtLit, result, work);
         --unresolvedCount;
+        JAM_LOG_CA(info, "  Resolved with reason clause "
+                             << &reason << ". Remaining literals to resolve: "
+                             << unresolvedCount);
       } else {
         // resolveAtLit is on the current decision level and can't be
         // removed from the result via resolution, so it must serve
         // as the asserting literal.
+        JAM_LOG_CA(
+            info,
+            "  Found the asserting literal. Remaining literals to resolve: "
+                << unresolvedCount);
         result[0] = ~resolveAtLit;
         m_stamps[resolveAtVar] = 0;
 
@@ -339,6 +357,9 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
     }
 
     if (cursor == trailIterators.begin()) {
+      JAM_LOG_CA(info, "  Reached the beginning of the trail with "
+                           << unresolvedCount
+                           << " literals remaining to resolve.");
       break;
     }
     --cursor;
@@ -376,7 +397,7 @@ FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::computeConflictClause(
     ClauseT &conflictingClause) const {
   // This implementation closely follows Donald Knuth's prosaic description
   // of first-UIP clause learning. See TAOCP, chapter 7.2.2.2.
-
+  JAM_LOG_CA(info, "Beginning conflict analysis.");
   JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar),
              "Class inv. A violated");
 
@@ -409,6 +430,7 @@ FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::computeConflictClause(
     JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar),
                "Class invariant A violated");
 
+    JAM_LOG_CA(info, "Finished conflict resolution.");
     return result;
   } catch (std::bad_alloc &oomException) {
     // Restore class invariant A before throwing on the exception.
