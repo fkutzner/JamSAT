@@ -31,6 +31,13 @@
 #include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/Truth.h>
 
+#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_PROPAGATION_LOGGING)
+#include <boost/log/trivial.hpp>
+#define JAM_LOG_PROPAGATION(x, y) BOOST_LOG_TRIVIAL(x) << y
+#else
+#define JAM_LOG_PROPAGATION(x, y)
+#endif
+
 namespace jamsat {
 /**
  * \ingroup JamSAT_Solver
@@ -206,6 +213,7 @@ bool Propagation<AssignmentProvider, ClauseT>::hasForcedAssignment(
 template <class AssignmentProvider, class ClauseT>
 ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(
     CNFLit toPropagate) {
+  JAM_LOG_PROPAGATION(info, "Propagating until fixpoint: " << toPropagate);
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Literal variable out of bounds");
@@ -228,6 +236,9 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(
   auto pqBegin = propagationQueue.begin();
   auto pqEnd = propagationQueue.end() + amountOfNewFacts;
   while (pqBegin != pqEnd) {
+    JAM_LOG_PROPAGATION(info, "Propagating until fixpoint: "
+                                  << amountOfNewFacts
+                                  << " assignments pending");
     size_t localNewFacts = 0;
     conflictingClause = propagate(*pqBegin, localNewFacts);
     pqEnd += localNewFacts;
@@ -237,6 +248,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(
     ++pqBegin;
   }
 
+  JAM_LOG_PROPAGATION(info, "Done propagating to fixpoint.");
   // No more forced assignments can be propagated => fixpoint reached.
   return nullptr;
 }
@@ -245,6 +257,7 @@ template <class AssignmentProvider, class ClauseT>
 ClauseT *
 Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
                                                     size_t &amountOfNewFacts) {
+  JAM_LOG_PROPAGATION(info, "Propagating literal: " << toPropagate);
   JAM_ASSERT(toPropagate.getVariable().getRawValue() <
                  static_cast<CNFVar::RawVariable>(m_reasons.size()),
              "Literal variable out of bounds");
@@ -313,12 +326,14 @@ Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
       if (assignment == TBool::FALSE) {
         // Conflict case: all literals are FALSE. Return the conflicting clause.
         watcherListTraversal.finishedTraversal();
+        JAM_LOG_PROPAGATION(info, "Current assignment is conflicting.");
         return &clause;
       } else {
         // Propagation case: otherWatchedLit is the only remaining unassigned
         // literal
         ++amountOfNewFacts;
         m_reasons[otherWatchedLit.getVariable()] = &clause;
+        JAM_LOG_PROPAGATION(info, "Forced assignment: " << otherWatchedLit);
         m_assignmentProvider.addAssignment(otherWatchedLit);
       }
 
