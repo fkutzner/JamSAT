@@ -51,6 +51,18 @@ TEST(UnitCNFProblem, undefinedCNFVarGreaterThanAllOtherVars) {
     EXPECT_TRUE(max < CNFVar::getUndefinedVariable());
 }
 
+TEST(UnitCNFProblem, nextCNFVarOfSmallVarIsDefined) {
+    CNFVar var{10};
+    CNFVar next = nextCNFVar(var);
+    EXPECT_EQ(next.getRawValue(), CNFVar::RawVariable{11});
+}
+
+TEST(UnitCNFProblem, nextCNFVarOfMaxVarIsUndefined) {
+    CNFVar var{CNFVar::getMaxRawValue()};
+    CNFVar next = nextCNFVar(var);
+    EXPECT_EQ(next, CNFVar::getUndefinedVariable());
+}
+
 TEST(UnitCNFProblem, invertSign) {
     CNFSign positiveSign = CNFSign::POSITIVE;
     EXPECT_EQ(invert(positiveSign), CNFSign::NEGATIVE);

@@ -234,6 +234,15 @@ std::ostream &operator<<(std::ostream &stream, const CNFVar &variable);
 std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
 
 /**
+ * \brief Gets the next-higher CNF variable.
+ *
+ * \param var   A CNFVar whose raw value is not greater than CNFVar::getMaxRawValue().
+ * \returns The next-higher CNFVar wrt. the raw value of \p var. If no such CNFVar exists,
+ *   the undefined variable is returned.
+ */
+CNFVar nextCNFVar(CNFVar var) noexcept;
+
+/**
  * \brief Equality operator for CNFVar.
  *
  * Two variables are considered equal iff their raw values are equal.
@@ -419,6 +428,16 @@ constexpr bool operator<=(const CNFVar &lhs, const CNFVar &rhs) noexcept {
 
 constexpr bool operator>=(const CNFVar &lhs, const CNFVar &rhs) noexcept {
     return lhs.getRawValue() >= rhs.getRawValue();
+}
+
+inline CNFVar nextCNFVar(CNFVar var) noexcept {
+    auto varRaw = var.getRawValue();
+    JAM_ASSERT(varRaw <= CNFVar::getMaxRawValue(), "Illegal argument");
+    if (varRaw != CNFVar::getMaxRawValue()) {
+        return CNFVar{varRaw + 1};
+    } else {
+        return CNFVar::getUndefinedVariable();
+    }
 }
 
 constexpr CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept

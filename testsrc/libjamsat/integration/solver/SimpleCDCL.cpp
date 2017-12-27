@@ -133,8 +133,7 @@ void SimpleCDCL::backtrackToLevel(TrailType::DecisionLevel level) {
 }
 
 TBool SimpleCDCL::solve() {
-    // TODO: easy variable increasing (or make range)
-    for (CNFVar v = CNFVar{0}; v <= m_maxVar; v = CNFVar{v.getRawValue() + 1}) {
+    for (CNFVar v = CNFVar{0}; v <= m_maxVar; v = nextCNFVar(v)) {
         m_branchingHeuristic.setEligibleForDecisions(v, true);
     }
 
