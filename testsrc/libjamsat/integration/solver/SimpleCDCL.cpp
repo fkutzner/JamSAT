@@ -53,7 +53,9 @@ private:
     using ClauseDBType = HeapClauseDB<Clause>;
     using BranchingHeuristicType = VSIDSBranchingHeuristic<TrailType>;
 
-    bool propagateUnitClauses();
+    enum class UnitPropagationResult { CONFLICTING, CONSISTENT };
+    UnitPropagationResult propagateUnitClauses();
+
     void backtrackToLevel(TrailType::DecisionLevel level);
 
     CNFVar m_maxVar;
@@ -91,7 +93,7 @@ void SimpleCDCL::addClause(const CNFClause &clause) {
 }
 
 // TODO: Sign <-> TBool
-bool SimpleCDCL::propagateUnitClauses() {
+SimpleCDCL::UnitPropagationResult SimpleCDCL::propagateUnitClauses() {
     for (auto unitClauseLit : m_unitClauses) {
         std::cout << "Tack" << std::endl;
         if (m_trail.getAssignment(unitClauseLit) != TBool::INDETERMINATE) {
@@ -100,7 +102,7 @@ bool SimpleCDCL::propagateUnitClauses() {
             if (assignment == litIsPositive) {
                 continue;
             } else {
-                return true;
+                return UnitPropagationResult::CONFLICTING;
             }
         }
 
@@ -111,10 +113,10 @@ bool SimpleCDCL::propagateUnitClauses() {
                   << m_trail.getNumberOfAssignments() << std::endl;
 
         if (conflictingClause != nullptr) {
-            return true;
+            return UnitPropagationResult::CONFLICTING;
         }
     }
-    return false;
+    return UnitPropagationResult::CONSISTENT;
 }
 
 void SimpleCDCL::backtrackToLevel(TrailType::DecisionLevel level) {
@@ -136,14 +138,14 @@ TBool SimpleCDCL::solve() {
         m_branchingHeuristic.setEligibleForDecisions(v, true);
     }
 
-    while (m_trail.getNumberOfAssignments() <= (m_maxVar.getRawValue())) {
-        if (propagateUnitClauses()) {
+    while (!m_trail.isVariableAssignmentComplete()) {
+        if (propagateUnitClauses() != UnitPropagationResult::CONSISTENT) {
+            backtrackToLevel(0);
             return toTBool(false);
         }
         m_trail.newDecisionLevel();
 
-        // TODO: isAllAssigned in trail
-        while (m_trail.getNumberOfAssignments() <= (m_maxVar.getRawValue())) {
+        while (!m_trail.isVariableAssignmentComplete()) {
             auto branchingLit = m_branchingHeuristic.pickBranchLiteral();
             std::cout << "Picking a branching variable: " << branchingLit << std::endl;
 
@@ -159,11 +161,12 @@ TBool SimpleCDCL::solve() {
                 m_branchingHeuristic.beginHandlingConflict();
                 auto learntClause = m_conflictAnalyzer.computeConflictClause(*conflictingClause);
                 if (learntClause.size() == 0) {
-
+                    backtrackToLevel(0);
                     return toTBool(false);
                 }
 
-                if (learntClause.size() == 1) {
+                if (learntClause.size() == 1 ||
+                    m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable()) == 0) {
                     std::cout << "Learnt unit clause: " << learntClause[0] << std::endl;
                     m_unitClauses.push_back(learntClause[0]);
                     backtrackToLevel(0);
@@ -172,15 +175,13 @@ TBool SimpleCDCL::solve() {
                     doRestart = true;
                     break;
                 } else {
+                    // simplify learnt clause...
                     auto &newClause = m_clauseDB.insertClause(learntClause);
                     std::cout << "Learnt clause: " << newClause << std::endl;
                     auto targetLevel =
                         m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable());
                     std::cout << "Backtracking to level:" << targetLevel << std::endl;
                     backtrackToLevel(targetLevel);
-                    if (targetLevel == 0) {
-                        doRestart = true;
-                    }
                     conflictingClause = m_propagation.registerClause(newClause);
                     m_branchingHeuristic.endHandlingConflict();
                 }
@@ -192,6 +193,7 @@ TBool SimpleCDCL::solve() {
     }
     std::cout << m_trail.getNumberOfAssignments() << std::endl;
     std::cout << m_maxVar.getRawValue() << std::endl;
+    backtrackToLevel(0);
     return toTBool(true);
 }
 }
