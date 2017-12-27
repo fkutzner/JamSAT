@@ -76,6 +76,10 @@ Trail::size_type Trail::getNumberOfAssignments() const noexcept {
     return m_trail.size();
 }
 
+bool Trail::isVariableAssignmentComplete() const noexcept {
+    return m_trail.size() == m_assignments.size();
+}
+
 boost::iterator_range<Trail::const_iterator>
 Trail::getDecisionLevelAssignments(DecisionLevel level) const noexcept {
     if (level >= m_trailLimits.size()) {

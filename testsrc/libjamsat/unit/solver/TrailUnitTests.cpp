@@ -255,4 +255,40 @@ TEST(UnitSolver, variablePhaseIsSavedInTrail) {
     EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
     EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBool::TRUE);
 }
+
+TEST(UnitSolver, sizeOneTrailWithoutAssignmentHasNoCompleteAssignment) {
+    Trail underTest{CNFVar{0}};
+    EXPECT_FALSE(underTest.isVariableAssignmentComplete());
+}
+
+TEST(UnitSolver, sizeOneTrailWithSingleAssignmentHasCompleteAssignment) {
+    Trail underTest{CNFVar{0}};
+    underTest.addAssignment(CNFLit{CNFVar{0}, CNFSign::POSITIVE});
+    EXPECT_TRUE(underTest.isVariableAssignmentComplete());
+}
+
+TEST(UnitSolver, sizeThreeTrailWithThreeAssignmentsHasCompleteAssignment) {
+    Trail underTest{CNFVar{2}};
+    underTest.addAssignment(CNFLit{CNFVar{0}, CNFSign::POSITIVE});
+    EXPECT_FALSE(underTest.isVariableAssignmentComplete());
+    underTest.addAssignment(CNFLit{CNFVar{2}, CNFSign::POSITIVE});
+    EXPECT_FALSE(underTest.isVariableAssignmentComplete());
+    underTest.addAssignment(CNFLit{CNFVar{1}, CNFSign::POSITIVE});
+    EXPECT_TRUE(underTest.isVariableAssignmentComplete());
+}
+
+TEST(UnitSolver, trailAssignmentIsIncompleteAfterBacktrack) {
+    Trail underTest{CNFVar{5}};
+    underTest.addAssignment(CNFLit{CNFVar{0}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{2}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{1}, CNFSign::POSITIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{3}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
+    ASSERT_TRUE(underTest.isVariableAssignmentComplete());
+    // Removes all assignments on current decision level:
+    underTest.shrinkToDecisionLevel(underTest.getCurrentDecisionLevel());
+    EXPECT_FALSE(underTest.isVariableAssignmentComplete());
+}
 }

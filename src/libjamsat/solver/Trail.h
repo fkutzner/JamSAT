@@ -105,6 +105,13 @@ public:
     size_type getNumberOfAssignments() const noexcept;
 
     /**
+     * \brief Determines whether all variables have been assigned.
+     *
+     * \returns true iff all variables have an assignment different from INDETERMINATE.
+     */
+    bool isVariableAssignmentComplete() const noexcept;
+
+    /**
      * \brief Gets the assignment for the given variable.
      *
      * \param variable  The target variable. Must not be greater than \p maxVar
