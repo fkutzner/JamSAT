@@ -110,6 +110,14 @@ public:
      */
     StampingContext createContext() noexcept;
 
+    /**
+     * \brief Increases the maximum internal key which can be stored in the stamp map.
+     *
+     * \param maxKey    The new maximum internal key as described above. Must at least be as large
+     *                  as the current maximum internal key.
+     */
+    void increaseSizeTo(size_type maxKey);
+
 protected:
     /**
      * \brief Constructs a StampMapBase instance.
@@ -222,6 +230,12 @@ typename StampMapBase<T>::StampingContext StampMapBase<T>::createContext() noexc
     JAM_ASSERT(!m_contextActive, "StampMap does not support concurrent contexts");
     m_contextActive = true;
     return StampingContext(*this, StampMapBase<T>::Stamp{m_currentStamp});
+}
+
+template <typename T>
+void StampMapBase<T>::increaseSizeTo(typename StampMapBase<T>::size_type maxKey) {
+    JAM_ASSERT((maxKey + 1) >= m_stamps.size(), "The size of StampMaps can only be increased");
+    m_stamps.resize(maxKey + 1, std::numeric_limits<T>::min());
 }
 
 template <typename T>

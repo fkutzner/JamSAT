@@ -114,4 +114,16 @@ TEST(UnitUtils, StampMap_stampMapIsClearedOnInnerStampWraparound) {
         EXPECT_FALSE(underTest.isStamped(testValue1, stamp));
     }
 }
+
+TEST(UnitUtils, StampMap_stampMapSizeIsIncreasable) {
+    StampMap<uint8_t, IntStampKey> underTest{IntStampKey::getIndex(1)};
+    auto stampingContext = underTest.createContext();
+    underTest.setStamped(1, stampingContext.getStamp(), true);
+    EXPECT_TRUE(underTest.isStamped(1, stampingContext.getStamp()));
+    underTest.increaseSizeTo(IntStampKey::getIndex(10));
+    EXPECT_FALSE(underTest.isStamped(10, stampingContext.getStamp()));
+    underTest.setStamped(10, stampingContext.getStamp(), true);
+    EXPECT_TRUE(underTest.isStamped(1, stampingContext.getStamp()));
+    EXPECT_TRUE(underTest.isStamped(10, stampingContext.getStamp()));
+}
 }
