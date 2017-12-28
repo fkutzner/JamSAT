@@ -26,8 +26,10 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <stdexcept>
 #include <unordered_set>
+#include <vector>
 
 #include "TestAssignmentProvider.h"
 #include "TestReasonProvider.h"
@@ -118,6 +120,49 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
     EXPECT_TRUE(equalLits(result, expectedClause));
 
     underTest.test_assertClassInvariantsSatisfied();
+}
+
+TEST(UnitSolver, firstUIPLearningCallsSeenVariableCallback) {
+    TestAssignmentProvider assignments;
+    DummyReasonProvider reasons;
+
+    TrivialClause dummyReasonClause{CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+                                    CNFLit{CNFVar{1}, CNFSign::NEGATIVE}};
+    TrivialClause conflictingClause{
+        CNFLit{CNFVar{3}, CNFSign::POSITIVE}, CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{6}, CNFSign::POSITIVE}, CNFLit{CNFVar{9}, CNFSign::NEGATIVE}};
+
+    assignments.addAssignment(~conflictingClause[1]);
+    assignments.addAssignment(~conflictingClause[3]);
+    assignments.addAssignment(~dummyReasonClause[1]);
+    assignments.addAssignment(~conflictingClause[0]);
+    assignments.addAssignment(~conflictingClause[2]);
+
+    assignments.setAssignmentDecisionLevel(CNFVar{4}, 2);
+    assignments.setAssignmentDecisionLevel(CNFVar{1}, 3);
+    assignments.setAssignmentDecisionLevel(CNFVar{9}, 3);
+
+    assignments.setAssignmentDecisionLevel(CNFVar{3}, 4);
+    assignments.setAssignmentDecisionLevel(CNFVar{6}, 4);
+
+    reasons.setAssignmentReason(CNFVar{3}, dummyReasonClause);
+
+    assignments.setCurrentDecisionLevel(4);
+
+    CNFVar maxVar{9};
+    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
+        maxVar, assignments, reasons);
+    std::vector<CNFVar> seenVars;
+    underTest.setOnSeenVariableCallback(
+        [&seenVars](CNFVar seenVar) { seenVars.push_back(seenVar); });
+    auto result = underTest.computeConflictClause(conflictingClause);
+
+    EXPECT_EQ(seenVars.size(), 5ull);
+    EXPECT_NE(std::find(seenVars.begin(), seenVars.end(), CNFVar{1}), seenVars.end());
+    EXPECT_NE(std::find(seenVars.begin(), seenVars.end(), CNFVar{3}), seenVars.end());
+    EXPECT_NE(std::find(seenVars.begin(), seenVars.end(), CNFVar{4}), seenVars.end());
+    EXPECT_NE(std::find(seenVars.begin(), seenVars.end(), CNFVar{6}), seenVars.end());
+    EXPECT_NE(std::find(seenVars.begin(), seenVars.end(), CNFVar{9}), seenVars.end());
 }
 
 TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {

@@ -27,6 +27,7 @@
 #pragma once
 
 #include <algorithm>
+#include <functional>
 #include <stdexcept>
 #include <vector>
 
@@ -93,6 +94,19 @@ public:
      * result.
      */
     std::vector<CNFLit> computeConflictClause(ClauseT &conflictingClause) const;
+
+
+    /**
+     * \brief Set the callback for variables seen during conflict resolution.
+     *
+     * The provided callback is called for all variables in the conflicting clause
+     * as well as for all variables in all clauses with which the conflicting clause
+     * is resolved. Per call to computeConflictClause(), the callback is invoked at
+     * most once per variable.
+     *
+     * \param callback  The callback function to be installed (see above).
+     */
+    void setOnSeenVariableCallback(std::function<void(CNFVar)> callback) noexcept;
 
     /**
      * \brief Asserts that the class invariants are satisfied.
@@ -196,6 +210,9 @@ private:
     // by class invariant A.
     mutable BoundedMap<CNFVar, char> m_stamps;
 
+    // Callback called once for every literal seen during conflict analysis
+    std::function<void(CNFVar)> m_onSeenVariableCallback;
+
     // Class invariant A: m_stamps[x] = 0 for all keys x
 };
 
@@ -275,6 +292,11 @@ int FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::addResolvent(
     for (auto reasonLit : reason) {
         if (reasonLit != resolveAtLit && m_stamps[reasonLit.getVariable()] == 0) {
             m_stamps[reasonLit.getVariable()] = 1;
+
+            if (m_onSeenVariableCallback) {
+                m_onSeenVariableCallback(reasonLit.getVariable());
+            }
+
             if (m_dlProvider.getAssignmentDecisionLevel(reasonLit.getVariable()) == currentLevel) {
                 ++unresolvedCount;
                 work.push_back(reasonLit);
@@ -426,6 +448,12 @@ std::vector<CNFLit> FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::compu
         }
         throw oomException;
     }
+}
+
+template <class DLProvider, class ReasonProvider, class ClauseT>
+void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::setOnSeenVariableCallback(
+    std::function<void(CNFVar)> callback) noexcept {
+    m_onSeenVariableCallback = callback;
 }
 
 template <class DLProvider, class ReasonProvider, class ClauseT>
