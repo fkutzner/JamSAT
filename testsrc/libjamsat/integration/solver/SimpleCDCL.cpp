@@ -36,7 +36,17 @@
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/ControlFlow.h>
+#include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/Truth.h>
+
+#include <toolbox/cnfgenerators/GateStructure.h>
+
+#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_CDCLITEST_LOGGING)
+#include <boost/log/trivial.hpp>
+#define JAM_LOG_CDCLITEST(x, y) BOOST_LOG_TRIVIAL(x) << "[cdclitest] " << y
+#else
+#define JAM_LOG_CDCLITEST(x, y)
+#endif
 
 namespace jamsat {
 namespace {
@@ -81,21 +91,17 @@ void SimpleCDCL::addClause(const CNFClause &clause) {
     JAM_ASSERT(clause.size() > 0, "Can't add empty clauses for solving");
     if (clause.size() > 1) {
         auto &newClause = m_clauseDB.insertClause(clause);
-        std::cout << "Added clause " << &newClause << ": ";
-        for (auto lit : newClause) {
-            std::cout << " " << lit;
-        }
-        std::cout << std::endl;
+        JAM_LOG_CDCLITEST(info, "Added clause " << &clause << " " << clause);
         m_propagation.registerClause(newClause);
     } else if (clause.size() == 1) {
         m_unitClauses.push_back(clause[0]);
+        JAM_LOG_CDCLITEST(info, "Added unit clause " << clause[0]);
     }
 }
 
-// TODO: Sign <-> TBool
 SimpleCDCL::UnitPropagationResult SimpleCDCL::propagateUnitClauses() {
+    JAM_LOG_CDCLITEST(info, "Propagating unit clauses...");
     for (auto unitClauseLit : m_unitClauses) {
-        std::cout << "Tack" << std::endl;
         if (m_trail.getAssignment(unitClauseLit) != TBool::INDETERMINATE) {
             auto assignment = m_trail.getAssignment(unitClauseLit);
             auto litIsPositive = toTBool(unitClauseLit.getSign() == CNFSign::POSITIVE);
@@ -109,10 +115,8 @@ SimpleCDCL::UnitPropagationResult SimpleCDCL::propagateUnitClauses() {
         m_branchingHeuristic.setEligibleForDecisions(unitClauseLit.getVariable(), false);
         m_trail.addAssignment(unitClauseLit);
         auto conflictingClause = m_propagation.propagateUntilFixpoint(unitClauseLit);
-        std::cout << "No. of assignments after unit propagate of " << unitClauseLit << ": "
-                  << m_trail.getNumberOfAssignments() << std::endl;
-
         if (conflictingClause != nullptr) {
+            JAM_LOG_CDCLITEST(info, "Detected a conflict within the unit clauses.");
             return UnitPropagationResult::CONFLICTING;
         }
     }
@@ -120,9 +124,10 @@ SimpleCDCL::UnitPropagationResult SimpleCDCL::propagateUnitClauses() {
 }
 
 void SimpleCDCL::backtrackToLevel(TrailType::DecisionLevel level) {
+    JAM_LOG_CDCLITEST(info, "Backtracking to level " << level);
     for (auto currentDL = m_trail.getCurrentDecisionLevel(); currentDL >= level; --currentDL) {
         for (auto lit : m_trail.getDecisionLevelAssignments(currentDL)) {
-            std::cout << "Undoing assignment: " << lit << std::endl;
+            JAM_LOG_CDCLITEST(info, "  Undoing assignment: " << lit);
             m_branchingHeuristic.reset(lit.getVariable());
         }
         if (currentDL == 0) {
@@ -137,16 +142,18 @@ TBool SimpleCDCL::solve() {
         m_branchingHeuristic.setEligibleForDecisions(v, true);
     }
 
+    // Leave the solver with an empty trail:
+    OnExitScope backtrackToLevel0{[this]() { this->backtrackToLevel(0); }};
+
     while (!m_trail.isVariableAssignmentComplete()) {
         if (propagateUnitClauses() != UnitPropagationResult::CONSISTENT) {
-            backtrackToLevel(0);
             return toTBool(false);
         }
-        m_trail.newDecisionLevel();
 
         while (!m_trail.isVariableAssignmentComplete()) {
+            m_trail.newDecisionLevel();
             auto branchingLit = m_branchingHeuristic.pickBranchLiteral();
-            std::cout << "Picking a branching variable: " << branchingLit << std::endl;
+            JAM_LOG_CDCLITEST(info, "Decided branching variable: " << branchingLit);
 
             JAM_ASSERT(branchingLit != CNFLit::getUndefinedLiteral(),
                        "branching should always return a defined literal");
@@ -155,44 +162,38 @@ TBool SimpleCDCL::solve() {
             auto conflictingClause = m_propagation.propagateUntilFixpoint(branchingLit);
 
             bool doRestart = false;
-            while (conflictingClause != nullptr) {
-                std::cout << "Handling a conflict..." << std::endl;
+            while (conflictingClause != nullptr && !doRestart) {
+                JAM_LOG_CDCLITEST(info, "Handling a conflict...");
                 m_branchingHeuristic.beginHandlingConflict();
+                OnExitScope notifyEndOfConflictHandling{
+                    [this]() { this->m_branchingHeuristic.endHandlingConflict(); }};
+
                 auto learntClause = m_conflictAnalyzer.computeConflictClause(*conflictingClause);
                 if (learntClause.size() == 0) {
-                    backtrackToLevel(0);
                     return toTBool(false);
                 }
 
                 if (learntClause.size() == 1 ||
                     m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable()) == 0) {
-                    std::cout << "Learnt unit clause: " << learntClause[0] << std::endl;
+                    JAM_LOG_CDCLITEST(info, "Learnt a unit clause: " << learntClause[0]);
                     m_unitClauses.push_back(learntClause[0]);
-                    backtrackToLevel(0);
-                    m_branchingHeuristic.endHandlingConflict();
-                    // restart:
                     doRestart = true;
-                    break;
                 } else {
-                    // simplify learnt clause...
                     auto &newClause = m_clauseDB.insertClause(learntClause);
-                    std::cout << "Learnt clause: " << newClause << std::endl;
+                    JAM_LOG_CDCLITEST(info, "Learnt a clause: " << newClause);
                     auto targetLevel =
                         m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable());
-                    std::cout << "Backtracking to level:" << targetLevel << std::endl;
                     backtrackToLevel(targetLevel);
                     conflictingClause = m_propagation.registerClause(newClause);
-                    m_branchingHeuristic.endHandlingConflict();
                 }
             }
             if (doRestart) {
+                JAM_LOG_CDCLITEST(info, "Performing a restart.");
+                backtrackToLevel(0);
                 break;
             }
         }
     }
-    std::cout << m_trail.getNumberOfAssignments() << std::endl;
-    std::cout << m_maxVar.getRawValue() << std::endl;
-    backtrackToLevel(0);
     return toTBool(true);
 }
 }
@@ -237,6 +238,30 @@ TEST(IntegrationSolver, SimpleCDCL_smallUnsatisfiableProblem) {
     conduit >> testData;
 
     ASSERT_FALSE(conduit.fail());
+
+    SimpleCDCL underTest{testData.getMaxVar()};
+    for (auto &clause : testData.getClauses()) {
+        underTest.addClause(clause);
+    }
+
+    EXPECT_EQ(underTest.solve(), TBool::FALSE);
+}
+
+TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
+    CNFProblem testData;
+    std::vector<CNFLit> lines;
+    for (CNFVar i{0}; i < CNFVar{16}; i = nextCNFVar(i)) {
+        lines.push_back(CNFLit{i, CNFSign::POSITIVE});
+    }
+
+    insertXOR({lines[0], lines[1], lines[2], lines[9]}, lines[15], testData);
+    insertXOR({lines[0], lines[1], lines[2], lines[9]}, ~lines[15], testData);
+    insertXOR({lines[3], lines[4]}, lines[0], testData);
+    insertXOR({lines[5], lines[6]}, lines[1], testData);
+    insertXOR({lines[7], lines[8]}, lines[2], testData);
+
+    CNFClause unit{CNFLit{CNFVar{15}, CNFSign::POSITIVE}};
+    testData.addClause(std::move(unit));
 
     SimpleCDCL underTest{testData.getMaxVar()};
     for (auto &clause : testData.getClauses()) {

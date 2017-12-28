@@ -107,6 +107,7 @@ if(JAMSAT_ENABLE_LOGGING)
   add_definitions(-DJAM_ENABLE_LOGGING)
   add_definitions(-DJAM_ENABLE_PROPAGATION_LOGGING)
   add_definitions(-DJAM_ENABLE_CA_LOGGING)
+  add_definitions(-DJAM_ENABLE_CDCLITEST_LOGGING)
 endif()
 
 ### Add JamSAT sources

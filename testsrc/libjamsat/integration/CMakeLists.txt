@@ -19,6 +19,9 @@ add_subdirectory(solver)
 
 add_executable(libjamsat_integration_tests
   $<TARGET_OBJECTS:solver_integration_tests>
+
+  # From toolbox/cnfgenerators:
+  $<TARGET_OBJECTS:cnfgenerators>
 )
 
 target_link_libraries(libjamsat_integration_tests jamcore gtest gtest_main)
