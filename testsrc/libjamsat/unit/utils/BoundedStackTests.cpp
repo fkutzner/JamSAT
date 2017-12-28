@@ -111,4 +111,26 @@ TEST(UnitUtils, boundedStackIsConstIterableInInsertionOrder) {
     EXPECT_EQ(*(begin + 1), 20);
     EXPECT_EQ(*(begin + 2), 30);
 }
+
+TEST(UnitUtils, boundedStackIsConstructibleWithMaxSizeZero) {
+    BoundedStack<int> underTest{0};
+    EXPECT_TRUE(underTest.empty());
+    EXPECT_EQ(underTest.size(), 0ull);
+}
+
+TEST(UnitUtils, boundedStackSizeIsIncreasable) {
+    BoundedStack<int> underTest{1};
+    underTest.push_back(10);
+    underTest.increaseMaxSizeBy(2);
+    underTest.push_back(11);
+    underTest.push_back(12);
+
+    EXPECT_EQ(underTest.back(), 12);
+    underTest.pop();
+    EXPECT_EQ(underTest.back(), 11);
+    underTest.pop();
+    EXPECT_EQ(underTest.back(), 10);
+    underTest.pop();
+    EXPECT_TRUE(underTest.empty());
+}
 }

@@ -36,10 +36,10 @@ namespace jamsat {
  *
  * \class jamsat::BoundedStack
  *
- * \brief A stack whose maximum size is determined at construction time.
+ * \brief A stack with O(1) (non-amortized) push and pop operations.
  *
  * This efficient stack implementation provides iterators whose validity is not
- * affected by push operations (and neither by pop operation, as long as the
+ * affected by push operations (and neither by pop operations, as long as the
  * pointed-to element has not been removed from the stack).
  *
  * \tparam T        The element type.
@@ -129,6 +129,9 @@ public:
     /**
      * \brief Returns an iterator pointing to the bottom of the stack.
      *
+     * The iterator remains valid until the stack is destroyed or its maximum
+     * size is changed.
+     *
      * \returns An iterator pointing to the least recently added element of the
      * stack.
      */
@@ -138,6 +141,9 @@ public:
      * \brief Returns an iterator pointing to the bottom of the stack. (const
      * version)
      *
+     * The iterator remains valid until the stack is destroyed or its maximum
+     * size is changed.
+     *
      * \returns An iterator pointing to the least recently added element of the
      * stack.
      */
@@ -146,6 +152,9 @@ public:
     /**
      * \brief Returns an iterator pointing to the top of the stack.
      *
+     * The iterator remains valid until the stack is destroyed, its maximum
+     * size is changed or the pop() method is called.
+     *
      * \returns An iterator pointing the most recently added element of the stack.
      */
     iterator end() noexcept { return m_stack.begin() + m_currentSize; }
@@ -153,6 +162,9 @@ public:
     /**
      * \brief Returns an iterator pointing to the top of the stack. (const
      * version)
+     *
+     * The iterator remains valid until the stack is destroyed, its maximum
+     * size is changed or the pop() method is called.
      *
      * \returns An iterator pointing the most recently added element of the stack.
      */
@@ -171,6 +183,17 @@ public:
      * \returns \p true iff the stack is empty.
      */
     bool empty() const noexcept { return m_currentSize == 0; }
+
+    /**
+     * \brief Increases the stack's maximum size.
+     *
+     * \param amount    The size by which the maximum size should be raised.
+     */
+    void increaseMaxSizeBy(size_type amount) {
+        if (amount > 0) {
+            m_stack.resize(m_stack.size() + amount);
+        }
+    }
 
 private:
     BackingType m_stack;
