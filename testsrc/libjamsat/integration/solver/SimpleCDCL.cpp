@@ -54,7 +54,7 @@ class SimpleCDCL {
 public:
     SimpleCDCL(CNFVar maxVar);
     void addClause(const CNFClause &clause);
-    TBool solve();
+    TBool isProblemSatisfiable();
 
 private:
     using TrailType = Trail;
@@ -137,7 +137,7 @@ void SimpleCDCL::backtrackToLevel(TrailType::DecisionLevel level) {
     m_trail.shrinkToDecisionLevel(level);
 }
 
-TBool SimpleCDCL::solve() {
+TBool SimpleCDCL::isProblemSatisfiable() {
     for (CNFVar v = CNFVar{0}; v <= m_maxVar; v = nextCNFVar(v)) {
         m_branchingHeuristic.setEligibleForDecisions(v, true);
     }
@@ -146,10 +146,13 @@ TBool SimpleCDCL::solve() {
     OnExitScope backtrackToLevel0{[this]() { this->backtrackToLevel(0); }};
 
     while (!m_trail.isVariableAssignmentComplete()) {
+        JAM_LOG_CDCLITEST(info, "Performing a restart.");
+        backtrackToLevel(0);
         if (propagateUnitClauses() != UnitPropagationResult::CONSISTENT) {
             return toTBool(false);
         }
 
+        // Breaking out of this inner loop causes a restart.
         while (!m_trail.isVariableAssignmentComplete()) {
             m_trail.newDecisionLevel();
             auto branchingLit = m_branchingHeuristic.pickBranchLiteral();
@@ -161,23 +164,23 @@ TBool SimpleCDCL::solve() {
 
             auto conflictingClause = m_propagation.propagateUntilFixpoint(branchingLit);
 
-            bool doRestart = false;
-            while (conflictingClause != nullptr && !doRestart) {
+            if (conflictingClause != nullptr) {
                 JAM_LOG_CDCLITEST(info, "Handling a conflict...");
                 m_branchingHeuristic.beginHandlingConflict();
                 OnExitScope notifyEndOfConflictHandling{
                     [this]() { this->m_branchingHeuristic.endHandlingConflict(); }};
 
                 auto learntClause = m_conflictAnalyzer.computeConflictClause(*conflictingClause);
-                if (learntClause.size() == 0) {
-                    return toTBool(false);
-                }
 
+                // Learning clauses until the solver learns a contradiction on the unit clause
+                // level (or finds a satisfying variable assignment)
                 if (learntClause.size() == 1 ||
                     m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable()) == 0) {
                     JAM_LOG_CDCLITEST(info, "Learnt a unit clause: " << learntClause[0]);
                     m_unitClauses.push_back(learntClause[0]);
-                    doRestart = true;
+                    // Restarting, since unit clauses need to be put on the first decision
+                    // level.
+                    break;
                 } else {
                     auto &newClause = m_clauseDB.insertClause(learntClause);
                     JAM_LOG_CDCLITEST(info, "Learnt a clause: " << newClause);
@@ -185,15 +188,12 @@ TBool SimpleCDCL::solve() {
                         m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable());
                     backtrackToLevel(targetLevel);
                     conflictingClause = m_propagation.registerClause(newClause);
+                    JAM_ASSERT(conflictingClause == nullptr, "Illegal state: double conflict");
                 }
-            }
-            if (doRestart) {
-                JAM_LOG_CDCLITEST(info, "Performing a restart.");
-                backtrackToLevel(0);
-                break;
             }
         }
     }
+    // All variables assigned without conflict => the CNFProblem is satisfiable.
     return toTBool(true);
 }
 }
@@ -218,7 +218,7 @@ TEST(IntegrationSolver, SimpleCDCL_unsatOnConflictInUnitPropagation) {
         underTest.addClause(clause);
     }
 
-    EXPECT_EQ(underTest.solve(), TBool::FALSE);
+    EXPECT_EQ(underTest.isProblemSatisfiable(), TBool::FALSE);
 }
 
 TEST(IntegrationSolver, SimpleCDCL_smallUnsatisfiableProblem) {
@@ -244,7 +244,7 @@ TEST(IntegrationSolver, SimpleCDCL_smallUnsatisfiableProblem) {
         underTest.addClause(clause);
     }
 
-    EXPECT_EQ(underTest.solve(), TBool::FALSE);
+    EXPECT_EQ(underTest.isProblemSatisfiable(), TBool::FALSE);
 }
 
 TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
@@ -268,6 +268,6 @@ TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
         underTest.addClause(clause);
     }
 
-    EXPECT_EQ(underTest.solve(), TBool::FALSE);
+    EXPECT_EQ(underTest.isProblemSatisfiable(), TBool::FALSE);
 }
 }
