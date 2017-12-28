@@ -57,4 +57,20 @@ TEST(UnitUtils, boundedMapReturnsDefaultValueForUnusedKeys) {
     EXPECT_EQ(underTest[1], 0.0f);
     EXPECT_EQ(underTest[2], 0.0f);
 }
+
+TEST(UnitUtils, boundedMapSizeIsIncreasable) {
+    BoundedMap<int, double, IntIndex> underTest{10};
+    underTest[10] = 1.0f;
+    underTest.increaseSizeTo(13);
+    underTest[13] = 2.0f;
+    EXPECT_EQ(underTest[10], 1.0f);
+    EXPECT_EQ(underTest[13], 2.0f);
+}
+
+TEST(UnitUtils, boundedMapInitializesStorageWithDefaultValues) {
+    BoundedMap<int, double, IntIndex> underTest{5, 2.0f};
+    EXPECT_EQ(underTest[4], 2.0f);
+    underTest.increaseSizeTo(20);
+    EXPECT_EQ(underTest[19], 2.0f);
+}
 }

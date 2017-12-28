@@ -63,7 +63,7 @@ public:
      * \param maxKey    The key with the maximum index storable in the map
      * instance. The instance will have a constant size in O(\param maxKey).
      */
-    explicit BoundedMap(K maxKey) : m_values(KIndex::getIndex(maxKey) + 1) {}
+    explicit BoundedMap(K maxKey) : m_values(KIndex::getIndex(maxKey) + 1), m_defaultValue(V{}) {}
 
     /**
      * \brief Constructs an ArrayBackedMap with the given default value and
@@ -76,7 +76,8 @@ public:
      * instance.
      * \param defaultValue  The default value of this map.
      */
-    BoundedMap(K maxKey, V defaultValue) : m_values(KIndex::getIndex(maxKey) + 1, defaultValue) {}
+    BoundedMap(K maxKey, V defaultValue)
+      : m_values(KIndex::getIndex(maxKey) + 1, defaultValue), m_defaultValue(defaultValue) {}
 
     /**
      * \brief Gets a reference to the specified element.
@@ -103,7 +104,21 @@ public:
      */
     size_type size() const noexcept { return m_values.size(); }
 
+    /**
+     * \brief Increases the map's size.
+     *
+     * \param maxKey    the new maximum key which can be mapped to a value. \p maxKey must not
+     *                  be smaller than the previous maximum key.
+     */
+    void increaseSizeTo(K maxKey) {
+        auto newMaxKey = KIndex::getIndex(maxKey) + 1;
+        if (newMaxKey >= m_values.size()) {
+            m_values.resize(newMaxKey, m_defaultValue);
+        }
+    }
+
 private:
     BackingType m_values;
+    V m_defaultValue;
 };
 }
