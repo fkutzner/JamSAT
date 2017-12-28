@@ -142,6 +142,10 @@ TBool SimpleCDCL::isProblemSatisfiable() {
         m_branchingHeuristic.setEligibleForDecisions(v, true);
     }
 
+    // Set up VSIDS-style variable activity bumping:
+    m_conflictAnalyzer.setOnSeenVariableCallback(
+        [this](CNFVar seenVar) { m_branchingHeuristic.seenInConflict(seenVar); });
+
     // Leave the solver with an empty trail:
     OnExitScope backtrackToLevel0{[this]() { this->backtrackToLevel(0); }};
 
