@@ -243,6 +243,15 @@ std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
 CNFVar nextCNFVar(CNFVar var) noexcept;
 
 /**
+ * \brief Returns true iff the given variable is regular.
+ *
+ * A variable is regular if its raw value is not greater than the maximimum raw value for CNFVar
+ * objects. "Special" variables such as the undefined variable are not regular.
+ */
+constexpr bool isRegular(CNFVar variable) noexcept;
+
+
+/**
  * \brief Equality operator for CNFVar.
  *
  * Two variables are considered equal iff their raw values are equal.
@@ -438,6 +447,10 @@ inline CNFVar nextCNFVar(CNFVar var) noexcept {
     } else {
         return CNFVar::getUndefinedVariable();
     }
+}
+
+constexpr bool isRegular(CNFVar variable) noexcept {
+    return variable.getRawValue() <= CNFVar::getMaxRawValue();
 }
 
 constexpr CNFLit::CNFLit(CNFVar variable, CNFSign sign) noexcept

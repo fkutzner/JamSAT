@@ -63,6 +63,15 @@ TEST(UnitCNFProblem, nextCNFVarOfMaxVarIsUndefined) {
     EXPECT_EQ(next, CNFVar::getUndefinedVariable());
 }
 
+TEST(UnitCNFProblem, undefinedVariableIsNotRegular) {
+    EXPECT_FALSE(isRegular(CNFVar::getUndefinedVariable()));
+}
+
+TEST(UnitCNFProblem, variableWithinRegularRangeIsRegular) {
+    EXPECT_TRUE(isRegular(CNFVar{CNFVar::getMaxRawValue()}));
+    EXPECT_TRUE(isRegular(CNFVar{0}));
+}
+
 TEST(UnitCNFProblem, invertSign) {
     CNFSign positiveSign = CNFSign::POSITIVE;
     EXPECT_EQ(invert(positiveSign), CNFSign::NEGATIVE);
