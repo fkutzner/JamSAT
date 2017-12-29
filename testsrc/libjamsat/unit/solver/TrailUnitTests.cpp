@@ -291,4 +291,22 @@ TEST(UnitSolver, trailAssignmentIsIncompleteAfterBacktrack) {
     underTest.shrinkToDecisionLevel(underTest.getCurrentDecisionLevel());
     EXPECT_FALSE(underTest.isVariableAssignmentComplete());
 }
+
+TEST(UnitSolver, trailMaxVariableCanBeIncreased) {
+    Trail underTest{CNFVar{5}};
+    underTest.newDecisionLevel();
+
+    underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
+    ASSERT_EQ(underTest.getAssignment(CNFVar{5}), TBool::TRUE);
+    underTest.increaseMaxVarTo(CNFVar{7});
+    ASSERT_EQ(underTest.getAssignment(CNFVar{5}), TBool::TRUE);
+
+    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBool::INDETERMINATE);
+    EXPECT_EQ(underTest.getPhase(CNFVar{7}), TBool::FALSE);
+    underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
+    ASSERT_EQ(underTest.getNumberOfAssignments(), 2ull);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBool::TRUE);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{7}), 1ull);
+    EXPECT_EQ(underTest.getPhase(CNFVar{7}), TBool::TRUE);
+}
 }

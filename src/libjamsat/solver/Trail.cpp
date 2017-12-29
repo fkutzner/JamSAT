@@ -125,4 +125,29 @@ TBool Trail::getAssignment(CNFLit literal) const noexcept {
 TBool Trail::getPhase(CNFVar variable) const noexcept {
     return m_phases[variable];
 }
+
+void Trail::increaseMaxVarTo(CNFVar newMaxVar) {
+    auto oldMaxVarRaw = m_assignments.size() - 1;
+    JAM_ASSERT(newMaxVar.getRawValue() >= oldMaxVarRaw,
+               "Argument newMaxVar must not be smaller than the previous maximum variable");
+    JAM_ASSERT(newMaxVar != CNFVar::getUndefinedVariable(),
+               "The new maximum variable may not be the undefined variable.");
+
+    auto amountNewVariables = newMaxVar.getRawValue() + 1 - m_assignments.size();
+    if (amountNewVariables == 0) {
+        return;
+    }
+
+    CNFVar firstNewVar = CNFVar{static_cast<CNFVar::RawVariable>(m_assignments.size())};
+    m_trail.increaseMaxSizeBy(amountNewVariables);
+    m_assignments.increaseSizeTo(newMaxVar);
+    m_assignmentLevel.increaseSizeTo(newMaxVar);
+    m_phases.increaseSizeTo(newMaxVar);
+
+    for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
+        m_assignments[i] = TBool::INDETERMINATE;
+        m_assignmentLevel[i] = 0;
+        m_phases[i] = TBool::FALSE;
+    }
+}
 }

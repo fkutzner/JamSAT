@@ -153,7 +153,8 @@ public:
      * remains valid until shrinkToDecisionLevel(x) is called with x < \p level.
      * The end iterator remains valid until shrinkToDecisionLevel(x) is called
      * with x < \p level and may be incremented once per subsequent call to
-     * addAssignment(...) if \p level is the current decision level.
+     * addAssignment(...) if \p level is the current decision level. Both iterators
+     * are invalidated by calls to increaseMaxVarTo().
      */
     boost::iterator_range<const_iterator> getDecisionLevelAssignments(DecisionLevel level) const
         noexcept;
@@ -170,7 +171,8 @@ public:
      * remains valid until shrinkToDecisionLevel(x) is called with x < \p level.
      * The end iterator remains valid until shrinkToDecisionLevel(x) is called
      * with x < \p level and may be incremented once per subsequent call to
-     * addAssignment(...) if \p level is the current decision level.
+     * addAssignment(...) if \p level is the current decision level. Both iterators
+     * are invalidated by calls to increaseMaxVarTo().
      */
     boost::iterator_range<const_iterator> getAssignments(size_type beginIndex);
 
@@ -184,5 +186,16 @@ public:
      * has not been assigned yet, the result is TBool::FALSE.
      */
     TBool getPhase(CNFVar variable) const noexcept;
+
+    /**
+     * \brief Increases the maximum variable which may occur on the trail.
+     *
+     * Any new variables will initially not have an assignment. Calling this method invalidates
+     * all iterators referring to the trail object.
+     *
+     * \param newMaxVar     the new maximum variable. Must not be smaller than the previous maximum
+     *                      variable, and must not be the undefined variable.
+     */
+    void increaseMaxVarTo(CNFVar newMaxVar);
 };
 }
