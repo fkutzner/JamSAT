@@ -34,8 +34,7 @@ Trail::Trail(CNFVar maxVar)
   , m_assignments(maxVar, TBool::INDETERMINATE)
   , m_assignmentLevel(maxVar)
   , m_phases(maxVar, TBool::FALSE) {
-    JAM_ASSERT(maxVar != CNFVar::getUndefinedVariable(),
-               "Trail cannot be instantiated with the undefined variable as maxVar");
+    JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
 
 void Trail::newDecisionLevel() noexcept {
@@ -130,8 +129,7 @@ void Trail::increaseMaxVarTo(CNFVar newMaxVar) {
     auto oldMaxVarRaw = m_assignments.size() - 1;
     JAM_ASSERT(newMaxVar.getRawValue() >= oldMaxVarRaw,
                "Argument newMaxVar must not be smaller than the previous maximum variable");
-    JAM_ASSERT(newMaxVar != CNFVar::getUndefinedVariable(),
-               "The new maximum variable may not be the undefined variable.");
+    JAM_ASSERT(isRegular(newMaxVar), "The new maximum variable must be a regular variable.");
 
     auto amountNewVariables = newMaxVar.getRawValue() + 1 - m_assignments.size();
     if (amountNewVariables == 0) {

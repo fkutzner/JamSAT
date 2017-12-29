@@ -159,6 +159,7 @@ public:
     void increaseMaxVarTo(CNFVar newMaxVar) {
         JAM_ASSERT(newMaxVar >= m_maxVar,
                    "Argument newMaxVar must not be smaller than the previous maximum variable");
+        JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
         m_watchers.increaseSizeTo(CNFLit{newMaxVar, CNFSign::POSITIVE});
         m_maxVar = newMaxVar;
     }

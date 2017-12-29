@@ -74,7 +74,7 @@ public:
      * \brief Constructs a new FirstUIPLearning instance.
      *
      * \param maxVar      The maximum variable occuring in the problem to be
-     * solved.
+     * solved. \p maxVar must be a regular variable.
      * \param dlProvider  The decision level providing object. Needs to live as
      * long as the constructed object.
      * \param reasonProvider  The assignment reason providing object. Needs to
@@ -221,10 +221,9 @@ private:
 template <class DLProvider, class ReasonProvider, class ClauseT>
 FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::FirstUIPLearning(
     CNFVar maxVar, const DLProvider &dlProvider, const ReasonProvider &reasonProvider)
-  : m_dlProvider(dlProvider)
-  , m_reasonProvider(reasonProvider)
-  , m_maxVar(maxVar)
-  , m_stamps(maxVar) {}
+  : m_dlProvider(dlProvider), m_reasonProvider(reasonProvider), m_maxVar(maxVar), m_stamps(maxVar) {
+    JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
+}
 
 #if defined(JAM_ASSERT_ENABLED)
 namespace detail_solver {

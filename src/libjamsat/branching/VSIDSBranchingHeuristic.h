@@ -79,7 +79,7 @@ public:
      * \brief Constructs a new VSIDSBranchingHeuristic object.
      *
      * \param maxVar              The largest variable occurring in the SAT
-     * problem instance to be solved.
+     * problem instance to be solved. \p maxVar must be a regular variable.
      * \param assignmentProvider  A reference to an object using which the current
      * variable assignment can be obtained.
      */
@@ -160,7 +160,7 @@ public:
      * \brief Increases the maximum variable known to occur in the SAT problem to be solved.
      *
      * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
-     *                      maximum variable, and must not be the undefined variable.
+     *                      maximum variable, and must be a regular variable.
      */
     void increaseMaxVarTo(CNFVar newMaxVar);
 
@@ -200,6 +200,7 @@ VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
   , m_decayRate(0.8f)
   , m_maxDecayRate(0.95f)
   , m_numberOfConflicts(0) {
+    JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
     reset();
 }
 
@@ -283,8 +284,7 @@ template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::increaseMaxVarTo(CNFVar newMaxVar) {
     JAM_ASSERT(newMaxVar.getRawValue() >= (m_activity.size() - 1),
                "Argument newMaxVar must not be smaller than the previous maximum variable");
-    JAM_ASSERT(newMaxVar != CNFVar::getUndefinedVariable(),
-               "Argument newMaxVar must not be the undefined variable");
+    JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
 
     increaseMaxDecisionVarTo(newMaxVar);
 

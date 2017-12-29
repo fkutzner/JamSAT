@@ -66,8 +66,8 @@ public:
     /**
      * \brief Constructs a new trail.
      *
-     * \param maxVar    The maximum variable which will occur on the trail. maxVar
-     * must not be CNFVar::undefinedVariable.
+     * \param maxVar    The maximum variable which will occur on the trail. \p maxVar must be a
+     *                  regular variable.
      */
     explicit Trail(CNFVar maxVar);
 
@@ -194,7 +194,7 @@ public:
      * all iterators referring to the trail object.
      *
      * \param newMaxVar     the new maximum variable. Must not be smaller than the previous maximum
-     *                      variable, and must not be the undefined variable.
+     *                      variable, and must be a regular variable.
      */
     void increaseMaxVarTo(CNFVar newMaxVar);
 };

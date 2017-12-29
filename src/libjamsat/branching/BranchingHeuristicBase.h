@@ -76,7 +76,7 @@ protected:
      * New variables are not marked as eligible for usage as branching decision variables.
      *
      * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
-     *                      maximum variable, and must not be the undefined variable.
+     *                      maximum variable, and must be a regular variable.
      */
     void increaseMaxDecisionVarTo(CNFVar newMaxVar);
 

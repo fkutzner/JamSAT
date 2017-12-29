@@ -63,7 +63,7 @@ public:
      * \brief Constructs a new Propagation instance.
      *
      * \param maxVar              The largest variable occuring in the clauses on
-     * which propagation is performed.
+     * which propagation is performed. \p maxVar must be a regular variable.
      * \param assignmentProvider  The assignment provider configured such that
      * assignments up to and including maxVar can be kept track of.
      */
@@ -152,7 +152,7 @@ public:
      * \brief Increases the maximum variable which may occur during propagation.
      *
      * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
-     *                      maximum variable.
+     *                      maximum variable, and must be a regular variable.
      */
     void increaseMaxVarTo(CNFVar newMaxVar);
 
@@ -176,7 +176,9 @@ private:
 template <class AssignmentProvider, class ClauseT>
 Propagation<AssignmentProvider, ClauseT>::Propagation(CNFVar maxVar,
                                                       AssignmentProvider &assignmentProvider)
-  : m_assignmentProvider(assignmentProvider), m_reasons(maxVar), m_watchers(maxVar) {}
+  : m_assignmentProvider(assignmentProvider), m_reasons(maxVar), m_watchers(maxVar) {
+    JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
+}
 
 template <class AssignmentProvider, class ClauseT>
 ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause) {
@@ -361,6 +363,7 @@ void Propagation<AssignmentProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar
     // TODO: assert that the assignment provider can provide assignments for newMaxVar.
     JAM_ASSERT(newMaxVar >= CNFVar{static_cast<CNFVar::RawVariable>(m_reasons.size() + 1)},
                "Argument newMaxVar must not be smaller than the previous maximum variable.");
+    JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     m_watchers.increaseMaxVarTo(newMaxVar);
     m_reasons.increaseSizeTo(newMaxVar);
 }
