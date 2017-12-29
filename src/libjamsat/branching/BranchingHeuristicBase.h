@@ -69,6 +69,17 @@ public:
      */
     bool isEligibleForDecisions(CNFVar variable) const noexcept;
 
+protected:
+    /**
+     * \brief Increases the maximum variable which can be used in branching.
+     *
+     * New variables are not marked as eligible for usage as branching decision variables.
+     *
+     * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
+     *                      maximum variable, and must not be the undefined variable.
+     */
+    void increaseMaxDecisionVarTo(CNFVar newMaxVar);
+
 private:
     BoundedMap<CNFVar, Bool> m_decisionVariables;
 };

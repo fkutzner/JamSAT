@@ -156,6 +156,14 @@ public:
      */
     double getActivityBumpDelta() const noexcept;
 
+    /**
+     * \brief Increases the maximum variable known to occur in the SAT problem to be solved.
+     *
+     * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
+     *                      maximum variable, and must not be the undefined variable.
+     */
+    void increaseMaxVarTo(CNFVar newMaxVar);
+
 private:
     void scaleDownActivities();
 
@@ -269,5 +277,25 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::beginHandlingConflict() noexce
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::endHandlingConflict() noexcept {
     m_activityBumpDelta *= (1 / m_decayRate);
+}
+
+template <class AssignmentProvider>
+void VSIDSBranchingHeuristic<AssignmentProvider>::increaseMaxVarTo(CNFVar newMaxVar) {
+    JAM_ASSERT(newMaxVar.getRawValue() >= (m_activity.size() - 1),
+               "Argument newMaxVar must not be smaller than the previous maximum variable");
+    JAM_ASSERT(newMaxVar != CNFVar::getUndefinedVariable(),
+               "Argument newMaxVar must not be the undefined variable");
+
+    increaseMaxDecisionVarTo(newMaxVar);
+
+    CNFVar firstNewVar = CNFVar{static_cast<CNFVar::RawVariable>(m_activity.size())};
+    m_activity.increaseSizeTo(newMaxVar);
+    m_heapVariableHandles.increaseSizeTo(newMaxVar);
+
+    for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
+        m_activity[i] = 0.0f;
+        auto heapHandle = m_variableOrder.emplace(i);
+        m_heapVariableHandles[i] = heapHandle;
+    }
 }
 }

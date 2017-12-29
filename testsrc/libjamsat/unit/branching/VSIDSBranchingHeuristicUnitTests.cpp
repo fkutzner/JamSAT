@@ -202,5 +202,46 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_signsAreSelectedByPhase) {
                                       CNFLit{CNFVar{3}, CNFSign::NEGATIVE}});
 }
 
+TEST(UnitBranching, VSIDSBranchingHeuristic_addedVariablesAreUsedForDecisions) {
+    CNFVar initialMaxVar{5};
+    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{initialMaxVar,
+                                                              fakeAssignmentProvider};
+
+    for (CNFVar i = CNFVar{0}; i < CNFVar{5}; i = nextCNFVar(i)) {
+        underTest.setEligibleForDecisions(i, true);
+    }
+    fakeAssignmentProvider.setPhase(CNFVar{0}, TBool::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{1}, TBool::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{2}, TBool::FALSE);
+    fakeAssignmentProvider.setPhase(CNFVar{3}, TBool::FALSE);
+    fakeAssignmentProvider.setPhase(CNFVar{4}, TBool::FALSE);
+    fakeAssignmentProvider.setPhase(CNFVar{5}, TBool::FALSE);
+
+    underTest.seenInConflict(CNFVar{2});
+    underTest.seenInConflict(CNFVar{2});
+    underTest.seenInConflict(CNFVar{2});
+    underTest.seenInConflict(CNFVar{1});
+    underTest.seenInConflict(CNFVar{1});
+    underTest.seenInConflict(CNFVar{0});
+
+    underTest.increaseMaxVarTo(CNFVar{8});
+    fakeAssignmentProvider.setPhase(CNFVar{7}, TBool::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{8}, TBool::TRUE);
+    underTest.setEligibleForDecisions(CNFVar{7}, true);
+    underTest.setEligibleForDecisions(CNFVar{8}, true);
+    for (int i = 0; i < 10; ++i) {
+        underTest.seenInConflict(CNFVar{7});
+    }
+    for (int i = 0; i < 9; ++i) {
+        underTest.seenInConflict(CNFVar{8});
+    }
+
+    expectLiteralSequence(
+        underTest, {CNFLit{CNFVar{7}, CNFSign::POSITIVE}, CNFLit{CNFVar{8}, CNFSign::POSITIVE},
+                    CNFLit{CNFVar{2}, CNFSign::NEGATIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+                    CNFLit{CNFVar{0}, CNFSign::POSITIVE}});
+}
+
 // TODO: unit tests for decay and bumping
 }

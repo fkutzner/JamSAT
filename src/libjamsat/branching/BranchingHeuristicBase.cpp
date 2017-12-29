@@ -47,4 +47,17 @@ void BranchingHeuristicBase::setEligibleForDecisions(CNFVar variable, bool isEli
                "Variable out of bounds");
     m_decisionVariables[variable] = toBool(isEligible);
 }
+
+void BranchingHeuristicBase::increaseMaxDecisionVarTo(CNFVar newMaxVar) {
+    JAM_ASSERT(newMaxVar.getRawValue() >= (m_decisionVariables.size() - 1),
+               "Argument newMaxVar must not be smaller than the previous maximum variable");
+    JAM_ASSERT(newMaxVar != CNFVar::getUndefinedVariable(),
+               "Argument newMaxVar must not be the undefined variable");
+
+    CNFVar firstNewVar = CNFVar{static_cast<CNFVar::RawVariable>(m_decisionVariables.size())};
+    m_decisionVariables.increaseSizeTo(newMaxVar);
+    for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
+        m_decisionVariables[i] = Bool::FALSE;
+    }
+}
 }
