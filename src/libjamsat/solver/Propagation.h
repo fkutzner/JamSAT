@@ -361,7 +361,7 @@ void Propagation<AssignmentProvider, ClauseT>::clear() noexcept {
 template <class AssignmentProvider, class ClauseT>
 void Propagation<AssignmentProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
     // TODO: assert that the assignment provider can provide assignments for newMaxVar.
-    JAM_ASSERT(newMaxVar >= CNFVar{static_cast<CNFVar::RawVariable>(m_reasons.size() + 1)},
+    JAM_ASSERT(newMaxVar >= CNFVar{static_cast<CNFVar::RawVariable>(m_reasons.size() - 1)},
                "Argument newMaxVar must not be smaller than the previous maximum variable.");
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     m_watchers.increaseMaxVarTo(newMaxVar);
