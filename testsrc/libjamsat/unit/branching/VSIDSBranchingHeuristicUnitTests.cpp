@@ -32,7 +32,6 @@
 
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/solver/VariableState.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {

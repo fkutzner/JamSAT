@@ -1,8 +1,6 @@
 add_jamsat_core_library(jamsatSolver
   Trail.cpp
   Trail.h
-  VariableState.h
-  VariableState.cpp
   Propagation.h
   Watcher.h
   FirstUIPLearning.h
