@@ -156,9 +156,16 @@ public:
         }
     }
 
+    void increaseMaxVarTo(CNFVar newMaxVar) {
+        JAM_ASSERT(newMaxVar >= m_maxVar,
+                   "Argument newMaxVar must not be smaller than the previous maximum variable");
+        m_watchers.increaseSizeTo(CNFLit{newMaxVar, CNFSign::POSITIVE});
+        m_maxVar = newMaxVar;
+    }
+
 private:
     using WatcherList = std::vector<Watcher<ClauseT>>;
-    const CNFVar m_maxVar;
+    CNFVar m_maxVar;
     BoundedMap<CNFLit, WatcherList> m_watchers;
 };
 }

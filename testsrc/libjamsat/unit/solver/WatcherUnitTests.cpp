@@ -246,5 +246,24 @@ TEST(UnitSolver, addedWatcherIsContainedInTraversal) {
         EXPECT_TRUE(probePos.hasFinishedTraversal());
     }
 }
+
+TEST(UnitSolver, watchersMaxVarCanBeIncreased) {
+    TestWatchers underTest{CNFVar{10}};
+    underTest.increaseMaxVarTo(CNFVar{20});
+    auto watchersFor20 = underTest.getWatchers(CNFLit{CNFVar{20}, CNFSign::POSITIVE});
+    EXPECT_TRUE(watchersFor20.hasFinishedTraversal());
+
+    CNFLit secondWatchedLiteral{CNFVar{9}, CNFSign::POSITIVE};
+    TrivialClause testClause;
+    TestWatcher watcher{testClause, secondWatchedLiteral};
+    CNFLit watchedLiteral{CNFVar{20}, CNFSign::POSITIVE};
+    underTest.addWatcher(watchedLiteral, watcher);
+
+    auto postAddWatchersFor20 = underTest.getWatchers(CNFLit{CNFVar{20}, CNFSign::POSITIVE});
+    ASSERT_FALSE(postAddWatchersFor20.hasFinishedTraversal());
+    EXPECT_EQ(&((*postAddWatchersFor20).getClause()), &testClause);
+    ++postAddWatchersFor20;
+    EXPECT_TRUE(postAddWatchersFor20.hasFinishedTraversal());
+}
 }
 }
