@@ -109,6 +109,14 @@ public:
     void setOnSeenVariableCallback(std::function<void(CNFVar)> callback) noexcept;
 
     /**
+     * \brief Increases the maximum variable occuring in the problem to be solved.
+     *
+     * \param newMaxVar The new maximum variable. \p newMaxVar must not be smaller than the
+     *                  previous maximum variable, and must be a regular variable.
+     */
+    void increaseMaxVarTo(CNFVar newMaxVar);
+
+    /**
      * \brief Asserts that the class invariants are satisfied.
      */
     void test_assertClassInvariantsSatisfied() const noexcept;
@@ -225,6 +233,17 @@ FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::FirstUIPLearning(
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
 
+template <class DLProvider, class ReasonProvider, class ClauseT>
+void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
+    JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
+    CNFVar firstNewVar = CNFVar{static_cast<CNFVar::RawVariable>(m_stamps.size())};
+    m_stamps.increaseSizeTo(newMaxVar);
+
+    for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
+        m_stamps[i] = 0;
+    }
+}
+
 #if defined(JAM_ASSERT_ENABLED)
 namespace detail_solver {
 bool isAllZero(const BoundedMap<CNFVar, char> &stamps, CNFVar maxVar) noexcept {
@@ -260,13 +279,10 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::initializeResult(
     // would have gotten a forced assignment on a lower decision level, which
     // is impossible. If unresolvedCount == 0, the clause has no literals
     // on the current decision level and could not have been part of the
-    // conflict
-    // in the first place, either.
+    // conflict in the first place, either.
     JAM_ASSERT(unresolvedCount >= 2,
                "Implementation error: fewer than 2 literals on current lvl found"
                " during initialization.");
-
-    // return unresolvedCount;
 }
 
 template <class DLProvider, class ReasonProvider, class ClauseT>
