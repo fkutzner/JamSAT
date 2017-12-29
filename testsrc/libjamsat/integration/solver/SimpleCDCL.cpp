@@ -52,7 +52,7 @@ namespace jamsat {
 namespace {
 class SimpleCDCL {
 public:
-    SimpleCDCL(CNFVar maxVar);
+    SimpleCDCL();
     void addClause(const CNFClause &clause);
     TBool isProblemSatisfiable();
 
@@ -79,15 +79,28 @@ private:
 };
 
 // TODO: resizable data structures
-SimpleCDCL::SimpleCDCL(CNFVar maxVar)
-  : m_maxVar(maxVar)
-  , m_trail(maxVar)
-  , m_propagation(maxVar, m_trail)
-  , m_conflictAnalyzer(maxVar, m_trail, m_propagation)
+SimpleCDCL::SimpleCDCL()
+  : m_maxVar(CNFVar{1})
+  , m_trail(m_maxVar)
+  , m_propagation(m_maxVar, m_trail)
+  , m_conflictAnalyzer(m_maxVar, m_trail, m_propagation)
   , m_clauseDB()
-  , m_branchingHeuristic(maxVar, m_trail) {}
+  , m_branchingHeuristic(m_maxVar, m_trail) {}
 
 void SimpleCDCL::addClause(const CNFClause &clause) {
+    auto oldMaxVar = m_maxVar;
+    for (auto lit : clause) {
+        m_maxVar = std::max(m_maxVar, lit.getVariable());
+    }
+    if (m_maxVar > oldMaxVar) {
+        JAM_LOG_CDCLITEST(info, "Increasing max. variable from " << oldMaxVar << " to "
+                                                                 << m_maxVar);
+        m_trail.increaseMaxVarTo(m_maxVar);
+        m_propagation.increaseMaxVarTo(m_maxVar);
+        m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
+        m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
+    }
+
     JAM_ASSERT(clause.size() > 0, "Can't add empty clauses for solving");
     if (clause.size() > 1) {
         auto &newClause = m_clauseDB.insertClause(clause);
@@ -217,7 +230,7 @@ TEST(IntegrationSolver, SimpleCDCL_unsatOnConflictInUnitPropagation) {
 
     ASSERT_FALSE(conduit.fail());
 
-    SimpleCDCL underTest{testData.getMaxVar()};
+    SimpleCDCL underTest;
     for (auto &clause : testData.getClauses()) {
         underTest.addClause(clause);
     }
@@ -243,7 +256,7 @@ TEST(IntegrationSolver, SimpleCDCL_smallUnsatisfiableProblem) {
 
     ASSERT_FALSE(conduit.fail());
 
-    SimpleCDCL underTest{testData.getMaxVar()};
+    SimpleCDCL underTest;
     for (auto &clause : testData.getClauses()) {
         underTest.addClause(clause);
     }
@@ -267,7 +280,7 @@ TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
     CNFClause unit{CNFLit{CNFVar{15}, CNFSign::POSITIVE}};
     testData.addClause(std::move(unit));
 
-    SimpleCDCL underTest{testData.getMaxVar()};
+    SimpleCDCL underTest;
     for (auto &clause : testData.getClauses()) {
         underTest.addClause(clause);
     }
