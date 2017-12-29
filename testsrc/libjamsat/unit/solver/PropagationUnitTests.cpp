@@ -290,5 +290,17 @@ TEST(UnitSolver, propagateUntilFixpointReportsEnsuingConflicts) {
                 conflictingClause == &midForcingClause2 || conflictingClause == &lastForcingClause);
 }
 
+TEST(UnitSolver, propagateAfterIncreasingMaximumVariable) {
+    TestAssignmentProvider assignments;
+    TrivialClause forcingClause{CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
+                                CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(CNFVar{5}, assignments);
+    underTest.increaseMaxVarTo(CNFVar{10});
+    underTest.registerClause(forcingClause);
+    assignments.addAssignment(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
+    underTest.propagateUntilFixpoint(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
+    EXPECT_EQ(assignments.getAssignment(CNFVar{6}), TBool::TRUE);
+}
+
 // TODO: test watcher restoration
 }

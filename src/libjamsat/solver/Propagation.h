@@ -148,6 +148,14 @@ public:
      */
     const ClauseT *getAssignmentReason(CNFVar variable) const noexcept;
 
+    /**
+     * \brief Increases the maximum variable which may occur during propagation.
+     *
+     * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
+     *                      maximum variable.
+     */
+    void increaseMaxVarTo(CNFVar newMaxVar);
+
 private:
     AssignmentProvider &m_assignmentProvider;
     BoundedMap<CNFVar, const ClauseT *> m_reasons;
@@ -346,5 +354,14 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
 template <class AssignmentProvider, class ClauseT>
 void Propagation<AssignmentProvider, ClauseT>::clear() noexcept {
     m_watchers.clear();
+}
+
+template <class AssignmentProvider, class ClauseT>
+void Propagation<AssignmentProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
+    // TODO: assert that the assignment provider can provide assignments for newMaxVar.
+    JAM_ASSERT(newMaxVar >= CNFVar{static_cast<CNFVar::RawVariable>(m_reasons.size() + 1)},
+               "Argument newMaxVar must not be smaller than the previous maximum variable.");
+    m_watchers.increaseMaxVarTo(newMaxVar);
+    m_reasons.increaseSizeTo(newMaxVar);
 }
 }
