@@ -40,6 +40,7 @@
 #include <libjamsat/utils/Truth.h>
 
 #include <toolbox/cnfgenerators/GateStructure.h>
+#include <toolbox/cnfgenerators/Rule110.h>
 
 #if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_CDCLITEST_LOGGING)
 #include <boost/log/trivial.hpp>
@@ -47,6 +48,12 @@
 #else
 #define JAM_LOG_CDCLITEST(x, y)
 #endif
+
+/*
+ * This file contains a simple implementation of a CDCL SAT solver, serving as an integration test
+ * for the solver's classes, and to drive the implementation. Testing is done on the level of
+ * checking whether correct sat/unsat answers can be obtained using the tested subsystems.
+ */
 
 namespace jamsat {
 namespace {
@@ -164,7 +171,7 @@ TBool SimpleCDCL::isProblemSatisfiable() {
 
     while (!m_trail.isVariableAssignmentComplete()) {
         JAM_LOG_CDCLITEST(info, "Performing a restart.");
-        backtrackToLevel(0);
+        JAM_ASSERT(m_trail.getCurrentDecisionLevel() == 0ull, "Illegal restart: not on DL 0");
         if (propagateUnitClauses() != UnitPropagationResult::CONSISTENT) {
             return toTBool(false);
         }
@@ -195,6 +202,7 @@ TBool SimpleCDCL::isProblemSatisfiable() {
                     m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable()) == 0) {
                     JAM_LOG_CDCLITEST(info, "Learnt a unit clause: " << learntClause[0]);
                     m_unitClauses.push_back(learntClause[0]);
+                    backtrackToLevel(0);
                     // Restarting, since unit clauses need to be put on the first decision
                     // level.
                     break;
@@ -286,5 +294,16 @@ TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
     }
 
     EXPECT_EQ(underTest.isProblemSatisfiable(), TBool::FALSE);
+}
+
+TEST(IntegrationSolver, SimpleCDCL_rule110_reachable) {
+    Rule110PredecessorStateProblem problem{"1xxx0", "0xx10", 1};
+    auto cnfProblem = problem.getCNFEncoding();
+
+    SimpleCDCL underTest;
+    for (auto &clause : cnfProblem.getClauses()) {
+        underTest.addClause(clause);
+    }
+    EXPECT_EQ(underTest.isProblemSatisfiable(), TBool::TRUE);
 }
 }
