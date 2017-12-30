@@ -3,6 +3,8 @@ SET(JAMSAT_LIBRARY_CNFGENERATORS_FOLDER_NAME "JamSAT Test Infrastructure")
 add_library(cnfgenerators OBJECT
   GateStructure.h
   GateStructure.cpp
+  Rule110.h
+  Rule110.cpp
 )
 
 target_include_directories(cnfgenerators PRIVATE ${PROJECT_SOURCE_DIR}/testsrc
