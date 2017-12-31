@@ -29,6 +29,7 @@
 #include <algorithm>
 
 #include <boost/heap/d_ary_heap.hpp>
+#include <boost/optional.hpp>
 
 #include <libjamsat/branching/BranchingHeuristicBase.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
@@ -175,7 +176,7 @@ private:
     using HeapMutability = boost::heap::mutable_<true>;
     using VariableHeap = boost::heap::d_ary_heap<CNFVar, HeapCompare, HeapArity, HeapMutability>;
     VariableHeap m_variableOrder;
-    BoundedMap<CNFVar, VariableHeap::handle_type> m_heapVariableHandles;
+    BoundedMap<CNFVar, boost::optional<VariableHeap::handle_type>> m_heapVariableHandles;
 
     const AssignmentProvider &m_assignmentProvider;
 
@@ -210,6 +211,7 @@ CNFLit VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept
     while (!m_variableOrder.empty()) {
         branchingVar = m_variableOrder.top();
         m_variableOrder.pop();
+        m_heapVariableHandles[branchingVar] = boost::optional<VariableHeap::handle_type>{};
 
         if (m_assignmentProvider.getAssignment(branchingVar) == TBool::INDETERMINATE &&
             isEligibleForDecisions(branchingVar)) {
@@ -229,7 +231,9 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(CNFVar variable
         scaleDownActivities();
     }
 
-    m_variableOrder.increase(m_heapVariableHandles[variable]);
+    if (m_heapVariableHandles[variable]) {
+        m_variableOrder.increase(*(m_heapVariableHandles[variable]));
+    }
 }
 
 template <class AssignmentProvider>
@@ -246,14 +250,14 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept {
     m_variableOrder.clear();
     for (CNFVar::RawVariable i = 0; i < static_cast<CNFVar::RawVariable>(m_activity.size()); ++i) {
         auto heapHandle = m_variableOrder.emplace(CNFVar{i});
-        m_heapVariableHandles[CNFVar{i}] = heapHandle;
+        m_heapVariableHandles[CNFVar{i}] = boost::optional<VariableHeap::handle_type>{heapHandle};
     }
 }
 
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset(CNFVar variable) noexcept {
     auto heapHandle = m_variableOrder.emplace(variable);
-    m_heapVariableHandles[variable] = heapHandle;
+    m_heapVariableHandles[variable] = boost::optional<VariableHeap::handle_type>{heapHandle};
 }
 
 template <class AssignmentProvider>
@@ -295,7 +299,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::increaseMaxVarTo(CNFVar newMax
     for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
         m_activity[i] = 0.0f;
         auto heapHandle = m_variableOrder.emplace(i);
-        m_heapVariableHandles[i] = heapHandle;
+        m_heapVariableHandles[i] = boost::optional<VariableHeap::handle_type>{heapHandle};
     }
 }
 }
