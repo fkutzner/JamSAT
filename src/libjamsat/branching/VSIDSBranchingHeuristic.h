@@ -168,6 +168,10 @@ public:
 private:
     void scaleDownActivities();
 
+    void addToActivityHeap(CNFVar var);
+    bool isInActivityHeap(CNFVar var) const noexcept;
+    CNFVar popFromActivityHeap();
+
     BoundedMap<CNFVar, double> m_activity;
     detail::CNFVarActivityOrder m_activityOrder;
 
@@ -206,13 +210,31 @@ VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
 }
 
 template <class AssignmentProvider>
+void VSIDSBranchingHeuristic<AssignmentProvider>::addToActivityHeap(CNFVar var) {
+    JAM_ASSERT(!isInActivityHeap(var), "Argument var already present in the activity heap");
+    auto heapHandle = m_variableOrder.emplace(var);
+    m_heapVariableHandles[var] = boost::optional<VariableHeap::handle_type>{heapHandle};
+}
+
+template <class AssignmentProvider>
+bool VSIDSBranchingHeuristic<AssignmentProvider>::isInActivityHeap(CNFVar var) const noexcept {
+    return m_heapVariableHandles[var] ? true : false;
+}
+
+template <class AssignmentProvider>
+CNFVar VSIDSBranchingHeuristic<AssignmentProvider>::popFromActivityHeap() {
+    JAM_ASSERT(!m_variableOrder.empty(), "Can't pop from an empty heap");
+    CNFVar result = m_variableOrder.top();
+    m_variableOrder.pop();
+    m_heapVariableHandles[result] = boost::optional<VariableHeap::handle_type>{};
+    return result;
+}
+
+template <class AssignmentProvider>
 CNFLit VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept {
     CNFVar branchingVar = CNFVar::getUndefinedVariable();
     while (!m_variableOrder.empty()) {
-        branchingVar = m_variableOrder.top();
-        m_variableOrder.pop();
-        m_heapVariableHandles[branchingVar] = boost::optional<VariableHeap::handle_type>{};
-
+        branchingVar = popFromActivityHeap();
         if (m_assignmentProvider.getAssignment(branchingVar) == TBool::INDETERMINATE &&
             isEligibleForDecisions(branchingVar)) {
             CNFSign sign = static_cast<CNFSign>(m_assignmentProvider.getPhase(branchingVar));
@@ -231,7 +253,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(CNFVar variable
         scaleDownActivities();
     }
 
-    if (m_heapVariableHandles[variable]) {
+    if (isInActivityHeap(variable)) {
         m_variableOrder.increase(*(m_heapVariableHandles[variable]));
     }
 }
@@ -248,16 +270,19 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept {
     m_variableOrder.clear();
-    for (CNFVar::RawVariable i = 0; i < static_cast<CNFVar::RawVariable>(m_activity.size()); ++i) {
-        auto heapHandle = m_variableOrder.emplace(CNFVar{i});
-        m_heapVariableHandles[CNFVar{i}] = boost::optional<VariableHeap::handle_type>{heapHandle};
+    for (CNFVar i = CNFVar{0}; i < CNFVar{static_cast<CNFVar::RawVariable>(m_activity.size())};
+         i = nextCNFVar(i)) {
+        if (!isInActivityHeap(i)) {
+            addToActivityHeap(i);
+        }
     }
 }
 
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset(CNFVar variable) noexcept {
-    auto heapHandle = m_variableOrder.emplace(variable);
-    m_heapVariableHandles[variable] = boost::optional<VariableHeap::handle_type>{heapHandle};
+    if (!isInActivityHeap(variable)) {
+        addToActivityHeap(variable);
+    }
 }
 
 template <class AssignmentProvider>
@@ -298,8 +323,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::increaseMaxVarTo(CNFVar newMax
 
     for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
         m_activity[i] = 0.0f;
-        auto heapHandle = m_variableOrder.emplace(i);
-        m_heapVariableHandles[i] = boost::optional<VariableHeap::handle_type>{heapHandle};
+        addToActivityHeap(i);
     }
 }
 }
