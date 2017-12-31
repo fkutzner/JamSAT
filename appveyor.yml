@@ -39,7 +39,6 @@ build_script:
   - cmake --build . --config %CONFIGURATION%
   - ctest -V -C %CONFIGURATION%
 
-build:
-  verbosity: minimal
+build: false
 
 test: off
