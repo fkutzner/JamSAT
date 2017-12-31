@@ -10,3 +10,4 @@ BinPackParameters: true
 AllowShortFunctionsOnASingleLine: Inline
 AlwaysBreakTemplateDeclarations: true
 AccessModifierOffset: -4
+FixNamespaceComments: false
