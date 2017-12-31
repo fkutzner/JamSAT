@@ -25,10 +25,16 @@
 */
 
 #include "CNFProblem.h"
-#include <boost/log/trivial.hpp>
 #include <boost/optional.hpp>
 #include <istream>
 #include <sstream>
+
+#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_CNFPROBLEM_LOGGING)
+#include <boost/log/trivial.hpp>
+#define JAM_LOG_CNFPROBLEM(x, y) BOOST_LOG_TRIVIAL(x) << "[cnfprb] " << y
+#else
+#define JAM_LOG_CNFPROBLEM(x, y)
+#endif
 
 namespace jamsat {
 
@@ -145,7 +151,7 @@ DIMACSHeader readDIMACSHeader(std::istream &input) {
         return result;
     }
 
-    BOOST_LOG_TRIVIAL(warning) << "Could not find the DIMACS header";
+    JAM_LOG_CNFPROBLEM(warning, "Could not find the DIMACS header");
     return {false, 0, 0};
 }
 
@@ -160,7 +166,7 @@ std::istream &readDIMACSClauses(std::istream &input, DIMACSHeader problemHeader,
         input >> newClause;
         if (input.fail()) {
             problem.clear();
-            BOOST_LOG_TRIVIAL(warning) << "Failed parsing DIMACS clause no. " << i;
+            JAM_LOG_CNFPROBLEM(warning, "Failed parsing DIMACS clause no. " << i);
             return input;
         }
         problem.addClause(std::move(newClause));
@@ -169,21 +175,21 @@ std::istream &readDIMACSClauses(std::istream &input, DIMACSHeader problemHeader,
             problemHeader.variableCount) {
             input.setstate(std::ios::failbit);
             problem.clear();
-            BOOST_LOG_TRIVIAL(warning) << "Illegal variable " << i;
-            BOOST_LOG_TRIVIAL(warning) << "Failed parsing DIMACS clause no. " << i;
+            JAM_LOG_CNFPROBLEM(warning, "Illegal variable " << i);
+            JAM_LOG_CNFPROBLEM(warning, "Failed parsing DIMACS clause no. " << i);
             return input;
         }
     }
 
     return input;
 }
-}
+} // namespace
 
 std::istream &operator>>(std::istream &input, CNFProblem &problem) {
     const DIMACSHeader dimacsHeader = readDIMACSHeader(input);
     if (!dimacsHeader.valid) {
         input.setstate(std::ios::failbit);
-        BOOST_LOG_TRIVIAL(warning) << "Unable to parse the DIMACS header";
+        JAM_LOG_CNFPROBLEM(warning, "Unable to parse the DIMACS header");
         return input;
     }
     return readDIMACSClauses(input, dimacsHeader, problem);
@@ -200,7 +206,7 @@ namespace {
  */
 boost::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
     if (encodedLiteral == std::numeric_limits<int>::min()) {
-        BOOST_LOG_TRIVIAL(warning) << "Illegally large variable: " << encodedLiteral;
+        JAM_LOG_CNFPROBLEM(warning, "Illegally large variable: " << encodedLiteral);
         return boost::optional<CNFLit>{};
     }
 
@@ -208,7 +214,7 @@ boost::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
     auto rawVariable = static_cast<CNFVar::RawVariable>(std::abs(encodedLiteral) - 1);
 
     if (rawVariable > CNFVar::getMaxRawValue()) {
-        BOOST_LOG_TRIVIAL(warning) << "Illegally large variable: " << encodedLiteral;
+        JAM_LOG_CNFPROBLEM(warning, "Illegally large variable: " << encodedLiteral);
         return boost::optional<CNFLit>{};
     }
 
@@ -220,7 +226,7 @@ void parsingFailed(CNFClause &clause, std::istream &source) {
     source.setstate(std::ios::failbit);
     clause.clear();
 }
-}
+} // namespace
 
 std::istream &operator>>(std::istream &input, CNFClause &clause) {
     std::string buffer;
@@ -243,7 +249,7 @@ std::istream &operator>>(std::istream &input, CNFClause &clause) {
                 continue;
             }
             parsingFailed(clause, input);
-            BOOST_LOG_TRIVIAL(warning) << "Illegal token in clause: " << buffer;
+            JAM_LOG_CNFPROBLEM(warning, "Illegal token in clause: " << buffer);
             return input;
         }
 
