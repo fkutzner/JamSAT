@@ -239,7 +239,8 @@ TEST(UnitCNFProblem, parseSimpleFormattedCNFClause) {
     ASSERT_EQ(underTest.size(), 3ull);
 
     CNFClause expected = {
-        CNFLit{CNFVar{1}, CNFSign::NEGATIVE}, CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
         CNFLit{CNFVar{0}, CNFSign::POSITIVE},
     };
 
@@ -271,7 +272,8 @@ TEST(UnitCNFProblem, parseMultilineCNFClause) {
     ASSERT_EQ(underTest.size(), 3ull);
 
     CNFClause expected = {
-        CNFLit{CNFVar{1}, CNFSign::NEGATIVE}, CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
         CNFLit{CNFVar{0}, CNFSign::POSITIVE},
     };
 
@@ -288,7 +290,8 @@ TEST(UnitCNFProblem, parseCommentContainingCNFClause) {
     ASSERT_EQ(underTest.size(), 3ull);
 
     CNFClause expected = {
-        CNFLit{CNFVar{1}, CNFSign::NEGATIVE}, CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
         CNFLit{CNFVar{0}, CNFSign::POSITIVE},
     };
 
@@ -385,11 +388,13 @@ TEST(UnitCNFProblem, parseMultipleClauseDIMACSProblem) {
     ASSERT_EQ(underTest.getSize(), 2ull);
 
     CNFClause expected1 = {
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{0}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{1}, CNFSign::POSITIVE},
     };
 
     CNFClause expected2 = {
-        CNFLit{CNFVar{4}, CNFSign::POSITIVE}, CNFLit{CNFVar{5}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{4}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{5}, CNFSign::POSITIVE},
     };
 
     EXPECT_EQ(underTest.getClauses()[0], expected1);

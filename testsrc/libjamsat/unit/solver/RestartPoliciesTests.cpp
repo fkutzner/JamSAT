@@ -43,8 +43,8 @@ TEST(UnitSolver, LubyRestartPolicy_noRestartWithinGraceTime) {
 
     for (int i = 0; i < 50; ++i) {
         underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
-        EXPECT_FALSE(underTest.shouldRestart()) << "Erroneous restart after " << (i + 1)
-                                                << " conflicts";
+        EXPECT_FALSE(underTest.shouldRestart())
+            << "Erroneous restart after " << (i + 1) << " conflicts";
     }
 }
 
@@ -103,8 +103,8 @@ TEST(UnitSolver, LubyRestartPolicy_restartAdvicePersistsWhenNoRestart) {
 
     for (int i = 0; i < 1024; ++i) {
         underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
-        EXPECT_TRUE(underTest.shouldRestart()) << "Restart advice failed after " << (i + 1)
-                                               << " conflicts";
+        EXPECT_TRUE(underTest.shouldRestart())
+            << "Restart advice failed after " << (i + 1) << " conflicts";
     }
 }
 

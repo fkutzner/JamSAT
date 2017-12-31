@@ -36,7 +36,6 @@
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/ControlFlow.h>
-#include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/Truth.h>
 
 #include <toolbox/cnfgenerators/GateStructure.h>
@@ -100,8 +99,8 @@ void SimpleCDCL::addClause(const CNFClause &clause) {
         m_maxVar = std::max(m_maxVar, lit.getVariable());
     }
     if (m_maxVar > oldMaxVar) {
-        JAM_LOG_CDCLITEST(info, "Increasing max. variable from " << oldMaxVar << " to "
-                                                                 << m_maxVar);
+        JAM_LOG_CDCLITEST(info,
+                          "Increasing max. variable from " << oldMaxVar << " to " << m_maxVar);
         m_trail.increaseMaxVarTo(m_maxVar);
         m_propagation.increaseMaxVarTo(m_maxVar);
         m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);

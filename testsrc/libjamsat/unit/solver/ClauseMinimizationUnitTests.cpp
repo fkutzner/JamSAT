@@ -75,7 +75,8 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancy) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
     TrivialClause reasonFor3{
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE}, CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
     };
     reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
 
@@ -102,13 +103,15 @@ TEST(UnitSolver, eraseRedundantLiterals_removesTwoLevelRedundancy) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
     TrivialClause reasonFor3{
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE}, CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
         CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
     };
     reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
 
     TrivialClause reasonFor5{
-        CNFLit{CNFVar{5}, CNFSign::NEGATIVE}, CNFLit{CNFVar{8}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{8}, CNFSign::NEGATIVE},
         CNFLit{CNFVar{9}, CNFSign::NEGATIVE},
     };
     reasonProvider.setAssignmentReason(CNFVar{5}, reasonFor5);
@@ -139,7 +142,8 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancyWithUnit) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
     TrivialClause reasonFor3{
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE}, CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
         CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
     };
     reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
@@ -294,8 +298,10 @@ TEST(UnitSolver, resolveWithBinaries_allResolutionOpportunitiesAreUsed) {
     // second literals
     std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
     binaryClauses[resolveAt] = {
-        CNFLit{CNFVar{12}, CNFSign::POSITIVE}, CNFLit{CNFVar{15}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{17}, CNFSign::NEGATIVE}, CNFLit{CNFVar{30}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{12}, CNFSign::POSITIVE},
+        CNFLit{CNFVar{15}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{17}, CNFSign::NEGATIVE},
+        CNFLit{CNFVar{30}, CNFSign::POSITIVE},
     };
 
     TrivialClause testData{
