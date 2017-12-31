@@ -19,7 +19,9 @@ configuration:
   - Release
   - Debug
 
-build_script:
+# This is a workaround: AppVeyor tries to directly invoke MSBuild unless
+# "build: false" is set, which causes the build script to be ignored.
+install:
 
   - IF "%PLATFORM%" == "x86" ( SET BOOST_LIBRARYDIR=%BOOST_ROOT%/lib32-msvc-15.0)
   - IF "%PLATFORM%" == "x64" ( SET BOOST_LIBRARYDIR=%BOOST_ROOT%/lib64-msvc-15.0)
