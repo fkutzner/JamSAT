@@ -17,14 +17,18 @@ endfunction()
 
 add_subdirectory(solver)
 
-add_executable(libjamsat_integration_tests
+add_executable(libjamsat_integration_testsuite
   $<TARGET_OBJECTS:solver_integration_tests>
 
   # From toolbox/cnfgenerators:
   $<TARGET_OBJECTS:cnfgenerators>
 )
 
-target_link_libraries(libjamsat_integration_tests jamcore gtest gtest_main)
-set_property(TARGET libjamsat_integration_tests
+target_link_libraries(libjamsat_integration_testsuite jamcore gtest gtest_main)
+set_property(TARGET libjamsat_integration_testsuite
              PROPERTY FOLDER ${JAMSAT_LIBRARY_INTEGRATIONTEST_FOLDER_NAME})
-add_test(NAME libjamsat_integration_tests COMMAND libjamsat_integration_tests WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(
+    NAME libjamsat_integration_testsuite
+    COMMAND libjamsat_integration_testsuite
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)

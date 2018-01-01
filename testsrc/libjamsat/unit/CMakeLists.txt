@@ -22,7 +22,7 @@ add_subdirectory(branching)
 add_subdirectory(utils)
 
 
-add_executable(libjamsat_unit_tests
+add_executable(libjamsat_unit_testsuite
   $<TARGET_OBJECTS:branching_unit_tests>
   $<TARGET_OBJECTS:cnfproblem_unit_tests>
   $<TARGET_OBJECTS:clausedb_unit_tests>
@@ -30,6 +30,10 @@ add_executable(libjamsat_unit_tests
   $<TARGET_OBJECTS:utils_unit_tests>
 )
 
-target_link_libraries(libjamsat_unit_tests jamcore gtest gtest_main)
-set_property(TARGET libjamsat_unit_tests PROPERTY FOLDER ${JAMSAT_LIBRARY_UNITTEST_FOLDER_NAME})
-add_test(NAME libjamsat_unit_tests COMMAND libjamsat_unit_tests WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(libjamsat_unit_testsuite jamcore gtest gtest_main)
+set_property(TARGET libjamsat_unit_testsuite PROPERTY FOLDER ${JAMSAT_LIBRARY_UNITTEST_FOLDER_NAME})
+add_test(
+    NAME libjamsat_unit_testsuite
+    COMMAND libjamsat_unit_testsuite
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
