@@ -22,6 +22,9 @@ env:
     - JAMSAT_MODE=COVERAGE
     - JAMSAT_MODE=SANITIZERS
 
+
+# Using Travis CI primarily for testing right now, so SonarSource scan and
+# Coverage builds may fail.
 matrix:
   include:
     - os: linux
@@ -40,6 +43,9 @@ matrix:
     - os: linux
       compiler: clang
       env: JAMSAT_MODE=COVERAGE
+  allow_failures:
+    - env: JAMSAT_MODE=COVERAGE
+    - env: SONARSOURCE_SCAN=1
 
 # Note: For clang builds on Linux, a gcc-6 environment is set up as well so that a
 # C++14-compliant libstdc++ can be used.
