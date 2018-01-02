@@ -45,7 +45,7 @@ matrix:
       env: JAMSAT_MODE=COVERAGE
   allow_failures:
     - env: JAMSAT_MODE=COVERAGE
-    - env: SONARSOURCE_SCAN=1
+    - env: SONARSOURCE_SCAN=1 JAMSAT_MODE=REGULAR
 
 # Note: For clang builds on Linux, a gcc-6 environment is set up as well so that a
 # C++14-compliant libstdc++ can be used.
