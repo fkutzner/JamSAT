@@ -110,6 +110,15 @@ TEST(UnitSolver, GlucoseClauseDBReductionPolicy_noReductionForTooManyKnownGoodCl
 }
 
 namespace {
+/**
+ * \brief Tests whether the correct clauses are selected for reduction.
+ *
+ * \param LBDs                     A sequence of LBDs. For each value, a clause with the
+ *                                 corresponding LBD value is created.
+ * \param knownGoods               The amount of "known good" clauses, passed to the policy.
+ * \param expectedDeletedIndices   The indices of the clauses expected to be deleted, given as
+ *                                 indices to \p LBDs
+ */
 void test_GlucoseClauseDBReductionPolicy_markedForDeletion(
     const std::vector<int> &LBDs, uint16_t knownGoods,
     const std::vector<uint16_t> &expectedDeletedIndices) {

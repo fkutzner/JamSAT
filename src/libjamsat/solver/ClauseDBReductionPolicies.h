@@ -40,6 +40,8 @@
 
 namespace jamsat {
 /**
+ * \ingroup JamSAT_Solver
+ *
  * \brief A policy deciding which clauses should be reduced from the main clause database
  *        modeled after the one used in Glucose.
  *
