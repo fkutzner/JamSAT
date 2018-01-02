@@ -150,7 +150,6 @@ GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::getClausesMar
     if (midIndex >= m_learntClauses.size()) {
         JAM_LOG_REDUCE(info, "Selecting no clauses for reduction: too few learnt clauses");
         return LearntClauseItRange{m_learntClauses.end(), m_learntClauses.end()};
-        ;
     }
 
     std::sort(m_learntClauses.begin(), m_learntClauses.end(), [](ClauseT *lhs, ClauseT *rhs) {
@@ -160,7 +159,6 @@ GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::getClausesMar
     if (m_learntClauses[midIndex]->template getLBD<LBDType>() <= static_cast<LBDType>(3)) {
         JAM_LOG_REDUCE(info, "Selecting no clauses for reduction: LBD values are too low");
         return LearntClauseItRange{m_learntClauses.end(), m_learntClauses.end()};
-        ;
     }
 
     JAM_LOG_REDUCE(info,
