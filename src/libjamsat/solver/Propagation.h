@@ -368,6 +368,13 @@ void Propagation<AssignmentProvider, ClauseT>::clear() noexcept {
 
 template <class AssignmentProvider, class ClauseT>
 void Propagation<AssignmentProvider, ClauseT>::eraseClausesToBeDeleted() {
+#if defined(JAM_ASSERT_ENABLED)
+    for (CNFLit assignment : m_assignmentProvider.getAssignments(0)) {
+        auto reason = m_reasons[assignment.getVariable()];
+        JAM_ASSERT(reason == nullptr || !isMarkedToBeDeleted(*reason),
+                   "Can't erase reason clauses");
+    }
+#endif
     m_watchers.eraseWatchersToBeDeleted();
 }
 
