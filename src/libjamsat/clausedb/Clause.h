@@ -33,7 +33,8 @@
 
 namespace jamsat {
 /**
- * \defgroup JamSAT_ClauseDB.
+ * \defgroup JamSAT_ClauseDB  JamSAT internal clause types and clause databases
+ * This module contains data structures for representing and storing (solver-internal) CNF clauses.
  */
 
 /**

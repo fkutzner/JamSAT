@@ -32,7 +32,8 @@
 
 namespace jamsat {
 /**
- * \defgroup JamSAT_Branching
+ * \defgroup JamSAT_Branching  JamSAT CDCL decision heuristics
+ * This module contains decision heuristics for branching in JamSAT.
  */
 
 /**

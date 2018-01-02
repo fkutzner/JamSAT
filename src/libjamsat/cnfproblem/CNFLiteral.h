@@ -34,7 +34,8 @@
 
 namespace jamsat {
 /**
- * \defgroup JamSAT_CNFProblem Collection of CNF-related data types.
+ * \defgroup JamSAT_CNFProblem  JamSAT CNF problem instance data structures
+ * This module contains types and data structures for representing CNF problem instances.
  */
 
 /**

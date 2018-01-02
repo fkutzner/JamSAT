@@ -38,7 +38,8 @@
 namespace jamsat {
 
 /**
- * \defgroup JamSAT_Solver
+ * \defgroup JamSAT_Solver  JamSAT core solver classes
+ * This module contains the core classes of the JamSAT solver.
  */
 
 /**
@@ -46,9 +47,11 @@ namespace jamsat {
  *
  * \class Trail
  *
- * \brief The solver's trail data structure. The trail is used to keep track of
- * the assignment sequence, which is partitioned into individually accessible
- * decision levels. The assignment sequence is kept as a sequence of literals.
+ * \brief The solver's trail data structure.
+ *
+ * The trail is used to keep track of the assignment sequence, which is partitioned into
+ * individually accessible decision levels. The assignment sequence is kept as a sequence of
+ * literals.
  */
 class Trail {
 private:

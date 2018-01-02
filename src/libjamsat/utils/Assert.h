@@ -29,7 +29,7 @@
 #include <cassert>
 
 /**
- * \defgroup JamSAT_Utils Collection of utilities for JamSAT.
+ * \defgroup JamSAT_Utils  JamSAT utility collection
  */
 
 #define JAM_ASSERT(x, message) assert(x &&message)

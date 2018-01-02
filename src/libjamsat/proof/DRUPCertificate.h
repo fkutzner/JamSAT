@@ -38,7 +38,8 @@ namespace jamsat {
 /**
  * \ingroup JamSAT_Proof
  *
- * \brief A DRUP (Delete Reverse Unit Propagation) certificate.
+ * \brief A DRUP (Delete Reverse Unit Propagation) certificate (proof for unsatisfiability of a
+ *        CNF problem instance).
  *
  * This class is a generic interface for DRUP proofs. Implementations may emit the proof
  * formatted as plaintext DRUP or binary DRUP. See e.g.:
@@ -89,6 +90,15 @@ protected:
     virtual void endClause() = 0;
 };
 
+/**
+ * \ingroup JamSAT_Proof
+ *
+ * \brief Creates a DRUPCertificate that prints the certificate as plaintext to a stream.
+ *
+ * \param outputStream      The target output stream.
+ */
+std::unique_ptr<DRUPCertificate> createPlainDRUPCertificate(std::ostream &outputStream);
+
 /********** Implementation ****************************** */
 
 template <typename LiteralForwardRange>
@@ -109,6 +119,4 @@ void DRUPCertificate::deleteClause(const LiteralForwardRange &clause) {
     beginDeletedClause();
     addClause(clause);
 }
-
-std::unique_ptr<DRUPCertificate> createPlainDRUPCertificate(std::ostream &outputStream);
 }

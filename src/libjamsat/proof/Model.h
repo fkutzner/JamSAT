@@ -34,13 +34,14 @@
 
 namespace jamsat {
 /**
- * \defgroup JamSAT_Proof SAT/UNSAT proof data structures for JamSAT.
+ * \defgroup JamSAT_Proof JamSAT SAT/UNSAT proof data structures
+ * This module contains data structures for CNF (un)satisfiability proofs.
  */
 
 /**
  * \ingroup JamSAT_Proof
  *
- * \brief A model for a CNF problem instance, i.e. a proof for its satisfiability.
+ * \brief A model for a CNF problem instance (proof for its satisfiability).
  */
 class Model {
 public:
