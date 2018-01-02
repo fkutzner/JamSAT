@@ -29,7 +29,7 @@
 #include <libjamsat/utils/ControlFlow.h>
 
 namespace jamsat {
-TEST(UnitControlFlow, OnExitScopeExitsWhenExitingScope) {
+TEST(UnitUtils, OnExitScopeExitsWhenExitingScope) {
     bool result = false;
 
     {
@@ -40,7 +40,7 @@ TEST(UnitControlFlow, OnExitScopeExitsWhenExitingScope) {
     EXPECT_EQ(result, true);
 }
 
-TEST(UnitControlFlow, OnExitScopeCorrectAfterMoveAssignment) {
+TEST(UnitUtils, OnExitScopeCorrectAfterMoveAssignment) {
     int callCount = 0;
 
     {
@@ -54,7 +54,7 @@ TEST(UnitControlFlow, OnExitScopeCorrectAfterMoveAssignment) {
     EXPECT_EQ(callCount, 1);
 }
 
-TEST(UnitControlFlow, OnExitScopeCorrectAfterMoveConstruction) {
+TEST(UnitUtils, OnExitScopeCorrectAfterMoveConstruction) {
     int callCount = 0;
 
     {
