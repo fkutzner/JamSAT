@@ -32,6 +32,8 @@
 
 namespace jamsat {
 /**
+ * \ingroup JamSAT_TestInfrastructure
+ *
  * \brief Encodes an AND gate as a set of clauses.
  *
  * Only the variables occuring in \p inputs and \p output are used for encoding the gate.
@@ -44,6 +46,8 @@ namespace jamsat {
 void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &target);
 
 /**
+ * \ingroup JamSAT_TestInfrastructure
+ *
  * \brief Encodes an OR gate as a set of clauses.
  *
  * Only the variables occuring in \p inputs and \p output are used for encoding the gate.
@@ -56,6 +60,8 @@ void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &targ
 void insertOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &target);
 
 /**
+ * \ingroup JamSAT_TestInfrastructure
+ *
  * \brief Encodes an XOR gate as a set of clauses.
  *
  * Only the variables occuring in \p inputs and \p output are used for encoding the gate.

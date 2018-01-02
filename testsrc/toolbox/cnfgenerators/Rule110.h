@@ -33,6 +33,12 @@
 
 namespace jamsat {
 /**
+ * \defgroup JamSAT_TestInfrastructure  JamSAT testing infrastructure
+ */
+
+/**
+ * \ingroup JamSAT_TestInfrastructure
+ *
  * \brief CNF Encoder for determining whether a given state can be reached in a Rule 110 automaton
  *        within N steps, starting from an under-specified start state.
  *

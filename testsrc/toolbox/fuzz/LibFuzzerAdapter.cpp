@@ -31,9 +31,15 @@
 
 using FuzzStream = boost::iostreams::stream<boost::iostreams::array_source>;
 
-// This file contains the LLVM libFuzzer adapter. See
-// http://llvm.org/docs/LibFuzzer.html
-
+/**
+ * \ingroup JamSAT_TestInfrastructure
+ *
+ * \brief An entry point for fuzzing with LLVM's LibFuzzer.
+ *
+ * See http://llvm.org/docs/LibFuzzer.html
+ *
+ * This adapter passes the fuzzer-generated input to jamsat::JamSATFuzzingEntryPoint.
+ */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     // TODO: make this nicer by getting rid of the copy and the reinterpret_cast.
     auto *workingCopy = new uint8_t[size];

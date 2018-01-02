@@ -28,10 +28,13 @@
 
 #include <iostream>
 
-// This file contains the generic fuzzer adapter, defining its own main()
-// function passing stdin on to the JamSAT fuzzer entry point. This adapter
-// can eg. be used with afl-fuzz.
-
+/**
+ * \ingroup JamSAT_TestInfrastructure
+ *
+ * \brief A generic fuzzer adapter, e.g. for use with afl-fuzz.
+ *
+ * This adapter passes the fuzzer-generated input to jamsat::JamSATFuzzingEntryPoint.
+ */
 int main(int, char **) {
     // JamSAT does not use C I/O
     std::ios_base::sync_with_stdio(false);
