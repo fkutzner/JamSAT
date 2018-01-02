@@ -302,5 +302,43 @@ TEST(UnitSolver, propagateAfterIncreasingMaximumVariable) {
     EXPECT_EQ(assignments.getAssignment(CNFVar{6}), TBool::TRUE);
 }
 
+TEST(UnitSolver, propagateAfterEraseToBeDeletedDoesNotPropagateDeletedClauses) {
+    CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    CNFLit lit4{CNFVar{4}, CNFSign::NEGATIVE};
+    CNFLit lit5{CNFVar{5}, CNFSign::POSITIVE};
+
+    TrivialClause c1{lit1, lit2, lit3};
+    TrivialClause c2{~lit3, lit1, ~lit5};
+    TrivialClause c3{~lit2, lit1, lit4};
+
+    TestAssignmentProvider assignments;
+
+    CNFVar maxVar{5};
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    underTest.registerClause(c1);
+    underTest.registerClause(c2);
+    underTest.registerClause(c3);
+
+    markToBeDeleted(c1);
+    underTest.eraseClausesToBeDeleted();
+
+    assignments.addAssignment(~lit1);
+    assignments.addAssignment(~lit2);
+    auto conflictingClause = underTest.propagateUntilFixpoint(~lit1);
+    ASSERT_EQ(conflictingClause, nullptr);
+    conflictingClause = underTest.propagateUntilFixpoint(~lit2);
+    ASSERT_EQ(conflictingClause, nullptr);
+    EXPECT_EQ(assignments.getAssignment(CNFVar{3}), TBool::INDETERMINATE)
+        << "Clause c1 has not been erased";
+
+    assignments.addAssignment(lit3);
+    conflictingClause = underTest.propagateUntilFixpoint(lit3);
+    ASSERT_EQ(conflictingClause, nullptr);
+    EXPECT_NE(assignments.getAssignment(CNFVar{5}), TBool::INDETERMINATE)
+        << "More clauses erased than expected";
+}
+
 // TODO: test watcher restoration
 }

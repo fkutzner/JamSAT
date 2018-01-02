@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include "Watcher.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/solver/Watcher.h>
 #include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/Truth.h>
 
@@ -93,6 +93,14 @@ public:
      * \brief Unregisters all clauses from the propagation system.
      */
     void clear() noexcept;
+
+    /**
+     * \brief Removes clauses marked as "to be deleted" from the propagation system.
+     *
+     * Clauses are considered marked "to be deleted" iff they have been passed to
+     * markToBeDeleted().
+     */
+    void eraseClausesToBeDeleted();
 
     /**
      * \brief Propagates the given fact wrt. the clauses registered in the
@@ -356,6 +364,11 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
 template <class AssignmentProvider, class ClauseT>
 void Propagation<AssignmentProvider, ClauseT>::clear() noexcept {
     m_watchers.clear();
+}
+
+template <class AssignmentProvider, class ClauseT>
+void Propagation<AssignmentProvider, ClauseT>::eraseClausesToBeDeleted() {
+    m_watchers.eraseWatchersToBeDeleted();
 }
 
 template <class AssignmentProvider, class ClauseT>

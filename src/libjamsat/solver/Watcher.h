@@ -33,6 +33,7 @@
 #include <putl/state_ptr.hpp>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/solver/ClauseMarkers.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
 
@@ -48,6 +49,8 @@ public:
       : m_clause(&watchedClause, index), m_otherWatchedLiteral(otherWatchedLiteral) {}
 
     ClauseT &getClause() noexcept { return *m_clause; }
+
+    const ClauseT &getClause() const noexcept { return *m_clause; }
 
     CNFLit getOtherWatchedLiteral() const noexcept { return m_otherWatchedLiteral; }
 
@@ -130,6 +133,9 @@ private:
 
 template <class ClauseT>
 class Watchers {
+private:
+    using WatcherList = std::vector<Watcher<ClauseT>>;
+
 public:
     using WatcherT = Watcher<ClauseT>;
 
@@ -156,6 +162,13 @@ public:
         }
     }
 
+    void eraseWatchersToBeDeleted() {
+        for (CNFLit::RawLiteral i = 0; i <= m_maxVar.getRawValue(); ++i) {
+            eraseWatchersToBeDeleted(m_watchers[CNFLit{CNFVar{i}, CNFSign::NEGATIVE}]);
+            eraseWatchersToBeDeleted(m_watchers[CNFLit{CNFVar{i}, CNFSign::POSITIVE}]);
+        }
+    }
+
     void increaseMaxVarTo(CNFVar newMaxVar) {
         JAM_ASSERT(newMaxVar >= m_maxVar,
                    "Argument newMaxVar must not be smaller than the previous maximum variable");
@@ -165,7 +178,14 @@ public:
     }
 
 private:
-    using WatcherList = std::vector<Watcher<ClauseT>>;
+    void eraseWatchersToBeDeleted(WatcherList &watcherList) {
+        watcherList.erase(std::remove_if(watcherList.begin(), watcherList.end(),
+                                         [](const Watcher<ClauseT> &w) {
+                                             return isMarkedToBeDeleted(w.getClause());
+                                         }),
+                          watcherList.end());
+    }
+
     CNFVar m_maxVar;
     BoundedMap<CNFLit, WatcherList> m_watchers;
 };
