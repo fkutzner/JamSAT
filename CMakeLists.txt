@@ -102,7 +102,7 @@ elseif(COMPILING_WITH_MSVC)
   add_definitions(/EHsc)
 
   # Disable warnings about usage of C++ TR1. Google Test apparently still uses
-  # TR1 functions. 
+  # TR1 functions.
   add_definitions(/wd4996)
 endif()
 
@@ -113,6 +113,7 @@ if(JAMSAT_ENABLE_LOGGING)
   add_definitions(-DJAM_ENABLE_CA_LOGGING)
   add_definitions(-DJAM_ENABLE_CNFPROBLEM_LOGGING)
   add_definitions(-DJAM_ENABLE_CDCLITEST_LOGGING)
+  add_definitions(-DJAM_ENABLE_REDUCE_LOGGING)
 endif()
 
 ### Add JamSAT sources
