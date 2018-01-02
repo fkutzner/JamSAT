@@ -20,6 +20,7 @@ add_subdirectory(clausedb)
 add_subdirectory(solver)
 add_subdirectory(branching)
 add_subdirectory(utils)
+add_subdirectory(proof)
 
 
 add_executable(libjamsat_unit_testsuite
@@ -28,6 +29,7 @@ add_executable(libjamsat_unit_testsuite
   $<TARGET_OBJECTS:clausedb_unit_tests>
   $<TARGET_OBJECTS:solver_unit_tests>
   $<TARGET_OBJECTS:utils_unit_tests>
+  $<TARGET_OBJECTS:proof_unit_tests>
 )
 
 target_link_libraries(libjamsat_unit_testsuite jamcore gtest gtest_main)

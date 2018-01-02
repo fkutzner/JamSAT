@@ -17,6 +17,7 @@ add_subdirectory(utils)
 add_subdirectory(clausedb)
 add_subdirectory(solver)
 add_subdirectory(branching)
+add_subdirectory(proof)
 
 add_library(
   jamcore STATIC
@@ -25,6 +26,7 @@ add_library(
   $<TARGET_OBJECTS:jamsatClauseDB>
   $<TARGET_OBJECTS:jamsatSolver>
   $<TARGET_OBJECTS:jamsatBranching>
+  $<TARGET_OBJECTS:jamsatProof>
 )
 set_property(TARGET jamcore PROPERTY FOLDER ${JAMSAT_LIBRARY_FOLDER_NAME})
 
