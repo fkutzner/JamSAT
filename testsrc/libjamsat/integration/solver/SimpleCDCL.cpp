@@ -26,6 +26,8 @@
 
 #include <gtest/gtest.h>
 
+#include <sstream>
+
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/clausedb/HeapClauseDB.h>

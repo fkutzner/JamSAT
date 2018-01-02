@@ -25,3 +25,73 @@
 */
 
 #pragma once
+
+#include <memory>
+
+#include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/cnfproblem/CNFProblem.h>
+#include <libjamsat/utils/Truth.h>
+
+namespace jamsat {
+/**
+ * \defgroup JamSAT_Proof SAT/UNSAT proof data structures for JamSAT.
+ */
+
+/**
+ * \ingroup JamSAT_Proof
+ *
+ * \brief A model for a CNF problem instance, i.e. a proof for its satisfiability.
+ */
+class Model {
+public:
+    /**
+     * \brief Sets the assignment of the given variable.
+     *
+     * \param variable  A regular variable.
+     * \param value     The variable's value in the model.
+     */
+    virtual void setAssignment(CNFVar variable, TBool value) noexcept = 0;
+
+    /**
+     * \brief Gets the assignment of the given variable.
+     *
+     * If the variable has not been assigned via setAssignment(), TBool::INDETERMINATE
+     * is returned.
+     *
+     * \param variable  A regular variable.
+     * \returns         The variable's assignment.
+     */
+    virtual TBool getAssignment(CNFVar variable) const noexcept = 0;
+
+    /**
+     * \brief Checks the proof.
+     *
+     * \param problem       A CNF problem.
+     * \returns             TBool::TRUE if the model is a model for \p problem; TBool::FALSE
+     *                      otherwise.
+     */
+    virtual TBool check(const CNFProblem &problem) const noexcept = 0;
+
+    // TODO: add getAssignments() returning a range of assignments
+
+    Model &operator=(const Model &other) = delete;
+    Model &operator=(Model &&other) = delete;
+    Model(const Model &other) = delete;
+    Model(Model &&other) = delete;
+
+    Model();
+    virtual ~Model();
+};
+
+/**
+ * \ingroup JamSAT_Proof
+ *
+ * \brief Creates a new Model instance.
+ *
+ * \param initialMaxVar   The maximum variable expected to occur in the model. If assignments are
+ *                        stored for greater variables than \p initialMaxVar, the data structure
+ *                        is automatically resized appropriately.
+ * \returns               A unique_ptr to the new Model instance.
+ */
+std::unique_ptr<Model> createModel(CNFVar initialMaxVar);
+}

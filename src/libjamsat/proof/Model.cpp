@@ -25,3 +25,72 @@
 */
 
 #include <libjamsat/proof/Model.h>
+#include <libjamsat/utils/BoundedMap.h>
+
+namespace jamsat {
+
+Model::Model() {}
+
+Model::~Model() {}
+
+class ModelImpl : public Model {
+public:
+    explicit ModelImpl(CNFVar maxVar);
+
+    void setAssignment(CNFVar variable, TBool value) noexcept override;
+    TBool getAssignment(CNFVar variable) const noexcept override;
+
+    TBool check(const CNFProblem &problem) const noexcept override;
+
+    // TODO: implement getAssignments()
+
+    ModelImpl &operator=(const ModelImpl &other) = delete;
+    ModelImpl &operator=(const ModelImpl &&other) = delete;
+    ModelImpl(const Model &other) = delete;
+    ModelImpl(const Model &&other) = delete;
+
+    virtual ~ModelImpl();
+
+private:
+    BoundedMap<CNFVar, TBool> m_assignments;
+    CNFVar m_currentMaxVar;
+};
+
+ModelImpl::ModelImpl(CNFVar maxVar)
+  : Model(), m_assignments(maxVar, TBool::INDETERMINATE), m_currentMaxVar(maxVar) {}
+
+ModelImpl::~ModelImpl() {}
+
+void ModelImpl::setAssignment(CNFVar variable, TBool value) noexcept {
+    if (variable > m_currentMaxVar) {
+        m_currentMaxVar = variable;
+        m_assignments.increaseSizeTo(variable);
+    }
+    m_assignments[variable] = value;
+}
+
+TBool ModelImpl::getAssignment(CNFVar variable) const noexcept {
+    if (variable <= m_currentMaxVar) {
+        return m_assignments[variable];
+    }
+    return TBool::INDETERMINATE;
+}
+
+TBool ModelImpl::check(const jamsat::CNFProblem &problem) const noexcept {
+    for (auto &clause : problem.getClauses()) {
+        bool satisfied = false;
+        for (auto lit : clause) {
+            TBool expectedValue = (lit.getSign() == CNFSign::POSITIVE) ? TBool::TRUE : TBool::FALSE;
+            satisfied |= (getAssignment(lit.getVariable()) == expectedValue);
+        }
+        if (!satisfied) {
+            return TBool::FALSE;
+        }
+    }
+    return TBool::TRUE;
+}
+
+std::unique_ptr<Model> createModel(CNFVar maxVar) {
+    return std::make_unique<ModelImpl>(maxVar);
+}
+}
