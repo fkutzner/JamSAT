@@ -54,8 +54,8 @@ bool LubyRestartPolicy::shouldRestart() const noexcept {
 GlucoseRestartPolicy::GlucoseRestartPolicy(const GlucoseRestartPolicy::Options &options) noexcept
   : m_averageLBD(options.movingAverageWindowSize)
   , m_K(options.K)
-  , m_sumLBD(0.0f)
-  , m_conflictCount(0ull) {}
+  , m_sumLBD(0.0F)
+  , m_conflictCount(0ULL) {}
 
 void GlucoseRestartPolicy::registerConflict(
     GlucoseRestartPolicy::RegisterConflictArgs &&args) noexcept {

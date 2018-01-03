@@ -30,7 +30,7 @@ namespace jamsat {
 
 class PlainDRUPCertificate : public DRUPCertificate {
 public:
-    PlainDRUPCertificate(std::ostream &outputStream);
+    explicit PlainDRUPCertificate(std::ostream &outputStream);
     virtual ~PlainDRUPCertificate();
 
     PlainDRUPCertificate &operator=(const PlainDRUPCertificate &other) = delete;

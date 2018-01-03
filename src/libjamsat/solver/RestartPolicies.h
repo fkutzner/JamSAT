@@ -50,7 +50,7 @@ public:
      *
      * \param[in] options   the configuration of the restart policy.
      */
-    GlucoseRestartPolicy(const Options &options) noexcept;
+    explicit GlucoseRestartPolicy(const Options &options) noexcept;
 
     /**
      * \brief Notifies the restart policy that the client has handled a conflict.
@@ -106,7 +106,7 @@ public:
      *
      * \param[in] options   the configuration of the restart policy.
      */
-    LubyRestartPolicy(const Options &options) noexcept;
+    explicit LubyRestartPolicy(const Options &options) noexcept;
 
     /**
      * \brief Notifies the restart policy that the client has handled a conflict.
