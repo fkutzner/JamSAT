@@ -50,8 +50,7 @@ namespace jamsat {
  * provider to compute all forced assignments after a CDCL branching decision.
  *
  * \tparam AssignmentProvider   A type satisfying the \ref AssignmentProvider concept.
- * \tparam ClauseT              The clause type. ClauseT must satisfy the Clause
- * interface defined in Clause.h.
+ * \tparam ClauseT              A type satisfying the \ref SimpleClause concept.
  *
  * \concept{ReasonProvider}
  */

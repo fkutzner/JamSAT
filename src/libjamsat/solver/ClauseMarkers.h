@@ -36,7 +36,7 @@ namespace jamsat {
  * \brief Destructively marks clauses as "to be deleted".
  *
  * \param clause    A nonempty clause.
- * \tparam ClauseT  The clause type.
+ * \tparam ClauseT  A type satisfying the \ref SimpleClause concept.
  */
 template <class ClauseT>
 void markToBeDeleted(ClauseT &clause) noexcept;
@@ -47,7 +47,7 @@ void markToBeDeleted(ClauseT &clause) noexcept;
  * \brief Checks whether a given clause has been marked as "to be deleted".
  *
  * \param clause    A nonempty clause.
- * \tparam ClauseT  The clause type.
+ * \tparam ClauseT  A type satisfying the \ref SimpleClause concept.
  *
  * \returns true iff \p clause has been marked as "to be deleted".
  */

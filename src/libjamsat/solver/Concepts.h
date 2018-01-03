@@ -189,3 +189,59 @@
  * </table>
  * \}
  */
+
+/**
+ * \defgroup SimpleClause
+ * \ingroup JamSAT_Solver_Concepts
+ * \{
+ *
+ * A simple container-like type for CNFLits.
+ *
+ * \par Requirements
+ *
+ * Given
+ *  - `C`, a \ref SimpleClause type
+ *  - `c`, an object of type `C`
+ *  - `s`, an object of type `C::size_type`
+ *
+ * <table>
+ *  <tr><th>Expression</th><th>Requirements</th><th>Return value</th></tr>
+ *  <tr>
+ *    <td> `C::size_type` </td>
+ *    <td> An integral type that can represent the largest amount of `CNFLit` objects an object of
+ * `C` can store.</td> <td> </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `C::iterator` </td>
+ *    <td> Iterator pointing to `CNFLit` </td>
+ *    <td> </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `C::const_iterator` </td>
+ *    <td> Const Iterator pointing to `CNFLit` </td>
+ *    <td> </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `c.begin()` </td>
+ *    <td> Iterator to the first element of `c` </td>
+ *    <td> `C::(const_)iterator`</td>
+ *  </tr>
+ *  <tr>
+ *    <td> `c.end()` </td>
+ *    <td> Iterator to one past the last element of `c` </td>
+ *    <td> `C::(const_)iterator`</td>
+ *  </tr>
+ *  <tr>
+ *    <td> `c.size()` </td>
+ *    <td> Returns the amount of literals stored in `c`.</td>
+ *    <td> `c::size_type` </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `c[s]` </td>
+ *    <td> Returns a reference to the `s`th literal stored in `c`. `s` must
+ *         not be negative and must be smaller than `c.size()`. </td>
+ *    <td> `(const) CNFLit&` </td>
+ *  </tr>
+ * </table>
+ * \}
+ */

@@ -58,8 +58,7 @@ namespace jamsat {
  *
  * \tparam DLProvider           A type satisfying the \ref DecisionLevelProvider concept.
  * \tparam ReasonProvider       A type satisfying the \ref ReasonProvider concept.
- * \tparam ClauseT              The clause type. ClauseT must satisfy the Clause
- * interface defined in Clause.h.
+ * \tparam ClauseT              A type satisfying the \ref SimpleClause concept.
  */
 template <class DLProvider, class ReasonProvider, class ClauseT>
 class FirstUIPLearning {
