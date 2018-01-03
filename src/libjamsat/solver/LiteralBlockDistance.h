@@ -40,21 +40,15 @@ using LBD = uint32_t;
  * decision levels of variables occuring in L.
  *
  * \param literals                a forward range of literals.
- * \param decisionLevelProvider   a decision level provider (TODO: document the
- * concept of a decision level provider)
+ * \param decisionLevelProvider   a decision level provider.
  * \param tempStamps              a clean StampMap supporting stamping the
- * decision levels of \p literals . When \p getLBD returns, \p tempStamps is
- * clean.
- * \returns                       the LBD of \p literals wrt. \p
- * decisionLevelProvider .
+ *     decision levels of \p literals . When \p getLBD returns, \p tempStamps is clean.
+ * \returns                       the LBD of \p literals wrt. \p decisionLevelProvider .
  *
  * \tparam ForwardRange           a forward range of literals.
- * \tparam DLProvider             the decision level provider type (TODO: see
- * above)
- * \tparam StampMapT              A StampMap specialization supporting stamping
- * of the decision levels.
- * \tparam LBD                    The literal block distance type, an integral
- * type.
+ * \tparam DLProvider             A type satisfying the \ref DecisionLevelProvider concept.
+ * \tparam StampMapT              A StampMap specialization supporting stamping of the decision
+ * levels. \tparam LBD                    The literal block distance type, an integral type.
  */
 template <typename ForwardRange, typename DLProvider, typename StampMapT>
 LBD getLBD(const ForwardRange &literals, const DLProvider &decisionLevelProvider,

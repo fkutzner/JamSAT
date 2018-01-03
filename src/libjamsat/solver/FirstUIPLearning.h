@@ -56,14 +56,8 @@ namespace jamsat {
  * DLProvider and Propagation as a ReasonProvider to compute conflict clauses
  * after a conflict occurred.
  *
- * \tparam DLProvider           A class type having the method T <tt>
- * getAssignmentDecisionLevel(CNFVar variable) const noexcept </tt> (with T
- * being an integral type) which returns the current decision level of \p
- * variable, and T <tt> getCurrentDecisionLevel() const noexcept </tt> returning
- * the current decision level.
- * \tparam ReasonProvider       A class type having the method <tt> const
- * Clause* getAssignmentReason(CNFVar variable) const noexcept </tt> returning
- * the reason for the assignment of \p variable.
+ * \tparam DLProvider           A type satisfying the \ref DecisionLevelProvider concept.
+ * \tparam ReasonProvider       A type satisfying the \ref ReasonProvider concept.
  * \tparam ClauseT              The clause type. ClauseT must satisfy the Clause
  * interface defined in Clause.h.
  */

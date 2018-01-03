@@ -52,6 +52,8 @@ namespace jamsat {
  * The trail is used to keep track of the assignment sequence, which is partitioned into
  * individually accessible decision levels. The assignment sequence is kept as a sequence of
  * literals.
+ *
+ * \concept{AssignmentProvider, DecisionLevelProvider}
  */
 class Trail {
 private:

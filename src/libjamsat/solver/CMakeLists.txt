@@ -10,4 +10,5 @@ add_jamsat_core_library(jamsatSolver
   RestartPolicies.cpp
   ClauseDBReductionPolicies.h
   ClauseMarkers.h
+  Concepts.h
 )

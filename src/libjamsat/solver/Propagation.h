@@ -49,16 +49,17 @@ namespace jamsat {
  * Usage example: Use Propagation with a Trail implementation as an assignment
  * provider to compute all forced assignments after a CDCL branching decision.
  *
- * \tparam AssignmentProvider   A class type T having the method TBool
- * T::getAssignment(CNFLit x) which returns the current variable assignment of
- * x and a method T::addAssignment(CNFLit x) registering the assignment x within
- * the assignment provider.
+ * \tparam AssignmentProvider   A type satisfying the \ref AssignmentProvider concept.
  * \tparam ClauseT              The clause type. ClauseT must satisfy the Clause
  * interface defined in Clause.h.
+ *
+ * \concept{ReasonProvider}
  */
 template <class AssignmentProvider, class ClauseT>
 class Propagation {
 public:
+    using ClauseType = ClauseT;
+
     /**
      * \brief Constructs a new Propagation instance.
      *

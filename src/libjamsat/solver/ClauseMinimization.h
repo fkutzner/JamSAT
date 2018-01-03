@@ -62,15 +62,15 @@ namespace jamsat {
  *
  * \param[in,out] literals    The container of CNFLits in which redundant
  * literals should be erased.
- * \param[in] reasonProvider  An assignment reason provider (TODO: document
- * assignment reason provider concept)
- * \param[in] dlProvider      A decision level provider (TODO: document decision
- * level provider concept)
+ * \param[in] reasonProvider  A reason provider.
+ * \param[in] dlProvider      A decision level provider.
  * \param[in,out] tempStamps  a clean StampMap supporting stamping CNFVar values
  * occuring in \p literals and any reason clause in \p reasonProvider . When
  * this function returns, \p tempStamps is clean.
  *
- * TODO: document template parameters
+ * \tparam ReasonProvider        A type satisfying the \ref ReasonProvider concept.
+ * \tparam DecisionLevelProvider A type satisfying the \ref DecisionLevelProvider concept.
+ * TODO: document other template parameters
  *
  * TODO: document that LiteralContainer must support erasing
  */
