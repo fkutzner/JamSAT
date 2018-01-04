@@ -26,6 +26,9 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
+#include <vector>
+
 #include <libjamsat/utils/BoundedMap.h>
 
 namespace jamsat {
@@ -72,5 +75,32 @@ TEST(UnitUtils, boundedMapInitializesStorageWithDefaultValues) {
     EXPECT_EQ(underTest[4], 2.0f);
     underTest.increaseSizeTo(20);
     EXPECT_EQ(underTest[19], 2.0f);
+}
+
+namespace {
+template <typename Range, typename T>
+void test_assertRangeContainsUnordered(const Range &r, const std::vector<T> &expected) {
+    uint64_t count = 0;
+    for (const T &elem : r) {
+        EXPECT_NE(std::find(expected.begin(), expected.end(), elem), expected.end())
+            << "Element " << elem << " not expected in result range";
+        ++count;
+    }
+    EXPECT_EQ(count, expected.size()) << "Result range larger than expected";
+}
+}
+
+TEST(UnitUtils, boundedMapValueRangeContainsDefaultValuesAfterConstruction) {
+    BoundedMap<int, double, IntIndex> underTest{4, 2.0f};
+    test_assertRangeContainsUnordered(underTest.values(),
+                                      std::vector<double>{2.0f, 2.0f, 2.0f, 2.0f, 2.0f});
+}
+
+TEST(UnitUtils, boundedMapValueRangeContainsExactlyTheValues) {
+    BoundedMap<int, double, IntIndex> underTest{2, 2.0f};
+    underTest[0] = 3.0f;
+    underTest[1] = 1.0f;
+    underTest[2] = 2.0f;
+    test_assertRangeContainsUnordered(underTest.values(), std::vector<double>{1.0f, 2.0f, 3.0f});
 }
 }

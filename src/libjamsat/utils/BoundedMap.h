@@ -28,14 +28,15 @@
 
 #include <vector>
 
+#include <boost/range.hpp>
+
 namespace jamsat {
 /**
  * \ingroup JamSAT_Utils
  *
  * \class jamsat::BoundedMap
  *
- * \brief A noniterable map with a bounded index range with and O(1) access
- * times.
+ * \brief A map with a bounded index range with and O(1) access times.
  *
  * \tparam K        The key type.
  * \tparam V        The value type.
@@ -53,6 +54,12 @@ private:
 public:
     /// The size type.
     using size_type = typename BackingType::size_type;
+
+    /// The const iterator for value ranges.
+    using const_iterator = typename BackingType::const_iterator;
+
+    /// The const value range type.
+    using const_value_range = boost::iterator_range<const_iterator>;
 
     /**
      * \brief Constructs an ArrayBackedMap with the given maximum key.
@@ -103,6 +110,18 @@ public:
      * \returns       The total size of this map.
      */
     size_type size() const noexcept { return m_values.size(); }
+
+    /**
+     * \brief Gets the range of values contained in this map.
+     *
+     * The range contains exactly `size()` elements, which are not required to be unique within
+     * the range. The returned range is valid until the map is destroyed or resized.
+     *
+     * \returns       The range of values contained in this map.
+     */
+    const_value_range values() const noexcept {
+        return const_value_range{m_values.begin(), m_values.end()};
+    }
 
     /**
      * \brief Increases the map's size.
