@@ -8,4 +8,5 @@ add_jamsat_core_unittest_library(utils_unit_tests
   SimpleMovingAverageTests.cpp
   LubySequenceTests.cpp
   FlatteningIteratorUnitTests.cpp
+  CastsUnitTests.cpp
 )

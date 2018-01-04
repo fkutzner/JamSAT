@@ -10,4 +10,5 @@ add_jamsat_core_library(jamsatUtils
   SimpleMovingAverage.h
   LubySequence.h
   FlatteningIterator.h
+  Casts.h
 )
