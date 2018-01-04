@@ -29,6 +29,8 @@
 #include <istream>
 #include <sstream>
 
+#include <libjamsat/utils/Casts.h>
+
 #if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_CNFPROBLEM_LOGGING)
 #include <boost/log/trivial.hpp>
 #define JAM_LOG_CNFPROBLEM(x, y) BOOST_LOG_TRIVIAL(x) << "[cnfprb] " << y
@@ -171,7 +173,7 @@ std::istream &readDIMACSClauses(std::istream &input, DIMACSHeader problemHeader,
         }
         problem.addClause(std::move(newClause));
 
-        if (static_cast<unsigned int>(problem.getMaxVar().getRawValue()) + 1 >
+        if (static_checked_cast<unsigned int>(problem.getMaxVar().getRawValue()) + 1 >
             problemHeader.variableCount) {
             input.setstate(std::ios::failbit);
             problem.clear();
@@ -211,7 +213,7 @@ boost::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
     }
 
     CNFSign literalSign = encodedLiteral > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
-    auto rawVariable = static_cast<CNFVar::RawVariable>(std::abs(encodedLiteral) - 1);
+    auto rawVariable = static_checked_cast<CNFVar::RawVariable>(std::abs(encodedLiteral) - 1);
 
     if (rawVariable > CNFVar::getMaxRawValue()) {
         JAM_LOG_CNFPROBLEM(warning, "Illegally large variable: " << encodedLiteral);

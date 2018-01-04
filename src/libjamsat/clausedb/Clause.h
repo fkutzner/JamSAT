@@ -30,6 +30,7 @@
 #include <memory>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/utils/Casts.h>
 
 namespace jamsat {
 /**
@@ -180,7 +181,7 @@ std::ostream &operator<<(std::ostream &stream, const Clause &clause);
 template <typename LBDType>
 auto Clause::getLBD() const noexcept -> LBDType {
     if (m_lbd <= std::numeric_limits<LBDType>::max()) {
-        return static_cast<LBDType>(m_lbd);
+        return static_checked_cast<LBDType>(m_lbd);
     } else {
         return std::numeric_limits<LBDType>::max();
     }
@@ -190,7 +191,7 @@ template <typename LBDType>
 void Clause::setLBD(LBDType LBD) noexcept {
     JAM_ASSERT(LBD >= 0, "LBD out of range");
     if (LBD <= std::numeric_limits<decltype(m_lbd)>::max()) {
-        m_lbd = static_cast<decltype(m_lbd)>(LBD);
+        m_lbd = static_checked_cast<decltype(m_lbd)>(LBD);
     } else {
         m_lbd = std::numeric_limits<decltype(m_lbd)>::max();
     }

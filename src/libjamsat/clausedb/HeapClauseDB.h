@@ -35,6 +35,7 @@
 #include <vector>
 
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/Casts.h>
 
 namespace jamsat {
 
@@ -175,11 +176,7 @@ ClauseT &HeapClauseDB<ClauseT>::insertClause(const ForwardRange &literals) {
     JAM_ASSERT(literals.begin() - literals.end() != 0,
                "The range of literals to be added must be nonempty");
     auto size = literals.end() - literals.begin();
-    JAM_ASSERT(size > 0 && static_cast<uint64_t>(size) <=
-                               static_cast<uint64_t>(
-                                   std::numeric_limits<typename ClauseT::size_type>::max()),
-               "The range of literals to be added is too large");
-    auto clauseSize = static_cast<typename ClauseT::size_type>(size);
+    auto clauseSize = static_checked_cast<typename ClauseT::size_type>(size);
     m_clauses.push_back(clausedb_detail::heapAllocateClause<ClauseT>(clauseSize));
     boost::copy(literals, m_clauses.back()->begin());
     return *(m_clauses.back());

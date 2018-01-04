@@ -28,6 +28,7 @@
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -36,14 +37,14 @@ BranchingHeuristicBase::BranchingHeuristicBase(CNFVar maxVar) noexcept
 
 bool BranchingHeuristicBase::isEligibleForDecisions(CNFVar variable) const noexcept {
     JAM_ASSERT(variable.getRawValue() <
-                   static_cast<CNFVar::RawVariable>(m_decisionVariables.size()),
+                   static_checked_cast<CNFVar::RawVariable>(m_decisionVariables.size()),
                "Variable out of bounds");
     return toRawBool(m_decisionVariables[variable]);
 }
 
 void BranchingHeuristicBase::setEligibleForDecisions(CNFVar variable, bool isEligible) noexcept {
     JAM_ASSERT(variable.getRawValue() <
-                   static_cast<CNFVar::RawVariable>(m_decisionVariables.size()),
+                   static_checked_cast<CNFVar::RawVariable>(m_decisionVariables.size()),
                "Variable out of bounds");
     m_decisionVariables[variable] = toBool(isEligible);
 }
@@ -53,7 +54,8 @@ void BranchingHeuristicBase::increaseMaxDecisionVarTo(CNFVar newMaxVar) {
                "Argument newMaxVar must not be smaller than the previous maximum variable");
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
 
-    CNFVar firstNewVar = CNFVar{static_cast<CNFVar::RawVariable>(m_decisionVariables.size())};
+    CNFVar firstNewVar =
+        CNFVar{static_checked_cast<CNFVar::RawVariable>(m_decisionVariables.size())};
     m_decisionVariables.increaseSizeTo(newMaxVar);
     for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
         m_decisionVariables[i] = Bool::FALSE;

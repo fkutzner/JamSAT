@@ -35,6 +35,7 @@
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
+#include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -45,9 +46,9 @@ public:
     explicit CNFVarActivityOrder(BoundedMap<CNFVar, double> &activity) : m_activity(activity){};
 
     bool operator()(const CNFVar &lhs, const CNFVar &rhs) const {
-        JAM_ASSERT(lhs.getRawValue() < static_cast<CNFVar::RawVariable>(m_activity.size()),
+        JAM_ASSERT(lhs.getRawValue() < static_checked_cast<CNFVar::RawVariable>(m_activity.size()),
                    "Index out of bounds");
-        JAM_ASSERT(rhs.getRawValue() < static_cast<CNFVar::RawVariable>(m_activity.size()),
+        JAM_ASSERT(rhs.getRawValue() < static_checked_cast<CNFVar::RawVariable>(m_activity.size()),
                    "Index out of bounds");
 
         return m_activity[lhs] < m_activity[rhs];
@@ -261,7 +262,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(CNFVar variable
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {
     for (typename decltype(m_activity)::size_type i = 0; i < m_activity.size(); ++i) {
-        auto rawVariable = static_cast<CNFVar::RawVariable>(i);
+        auto rawVariable = static_checked_cast<CNFVar::RawVariable>(i);
         auto &activity = m_activity[CNFVar{rawVariable}];
         activity = 1e-100 * activity;
     }
@@ -270,8 +271,8 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept {
     m_variableOrder.clear();
-    for (CNFVar i = CNFVar{0}; i < CNFVar{static_cast<CNFVar::RawVariable>(m_activity.size())};
-         i = nextCNFVar(i)) {
+    CNFVar max = CNFVar{static_checked_cast<CNFVar::RawVariable>(m_activity.size())};
+    for (CNFVar i = CNFVar{0}; i < max; i = nextCNFVar(i)) {
         if (!isInActivityHeap(i)) {
             addToActivityHeap(i);
         }
@@ -317,7 +318,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::increaseMaxVarTo(CNFVar newMax
 
     increaseMaxDecisionVarTo(newMaxVar);
 
-    CNFVar firstNewVar = CNFVar{static_cast<CNFVar::RawVariable>(m_activity.size())};
+    CNFVar firstNewVar = CNFVar{static_checked_cast<CNFVar::RawVariable>(m_activity.size())};
     m_activity.increaseSizeTo(newMaxVar);
     m_heapVariableHandles.increaseSizeTo(newMaxVar);
 
