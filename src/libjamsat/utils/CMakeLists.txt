@@ -9,5 +9,5 @@ add_jamsat_core_library(jamsatUtils
   StampMap.h
   SimpleMovingAverage.h
   LubySequence.h
-  NestedConstIterator.h
+  FlatteningIterator.h
 )
