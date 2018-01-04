@@ -104,6 +104,8 @@ elseif(COMPILING_WITH_MSVC)
   # Disable warnings about usage of C++ TR1. Google Test apparently still uses
   # TR1 functions.
   add_definitions(/wd4996)
+
+  add_definitions(/W4)
 endif()
 
 ### Set preprocessor definitions
