@@ -30,6 +30,9 @@ add_executable(libjamsat_unit_testsuite
   $<TARGET_OBJECTS:solver_unit_tests>
   $<TARGET_OBJECTS:utils_unit_tests>
   $<TARGET_OBJECTS:proof_unit_tests>
+
+  # From toolbox/testutils:
+  $<TARGET_OBJECTS:jamsatTestUtils>
 )
 
 target_link_libraries(libjamsat_unit_testsuite jamcore gtest gtest_main)
