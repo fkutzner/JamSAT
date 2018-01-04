@@ -40,8 +40,8 @@ void test_staticCheckedCastSucceeds(FromType from) {
     static_checked_cast<ToType>(from);
     // not expecting an exception to be thrown
 #else
-    (void)from std::cerr << "Warning: static cast checking is disabled, not testing anything"
-                         << std::endl;
+    (void)from;
+    std::cerr << "Warning: static cast checking is disabled, not testing anything" << std::endl;
 #endif
 }
 
@@ -50,8 +50,8 @@ void test_staticCheckedCastFails(FromType from) {
 #if defined(JAM_ASSERT_ENABLED)
     EXPECT_DEATH(static_checked_cast<ToType>(from), ".*");
 #else
-    (void)from std::cerr << "Warning: static cast checking is disabled, not testing anything"
-                         << std::endl;
+    (void)from;
+    std::cerr << "Warning: static cast checking is disabled, not testing anything" << std::endl;
 #endif
 }
 }

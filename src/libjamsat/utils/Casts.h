@@ -26,12 +26,12 @@
 
 #pragma once
 
+#include <libjamsat/utils/Assert.h>
+
 #if defined(JAM_ASSERT_ENABLED)
 #include <cstdint>
 #include <limits>
 #include <type_traits>
-
-#include <libjamsat/utils/Assert.h>
 #endif
 
 namespace jamsat {
