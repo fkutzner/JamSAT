@@ -141,4 +141,27 @@ TEST(UnitUtils, NestedConstIterator_isAccessibleViaPointOperator) {
     NestedConstIterator<std::vector<std::vector<Z>>> begin{testData.begin(), testData.end()};
     EXPECT_EQ(begin->x, (*begin).x);
 }
+
+TEST(UnitUtils, NestedConstIterator_isEqualToSelf) {
+    std::vector<std::vector<int>> testData{{}, {1}, {2, 3}};
+    NestedConstIntVecIterator begin{testData.begin(), testData.end()};
+    ASSERT_EQ(begin, begin);
+}
+
+TEST(UnitUtils, NestedConstIterator_defaultConstructedNCIIsPastTheEnd) {
+    std::vector<std::vector<int>> testData{{}, {1}, {2, 3}};
+    NestedConstIntVecIterator begin{testData.begin(), testData.end()};
+    NestedConstIntVecIterator explicitEnd{testData.end(), testData.end()};
+    NestedConstIntVecIterator end;
+
+    ASSERT_EQ(explicitEnd, end);
+
+    ASSERT_NE(begin, end);
+    ++begin;
+    ASSERT_NE(begin, end);
+    ++begin;
+    ASSERT_NE(begin, end);
+    ++begin;
+    ASSERT_EQ(begin, end);
+}
 }

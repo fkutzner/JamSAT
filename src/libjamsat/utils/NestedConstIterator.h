@@ -83,6 +83,11 @@ public:
      */
     NestedConstIterator(typename C::const_iterator begin, typename C::const_iterator end);
 
+    /**
+     * \brief Constructs a past-the-end NestedConstIterator.
+     */
+    NestedConstIterator();
+
     reference operator*() const;
     const value_type *operator->() const;
 
@@ -139,6 +144,10 @@ NestedConstIterator<C>::NestedConstIterator(typename C::const_iterator begin,
         m_innerEndIt = boost::optional<InnerIt>{m_outerIt->end()};
     }
 }
+
+template <typename C>
+NestedConstIterator<C>::NestedConstIterator()
+  : m_outerIt(), m_outerEndIt(), m_innerIt(), m_innerEndIt() {}
 
 template <typename C>
 typename NestedConstIterator<C>::reference NestedConstIterator<C>::operator*() const {
@@ -199,9 +208,15 @@ bool NestedConstIterator<C>::operator==(const NestedConstIterator<C> &rhs) const
         return true;
     }
 
-    // Optimize for comparing to an end iterator that is not equal to *this:
-    if (this->m_innerIt && !rhs.m_innerIt) {
+    // Optimize for comparing to end iterators:
+    bool isLhsEnd = !static_cast<bool>(this->m_innerIt);
+    bool isRhsEnd = !static_cast<bool>(rhs.m_innerIt);
+    if (isLhsEnd != isRhsEnd) {
         return false;
+    }
+    if (isLhsEnd) {
+        // Special case for end iterators (m_outerIt may differ, but all end iterators are equal)
+        return true;
     }
 
     return (this->m_outerIt == rhs.m_outerIt && this->m_innerIt == rhs.m_innerIt &&
