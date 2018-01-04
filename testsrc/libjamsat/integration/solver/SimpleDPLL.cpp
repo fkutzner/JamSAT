@@ -34,6 +34,7 @@
 #include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
+#include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/ControlFlow.h>
 
 /*
@@ -92,7 +93,7 @@ private:
     }
 
     std::unique_ptr<Clause> createInternalClause(const CNFClause &from) {
-        auto newClause = createHeapClause(from.size());
+        auto newClause = createHeapClause(static_checked_cast<Clause::size_type>(from.size()));
         boost::copy(from, newClause->begin());
         return newClause;
     }
