@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include <boost/range.hpp>
+#include <boost/range/adaptors.hpp>
+
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/solver/Watcher.h>
 #include <libjamsat/utils/BoundedMap.h>
@@ -56,8 +59,17 @@ namespace jamsat {
  */
 template <class AssignmentProvider, class ClauseT>
 class Propagation {
+private:
+    using WatcherType = detail_propagation::Watcher<ClauseT>;
+    using WatchersType = detail_propagation::Watchers<ClauseT>;
+    using WatchersRangeType = typename WatchersType::WatcherRange;
+    using ClauseRangeType = decltype(boost::adaptors::transform(
+        std::declval<WatchersRangeType>(),
+        std::declval<std::function<const ClauseT *(const WatcherType &)>>()));
+
 public:
     using ClauseType = ClauseT;
+    using ClauseRange = ClauseRangeType;
 
     /**
      * \brief Constructs a new Propagation instance.
@@ -163,6 +175,17 @@ public:
      *                      maximum variable, and must be a regular variable.
      */
     void increaseMaxVarTo(CNFVar newMaxVar);
+
+
+    /**
+     * \brief Returns a range of clause pointers in order of propagation.
+     *
+     * For pointers c1, c2 in the returned range, it holds that during the next propagation of a
+     * fact, if both *c1 and *c2 are accessed, *c1 is accessed before *c2.
+     *
+     * \returns A range of clause pointers as described above.
+     */
+    ClauseRange getClausesInPropagationOrder() const noexcept;
 
 private:
     AssignmentProvider &m_assignmentProvider;
@@ -386,5 +409,15 @@ void Propagation<AssignmentProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     m_watchers.increaseMaxVarTo(newMaxVar);
     m_reasons.increaseSizeTo(newMaxVar);
+}
+
+template <class AssignmentProvider, class ClauseT>
+typename Propagation<AssignmentProvider, ClauseT>::ClauseRange
+Propagation<AssignmentProvider, ClauseT>::getClausesInPropagationOrder() const noexcept {
+    std::function<const ClauseT *(const WatcherType &)> trans = [](const WatcherType &w) {
+        return &w.getClause();
+    };
+
+    return boost::adaptors::transform(m_watchers.getWatchersInTraversalOrder(), trans);
 }
 }

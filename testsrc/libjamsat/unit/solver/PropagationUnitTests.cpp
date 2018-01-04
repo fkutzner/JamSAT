@@ -28,6 +28,7 @@
 
 #include "TestAssignmentProvider.h"
 #include <libjamsat/solver/Propagation.h>
+#include <toolbox/testutils/RangeUtils.h>
 
 namespace jamsat {
 using TrivialClause = std::vector<CNFLit>;
@@ -338,6 +339,31 @@ TEST(UnitSolver, propagateAfterEraseToBeDeletedDoesNotPropagateDeletedClauses) {
     ASSERT_EQ(conflictingClause, nullptr);
     EXPECT_NE(assignments.getAssignment(CNFVar{5}), TBool::INDETERMINATE)
         << "More clauses erased than expected";
+}
+
+TEST(UnitSolver, propagationClauseRangeEmptyWhenNoClausesAdded) {
+    TestAssignmentProvider assignments;
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(CNFVar{5}, assignments);
+    auto clauses = underTest.getClausesInPropagationOrder();
+    EXPECT_TRUE(clauses.begin() == clauses.end());
+}
+
+TEST(UnitSolver, propagationClauseRangeHasCorrectOrder) {
+    TrivialClause c1{CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::POSITIVE}};
+    TrivialClause c2{CNFLit{CNFVar{0}, CNFSign::NEGATIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+    TrivialClause c3{CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
+
+    TestAssignmentProvider assignments;
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(CNFVar{15}, assignments);
+    underTest.registerClause(c1);
+    underTest.registerClause(c2);
+    underTest.registerClause(c3);
+
+    auto clauses = underTest.getClausesInPropagationOrder();
+    // Note: the concrete ordering of clauses is a "hidden" implementation detail because
+    // it depends on implementation details of the Watcher implementation.
+    expectRangeElementsSequencedEqual(clauses,
+                                      std::vector<TrivialClause *>{&c2, &c3, &c1, &c2, &c1, &c3});
 }
 
 // TODO: test watcher restoration
