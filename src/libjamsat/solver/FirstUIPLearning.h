@@ -332,7 +332,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
     // in the result and ~L occurs on the trail, making the resolution
     // possible.) When unresolvedCount == 1, the single remaining literal L
     // on the current decision level is the asserting literal.
-    int unresolvedCount = work.size();
+    std::vector<CNFLit>::size_type unresolvedCount = work.size();
 
     JAM_LOG_CA(info, "  Resolving until UIP. Literals to resolve: " << unresolvedCount);
 

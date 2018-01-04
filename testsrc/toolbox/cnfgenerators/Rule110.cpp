@@ -27,6 +27,8 @@
 #include <libjamsat/utils/Assert.h>
 #include <toolbox/cnfgenerators/Rule110.h>
 
+#include <limits>
+
 
 namespace jamsat {
 Rule110PredecessorStateProblem::Rule110PredecessorStateProblem(const std::string &targetStateSpec,
@@ -35,7 +37,10 @@ Rule110PredecessorStateProblem::Rule110PredecessorStateProblem(const std::string
   : m_targetStateSpec(targetStateSpec)
   , m_sourceStateSpec(sourceStateSpec)
   , m_numberOfIntermediateSteps(numberOfIntermediateSteps)
-  , m_automatonWidth(targetStateSpec.size()) {
+  , m_automatonWidth(static_cast<uint32_t>(targetStateSpec.size())) {
+    JAM_ASSERT(static_cast<uint64_t>(targetStateSpec.size()) <=
+                   std::numeric_limits<uint32_t>::max(),
+               "Automaton spec too large");
     JAM_ASSERT(targetStateSpec.size() == sourceStateSpec.size(),
                "Source and target automaton states must be of equal size");
 }
