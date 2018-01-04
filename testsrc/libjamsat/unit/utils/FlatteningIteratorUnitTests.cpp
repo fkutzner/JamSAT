@@ -26,7 +26,7 @@
 
 #include <gtest/gtest.h>
 
-#include <libjamsat/utils/NestedConstIterator.h>
+#include <libjamsat/utils/FlatteningIterator.h>
 
 #include <vector>
 
