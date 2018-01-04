@@ -26,4 +26,36 @@
 
 #pragma once
 
-namespace jamsat {}
+#include <gtest/gtest.h>
+
+#include <cstdint>
+#include <vector>
+
+namespace jamsat {
+/**
+ * \ingroup JamSAT_TestInfrastructure
+ *
+ * \brief Checks whether a range contains the expected values.
+ *
+ * The order of the elements in the range is not checked. This function checks (using Google
+ * Tests's EXPECT_EQ macro) that all elements in \p r are contained in \p expected and that
+ * the amount of elements in \p r is equal to the amount of elements in \p .
+ *
+ * \param r         A range.
+ * \param expected  A container containing the elements expected to occur in \p r.
+ *
+ * \tparam Range    A range type.
+ * \tparam Expected A container type. The elements storable in objects of this type must be
+ *                  comparable to the objects obtainable from \p Range objects.
+ */
+template <typename Range, typename Expected>
+void expectRangeContainsValues(const Range &r, const Expected &expected) {
+    uint64_t count = 0;
+    for (auto &elem : r) {
+        EXPECT_NE(std::find(expected.begin(), expected.end(), elem), expected.end())
+            << "Element " << elem << " not expected in result range";
+        ++count;
+    }
+    EXPECT_EQ(count, expected.size()) << "Result range larger than expected";
+}
+}
