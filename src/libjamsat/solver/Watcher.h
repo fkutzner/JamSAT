@@ -36,6 +36,7 @@
 #include <libjamsat/solver/ClauseMarkers.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
+#include <libjamsat/utils/FlatteningIterator.h>
 
 namespace jamsat {
 namespace detail_propagation {
@@ -139,6 +140,10 @@ private:
 public:
     using WatcherT = Watcher<ClauseT>;
 
+    using WatcherIterator =
+        FlatteningIterator<typename BoundedMap<CNFLit, WatcherList>::const_iterator>;
+    using WatcherRange = boost::iterator_range<WatcherIterator>;
+
     explicit Watchers(CNFVar maxVar)
       : m_maxVar(maxVar), m_watchers(CNFLit{maxVar, CNFSign::POSITIVE}) {}
 
@@ -160,6 +165,11 @@ public:
             m_watchers[CNFLit{CNFVar{i}, CNFSign::NEGATIVE}].clear();
             m_watchers[CNFLit{CNFVar{i}, CNFSign::POSITIVE}].clear();
         }
+    }
+
+    WatcherRange getWatchersInTraversalOrder() const noexcept {
+        auto watcherLists = m_watchers.values();
+        return {WatcherIterator{watcherLists.begin(), watcherLists.end()}, WatcherIterator{}};
     }
 
     void eraseWatchersToBeDeleted() {

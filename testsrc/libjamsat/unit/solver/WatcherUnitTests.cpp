@@ -28,6 +28,7 @@
 
 #include <libjamsat/solver/ClauseMarkers.h>
 #include <libjamsat/solver/Watcher.h>
+#include <toolbox/testutils/RangeUtils.h>
 
 namespace jamsat {
 namespace detail_propagation {
@@ -355,6 +356,51 @@ TEST(UnitSolver, watchersAreClearedByEraseWhenAllClausesMarkedToBeDeleted) {
         auto traversal2 = underTest.getWatchers(~lit);
         ASSERT_TRUE(traversal2.hasFinishedTraversal()) << "Watchers for " << lit << " not empty";
     }
+}
+
+TEST(UnitSolver, completeWatchersTraversalEmptyWhenNoWatchersExist) {
+    TestWatchers underTest{CNFVar{4}};
+    auto watcherRange = underTest.getWatchersInTraversalOrder();
+    EXPECT_TRUE(watcherRange.begin() == watcherRange.end());
+}
+
+TEST(UnitSolver, watchersAllOccurInCompleteWatchersTraversal) {
+    std::vector<TrivialClause> clauses = {
+        {CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE}},
+        {CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{2}, CNFSign::POSITIVE}},
+        {CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{3}, CNFSign::POSITIVE}},
+        {CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE}},
+    };
+
+    std::vector<TestWatcher> watchers;
+    for (auto &clause : clauses) {
+        watchers.emplace_back(clause, clause[1]);
+        watchers.emplace_back(clause, clause[0]);
+    }
+
+    TestWatchers underTest{CNFVar{10}};
+    for (decltype(watchers)::size_type i = 0; i < watchers.size(); i += 2) {
+        underTest.addWatcher(clauses[i / 2][0], watchers[i]);
+        underTest.addWatcher(clauses[i / 2][1], watchers[i + 1]);
+    }
+
+    auto watcherRange = underTest.getWatchersInTraversalOrder();
+
+    // The concrete ordering of the watchers is deliberately omitted from the Watcher interface's
+    // documentation. Thus, this test depends on a "deeper" implementation detail and will need
+    // to be adjusted if the ordering mechanism of the watchers is changed.
+    expectRangeElementsSequencedEqual(
+        watcherRange, std::vector<TestWatcher>{// in the watcher list for 0:
+                                               watchers[0], watchers[2],
+
+                                               // in the watcher list for 1:
+                                               watchers[1], watchers[4], watchers[7],
+
+                                               // in the watcher list for 2:
+                                               watchers[3], watchers[6],
+
+                                               // in the watcher list for 3:
+                                               watchers[5]});
 }
 }
 }

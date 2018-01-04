@@ -52,10 +52,44 @@ template <typename Range, typename Expected>
 void expectRangeContainsValues(const Range &r, const Expected &expected) {
     uint64_t count = 0;
     for (auto &elem : r) {
-        EXPECT_NE(std::find(expected.begin(), expected.end(), elem), expected.end())
-            << "Element " << elem << " not expected in result range";
+        EXPECT_FALSE(std::find(expected.begin(), expected.end(), elem) == expected.end())
+            << "Element missing in result range";
         ++count;
     }
     EXPECT_EQ(count, expected.size()) << "Result range larger than expected";
+}
+
+/**
+ * \ingroup JamSAT_TestInfrastructure
+ *
+ * \brief Checks whether a range contains exactly the expected values, in order.
+ *
+ * \param toTest    A range.
+ * \param reference The reference range.
+ *
+ * \tparam RangeA   A range type.
+ * \tparam RangeB   A range type. The elements in \p RangeB must be equality-comparable to the
+ *                  elements in \p RangeA.
+ */
+template <typename RangeA, typename RangeB>
+void expectRangeElementsSequencedEqual(const RangeA &toTest, const RangeB &reference) {
+    auto toTestIt = toTest.begin();
+    auto toTestEnd = toTest.end();
+    auto referenceIt = reference.begin();
+    auto referenceEnd = reference.end();
+    uint64_t count = 0;
+
+    while (toTestIt != toTestEnd && referenceIt != referenceEnd) {
+        EXPECT_TRUE(*toTestIt == *referenceIt)
+            << "Nonequal ranges: element " << count << " differs from reference";
+        ++toTestIt;
+        ++referenceIt;
+        ++count;
+    }
+
+    EXPECT_TRUE(toTestIt == toTestEnd)
+        << "Nonequal ranges: more elements in reference than in toTest";
+    EXPECT_TRUE(referenceIt == referenceEnd)
+        << "Nonequal ranges: more elements in toTest than in reference";
 }
 }
