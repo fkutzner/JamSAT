@@ -384,23 +384,22 @@ TEST(UnitSolver, watchersAllOccurInCompleteWatchersTraversal) {
         underTest.addWatcher(clauses[i / 2][1], watchers[i + 1]);
     }
 
+    std::vector<TestWatcher> expected;
+    // The concrete ordering of the watcher sequences is deliberately omitted from the Watcher
+    // interface's documentation. Thus, this test depends on a "deeper" implementation detail and
+    // will need to be adjusted if the ordering mechanism of the watchers is changed.
+    for (CNFVar i = CNFVar{0}; i <= CNFVar{10}; i = nextCNFVar(i)) {
+        for (CNFSign s : {CNFSign::NEGATIVE, CNFSign::POSITIVE}) {
+            auto traversal = underTest.getWatchers(CNFLit{i, s});
+            while (!traversal.hasFinishedTraversal()) {
+                expected.push_back(*traversal);
+                ++traversal;
+            }
+        }
+    }
+
     auto watcherRange = underTest.getWatchersInTraversalOrder();
-
-    // The concrete ordering of the watchers is deliberately omitted from the Watcher interface's
-    // documentation. Thus, this test depends on a "deeper" implementation detail and will need
-    // to be adjusted if the ordering mechanism of the watchers is changed.
-    expectRangeElementsSequencedEqual(
-        watcherRange, std::vector<TestWatcher>{// in the watcher list for 0:
-                                               watchers[0], watchers[2],
-
-                                               // in the watcher list for 1:
-                                               watchers[1], watchers[4], watchers[7],
-
-                                               // in the watcher list for 2:
-                                               watchers[3], watchers[6],
-
-                                               // in the watcher list for 3:
-                                               watchers[5]});
+    expectRangeElementsSequencedEqual(watcherRange, expected);
 }
 }
 }
