@@ -165,4 +165,22 @@ TEST(UnitUtils, FlatteningIterator_defaultConstructedNCIIsPastTheEnd) {
     ++begin;
     ASSERT_EQ(begin, end);
 }
+
+TEST(UnitUtils, FlatteningIterator_incrementReturnsCorrectIterator) {
+    std::vector<std::vector<int>> testData{{1}, {2, 3}};
+    NestedConstIntVecIterator it{testData.begin(), testData.end()};
+    NestedConstIntVecIterator end;
+
+    NestedConstIntVecIterator &preIncResult = ++it;
+    ASSERT_FALSE(preIncResult == end || it == end);
+    ASSERT_TRUE(&preIncResult == &it)
+        << "'preInc' points to " << *preIncResult << " but 'it' points to " << *it;
+
+    auto itBeforePostInc = it;
+    NestedConstIntVecIterator postIncResult = it++;
+    ASSERT_FALSE(postIncResult == end || itBeforePostInc == end);
+    EXPECT_TRUE(postIncResult == itBeforePostInc)
+        << "'postIncResult' points to " << *postIncResult << " but 'itBeforePostInc' points to "
+        << *preIncResult;
+}
 }

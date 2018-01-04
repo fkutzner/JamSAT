@@ -90,14 +90,14 @@ public:
     reference operator*() const;
     const value_type *operator->() const;
 
-    void operator++();
-    FlatteningIterator operator++(int dummy);
+    FlatteningIterator<I> &operator++();
+    FlatteningIterator<I> operator++(int dummy);
 
     bool operator==(const FlatteningIterator<I> &rhs) const noexcept;
     bool operator!=(const FlatteningIterator<I> &rhs) const noexcept;
 
-    FlatteningIterator &operator=(const FlatteningIterator<I> &other) = default;
-    FlatteningIterator &operator=(FlatteningIterator<I> &&other) = default;
+    FlatteningIterator<I> &operator=(const FlatteningIterator<I> &other) = default;
+    FlatteningIterator<I> &operator=(FlatteningIterator<I> &&other) = default;
     FlatteningIterator(const FlatteningIterator<I> &other) = default;
     FlatteningIterator(FlatteningIterator<I> &&other) = default;
     ~FlatteningIterator() = default;
@@ -159,10 +159,10 @@ const typename FlatteningIterator<I>::value_type *FlatteningIterator<I>::operato
 }
 
 template <typename I>
-void FlatteningIterator<I>::operator++() {
+FlatteningIterator<I> &FlatteningIterator<I>::operator++() {
     if (!m_innerIt) {
         // Due to class invariant B, there are no further elements to traverse
-        return;
+        return *this;
     }
 
     // Try to advance to the next element of the nested container:
@@ -171,7 +171,7 @@ void FlatteningIterator<I>::operator++() {
         ++newInnerIt;
         if (newInnerIt != *m_innerEndIt) {
             m_innerIt = boost::optional<InnerIt>{newInnerIt};
-            return;
+            return *this;
         }
     }
 
@@ -184,12 +184,13 @@ void FlatteningIterator<I>::operator++() {
     if (m_outerIt != m_outerEndIt) {
         m_innerIt = boost::optional<InnerIt>{m_outerIt->begin()};
         m_innerEndIt = boost::optional<InnerIt>{m_outerIt->end()};
-        return;
+        return *this;
     }
 
     // No more elements to traverse
     m_innerIt = boost::optional<InnerIt>{};
     m_innerEndIt = boost::optional<InnerIt>{};
+    return *this;
 }
 
 template <typename I>
