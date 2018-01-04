@@ -31,29 +31,29 @@
 #include <vector>
 
 namespace jamsat {
-using NestedConstIntVecIterator = NestedConstIterator<std::vector<std::vector<int>>>;
+using NestedConstIntVecIterator = FlatteningIterator<std::vector<std::vector<int>>::const_iterator>;
 
 namespace {
-void test_NestedConstIterator_beginIsEnd(const std::vector<std::vector<int>> testData) {
+void test_FlatteningIterator_beginIsEnd(const std::vector<std::vector<int>> testData) {
     NestedConstIntVecIterator begin{testData.begin(), testData.end()};
     NestedConstIntVecIterator end{testData.end(), testData.end()};
     EXPECT_EQ(begin, end);
 }
 }
-TEST(UnitUtils, NestedConstIterator_endIteratorsMatchOnEmptySeq) {
-    test_NestedConstIterator_beginIsEnd({});
+TEST(UnitUtils, FlatteningIterator_endIteratorsMatchOnEmptySeq) {
+    test_FlatteningIterator_beginIsEnd({});
 }
 
-TEST(UnitUtils, NestedConstIterator_endIteratorsMatchOnSeqContainingOneEmptySeq) {
-    test_NestedConstIterator_beginIsEnd({{}});
+TEST(UnitUtils, FlatteningIterator_endIteratorsMatchOnSeqContainingOneEmptySeq) {
+    test_FlatteningIterator_beginIsEnd({{}});
 }
 
-TEST(UnitUtils, NestedConstIterator_endIteratorsMatchOnSeqContainingMultipleEmptySeq) {
-    test_NestedConstIterator_beginIsEnd({{}, {}, {}});
+TEST(UnitUtils, FlatteningIterator_endIteratorsMatchOnSeqContainingMultipleEmptySeq) {
+    test_FlatteningIterator_beginIsEnd({{}, {}, {}});
 }
 
 namespace {
-void test_NestedConstIterator_flattenSeqTest(const std::vector<std::vector<int>> testData) {
+void test_FlatteningIterator_flattenSeqTest(const std::vector<std::vector<int>> testData) {
     std::vector<int> expected;
     for (auto &vec : testData) {
         for (auto &i : vec) {
@@ -73,27 +73,27 @@ void test_NestedConstIterator_flattenSeqTest(const std::vector<std::vector<int>>
 }
 }
 
-TEST(UnitUtils, NestedConstIterator_iterationOnSeqContainingSingleElementSeq) {
-    test_NestedConstIterator_flattenSeqTest({{1}});
+TEST(UnitUtils, FlatteningIterator_iterationOnSeqContainingSingleElementSeq) {
+    test_FlatteningIterator_flattenSeqTest({{1}});
 }
 
-TEST(UnitUtils, NestedConstIterator_iterationOnSeqContainingMultiElementSeqs) {
-    test_NestedConstIterator_flattenSeqTest({{1, 2}, {3}});
+TEST(UnitUtils, FlatteningIterator_iterationOnSeqContainingMultiElementSeqs) {
+    test_FlatteningIterator_flattenSeqTest({{1, 2}, {3}});
 }
 
-TEST(UnitUtils, NestedConstIterator_iterationOnSeqContainingMultiElementSeqsAndEmptyBack) {
-    test_NestedConstIterator_flattenSeqTest({{5}, {1, 2}, {3}, {}});
+TEST(UnitUtils, FlatteningIterator_iterationOnSeqContainingMultiElementSeqsAndEmptyBack) {
+    test_FlatteningIterator_flattenSeqTest({{5}, {1, 2}, {3}, {}});
 }
 
-TEST(UnitUtils, NestedConstIterator_iterationOnSeqContainingMultiElementSeqsMultiEmptyAtBack) {
-    test_NestedConstIterator_flattenSeqTest({{5}, {}, {1, 2}, {3}, {}, {}});
+TEST(UnitUtils, FlatteningIterator_iterationOnSeqContainingMultiElementSeqsMultiEmptyAtBack) {
+    test_FlatteningIterator_flattenSeqTest({{5}, {}, {1, 2}, {3}, {}, {}});
 }
 
-TEST(UnitUtils, NestedConstIterator_iterationOnSeqContainingMultiElementSeqsMultiEmptyAtFront) {
-    test_NestedConstIterator_flattenSeqTest({{}, {}, {5}, {1, 2}, {3}});
+TEST(UnitUtils, FlatteningIterator_iterationOnSeqContainingMultiElementSeqsMultiEmptyAtFront) {
+    test_FlatteningIterator_flattenSeqTest({{}, {}, {5}, {1, 2}, {3}});
 }
 
-TEST(UnitUtils, NestedConstIterator_isMultipassIteratorForVectorOfVectors) {
+TEST(UnitUtils, FlatteningIterator_isMultipassIteratorForVectorOfVectors) {
     std::vector<std::vector<int>> testData{{}, {1}, {2, 3}};
     NestedConstIntVecIterator begin{testData.begin(), testData.end()};
     NestedConstIntVecIterator end{testData.end(), testData.end()};
@@ -121,7 +121,7 @@ TEST(UnitUtils, NestedConstIterator_isMultipassIteratorForVectorOfVectors) {
     EXPECT_EQ(beginCopy, end);
 }
 
-TEST(UnitUtils, NestedConstIterator_isSwappable) {
+TEST(UnitUtils, FlatteningIterator_isSwappable) {
     std::vector<std::vector<int>> testData{{}, {1}, {2, 3}};
     NestedConstIntVecIterator x{testData.begin(), testData.end()};
     NestedConstIntVecIterator y{testData.begin(), testData.end()};
@@ -132,23 +132,24 @@ TEST(UnitUtils, NestedConstIterator_isSwappable) {
     EXPECT_EQ(*y, 2);
 }
 
-TEST(UnitUtils, NestedConstIterator_isAccessibleViaPointOperator) {
+TEST(UnitUtils, FlatteningIterator_isAccessibleViaPointOperator) {
     struct Z {
         int x;
         int y;
     };
     std::vector<std::vector<Z>> testData{{Z{1, 2}}};
-    NestedConstIterator<std::vector<std::vector<Z>>> begin{testData.begin(), testData.end()};
+    FlatteningIterator<std::vector<std::vector<Z>>::const_iterator> begin{testData.begin(),
+                                                                          testData.end()};
     EXPECT_EQ(begin->x, (*begin).x);
 }
 
-TEST(UnitUtils, NestedConstIterator_isEqualToSelf) {
+TEST(UnitUtils, FlatteningIterator_isEqualToSelf) {
     std::vector<std::vector<int>> testData{{}, {1}, {2, 3}};
     NestedConstIntVecIterator begin{testData.begin(), testData.end()};
     ASSERT_EQ(begin, begin);
 }
 
-TEST(UnitUtils, NestedConstIterator_defaultConstructedNCIIsPastTheEnd) {
+TEST(UnitUtils, FlatteningIterator_defaultConstructedNCIIsPastTheEnd) {
     std::vector<std::vector<int>> testData{{}, {1}, {2, 3}};
     NestedConstIntVecIterator begin{testData.begin(), testData.end()};
     NestedConstIntVecIterator explicitEnd{testData.end(), testData.end()};

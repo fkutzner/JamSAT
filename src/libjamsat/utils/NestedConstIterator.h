@@ -38,15 +38,13 @@ namespace jamsat {
 /**
  * \ingroup JamSAT_Utils
  *
- * \brief A const iterator type providing a flat view on nested STL containers.
+ * \brief A const iterator type providing a flat view on a sequence of STL containers.
  *
  * Let
  *
- *  - `C` and `D` be types satisfying the STL Container concept, with objects of `C`
- *    containing objects of type `D`,
- *  - `c` be an object of type `C`,
- *  - `i1` and `i2` be valid iterators of `c` with `i1 <= i2` (if `i1` and `i2` are random
- *    access iterators) or `i2 == c.end()`.
+ *  - `C` be a type satisfying the STL container concept,
+ *  - `I` be a type satisfying the STP InputIterator concept, with the value type of `I` being `C`,
+ *  - `i1` and `i2` be objects of type `I` such that `i1 = i2` can be achieved by incrementing `i1`
  *
  * this iterator traverses the objects contained in the objects in `[i1, i2)`. The nested
  * containers are traversed in the order given by `i1`.
@@ -56,15 +54,16 @@ namespace jamsat {
  * Usage example: Use this iterator to iterate over all the integers contained in an
  *   `std::vector<std::vector<int>>` object.
  *
- * This type satisfies the STL's InputIterator concept. If both C::const_iterator and
- * D::const_iterator satisfy the STL's ForwardIterator concept, so does NestedConstIterator<C>.
+ * This type satisfies the STL's InputIterator concept. If both `I` and
+ * `D::const_iterator` satisfy the STL's ForwardIterator concept, so does `FlatteningIterator<I>`.
  *
- * \tparam C    An STL container type whose objects contain STL containers.
+ * \tparam I    a type satisfying the STP InputIterator concept, with the value type of `I`
+ *              satisfying the STL container concept.
  */
-template <typename C>
-class NestedConstIterator {
+template <typename I>
+class FlatteningIterator {
 private:
-    using OuterIt = typename C::const_iterator;
+    using OuterIt = I;
     using InnerContainer = typename std::iterator_traits<OuterIt>::value_type;
     using InnerIt = typename InnerContainer::const_iterator;
 
@@ -76,32 +75,32 @@ public:
     using difference_type = int64_t;
 
     /**
-     * \brief Constructs a new NestedConstIterator.
+     * \brief Constructs a new FlatteningIterator.
      *
      * \param begin     An iterator pointing to the first nested container to be traversed.
      * \param end       An iterator pointing past the last container to be traversed.
      */
-    NestedConstIterator(typename C::const_iterator begin, typename C::const_iterator end);
+    FlatteningIterator(I begin, I end);
 
     /**
-     * \brief Constructs a past-the-end NestedConstIterator.
+     * \brief Constructs a past-the-end FlatteningIterator.
      */
-    NestedConstIterator();
+    FlatteningIterator();
 
     reference operator*() const;
     const value_type *operator->() const;
 
     void operator++();
-    NestedConstIterator operator++(int dummy);
+    FlatteningIterator operator++(int dummy);
 
-    bool operator==(const NestedConstIterator<C> &rhs) const noexcept;
-    bool operator!=(const NestedConstIterator<C> &rhs) const noexcept;
+    bool operator==(const FlatteningIterator<I> &rhs) const noexcept;
+    bool operator!=(const FlatteningIterator<I> &rhs) const noexcept;
 
-    NestedConstIterator &operator=(const NestedConstIterator<C> &other) = default;
-    NestedConstIterator &operator=(NestedConstIterator<C> &&other) = default;
-    NestedConstIterator(const NestedConstIterator<C> &other) = default;
-    NestedConstIterator(NestedConstIterator<C> &&other) = default;
-    ~NestedConstIterator() = default;
+    FlatteningIterator &operator=(const FlatteningIterator<I> &other) = default;
+    FlatteningIterator &operator=(FlatteningIterator<I> &&other) = default;
+    FlatteningIterator(const FlatteningIterator<I> &other) = default;
+    FlatteningIterator(FlatteningIterator<I> &&other) = default;
+    ~FlatteningIterator() = default;
 
 private:
     // Class invariant A: m_outerIt is either dereferencable or equal to m_outerEndIt
@@ -117,13 +116,13 @@ private:
 }
 
 namespace std {
-template <typename C>
-struct iterator_traits<jamsat::NestedConstIterator<C>> {
-    using value_type = typename jamsat::NestedConstIterator<C>::value_type;
-    using reference = typename jamsat::NestedConstIterator<C>::reference;
-    using pointer = typename jamsat::NestedConstIterator<C>::pointer;
-    using iterator_category = typename jamsat::NestedConstIterator<C>::iterator_category;
-    using difference_type = typename jamsat::NestedConstIterator<C>::difference_type;
+template <typename I>
+struct iterator_traits<jamsat::FlatteningIterator<I>> {
+    using value_type = typename jamsat::FlatteningIterator<I>::value_type;
+    using reference = typename jamsat::FlatteningIterator<I>::reference;
+    using pointer = typename jamsat::FlatteningIterator<I>::pointer;
+    using iterator_category = typename jamsat::FlatteningIterator<I>::iterator_category;
+    using difference_type = typename jamsat::FlatteningIterator<I>::difference_type;
 };
 }
 
@@ -131,9 +130,8 @@ struct iterator_traits<jamsat::NestedConstIterator<C>> {
 
 namespace jamsat {
 
-template <typename C>
-NestedConstIterator<C>::NestedConstIterator(typename C::const_iterator begin,
-                                            typename C::const_iterator end)
+template <typename I>
+FlatteningIterator<I>::FlatteningIterator(I begin, I end)
   : m_outerIt(begin), m_outerEndIt(end), m_innerIt(), m_innerEndIt() {
     while (m_outerIt != m_outerEndIt && m_outerIt->empty()) {
         ++m_outerIt;
@@ -145,23 +143,23 @@ NestedConstIterator<C>::NestedConstIterator(typename C::const_iterator begin,
     }
 }
 
-template <typename C>
-NestedConstIterator<C>::NestedConstIterator()
+template <typename I>
+FlatteningIterator<I>::FlatteningIterator()
   : m_outerIt(), m_outerEndIt(), m_innerIt(), m_innerEndIt() {}
 
-template <typename C>
-typename NestedConstIterator<C>::reference NestedConstIterator<C>::operator*() const {
+template <typename I>
+typename FlatteningIterator<I>::reference FlatteningIterator<I>::operator*() const {
     JAM_ASSERT(m_innerIt, "Nested iterator pointing past the end dereferenced");
     return **m_innerIt;
 }
 
-template <typename C>
-const typename NestedConstIterator<C>::value_type *NestedConstIterator<C>::operator->() const {
+template <typename I>
+const typename FlatteningIterator<I>::value_type *FlatteningIterator<I>::operator->() const {
     return &(this->operator*());
 }
 
-template <typename C>
-void NestedConstIterator<C>::operator++() {
+template <typename I>
+void FlatteningIterator<I>::operator++() {
     if (!m_innerIt) {
         // Due to class invariant B, there are no further elements to traverse
         return;
@@ -194,16 +192,16 @@ void NestedConstIterator<C>::operator++() {
     m_innerEndIt = boost::optional<InnerIt>{};
 }
 
-template <typename C>
-typename NestedConstIterator<C>::NestedConstIterator NestedConstIterator<C>::operator++(int dummy) {
+template <typename I>
+typename FlatteningIterator<I>::FlatteningIterator FlatteningIterator<I>::operator++(int dummy) {
     (void)dummy;
-    NestedConstIterator<C> copy = *this;
+    FlatteningIterator<I> copy = *this;
     this->operator++();
     return copy;
 }
 
-template <typename C>
-bool NestedConstIterator<C>::operator==(const NestedConstIterator<C> &rhs) const noexcept {
+template <typename I>
+bool FlatteningIterator<I>::operator==(const FlatteningIterator<I> &rhs) const noexcept {
     if (this == &rhs) {
         return true;
     }
@@ -223,8 +221,8 @@ bool NestedConstIterator<C>::operator==(const NestedConstIterator<C> &rhs) const
             this->m_outerEndIt == rhs.m_outerEndIt && this->m_innerEndIt == rhs.m_innerEndIt);
 }
 
-template <typename C>
-bool NestedConstIterator<C>::operator!=(const NestedConstIterator<C> &rhs) const noexcept {
+template <typename I>
+bool FlatteningIterator<I>::operator!=(const FlatteningIterator<I> &rhs) const noexcept {
     return !this->operator==(rhs);
 }
 }
