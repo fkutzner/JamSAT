@@ -187,6 +187,35 @@ public:
      */
     ClauseRange getClausesInPropagationOrder() const noexcept;
 
+
+    /**
+     * \brief Determines whether the given clause is an assignment reason clause.
+     *
+     * \param clause        A clause containing at least two literals. The literals in \p clause
+     *                      must not contain variables greater than the Propagation object's
+     *                      maximum variable.
+     * \param dlProvider    The decision level provider.
+     * \returns             True iff \p clause is an assignment reason clause.
+     *
+     * \tparam DecisionLevelProvider    A type satisfying the DecisionLevelProvider concept.
+     */
+    template <typename DecisionLevelProvider>
+    bool isAssignmentReason(const ClauseT &clause, const DecisionLevelProvider &dlProvider) const
+        noexcept;
+
+    /**
+     * \brief Updates the location of an assignment reason clause.
+     *
+     * This method replaces the assignment reason clause for the variable assignment forced by
+     * \p oldClause by the clause \p newClause. \p newClause must be equal to \p oldClause
+     * (including the ordering of the literals within the clauses). After completion of this
+     * method, \p oldClause is no longer referenced by the propagation system.
+     *
+     * \param oldClause     An assignment reason clause.
+     * \param newClause     The replacement for \p oldClause, with oldClause == newClause.
+     */
+    void updateAssignmentReason(const ClauseT &oldClause, const ClauseT &newClause) noexcept;
+
 private:
     AssignmentProvider &m_assignmentProvider;
     BoundedMap<CNFVar, const ClauseT *> m_reasons;
@@ -419,5 +448,35 @@ Propagation<AssignmentProvider, ClauseT>::getClausesInPropagationOrder() const n
     };
 
     return boost::adaptors::transform(m_watchers.getWatchersInTraversalOrder(), trans);
+}
+
+template <class AssignmentProvider, class ClauseT>
+template <typename DecisionLevelProvider>
+bool Propagation<AssignmentProvider, ClauseT>::isAssignmentReason(
+    const ClauseT &clause, const DecisionLevelProvider &dlProvider) const noexcept {
+    JAM_ASSERT(clause.size() >= 2, "Argument clause must at have a size of 2");
+    for (auto var : {clause[0].getVariable(), clause[1].getVariable()}) {
+        if (m_reasons[var] != &clause) {
+            continue;
+        }
+
+        // The pointers in m_reasons do not get cleared eagerly during backtracking
+        auto decisionLevel = dlProvider.getAssignmentDecisionLevel(var);
+        if (decisionLevel <= dlProvider.getCurrentDecisionLevel()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+template <class AssignmentProvider, class ClauseT>
+void Propagation<AssignmentProvider, ClauseT>::updateAssignmentReason(
+    const ClauseT &oldClause, const ClauseT &newClause) noexcept {
+    JAM_ASSERT(oldClause == newClause, "Arguments oldClause and newClause must be equal");
+    for (auto var : {oldClause[0].getVariable(), oldClause[1].getVariable()}) {
+        if (m_reasons[var] == &oldClause) {
+            m_reasons[var] = &newClause;
+        }
+    }
 }
 }

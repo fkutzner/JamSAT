@@ -366,5 +366,56 @@ TEST(UnitSolver, propagationClauseRangeHasCorrectOrder) {
                                       std::vector<TrivialClause *>{&c2, &c3, &c1, &c2, &c1, &c3});
 }
 
+TEST(UnitSolver, propagationDetectsAssignmentReasonClause) {
+    CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    TrivialClause clause1{lit1, lit2, lit3};
+    TrivialClause clause2{lit1, ~lit2, lit3};
+
+    TestAssignmentProvider assignments;
+    assignments.setCurrentDecisionLevel(1);
+    assignments.setAssignmentDecisionLevel(CNFVar{1}, 0);
+    assignments.setAssignmentDecisionLevel(CNFVar{2}, 0);
+    assignments.setAssignmentDecisionLevel(CNFVar{3}, 0);
+
+    CNFVar maxVar{4};
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    underTest.registerClause(clause1);
+    underTest.registerClause(clause2);
+
+    assignments.addAssignment(~lit1);
+    underTest.propagateUntilFixpoint(~lit1);
+    assignments.addAssignment(~lit2);
+    underTest.propagateUntilFixpoint(~lit2);
+
+    auto lit3Reason = underTest.getAssignmentReason(CNFVar{3});
+    ASSERT_NE(lit3Reason, nullptr);
+    EXPECT_TRUE(underTest.isAssignmentReason(clause1, assignments));
+    EXPECT_FALSE(underTest.isAssignmentReason(clause2, assignments));
+}
+
+TEST(UnitSolver, replacementOfReasonClauseInPropagationSucceeds) {
+    CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    TrivialClause clause1{lit1, lit2, lit3};
+
+    TestAssignmentProvider assignments;
+
+    CNFVar maxVar{5};
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    underTest.registerClause(clause1);
+
+    assignments.addAssignment(~lit2);
+    underTest.propagateUntilFixpoint(~lit2);
+    assignments.addAssignment(~lit1);
+    underTest.propagateUntilFixpoint(~lit1);
+
+    TrivialClause clause1Replacement = clause1;
+    underTest.updateAssignmentReason(clause1, clause1Replacement);
+    EXPECT_EQ(underTest.getAssignmentReason(CNFVar{3}), &clause1Replacement);
+}
+
 // TODO: test watcher restoration
 }
