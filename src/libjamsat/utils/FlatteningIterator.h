@@ -84,7 +84,7 @@ public:
     FlatteningIterator(I begin, I end);
 
     /**
-     * \brief Constructs a past-the-end FlatteningIterator.
+     * \brief Constructs a universal past-the-end FlatteningIterator.
      */
     FlatteningIterator();
 
