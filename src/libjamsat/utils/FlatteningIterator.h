@@ -28,6 +28,7 @@
 
 #include <cstdint>
 #include <iterator>
+#include <type_traits>
 
 #include <boost/optional.hpp>
 
@@ -42,30 +43,30 @@ namespace jamsat {
  *
  * Let
  *
- *  - `C` be a type satisfying the STL container concept,
+ *  - `C` be a type satisfying the STL Iterable concept,
  *  - `I` be a type satisfying the STP InputIterator concept, with the value type of `I` being `C`,
  *  - `i1` and `i2` be objects of type `I` such that `i1 = i2` can be achieved by incrementing `i1`
  *
- * this iterator traverses the objects contained in the objects in `[i1, i2)`. The nested
+ * this iterator traverses the objects iterated over by the iterables in `[i1, i2)`. The nested
  * containers are traversed in the order given by `i1`.
  *
- * Restriction: Only a single level of container nesting is supported by this iterator type.
+ * Restriction: Only a single level of Iterable nesting is supported by this iterator type.
  *
  * Usage example: Use this iterator to iterate over all the integers contained in an
  *   `std::vector<std::vector<int>>` object.
  *
- * This type satisfies the STL's InputIterator concept. If both `I` and
- * `D::const_iterator` satisfy the STL's ForwardIterator concept, so does `FlatteningIterator<I>`.
+ * This type satisfies the STL's InputIterator concept. If both `I` and the Iterables iterated by
+ * `I` satisfy the STL's ForwardIterator concept, so does `FlatteningIterator<I>`.
  *
  * \tparam I    a type satisfying the STP InputIterator concept, with the value type of `I`
- *              satisfying the STL container concept.
+ *              satisfying the STL Iterable concept.
  */
 template <typename I>
 class FlatteningIterator {
 private:
     using OuterIt = I;
-    using InnerContainer = typename std::iterator_traits<OuterIt>::value_type;
-    using InnerIt = typename InnerContainer::const_iterator;
+    using InnerIterable = typename std::iterator_traits<OuterIt>::value_type;
+    using InnerIt = decltype(std::declval<typename std::add_const<InnerIterable>::type>().begin());
 
 public:
     using value_type = typename std::iterator_traits<InnerIt>::value_type;

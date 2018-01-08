@@ -24,6 +24,7 @@
 
 */
 
+#include <boost/range.hpp>
 #include <gtest/gtest.h>
 
 #include <libjamsat/utils/FlatteningIterator.h>
@@ -182,5 +183,24 @@ TEST(UnitUtils, FlatteningIterator_incrementReturnsCorrectIterator) {
     EXPECT_TRUE(postIncResult == itBeforePostInc)
         << "'postIncResult' points to " << *postIncResult << " but 'itBeforePostInc' points to "
         << *preIncResult;
+}
+
+TEST(UnitUtils, FlatteningIterator_iterateOverRange) {
+    std::vector<std::vector<int>> testData{{1}, {}, {2, 3}, {}};
+    using TestDataIterator = std::vector<std::vector<int>>::iterator;
+    auto testDataRange = boost::iterator_range<TestDataIterator>{testData.begin(), testData.end()};
+    FlatteningIterator<TestDataIterator> begin{testDataRange.begin(), testDataRange.end()};
+    FlatteningIterator<TestDataIterator> end;
+
+    ASSERT_TRUE(begin != end);
+    EXPECT_EQ(*begin, 1);
+    ++begin;
+    ASSERT_TRUE(begin != end);
+    EXPECT_EQ(*begin, 2);
+    ++begin;
+    ASSERT_TRUE(begin != end);
+    EXPECT_EQ(*begin, 3);
+    ++begin;
+    ASSERT_TRUE(begin == end);
 }
 }
