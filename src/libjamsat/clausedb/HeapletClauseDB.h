@@ -61,33 +61,21 @@ public:
     explicit Heaplet(size_type size) noexcept
       : m_memory(nullptr), m_firstFree(nullptr), m_size(size), m_free(0) {}
 
-    ~Heaplet() {
-        if (m_memory != nullptr) {
-            std::free(m_memory);
-            m_memory = nullptr;
-        }
-    }
+    ~Heaplet();
 
     /**
      * \brief Initializes the Heaplet.
      *
      * \throws std::bad_alloc when memory allocation failed.
      */
-    void initialize() {
-        JAM_ASSERT(m_memory == nullptr, "Cannot initialize a heaplet twice");
-        m_memory = std::malloc(m_size);
-        if (m_memory == nullptr) {
-            throw std::bad_alloc{};
-        }
-        clear();
-    }
+    void initialize();
 
     /**
      * \brief Returns true iff the Heaplet has been initialized.
      *
      * \returns true iff the Heaplet has been initialized.
      */
-    bool isInitialized() const noexcept { return m_memory != nullptr; }
+    bool isInitialized() const noexcept;
 
     /**
      * \brief Empties the Heaplet.
@@ -95,11 +83,7 @@ public:
      * This method may only be called for initialized Heaplets. After calling
      * this method, the Heaplet is reset to its state just after initialization.
      */
-    void clear() noexcept {
-        JAM_ASSERT(isInitialized(), "Cannot reset an uninitialized Heaplet");
-        m_firstFree = m_memory;
-        m_free = m_size;
-    }
+    void clear() noexcept;
 
     /**
      * \brief Allocates memory in the Heaplet.
@@ -120,18 +104,7 @@ public:
      * \tparam CtorArgs... The argument types of T::constructIn(void*, CtorArgs...).
      */
     template <typename T, typename... CtorArgs>
-    T *allocate(size_type size, CtorArgs &&... constructionArgs) noexcept {
-        JAM_ASSERT(isInitialized(), "Cannot allocate on an uninitialized Heaplet");
-        JAM_ASSERT(size >= sizeof(T), "Fewer bytes allocated than required by type");
-
-        void *result = std::align(alignof(T), size, m_firstFree, m_free);
-        if (result == nullptr) {
-            return nullptr;
-        }
-        m_free -= size;
-        m_firstFree = reinterpret_cast<char *>(m_firstFree) + size;
-        return T::constructIn(result, std::forward<CtorArgs>(constructionArgs)...);
-    }
+    T *allocate(size_type size, CtorArgs &&... constructionArgs) noexcept;
 
     /**
      * \brief Returns the amount of bytes which are available for allocation.
@@ -140,43 +113,16 @@ public:
      */
     size_type getFreeSize() const noexcept { return m_free; }
 
-#if defined(JAM_EXPOSE_INTERNAL_TESTING_INTERFACES)
-    // Functions for testing the internal state of heaplets:
-    bool test_isRegionInHeaplet(const void *ptr, size_type length) const noexcept {
-        if (!isInitialized()) {
-            return false;
-        }
-        uintptr_t ptrAsInt = reinterpret_cast<uintptr_t>(ptr);
-        uintptr_t memAsInt = reinterpret_cast<uintptr_t>(m_memory);
-        return ptrAsInt >= memAsInt && (ptrAsInt + length) < (memAsInt + m_size);
-    }
-#endif
-
     Heaplet &operator=(const Heaplet &other) = delete;
     Heaplet(const Heaplet &other) = delete;
 
-    Heaplet &operator=(Heaplet &&other) noexcept {
-        if (m_memory != nullptr) {
-            std::free(m_memory);
-        }
+    Heaplet &operator=(Heaplet &&other) noexcept;
+    Heaplet(Heaplet &&other) noexcept;
 
-        m_memory = other.m_memory;
-        m_firstFree = other.m_firstFree;
-        m_size = other.m_size;
-        m_free = other.m_free;
-        other.m_memory = nullptr;
-        other.m_free = other.m_size;
-        return *this;
-    }
-
-    Heaplet(Heaplet &&other) noexcept {
-        m_memory = other.m_memory;
-        m_firstFree = other.m_firstFree;
-        m_size = other.m_size;
-        m_free = other.m_free;
-        other.m_memory = nullptr;
-        other.m_free = other.m_size;
-    }
+#if defined(JAM_EXPOSE_INTERNAL_TESTING_INTERFACES)
+    // Functions for testing the internal state of heaplets:
+    bool test_isRegionInHeaplet(const void *ptr, size_type length) const noexcept;
+#endif
 
 private:
     void *m_memory;
@@ -309,6 +255,83 @@ private:
 
 
 /********** Implementation ****************************** */
+
+namespace clausedb_detail {
+inline Heaplet::~Heaplet() {
+    if (m_memory != nullptr) {
+        std::free(m_memory);
+        m_memory = nullptr;
+    }
+}
+
+inline void Heaplet::initialize() {
+    JAM_ASSERT(m_memory == nullptr, "Cannot initialize a heaplet twice");
+    m_memory = std::malloc(m_size);
+    if (m_memory == nullptr) {
+        throw std::bad_alloc{};
+    }
+    clear();
+}
+
+inline bool Heaplet::isInitialized() const noexcept {
+    return m_memory != nullptr;
+}
+
+inline void Heaplet::clear() noexcept {
+    JAM_ASSERT(isInitialized(), "Cannot reset an uninitialized Heaplet");
+    m_firstFree = m_memory;
+    m_free = m_size;
+}
+
+template <typename T, typename... CtorArgs>
+T *Heaplet::allocate(size_type size, CtorArgs &&... constructionArgs) noexcept {
+    JAM_ASSERT(isInitialized(), "Cannot allocate on an uninitialized Heaplet");
+    JAM_ASSERT(size >= sizeof(T), "Fewer bytes allocated than required by type");
+
+    void *result = std::align(alignof(T), size, m_firstFree, m_free);
+    if (result == nullptr) {
+        return nullptr;
+    }
+    m_free -= size;
+    m_firstFree = reinterpret_cast<char *>(m_firstFree) + size;
+    return T::constructIn(result, std::forward<CtorArgs>(constructionArgs)...);
+}
+
+inline Heaplet &Heaplet::operator=(Heaplet &&other) noexcept {
+    if (m_memory != nullptr) {
+        std::free(m_memory);
+    }
+
+    m_memory = other.m_memory;
+    m_firstFree = other.m_firstFree;
+    m_size = other.m_size;
+    m_free = other.m_free;
+    other.m_memory = nullptr;
+    other.m_free = other.m_size;
+    return *this;
+}
+
+inline Heaplet::Heaplet(Heaplet &&other) noexcept {
+    m_memory = other.m_memory;
+    m_firstFree = other.m_firstFree;
+    m_size = other.m_size;
+    m_free = other.m_free;
+    other.m_memory = nullptr;
+    other.m_free = other.m_size;
+}
+
+#if defined(JAM_EXPOSE_INTERNAL_TESTING_INTERFACES)
+// Functions for testing the internal state of heaplets:
+inline bool Heaplet::test_isRegionInHeaplet(const void *ptr, size_type length) const noexcept {
+    if (!isInitialized()) {
+        return false;
+    }
+    uintptr_t ptrAsInt = reinterpret_cast<uintptr_t>(ptr);
+    uintptr_t memAsInt = reinterpret_cast<uintptr_t>(m_memory);
+    return ptrAsInt >= memAsInt && (ptrAsInt + length) < (memAsInt + m_size);
+}
+#endif
+}
 
 template <typename ClauseT>
 HeapletClauseDB<ClauseT>::HeapletClauseDB(size_type heapletSize, size_type memoryLimit,
