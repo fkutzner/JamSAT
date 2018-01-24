@@ -172,7 +172,7 @@ TEST(UnitClauseDB, HeapletPassesConstructionArgumentsToFactoryFunction) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBIsEmptyAfterCreation) {
-    HeapletClauseDB<Clause> underTest{512ull, 2048ull, {}, {}};
+    HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     // Assert that space is allocated lazily:
     EXPECT_EQ(underTest.test_getAvailableSpaceInActiveHeaplets(), 0ull);
     EXPECT_EQ(underTest.test_getAvailableSpaceInBinaryHeaplets(), 0ull);
@@ -180,7 +180,7 @@ TEST(UnitClauseDB, HeapletClauseDBIsEmptyAfterCreation) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBFreeSpaceDecreasedNonBinaryClauseCreation) {
-    HeapletClauseDB<Clause> underTest{512ull, 2048ull, {}, {}};
+    HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     HeapletClauseDB<Clause>::size_type maxFree = 512ull;
 
     const Clause::size_type clauseSize = 5;
@@ -204,7 +204,7 @@ TEST(UnitClauseDB, HeapletClauseDBFreeSpaceDecreasedNonBinaryClauseCreation) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBFreeSpaceDecreasedBinaryClauseCreation) {
-    HeapletClauseDB<Clause> underTest{512ull, 2048ull, {}, {}};
+    HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     HeapletClauseDB<Clause>::size_type maxFree = 512ull;
 
     const Clause::size_type clauseSize = 2;
@@ -228,14 +228,14 @@ TEST(UnitClauseDB, HeapletClauseDBFreeSpaceDecreasedBinaryClauseCreation) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBAllocatesClausesOfCorrectSize) {
-    HeapletClauseDB<Clause> underTest{512ull, 2048ull, {}, {}};
+    HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     const Clause::size_type clauseSize = 5;
     auto &clause = underTest.allocate(clauseSize);
     EXPECT_EQ(clause.size(), clauseSize);
 }
 
 TEST(UnitClauseDB, HeapletClauseDBUsesFreshHeapletWhenFirstIsFull) {
-    HeapletClauseDB<Clause> underTest{512ull, 2048ull, {}, {}};
+    HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     auto &clause1 = underTest.allocate(96);
     (void)clause1;
     auto free = underTest.test_getAvailableSpaceInActiveHeaplets();
@@ -246,7 +246,7 @@ TEST(UnitClauseDB, HeapletClauseDBUsesFreshHeapletWhenFirstIsFull) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenOutOfMemory) {
-    HeapletClauseDB<Clause> underTest{512ull, 1536ull, {}, {}};
+    HeapletClauseDB<Clause> underTest{512ull, 1536ull};
     // Should be able to allocate no more than 1024 byte in non-binary clauses
     // Allocating at least 384 bytes at a time:
     underTest.allocate(96);
@@ -257,7 +257,7 @@ TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenOutOfMemory) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenClauseTooLarge) {
-    HeapletClauseDB<Clause> underTest{512ull, 1536ull, {}, {}};
+    HeapletClauseDB<Clause> underTest{512ull, 1536ull};
     // Allocatnig a clause bigger than 512 byte, should not fit in any heaplet:
     EXPECT_THROW(underTest.allocate(384), std::bad_alloc);
 }
@@ -269,11 +269,12 @@ std::function<bool(const Clause &)> createNoReasonClausePred() noexcept {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBIsEmptyAfterRetainingNoClauses) {
-    HeapletClauseDB<Clause> underTest{512ull, 3096ull, createNoReasonClausePred(), {}};
+    HeapletClauseDB<Clause> underTest{512ull, 3096ull};
     auto &clause1 = underTest.allocate(96);
     auto &clause2 = underTest.allocate(96);
     std::vector<Clause *> empty;
-    underTest.retain(empty, boost::optional<std::vector<Clause *>::iterator>{});
+    underTest.retain(empty, createNoReasonClausePred(), {},
+                     boost::optional<std::vector<Clause *>::iterator>{});
 
     // The two heaplets used by the clauses should show up as free memory now:
     EXPECT_EQ(underTest.test_getAvailableSpaceInFreeHeaplets(), 1024ull);
@@ -287,11 +288,12 @@ TEST(UnitClauseDB, HeapletClauseDBIsEmptyAfterRetainingNoClauses) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBCanAllocateAfterRetainingNoClauses) {
-    HeapletClauseDB<Clause> underTest{512ull, 2048ull, createNoReasonClausePred(), {}};
+    HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     underTest.allocate(80);
     underTest.allocate(80);
     std::vector<Clause *> empty;
-    underTest.retain(empty, boost::optional<std::vector<Clause *>::iterator>{});
+    underTest.retain(empty, createNoReasonClausePred(), {},
+                     boost::optional<std::vector<Clause *>::iterator>{});
     EXPECT_NO_THROW(underTest.allocate(96));
     EXPECT_NO_THROW(underTest.allocate(96));
     EXPECT_NO_THROW(underTest.allocate(96));
@@ -299,18 +301,19 @@ TEST(UnitClauseDB, HeapletClauseDBCanAllocateAfterRetainingNoClauses) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenRetainIsOutOfMemory) {
-    HeapletClauseDB<Clause> underTest{512ull, 1024ull, createNoReasonClausePred(), {}};
+    HeapletClauseDB<Clause> underTest{512ull, 1024ull};
     // This clause DB has no heaplets that might be used for retain()
     auto &clause = underTest.allocate(3);
     std::vector<Clause *> empty;
-    ASSERT_THROW(underTest.retain(empty, boost::optional<std::vector<Clause *>::iterator>{}),
+    ASSERT_THROW(underTest.retain(empty, createNoReasonClausePred(), {},
+                                  boost::optional<std::vector<Clause *>::iterator>{}),
                  std::bad_alloc);
     // Check exception safety: the clause should remain intact
     EXPECT_TRUE(underTest.test_isRegionInActiveHeaplet(&clause, Clause::getAllocationSize(3)));
 }
 
 TEST(UnitClauseDB, HeapletClauseDBContainsCorrectClausesAfterRetain) {
-    HeapletClauseDB<Clause> underTest{64ull, 8192ull, createNoReasonClausePred(), {}};
+    HeapletClauseDB<Clause> underTest{64ull, 8192ull};
     std::vector<Clause *> clauses{&underTest.allocate(4), &underTest.allocate(3),
                                   &underTest.allocate(10), &underTest.allocate(4)};
     std::vector<CNFLit> retainedClauseALiterals{CNFLit{CNFVar{3}, CNFSign::POSITIVE},
@@ -326,7 +329,8 @@ TEST(UnitClauseDB, HeapletClauseDBContainsCorrectClausesAfterRetain) {
 
     std::vector<Clause *> relocated;
     using BackInserterType = decltype(std::back_inserter(relocated));
-    underTest.retain(retained, boost::optional<BackInserterType>{std::back_inserter(relocated)});
+    underTest.retain(retained, createNoReasonClausePred(), {},
+                     boost::optional<BackInserterType>{std::back_inserter(relocated)});
     ASSERT_EQ(relocated.size(), 2ull);
 
     EXPECT_FALSE(underTest.test_isRegionInActiveHeaplet(clauses[0], Clause::getAllocationSize(4)));
@@ -357,7 +361,7 @@ TEST(UnitClauseDB, HeapletClauseDBAnnouncesRewriteOfReasonClauses) {
         reasonRelocations.push_back({&oldR, &newR});
     };
 
-    HeapletClauseDB<Clause> underTest{512ull, 2048ull, reasonPred, reasonRelocationRecv};
+    HeapletClauseDB<Clause> underTest{512ull, 2048ull};
 
     std::vector<Clause *> clauses{&underTest.allocate(4), &underTest.allocate(3),
                                   &underTest.allocate(10), &underTest.allocate(4)};
@@ -370,7 +374,8 @@ TEST(UnitClauseDB, HeapletClauseDBAnnouncesRewriteOfReasonClauses) {
     std::vector<Clause *> retained{clauses[0], clauses[1], clauses[3]};
     std::vector<Clause *> relocated;
     using BackInserterType = decltype(std::back_inserter(relocated));
-    underTest.retain(retained, boost::optional<BackInserterType>{std::back_inserter(relocated)});
+    underTest.retain(retained, reasonPred, reasonRelocationRecv,
+                     boost::optional<BackInserterType>{std::back_inserter(relocated)});
 
     ASSERT_EQ(reasonRelocations.size(), 2ull);
     ASSERT_EQ(relocated.size(), 3ull);

@@ -162,16 +162,8 @@ public:
      *
      * \param heapletSize     The size of a heaplet, in bytes.
      * \param memoryLimit     The maximum amount of memory allocated to heaplets.
-     * \param reasonPredicate A function determining whether a given clause is a reason clause.
-     * \param reasonRelocator A function that is called whenever a reason clause has been
-     *                        moved in memory. A reference to the "old" clause is passed as the
-     *                        first argument, a reference to the "new" clause as the second
-     *                        one. When \p reasonRelocator is called, both clauses may be
-     *                        dereferenced.
      */
-    HeapletClauseDB(size_type heapletSize, size_type memoryLimit,
-                    ReasonClausePredicateFunc reasonPredicate,
-                    RelocateReasonClauseFunc reasonRelocator);
+    HeapletClauseDB(size_type heapletSize, size_type memoryLimit);
 
     /**
      * \brief Allocates a new clause.
@@ -214,13 +206,20 @@ public:
      *                          must hold: the clause to which `p` points must contain more
      *                          than 2 literals, `p` must be valid and must have been allocated
      *                          by the same allocator objet where `retain` is called.
+     * \param reasonPredicate   A function determining whether a given clause is a reason clause.
+     * \param reasonRelocator   A function that is called whenever a reason clause has been
+     *                          moved in memory. A reference to the "old" clause is passed as the
+     *                          first argument, a reference to the "new" clause as the second
+     *                          one. When \p reasonRelocator is called, both clauses may be
+     *                          dereferenced.
      * \param relocedReceiver   An optional output iterator of a destination range where the
      *                          pointers to the new clauses should to be stored.
      * \tparam ClauseTIterable  A type satisfying the InputIterator concept for pointers to
      *                          `ClauseT`.
      */
     template <typename ClauseTIterable, typename ClauseTPtrOutputIter>
-    void retain(const ClauseTIterable &clausePointers,
+    void retain(const ClauseTIterable &clausePointers, ReasonClausePredicateFunc m_isReasonClause,
+                RelocateReasonClauseFunc m_relocateReasonClause,
                 boost::optional<ClauseTPtrOutputIter> relocedReceiver);
 
 #if defined(JAM_EXPOSE_INTERNAL_TESTING_INTERFACES)
@@ -248,9 +247,6 @@ private:
     HeapletList m_activeHeaplets;
     HeapletList m_binaryHeaplets;
     HeapletList m_freeHeapletPool;
-
-    ReasonClausePredicateFunc m_isReasonClause;
-    RelocateReasonClauseFunc m_relocateReasonClause;
 };
 
 
@@ -334,16 +330,12 @@ inline bool Heaplet::test_isRegionInHeaplet(const void *ptr, size_type length) c
 }
 
 template <typename ClauseT>
-HeapletClauseDB<ClauseT>::HeapletClauseDB(size_type heapletSize, size_type memoryLimit,
-                                          ReasonClausePredicateFunc reasonPredicate,
-                                          RelocateReasonClauseFunc reasonRelocator)
+HeapletClauseDB<ClauseT>::HeapletClauseDB(size_type heapletSize, size_type memoryLimit)
   : m_heapletSize(heapletSize)
   , m_memoryLimit(memoryLimit)
   , m_activeHeaplets()
   , m_binaryHeaplets()
-  , m_freeHeapletPool()
-  , m_isReasonClause(reasonPredicate)
-  , m_relocateReasonClause(reasonRelocator) {
+  , m_freeHeapletPool() {
 
     size_type numHeaplets = memoryLimit / heapletSize;
 
@@ -399,6 +391,8 @@ ClauseT &HeapletClauseDB<ClauseT>::allocate(typename ClauseT::size_type size) {
 template <typename ClauseT>
 template <typename ClauseTIterable, typename ClauseTPtrOutputIter>
 void HeapletClauseDB<ClauseT>::retain(const ClauseTIterable &clausePointers,
+                                      ReasonClausePredicateFunc isReasonClauseFn,
+                                      RelocateReasonClauseFunc relocateReasonClauseFn,
                                       boost::optional<ClauseTPtrOutputIter> relocedReceiver) {
     if (m_freeHeapletPool.empty()) {
         throw std::bad_alloc{};
@@ -415,7 +409,7 @@ void HeapletClauseDB<ClauseT>::retain(const ClauseTIterable &clausePointers,
         auto &replacement = allocateIn(size, newActiveHeaplets, m_freeHeapletPool);
         std::copy(oldClause->begin(), oldClause->end(), replacement.begin());
 
-        if (m_isReasonClause(*oldClause)) {
+        if (isReasonClauseFn(*oldClause)) {
             reasonClauses.emplace_back(oldClause, &replacement);
         }
         if (relocedReceiver) {
@@ -425,7 +419,7 @@ void HeapletClauseDB<ClauseT>::retain(const ClauseTIterable &clausePointers,
     }
 
     for (auto reasonReplacement : reasonClauses) {
-        m_relocateReasonClause(*reasonReplacement.first, *reasonReplacement.second);
+        relocateReasonClauseFn(*reasonReplacement.first, *reasonReplacement.second);
     }
 
     std::swap(newActiveHeaplets, m_activeHeaplets);
