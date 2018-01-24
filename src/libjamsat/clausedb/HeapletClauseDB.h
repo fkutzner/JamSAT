@@ -150,8 +150,8 @@ private:
 template <typename ClauseT>
 class HeapletClauseDB {
 public:
-    using ReasonClausePredicateFunc = std::function<bool(ClauseT &) noexcept>;
-    using RelocateReasonClauseFunc = std::function<void(ClauseT &, ClauseT &) noexcept>;
+    using ReasonClausePredicateFunc = std::function<bool(const ClauseT &) noexcept>;
+    using RelocateReasonClauseFunc = std::function<void(const ClauseT &, const ClauseT &) noexcept>;
 
     using size_type = uintptr_t;
 
@@ -411,8 +411,12 @@ void HeapletClauseDB<ClauseT>::retain(const ClauseTIterable &clausePointers,
     m_freeHeapletPool.pop_back();
 
     // Postponing the announcement of reason clause replacements for exception safety
-    std::vector<std::pair<ClauseT *, ClauseT *>> reasonClauses;
-    for (auto oldClause : clausePointers) {
+    std::vector<std::pair<const ClauseT *, const ClauseT *>> reasonClauses;
+    for (auto oldClauseConst : clausePointers) {
+        // This const_cast is safe since the clause memory is guaranteed to be non-constant:
+        ClauseT *oldClause = const_cast<ClauseT *>(oldClauseConst);
+        // TODO: eliminate the const_cast? It's safe, but rather ugly.
+
         auto size = oldClause->size();
 
         if (size == 0ull) {
