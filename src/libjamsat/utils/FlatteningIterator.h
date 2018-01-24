@@ -65,8 +65,7 @@ template <typename I>
 class FlatteningIterator {
 private:
     using OuterIt = I;
-    using InnerIterable = typename std::iterator_traits<OuterIt>::value_type;
-    using InnerIt = decltype(std::declval<typename std::add_const<InnerIterable>::type>().begin());
+    using InnerIt = decltype(std::declval<I>()->begin());
 
 public:
     using value_type = typename std::iterator_traits<InnerIt>::value_type;
