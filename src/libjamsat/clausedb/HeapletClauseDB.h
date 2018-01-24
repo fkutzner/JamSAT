@@ -206,14 +206,22 @@ public:
      *                          must hold: the clause to which `p` points must contain more
      *                          than 2 literals, `p` must be valid and must have been allocated
      *                          by the same allocator objet where `retain` is called.
+     *                          \p clausePointers must not contain any pointer to empty clauses.
+     *                          \p clausePointers may contain duplicates; if a clause pointer has
+     *                          already been processed, it is ignored.
+     *
      * \param reasonPredicate   A function determining whether a given clause is a reason clause.
-     * \param reasonRelocator   A function that is called whenever a reason clause has been
-     *                          moved in memory. A reference to the "old" clause is passed as the
-     *                          first argument, a reference to the "new" clause as the second
-     *                          one. When \p reasonRelocator is called, both clauses may be
-     *                          dereferenced.
+     *
+     * \param reasonRelocator   A function that is called whenever a reason clause has been moved in
+     *                          memory. A reference to the "old" clause is passed as the first
+     *                          argument, a reference to the "new" clause as the second one. When
+     *                          \p reasonRelocator is called, both clauses may be
+     *                          dereferenced; however, the "old" clause will have been resized
+     *                          to contain 0 literals.
+     *
      * \param relocedReceiver   An optional output iterator of a destination range where the
      *                          pointers to the new clauses should to be stored.
+     *
      * \tparam ClauseTIterable  A type satisfying the InputIterator concept for pointers to
      *                          `ClauseT`.
      */
@@ -406,6 +414,12 @@ void HeapletClauseDB<ClauseT>::retain(const ClauseTIterable &clausePointers,
     std::vector<std::pair<ClauseT *, ClauseT *>> reasonClauses;
     for (auto oldClause : clausePointers) {
         auto size = oldClause->size();
+
+        if (size == 0ull) {
+            // the clause has already been relocated
+            continue;
+        }
+
         auto &replacement = allocateIn(size, newActiveHeaplets, m_freeHeapletPool);
         std::copy(oldClause->begin(), oldClause->end(), replacement.begin());
 
@@ -416,6 +430,8 @@ void HeapletClauseDB<ClauseT>::retain(const ClauseTIterable &clausePointers,
             (**relocedReceiver) = &replacement;
             ++(*relocedReceiver);
         }
+
+        oldClause->resize(0);
     }
 
     for (auto reasonReplacement : reasonClauses) {

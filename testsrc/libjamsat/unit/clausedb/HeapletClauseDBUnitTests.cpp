@@ -341,12 +341,31 @@ TEST(UnitClauseDB, HeapletClauseDBContainsCorrectClausesAfterRetain) {
     ASSERT_TRUE(underTest.test_isRegionInActiveHeaplet(relocated[0], Clause::getAllocationSize(3)));
     ASSERT_TRUE(underTest.test_isRegionInActiveHeaplet(relocated[1], Clause::getAllocationSize(4)));
 
-    EXPECT_EQ(retained[0]->size(), 3ull);
-    EXPECT_EQ(retained[1]->size(), 4ull);
+    EXPECT_EQ(relocated[0]->size(), 3ull);
+    EXPECT_EQ(relocated[1]->size(), 4ull);
     EXPECT_TRUE(
-        std::equal(retained[0]->begin(), retained[0]->end(), retainedClauseALiterals.begin()));
+        std::equal(relocated[0]->begin(), relocated[0]->end(), retainedClauseALiterals.begin()));
     EXPECT_TRUE(
-        std::equal(retained[1]->begin(), retained[1]->end(), retainedClauseBLiterals.begin()));
+        std::equal(relocated[1]->begin(), relocated[1]->end(), retainedClauseBLiterals.begin()));
+}
+
+TEST(UnitClauseDB, HeapletClauseDBIgnoresDuplicateClauses) {
+    HeapletClauseDB<Clause> underTest{512ull, 8192ull};
+    std::vector<Clause *> clauses{&underTest.allocate(91), &underTest.allocate(92),
+                                  &underTest.allocate(93)};
+
+    std::vector<Clause *> retained{clauses[1], clauses[2], clauses[1]};
+
+    std::vector<Clause *> relocated;
+    using BackInserterType = decltype(std::back_inserter(relocated));
+
+    ASSERT_NO_THROW(
+        underTest.retain(retained, createNoReasonClausePred(), {},
+                         boost::optional<BackInserterType>{std::back_inserter(relocated)}));
+    ASSERT_EQ(relocated.size(), 2ull);
+
+    // Check that the two clauses are different:
+    EXPECT_NE(relocated[0]->size(), relocated[1]->size());
 }
 
 TEST(UnitClauseDB, HeapletClauseDBAnnouncesRewriteOfReasonClauses) {
@@ -357,7 +376,6 @@ TEST(UnitClauseDB, HeapletClauseDBAnnouncesRewriteOfReasonClauses) {
         return std::find(reasons.begin(), reasons.end(), &c) != reasons.end();
     };
     auto reasonRelocationRecv = [&reasonRelocations](const Clause &oldR, const Clause &newR) {
-        EXPECT_EQ(oldR[0], newR[0]);
         reasonRelocations.push_back({&oldR, &newR});
     };
 
