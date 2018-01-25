@@ -74,6 +74,9 @@ public:
     using iterator_category = std::input_iterator_tag;
     using difference_type = int64_t;
 
+    using const_reference = typename std::add_const<reference>::type;
+    using const_pointer = typename std::add_const<pointer>::type;
+
     /**
      * \brief Constructs a new FlatteningIterator.
      *
@@ -87,8 +90,11 @@ public:
      */
     FlatteningIterator();
 
-    reference operator*() const;
-    const value_type *operator->() const;
+    reference operator*();
+    pointer operator->();
+
+    const_reference operator*() const;
+    const_pointer operator->() const;
 
     FlatteningIterator<I> &operator++();
     FlatteningIterator<I> operator++(int dummy);
@@ -148,13 +154,24 @@ FlatteningIterator<I>::FlatteningIterator()
   : m_outerIt(), m_outerEndIt(), m_innerIt(), m_innerEndIt() {}
 
 template <typename I>
-typename FlatteningIterator<I>::reference FlatteningIterator<I>::operator*() const {
+typename FlatteningIterator<I>::reference FlatteningIterator<I>::operator*() {
     JAM_ASSERT(m_innerIt, "Nested iterator pointing past the end dereferenced");
     return **m_innerIt;
 }
 
 template <typename I>
-const typename FlatteningIterator<I>::value_type *FlatteningIterator<I>::operator->() const {
+typename FlatteningIterator<I>::pointer FlatteningIterator<I>::operator->() {
+    return &(this->operator*());
+}
+
+template <typename I>
+typename FlatteningIterator<I>::const_reference FlatteningIterator<I>::operator*() const {
+    JAM_ASSERT(m_innerIt, "Nested iterator pointing past the end dereferenced");
+    return **m_innerIt;
+}
+
+template <typename I>
+typename FlatteningIterator<I>::const_pointer FlatteningIterator<I>::operator->() const {
     return &(this->operator*());
 }
 

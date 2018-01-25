@@ -185,7 +185,7 @@ TEST(UnitUtils, FlatteningIterator_incrementReturnsCorrectIterator) {
         << *preIncResult;
 }
 
-TEST(UnitUtils, FlatteningIterator_iterateOverRange) {
+TEST(UnitUtils, FlatteningIterator_iterateOverNonconstRange) {
     std::vector<std::vector<int>> testData{{1}, {}, {2, 3}, {}};
     using TestDataIterator = std::vector<std::vector<int>>::iterator;
     auto testDataRange = boost::iterator_range<TestDataIterator>{testData.begin(), testData.end()};
@@ -194,13 +194,19 @@ TEST(UnitUtils, FlatteningIterator_iterateOverRange) {
 
     ASSERT_TRUE(begin != end);
     EXPECT_EQ(*begin, 1);
+    *begin = 10;
     ++begin;
     ASSERT_TRUE(begin != end);
     EXPECT_EQ(*begin, 2);
+    *begin = 20;
     ++begin;
     ASSERT_TRUE(begin != end);
     EXPECT_EQ(*begin, 3);
+    *begin = 30;
     ++begin;
     ASSERT_TRUE(begin == end);
+
+    std::vector<std::vector<int>> expectedTestData = {{10}, {}, {20, 30}, {}};
+    EXPECT_EQ(testData, expectedTestData);
 }
 }
