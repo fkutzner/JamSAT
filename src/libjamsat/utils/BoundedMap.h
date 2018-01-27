@@ -55,11 +55,17 @@ public:
     /// The size type.
     using size_type = typename BackingType::size_type;
 
-    /// The const iterator for value ranges.
+    /// The const iterator type for value ranges.
     using const_iterator = typename BackingType::const_iterator;
 
     /// The const value range type.
     using const_value_range = boost::iterator_range<const_iterator>;
+
+    /// The iterator type for value ranges.
+    using iterator = typename BackingType::iterator;
+
+    /// The const value range type.
+    using value_range = boost::iterator_range<iterator>;
 
     /**
      * \brief Constructs an ArrayBackedMap with the given maximum key.
@@ -112,7 +118,7 @@ public:
     size_type size() const noexcept { return m_values.size(); }
 
     /**
-     * \brief Gets the range of values contained in this map.
+     * \brief Gets the const range of values contained in this map.
      *
      * The range contains exactly `size()` elements, which are not required to be unique within
      * the range. The returned range is valid until the map is destroyed or resized.
@@ -120,8 +126,18 @@ public:
      * \returns       The range of values contained in this map.
      */
     const_value_range values() const noexcept {
-        return const_value_range{m_values.begin(), m_values.end()};
+        return const_value_range{m_values.cbegin(), m_values.cend()};
     }
+
+    /**
+     * \brief Gets the range of values contained in this map.
+     *
+     * The range contains exactly `size()` elements, which are not required to be unique within
+     * the range. The returned range is valid until the map is destroyed or resized.
+     *
+     * \returns       The range of values contained in this map.
+     */
+    value_range values() noexcept { return value_range{m_values.begin(), m_values.end()}; }
 
     /**
      * \brief Increases the map's size.
