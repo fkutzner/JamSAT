@@ -425,7 +425,7 @@ void HeapletClauseDB<ClauseT>::retain(const ClauseTIterable &clausePointers,
         }
 
         auto &replacement = allocateIn(size, newActiveHeaplets, m_freeHeapletPool);
-        std::copy(oldClause->begin(), oldClause->end(), replacement.begin());
+        replacement = *oldClause;
 
         if (isReasonClauseFn(*oldClause)) {
             reasonClauses.emplace_back(oldClause, &replacement);

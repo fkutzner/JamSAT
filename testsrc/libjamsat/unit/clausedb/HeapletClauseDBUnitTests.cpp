@@ -324,6 +324,8 @@ TEST(UnitClauseDB, HeapletClauseDBContainsCorrectClausesAfterRetain) {
         CNFLit{CNFVar{6}, CNFSign::NEGATIVE}, CNFLit{CNFVar{4}, CNFSign::POSITIVE}};
 
     std::vector<Clause *> retained{clauses[1], clauses[3]};
+    retained[0]->setLBD<unsigned char>(5);
+    retained[1]->setLBD<unsigned char>(3);
     std::copy(retainedClauseALiterals.begin(), retainedClauseALiterals.end(), retained[0]->begin());
     std::copy(retainedClauseBLiterals.begin(), retainedClauseBLiterals.end(), retained[1]->begin());
 
@@ -347,6 +349,8 @@ TEST(UnitClauseDB, HeapletClauseDBContainsCorrectClausesAfterRetain) {
         std::equal(relocated[0]->begin(), relocated[0]->end(), retainedClauseALiterals.begin()));
     EXPECT_TRUE(
         std::equal(relocated[1]->begin(), relocated[1]->end(), retainedClauseBLiterals.begin()));
+    EXPECT_EQ(relocated[0]->getLBD<unsigned char>(), 5);
+    EXPECT_EQ(relocated[1]->getLBD<unsigned char>(), 3);
 }
 
 TEST(UnitClauseDB, HeapletClauseDBIgnoresDuplicateClauses) {
