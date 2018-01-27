@@ -14,6 +14,11 @@ option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
 
+### Language options
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED 14)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 ### Find libraries
 
 #add_definitions(-DBOOST_ALL_DYN_LINK)
@@ -55,7 +60,7 @@ else()
 endif()
 
 if(COMPILING_WITH_GNULIKE)
-  add_definitions(-std=c++14 -Wall -Wextra -pedantic-errors -fvisibility=hidden)
+  add_definitions(-Wall -Wextra -pedantic-errors -fvisibility=hidden)
 
   if(JAMSAT_DISABLE_OPTIMIZATIONS)
     add_definitions(-fno-inline -O0)
