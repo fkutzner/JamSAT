@@ -417,5 +417,61 @@ TEST(UnitSolver, replacementOfReasonClauseInPropagationSucceeds) {
     EXPECT_EQ(underTest.getAssignmentReason(CNFVar{3}), &clause1Replacement);
 }
 
+namespace {
+void test_clearClausesInPropagation(bool withKeepReasons) {
+    using PropagationTy = Propagation<TestAssignmentProvider, TrivialClause>;
+
+    CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    CNFLit lit4{CNFVar{4}, CNFSign::POSITIVE};
+    CNFLit lit5{CNFVar{5}, CNFSign::POSITIVE};
+    CNFLit lit6{CNFVar{6}, CNFSign::POSITIVE};
+    TrivialClause clause1{lit1, lit2, lit3, lit4};
+    TrivialClause clause2{lit1, lit2, ~lit4};
+    TrivialClause clause3{lit5, lit6};
+
+    TestAssignmentProvider assignments;
+    CNFVar maxVar{6};
+    PropagationTy underTest(maxVar, assignments);
+    underTest.registerClause(clause1);
+    underTest.registerClause(clause2);
+    underTest.registerClause(clause3);
+
+    PropagationTy::ClearMode testClearMode = withKeepReasons
+                                                 ? PropagationTy::ClearMode::KEEP_REASONS
+                                                 : PropagationTy::ClearMode::NO_KEEP_REASONS;
+
+    assignments.addAssignment(~lit5);
+    underTest.propagateUntilFixpoint(~lit5);
+    ASSERT_EQ(underTest.getAssignmentReason(lit6.getVariable()), &clause3);
+
+    underTest.clear(testClearMode);
+
+    if (testClearMode == PropagationTy::ClearMode::KEEP_REASONS) {
+        EXPECT_EQ(underTest.getAssignmentReason(lit6.getVariable()), &clause3);
+    } else {
+        EXPECT_EQ(underTest.getAssignmentReason(lit6.getVariable()), nullptr);
+    }
+
+    assignments.addAssignment(~lit1);
+    underTest.propagateUntilFixpoint(~lit1);
+    assignments.addAssignment(~lit3);
+    underTest.propagateUntilFixpoint(~lit3);
+    assignments.addAssignment(~lit2);
+    auto conflicting = underTest.propagateUntilFixpoint(~lit2);
+    EXPECT_EQ(assignments.getAssignment(lit4), TBool::INDETERMINATE);
+    EXPECT_EQ(conflicting, nullptr);
+}
+}
+
+TEST(UnitSolver, clearClausesInPropagation_withReasonsCleared) {
+    test_clearClausesInPropagation(false);
+}
+
+TEST(UnitSolver, clearClausesInPropagation_withReasonsKept) {
+    test_clearClausesInPropagation(true);
+}
+
 // TODO: test watcher restoration
 }

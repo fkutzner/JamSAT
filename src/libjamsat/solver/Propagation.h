@@ -101,10 +101,15 @@ public:
      */
     ClauseT *registerClause(ClauseT &clause);
 
+    enum class ClearMode { NO_KEEP_REASONS, KEEP_REASONS };
+
     /**
      * \brief Unregisters all clauses from the propagation system.
+     *
+     * \param mode     Iff set to NO_KEEP_REASONS, the reason clause assignments are cleared
+     *                 as well.
      */
-    void clear() noexcept;
+    void clear(ClearMode mode) noexcept;
 
     /**
      * \brief Removes clauses marked as "to be deleted" from the propagation system.
@@ -414,8 +419,13 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
 }
 
 template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::clear() noexcept {
+void Propagation<AssignmentProvider, ClauseT>::clear(ClearMode mode) noexcept {
     m_watchers.clear();
+    if (mode == ClearMode::NO_KEEP_REASONS) {
+        for (auto &clausePointer : m_reasons.values()) {
+            clausePointer = nullptr;
+        }
+    }
 }
 
 template <class AssignmentProvider, class ClauseT>
