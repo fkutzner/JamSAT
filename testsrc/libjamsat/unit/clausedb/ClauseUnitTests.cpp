@@ -150,6 +150,21 @@ TEST(UnitClauseDB, shrinkClause) {
     EXPECT_EQ(underTest->size(), 5ull);
 }
 
+TEST(UnitClauseDB, assignClause) {
+    auto assignee = createHeapClause(3);
+    auto source = createHeapClause(3);
+
+    source->setLBD<int>(10);
+    (*source)[0] = CNFLit{CNFVar{100}, CNFSign::POSITIVE};
+    (*source)[1] = CNFLit{CNFVar{10}, CNFSign::NEGATIVE};
+    (*source)[2] = CNFLit{CNFVar{1000}, CNFSign::POSITIVE};
+
+    *assignee = *source;
+
+    EXPECT_EQ(assignee->getLBD<int>(), 10);
+    EXPECT_TRUE(std::equal(assignee->begin(), assignee->end(), source->begin(), source->end()));
+}
+
 TEST(UnitClauseDB, tooLargeLBDValueIsCapped) {
     uint64_t largeLBDValue = std::numeric_limits<Clause::lbd_type>::max();
     ++largeLBDValue;

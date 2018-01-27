@@ -130,6 +130,18 @@ public:
     const_iterator end() const noexcept;
 
     /**
+     * \brief Assignment operator
+     *
+     * \param other     The clause to be copied. \p other must not be larger than this clause.
+     * \returns Reference to this clause
+     */
+    Clause &operator=(const Clause &other) noexcept;
+
+    Clause &operator=(Clause &&other) = delete;
+    Clause(const Clause &other) = delete;
+    Clause(Clause &&other) = delete;
+
+    /**
      * \brief Computes the size of a non-empty Clause object.
      *
      * \param clauseSize The nonzero length of the clause.

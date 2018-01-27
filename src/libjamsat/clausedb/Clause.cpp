@@ -27,6 +27,8 @@
 #include "Clause.h"
 #include <libjamsat/utils/Assert.h>
 
+#include <algorithm>
+
 namespace jamsat {
 Clause::Clause(size_type size) noexcept : m_size(size), m_anchor(CNFLit::getUndefinedLiteral()) {}
 
@@ -63,6 +65,20 @@ Clause::const_iterator Clause::begin() const noexcept {
 
 Clause::const_iterator Clause::end() const noexcept {
     return &m_anchor + m_size;
+}
+
+Clause &Clause::operator=(const Clause &other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+
+    JAM_ASSERT(this->m_size >= other.m_size,
+               "Illegal argument: other clause must not be larger than the assignee");
+
+    this->m_lbd = other.m_lbd;
+    this->m_size = other.m_size;
+    std::copy(other.begin(), other.end(), this->begin());
+    return *this;
 }
 
 size_t Clause::getAllocationSize(Clause::size_type clauseSize) {
