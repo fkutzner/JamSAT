@@ -239,7 +239,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::increaseMaxVarTo(CNF
 
 #if defined(JAM_ASSERT_ENABLED)
 namespace detail_solver {
-bool isAllZero(const BoundedMap<CNFVar, char> &stamps, CNFVar maxVar) noexcept {
+inline bool isAllZero(const BoundedMap<CNFVar, char> &stamps, CNFVar maxVar) noexcept {
     bool result = true;
     for (CNFVar::RawVariable v = 0; v <= maxVar.getRawValue(); ++v) {
         result &= (stamps[CNFVar{v}] == 0);
