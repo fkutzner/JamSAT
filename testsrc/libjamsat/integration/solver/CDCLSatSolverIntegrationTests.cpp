@@ -27,6 +27,7 @@
 #include <gtest/gtest.h>
 
 #include <libjamsat/solver/CDCLSatSolver.h>
+#include <toolbox/cnfgenerators/Rule110.h>
 
 namespace jamsat {
 
@@ -36,6 +37,50 @@ TEST(SolverIntegration, CDCLSatSolver_problemWithEmptyClauseIsUnsatisfiable) {
     CDCLSatSolver<> underTest{testConfig};
 
     underTest.addClause({});
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::FALSE);
+}
+
+TEST(SolverIntegration, CDCLSatSolver_problemWithNoClausesIsTriviallySatisfiable) {
+    CDCLSatSolver<>::Configuration testConfig;
+    testConfig.clauseMemoryLimit = 1048576ULL;
+    CDCLSatSolver<> underTest{testConfig};
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::TRUE);
+}
+
+TEST(SolverIntegration, CDCLSatSolver_problemConsistingOfUnitClauseIsSatisfiable) {
+    CDCLSatSolver<>::Configuration testConfig;
+    testConfig.clauseMemoryLimit = 1048576ULL;
+
+    CDCLSatSolver<> underTest{testConfig};
+    underTest.addClause({CNFLit{CNFVar{1}, CNFSign::POSITIVE}});
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::TRUE);
+}
+
+TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
+    Rule110PredecessorStateProblem problem{"1xxx0", "0xx10", 5};
+    auto cnfProblem = problem.getCNFEncoding();
+
+    CDCLSatSolver<>::Configuration testConfig;
+    CDCLSatSolver<> underTest{testConfig};
+
+    testConfig.clauseMemoryLimit = 1048576ULL;
+    for (auto &clause : cnfProblem.getClauses()) {
+        underTest.addClause(clause);
+    }
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::TRUE);
+}
+
+TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {
+    Rule110PredecessorStateProblem problem{"1xxx0", "00010", 5};
+    auto cnfProblem = problem.getCNFEncoding();
+
+    CDCLSatSolver<>::Configuration testConfig;
+    CDCLSatSolver<> underTest{testConfig};
+
+    testConfig.clauseMemoryLimit = 1048576ULL;
+    for (auto &clause : cnfProblem.getClauses()) {
+        underTest.addClause(clause);
+    }
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::FALSE);
 }
 }

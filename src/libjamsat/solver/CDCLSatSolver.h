@@ -45,6 +45,13 @@
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
 
+#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_SOLVER_LOGGING)
+#include <boost/log/trivial.hpp>
+#define JAM_LOG_SOLVER(x, y) BOOST_LOG_TRIVIAL(x) << "[reduce] " << y
+#else
+#define JAM_LOG_SOLVER(x, y)
+#endif
+
 namespace jamsat {
 
 struct CDCLSatSolverDefaultTypes {
@@ -159,7 +166,7 @@ private:
         bool learntUnitClause;
         typename ST::Trail::DecisionLevel backtrackLevel;
     };
-    ConflictHandlingResult deriveLearntClause(typename ST::Clause &conflicting);
+    ConflictHandlingResult deriveClause(typename ST::Clause &conflicting, typename ST::Clause **learntOut);
 
     void backtrackToLevel(typename ST::Trail::DecisionLevel level);
 
@@ -215,6 +222,7 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
         m_unitClauses.push_back(clause[0]);
     } else {
         auto &internalClause = m_clauseDB.allocate(clause.size());
+        std::copy(clause.begin(), clause.end(), internalClause.begin());
         m_problemClauses.push_back(&internalClause);
     }
 
@@ -245,7 +253,15 @@ CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
             return UnitClausePropagationResult::CONFLICTING;
         }
 
-        m_trail.addAssignment(unit);
+        if (assignment == TBool::INDETERMINATE) {
+            m_trail.addAssignment(unit);
+        }
+        else {
+            JAM_ASSERT(
+                   toTBool(unit.getSign() == CNFSign::POSITIVE) == assignment,
+                   "Illegal unit clause conflict");
+        }
+
         if (m_propagation.propagateUntilFixpoint(unit) != nullptr) {
             return UnitClausePropagationResult::CONFLICTING;
         }
@@ -257,29 +273,46 @@ CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
 
 template <typename ST>
 TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumptions) {
+    backtrackToLevel(0);
     if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT ||
         propagateUnitClauses(assumptions) != UnitClausePropagationResult::CONSISTENT) {
         return TBool::FALSE;
     }
 
+    int conflictsUntilMaintenance = 5000;
+
     while (!m_trail.isVariableAssignmentComplete()) {
         m_trail.newDecisionLevel();
         auto decision = m_branchingHeuristic.pickBranchLiteral();
+        JAM_ASSERT(decision != CNFLit::getUndefinedLiteral(),
+                   "The branching heuristic is not expected to return an undefined literal");
         m_trail.addAssignment(decision);
         auto conflictingClause = m_propagation.propagateUntilFixpoint(decision);
 
+
         if (conflictingClause != nullptr) {
-            auto conflictHandlingResult = deriveLearntClause(*conflictingClause);
+            typename ST::Clause* learntClause;
+            auto conflictHandlingResult = deriveClause(*conflictingClause, &learntClause);
             backtrackToLevel(conflictHandlingResult.backtrackLevel);
             if (conflictHandlingResult.learntUnitClause) {
                 // Perform a restart to check for unsatisfiability during unit-clause
                 // propagation
                 return TBool::INDETERMINATE;
             }
-        }
 
-        if (m_stopRequested.load()) {
-            return TBool::INDETERMINATE;
+            m_propagation.registerClause(*learntClause);
+
+            --conflictsUntilMaintenance;
+            if (conflictsUntilMaintenance == 0) {
+                // TODO: do post-learning stuff (clausedb cleaning, adjustment of heuristics,
+                // inprocessing, ...)
+
+                if (m_stopRequested.load()) {
+                    return TBool::INDETERMINATE;
+                }
+
+                conflictsUntilMaintenance = 5000;
+            }
         }
     }
 
@@ -288,7 +321,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 
 template <typename ST>
 typename CDCLSatSolver<ST>::ConflictHandlingResult
-CDCLSatSolver<ST>::deriveLearntClause(typename ST::Clause &conflicting) {
+CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::Clause **learntOut) {
     /* TODO: bad_alloc handling... */
 
     typename ST::Trail::DecisionLevel backtrackLevel;
@@ -299,7 +332,10 @@ CDCLSatSolver<ST>::deriveLearntClause(typename ST::Clause &conflicting) {
         backtrackLevel = 0;
     } else {
         auto &learntClause = m_clauseDB.allocate(learnt.size());
-        m_propagation.registerClause(learntClause);
+        // TODO: fill learnt clause
+        // TODO: simplify learnt clause
+        std::copy(learnt.begin(), learnt.end(), learntClause.begin());
+        *learntOut = &learntClause;
         backtrackLevel = m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable());
     }
 
@@ -325,6 +361,11 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     if (m_detectedUNSAT) {
         return createSolvingResult(TBool::FALSE);
     }
+
+    if (m_problemClauses.empty()) {
+        return createSolvingResult(TBool::TRUE);
+    }
+
     m_stopRequested.store(false);
     m_isSolving.store(true);
 
@@ -335,6 +376,11 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
 
     for (auto clause : m_problemClauses) {
         m_propagation.registerClause(*clause);
+    }
+
+    for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
+        // Note: no real support for assumptions yet...
+        m_branchingHeuristic.setEligibleForDecisions(i, true);
     }
 
     TBool intermediateResult = TBool::INDETERMINATE;
