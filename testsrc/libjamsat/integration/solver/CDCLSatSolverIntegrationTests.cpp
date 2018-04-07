@@ -61,9 +61,9 @@ TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
     auto cnfProblem = problem.getCNFEncoding();
 
     CDCLSatSolver<>::Configuration testConfig;
+    testConfig.clauseMemoryLimit = 1048576ULL;
     CDCLSatSolver<> underTest{testConfig};
 
-    testConfig.clauseMemoryLimit = 1048576ULL;
     for (auto &clause : cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
@@ -75,9 +75,9 @@ TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {
     auto cnfProblem = problem.getCNFEncoding();
 
     CDCLSatSolver<>::Configuration testConfig;
+    testConfig.clauseMemoryLimit = 1048576ULL;
     CDCLSatSolver<> underTest{testConfig};
 
-    testConfig.clauseMemoryLimit = 1048576ULL;
     for (auto &clause : cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
