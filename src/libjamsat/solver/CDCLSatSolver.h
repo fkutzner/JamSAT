@@ -166,7 +166,8 @@ private:
         bool learntUnitClause;
         typename ST::Trail::DecisionLevel backtrackLevel;
     };
-    ConflictHandlingResult deriveClause(typename ST::Clause &conflicting, typename ST::Clause **learntOut);
+    ConflictHandlingResult deriveClause(typename ST::Clause &conflicting,
+                                        typename ST::Clause **learntOut);
 
     void backtrackToLevel(typename ST::Trail::DecisionLevel level);
 
@@ -255,11 +256,9 @@ CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
 
         if (assignment == TBool::INDETERMINATE) {
             m_trail.addAssignment(unit);
-        }
-        else {
-            JAM_ASSERT(
-                   toTBool(unit.getSign() == CNFSign::POSITIVE) == assignment,
-                   "Illegal unit clause conflict");
+        } else {
+            JAM_ASSERT(toTBool(unit.getSign() == CNFSign::POSITIVE) == assignment,
+                       "Illegal unit clause conflict");
         }
 
         if (m_propagation.propagateUntilFixpoint(unit) != nullptr) {
@@ -291,7 +290,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 
 
         if (conflictingClause != nullptr) {
-            typename ST::Clause* learntClause;
+            typename ST::Clause *learntClause;
             auto conflictHandlingResult = deriveClause(*conflictingClause, &learntClause);
             backtrackToLevel(conflictHandlingResult.backtrackLevel);
             if (conflictHandlingResult.learntUnitClause) {
