@@ -1,0 +1,28 @@
+c A SAT instance generated from a 2-CNF formula that had 26 clauses and 2 variables
+p cnf 2 26
+-2 1 0
+-2 1 0
+1 -2 0
+-2 1 0
+-2 1 0
+1 2 0
+1 -2 0
+-1 2 0
+2 -1 0
+2 1 0
+1 -2 0
+-2 1 0
+1 -2 0
+2 1 0
+1 -2 0
+-2 -1 0
+1 2 0
+-2 1 0
+-2 -1 0
+2 1 0
+2 -1 0
+1 2 0
+-2 -1 0
+-1 -2 0
+-2 1 0
+-2 -1 0
