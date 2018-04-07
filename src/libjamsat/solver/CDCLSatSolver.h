@@ -56,10 +56,10 @@ namespace jamsat {
 
 struct CDCLSatSolverDefaultTypes {
     using Clause = jamsat::Clause;
-    using ClauseDB = HeapletClauseDB<CDCLSatSolverDefaultTypes::Clause>;
+    using ClauseDB = jamsat::HeapletClauseDB<CDCLSatSolverDefaultTypes::Clause>;
     using Trail = jamsat::Trail;
     using Propagation =
-        Propagation<CDCLSatSolverDefaultTypes::Trail, CDCLSatSolverDefaultTypes::Clause>;
+        jamsat::Propagation<CDCLSatSolverDefaultTypes::Trail, CDCLSatSolverDefaultTypes::Clause>;
     using ConflictAnalyzer = FirstUIPLearning<CDCLSatSolverDefaultTypes::Trail, Propagation,
                                               CDCLSatSolverDefaultTypes::Clause>;
     using BranchingHeuristic = VSIDSBranchingHeuristic<CDCLSatSolverDefaultTypes::Trail>;
