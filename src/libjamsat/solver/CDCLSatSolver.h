@@ -344,20 +344,23 @@ typename CDCLSatSolver<ST>::ConflictHandlingResult
 CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::Clause **learntOut) {
     /* TODO: bad_alloc handling... */
 
-    typename ST::Trail::DecisionLevel backtrackLevel;
+    typename ST::Trail::DecisionLevel backtrackLevel = 0;
 
     auto learnt = m_conflictAnalyzer.computeConflictClause(conflicting);
     JAM_LOG_SOLVER(info, "Learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
     if (learnt.size() == 1) {
         m_unitClauses.push_back(learnt[0]);
-        backtrackLevel = 0;
     } else {
         auto &learntClause = m_clauseDB.allocate(learnt.size());
         // TODO: fill learnt clause
         // TODO: simplify learnt clause
         std::copy(learnt.begin(), learnt.end(), learntClause.begin());
         *learntOut = &learntClause;
-        backtrackLevel = m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable());
+
+        for (auto lit = learntClause.begin() + 1; lit != learntClause.end(); ++lit) {
+            backtrackLevel =
+                std::max(backtrackLevel, m_trail.getAssignmentDecisionLevel(lit->getVariable()));
+        }
     }
 
     return ConflictHandlingResult{learnt.size() == 1, backtrackLevel};
