@@ -223,8 +223,11 @@ public:
     void updateAssignmentReason(const ClauseT &oldClause, const ClauseT &newClause) noexcept;
 
 private:
+    ClauseT *propagateBinaries(CNFLit toPropagate, size_t &amountOfNewFacts);
+
     AssignmentProvider &m_assignmentProvider;
     BoundedMap<CNFVar, const ClauseT *> m_reasons;
+    detail_propagation::Watchers<ClauseT> m_binaryWatchers;
 
     /**
      * \internal
@@ -242,7 +245,10 @@ private:
 template <class AssignmentProvider, class ClauseT>
 Propagation<AssignmentProvider, ClauseT>::Propagation(CNFVar maxVar,
                                                       AssignmentProvider &assignmentProvider)
-  : m_assignmentProvider(assignmentProvider), m_reasons(maxVar), m_watchers(maxVar) {
+  : m_assignmentProvider(assignmentProvider)
+  , m_reasons(maxVar)
+  , m_binaryWatchers(maxVar)
+  , m_watchers(maxVar) {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
 
@@ -254,8 +260,10 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &claus
                                                     << ") for propagation.");
     detail_propagation::Watcher<ClauseT> watcher1{clause, clause[0], 1};
     detail_propagation::Watcher<ClauseT> watcher2{clause, clause[1], 0};
-    m_watchers.addWatcher(clause[0], watcher2);
-    m_watchers.addWatcher(clause[1], watcher1);
+
+    auto &targetWatchList = (clause.size() <= 2 ? m_binaryWatchers : m_watchers);
+    targetWatchList.addWatcher(clause[0], watcher2);
+    targetWatchList.addWatcher(clause[1], watcher1);
 
     TBool secondLiteralAssignment = m_assignmentProvider.getAssignment(clause[1]);
     // By method contract, if secondLiteralAssignment != INDETERMINATE, we need
@@ -328,6 +336,38 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(CNFLit
 }
 
 template <class AssignmentProvider, class ClauseT>
+ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateBinaries(CNFLit toPropagate,
+                                                                     size_t &amountOfNewFacts) {
+    CNFLit negatedToPropagate = ~toPropagate;
+    auto watcherListTraversal = m_binaryWatchers.getWatchers(negatedToPropagate);
+    while (!watcherListTraversal.hasFinishedTraversal()) {
+        auto &currentWatcher = *watcherListTraversal;
+        CNFLit secondLit = currentWatcher.getOtherWatchedLiteral();
+        TBool assignment = m_assignmentProvider.getAssignment(secondLit);
+
+        if (assignment == TBool::FALSE) {
+            // conflict case:
+            return &currentWatcher.getClause();
+        } else if (assignment == TBool::INDETERMINATE) {
+            // propagation case:
+            ++amountOfNewFacts;
+            ClauseT *reason = &currentWatcher.getClause();
+            m_reasons[secondLit.getVariable()] = reason;
+            JAM_LOG_PROPAGATION(info,
+                                "  Forced assignment: " << secondLit << " Reason: " << reason);
+            m_assignmentProvider.addAssignment(secondLit);
+
+            ++watcherListTraversal;
+            continue;
+        }
+
+        ++watcherListTraversal;
+    }
+    watcherListTraversal.finishedTraversal();
+    return nullptr;
+}
+
+template <class AssignmentProvider, class ClauseT>
 ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
                                                              size_t &amountOfNewFacts) {
     JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
@@ -335,8 +375,12 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
                    static_cast<CNFVar::RawVariable>(m_reasons.size()),
                "Literal variable out of bounds");
 
-    // m_reasons[toPropagate.getVariable()] = nullptr;
     amountOfNewFacts = 0;
+
+    if (ClauseT *conflict = propagateBinaries(toPropagate, amountOfNewFacts)) {
+        return conflict;
+    }
+
     CNFLit negatedToPropagate = ~toPropagate;
 
     // Traverse all watchers referencing clauses containing ~toPropagate to find
@@ -452,6 +496,7 @@ void Propagation<AssignmentProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     m_watchers.increaseMaxVarTo(newMaxVar);
     m_reasons.increaseSizeTo(newMaxVar);
+    m_binaryWatchers.increaseMaxVarTo(newMaxVar);
 }
 
 template <class AssignmentProvider, class ClauseT>

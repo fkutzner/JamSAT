@@ -41,6 +41,7 @@
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/clausedb/HeapletClauseDB.h>
+#include <libjamsat/solver/ClauseMinimization.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>

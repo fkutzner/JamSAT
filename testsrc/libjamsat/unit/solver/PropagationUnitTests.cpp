@@ -349,9 +349,12 @@ TEST(UnitSolver, propagationClauseRangeEmptyWhenNoClausesAdded) {
 }
 
 TEST(UnitSolver, propagationClauseRangeHasCorrectOrder) {
-    TrivialClause c1{CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::POSITIVE}};
-    TrivialClause c2{CNFLit{CNFVar{0}, CNFSign::NEGATIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-    TrivialClause c3{CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
+    TrivialClause c1{CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::POSITIVE},
+                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+    TrivialClause c2{CNFLit{CNFVar{0}, CNFSign::NEGATIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
+                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+    TrivialClause c3{CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{11}, CNFSign::NEGATIVE},
+                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
 
     TestAssignmentProvider assignments;
     Propagation<TestAssignmentProvider, TrivialClause> underTest(CNFVar{15}, assignments);
