@@ -10,4 +10,5 @@ add_jamsat_core_unittest_library(utils_unit_tests
   FlatteningIteratorUnitTests.cpp
   CastsUnitTests.cpp
   PrintersTests.cpp
+  RangeUtilsTests.cpp
 )

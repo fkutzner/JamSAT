@@ -12,4 +12,5 @@ add_jamsat_core_library(jamsatUtils
   FlatteningIterator.h
   Casts.h
   Printers.h
+  RangeUtils.h
 )
