@@ -186,6 +186,7 @@ private:
     std::vector<CNFLit> m_unitClauses;
     std::vector<typename ST::Clause *> m_problemClauses;
     std::vector<typename ST::Clause *> m_learntClauses;
+    BoundedMap<CNFLit, std::vector<CNFLit>> m_binaryClauses;
 
     bool m_detectedUNSAT;
 };
@@ -205,6 +206,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_unitClauses()
   , m_problemClauses()
   , m_learntClauses()
+  , m_binaryClauses(CNFLit{CNFVar{0}, CNFSign::POSITIVE})
   , m_detectedUNSAT(false) {}
 
 template <typename ST>
@@ -231,7 +233,21 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
 
     JAM_LOG_SOLVER(info, "Adding clause (" << toString(clause.begin(), clause.end()) << ")");
 
-    if (compressionBuf.size() == 0) {
+    CNFVar oldMaxVar = m_maxVar;
+    for (auto lit : compressionBuf) {
+        m_maxVar = std::max(m_maxVar, lit.getVariable());
+    }
+
+    if (m_maxVar > oldMaxVar) {
+        m_binaryClauses.increaseSizeTo(CNFLit{m_maxVar, CNFSign::POSITIVE});
+    }
+
+    if (compressionBuf.size() == 2) {
+        m_binaryClauses[compressionBuf[0]].push_back(compressionBuf[1]);
+        m_binaryClauses[compressionBuf[1]].push_back(compressionBuf[0]);
+    }
+
+    if (compressionBuf.empty()) {
         m_detectedUNSAT = true;
     } else if (compressionBuf.size() == 1) {
         m_unitClauses.push_back(compressionBuf[0]);
@@ -239,10 +255,6 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
         auto &internalClause = m_clauseDB.allocate(compressionBuf.size());
         std::copy(compressionBuf.begin(), compressionBuf.end(), internalClause.begin());
         m_problemClauses.push_back(&internalClause);
-    }
-
-    for (auto lit : compressionBuf) {
-        m_maxVar = std::max(m_maxVar, lit.getVariable());
     }
 }
 
@@ -357,6 +369,13 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
         // TODO: simplify learnt clause
         std::copy(learnt.begin(), learnt.end(), learntClause.begin());
         *learntOut = &learntClause;
+
+        if (learnt.size() == 2) {
+            m_binaryClauses[learnt[0]].push_back(learnt[1]);
+            m_binaryClauses[learnt[1]].push_back(learnt[0]);
+        } else {
+            m_learntClauses.push_back(&learntClause);
+        }
 
         for (auto lit = learntClause.begin() + 1; lit != learntClause.end(); ++lit) {
             backtrackLevel =
