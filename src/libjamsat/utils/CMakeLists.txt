@@ -11,4 +11,5 @@ add_jamsat_core_library(jamsatUtils
   LubySequence.h
   FlatteningIterator.h
   Casts.h
+  Printers.h
 )
