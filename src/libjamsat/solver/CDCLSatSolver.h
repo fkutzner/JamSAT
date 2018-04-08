@@ -45,6 +45,7 @@
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
+#include <libjamsat/utils/RangeUtils.h>
 
 #if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_SOLVER_LOGGING)
 #include <boost/log/trivial.hpp>
@@ -220,21 +221,11 @@ void CDCLSatSolver<ST>::stop() noexcept {
 
 template <typename ST>
 void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
-    std::vector<CNFLit> compressionBuf;
-    compressionBuf.resize(clause.size());
-    std::copy(clause.begin(), clause.end(), compressionBuf.begin());
-    std::sort(compressionBuf.begin(), compressionBuf.end());
-    auto compressionBufEnd = std::unique(compressionBuf.begin(), compressionBuf.end());
-
-    using CNFClauseSize = std::vector<CNFLit>::size_type;
-    CNFClauseSize realClauseSize =
-        static_cast<CNFClauseSize>(compressionBufEnd - compressionBuf.begin());
-    compressionBuf.resize(realClauseSize);
-
+    std::vector<CNFLit> compressedClause = withoutRedundancies(clause.begin(), clause.end());
     JAM_LOG_SOLVER(info, "Adding clause (" << toString(clause.begin(), clause.end()) << ")");
 
     CNFVar oldMaxVar = m_maxVar;
-    for (auto lit : compressionBuf) {
+    for (auto lit : compressedClause) {
         m_maxVar = std::max(m_maxVar, lit.getVariable());
     }
 
@@ -242,18 +233,18 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
         m_binaryClauses.increaseSizeTo(CNFLit{m_maxVar, CNFSign::POSITIVE});
     }
 
-    if (compressionBuf.size() == 2) {
-        m_binaryClauses[compressionBuf[0]].push_back(compressionBuf[1]);
-        m_binaryClauses[compressionBuf[1]].push_back(compressionBuf[0]);
+    if (compressedClause.size() == 2) {
+        m_binaryClauses[compressedClause[0]].push_back(compressedClause[1]);
+        m_binaryClauses[compressedClause[1]].push_back(compressedClause[0]);
     }
 
-    if (compressionBuf.empty()) {
+    if (compressedClause.empty()) {
         m_detectedUNSAT = true;
-    } else if (compressionBuf.size() == 1) {
-        m_unitClauses.push_back(compressionBuf[0]);
+    } else if (compressedClause.size() == 1) {
+        m_unitClauses.push_back(compressedClause[0]);
     } else {
-        auto &internalClause = m_clauseDB.allocate(compressionBuf.size());
-        std::copy(compressionBuf.begin(), compressionBuf.end(), internalClause.begin());
+        auto &internalClause = m_clauseDB.allocate(compressedClause.size());
+        std::copy(compressedClause.begin(), compressedClause.end(), internalClause.begin());
         m_problemClauses.push_back(&internalClause);
     }
 }
