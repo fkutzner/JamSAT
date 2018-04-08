@@ -54,6 +54,7 @@ void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
     FuzzedSolver::Configuration config;
     config.clauseMemoryLimit = 1048576 * 100;
     FuzzedSolver solver{config};
+    solver.addProblem(problem);
     auto result = solver.solve({});
     std::cout << (result.isSatisfiable == TBool::TRUE ? "SAT" : "INDET-OR-UNSAT");
 }
