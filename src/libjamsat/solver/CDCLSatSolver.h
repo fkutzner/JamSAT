@@ -217,17 +217,28 @@ void CDCLSatSolver<ST>::stop() noexcept {
 
 template <typename ST>
 void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
-    if (clause.size() == 0) {
+    std::vector<CNFLit> compressionBuf;
+    compressionBuf.resize(clause.size());
+    std::copy(clause.begin(), clause.end(), compressionBuf.begin());
+    std::sort(compressionBuf.begin(), compressionBuf.end());
+    auto compressionBufEnd = std::unique(compressionBuf.begin(), compressionBuf.end());
+
+    using CNFClauseSize = std::vector<CNFLit>::size_type;
+    CNFClauseSize realClauseSize =
+        static_cast<CNFClauseSize>(compressionBufEnd - compressionBuf.begin());
+    compressionBuf.resize(realClauseSize);
+
+    if (compressionBuf.size() == 0) {
         m_detectedUNSAT = true;
-    } else if (clause.size() == 1) {
-        m_unitClauses.push_back(clause[0]);
+    } else if (compressionBuf.size() == 1) {
+        m_unitClauses.push_back(compressionBuf[0]);
     } else {
-        auto &internalClause = m_clauseDB.allocate(clause.size());
-        std::copy(clause.begin(), clause.end(), internalClause.begin());
+        auto &internalClause = m_clauseDB.allocate(compressionBuf.size());
+        std::copy(compressionBuf.begin(), compressionBuf.end(), internalClause.begin());
         m_problemClauses.push_back(&internalClause);
     }
 
-    for (auto lit : clause) {
+    for (auto lit : compressionBuf) {
         m_maxVar = std::max(m_maxVar, lit.getVariable());
     }
 }
