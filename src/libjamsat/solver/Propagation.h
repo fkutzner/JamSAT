@@ -32,6 +32,7 @@
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/solver/Watcher.h>
 #include <libjamsat/utils/BoundedMap.h>
+#include <libjamsat/utils/Printers.h>
 #include <libjamsat/utils/Truth.h>
 
 #if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_PROPAGATION_LOGGING)
@@ -248,7 +249,9 @@ Propagation<AssignmentProvider, ClauseT>::Propagation(CNFVar maxVar,
 template <class AssignmentProvider, class ClauseT>
 ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause) {
     JAM_ASSERT(clause.size() >= 2ull, "Illegally small clause argument");
-    JAM_LOG_PROPAGATION(info, "Registering clause " << &clause << " for propagation.");
+    JAM_LOG_PROPAGATION(info, "Registering clause " << &clause << " ("
+                                                    << toString(clause.begin(), clause.end())
+                                                    << ") for propagation.");
     detail_propagation::Watcher<ClauseT> watcher1{clause, clause[0], 1};
     detail_propagation::Watcher<ClauseT> watcher2{clause, clause[1], 0};
     m_watchers.addWatcher(clause[0], watcher2);
@@ -258,6 +261,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &claus
     // By method contract, if secondLiteralAssignment != INDETERMINATE, we need
     // to propagate the first literal.
     if (secondLiteralAssignment != TBool::INDETERMINATE) {
+        JAM_LOG_PROPAGATION(info, "Propagating first literal of registered clause.");
         m_assignmentProvider.addAssignment(clause[0]);
         auto confl = propagateUntilFixpoint(clause[0]);
         // Fix the reason since this was not a decision:

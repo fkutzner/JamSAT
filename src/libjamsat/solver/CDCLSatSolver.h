@@ -47,7 +47,7 @@
 
 #if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_SOLVER_LOGGING)
 #include <boost/log/trivial.hpp>
-#define JAM_LOG_SOLVER(x, y) BOOST_LOG_TRIVIAL(x) << "[reduce] " << y
+#define JAM_LOG_SOLVER(x, y) BOOST_LOG_TRIVIAL(x) << "[cdcldr] " << y
 #else
 #define JAM_LOG_SOLVER(x, y)
 #endif
@@ -228,6 +228,8 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
         static_cast<CNFClauseSize>(compressionBufEnd - compressionBuf.begin());
     compressionBuf.resize(realClauseSize);
 
+    JAM_LOG_SOLVER(info, "Adding clause (" << toString(clause.begin(), clause.end()) << ")");
+
     if (compressionBuf.size() == 0) {
         m_detectedUNSAT = true;
     } else if (compressionBuf.size() == 1) {
@@ -258,10 +260,12 @@ typename CDCLSatSolver<ST>::SolvingResult CDCLSatSolver<ST>::createSolvingResult
 template <typename ST>
 typename CDCLSatSolver<ST>::UnitClausePropagationResult
 CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
+    JAM_LOG_SOLVER(info, "Propagating unit clauses...");
     for (auto unit : units) {
         auto assignment = m_trail.getAssignment(unit);
         if (assignment != TBool::INDETERMINATE &&
             toTBool(unit.getSign() == CNFSign::POSITIVE) != assignment) {
+            JAM_LOG_SOLVER(info, "Detected conflict at unit clause " << unit);
             return UnitClausePropagationResult::CONFLICTING;
         }
 
@@ -273,6 +277,7 @@ CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
         }
 
         if (m_propagation.propagateUntilFixpoint(unit) != nullptr) {
+            JAM_LOG_SOLVER(info, "Detected conflict at unit clause " << unit);
             return UnitClausePropagationResult::CONFLICTING;
         }
 
@@ -283,6 +288,7 @@ CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
 
 template <typename ST>
 TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumptions) {
+    JAM_LOG_SOLVER(info, "Restarting the solver, backtracking to decision level 0.");
     backtrackToLevel(0);
     if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT ||
         propagateUnitClauses(assumptions) != UnitClausePropagationResult::CONSISTENT) {
@@ -294,6 +300,8 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
     while (!m_trail.isVariableAssignmentComplete()) {
         m_trail.newDecisionLevel();
         auto decision = m_branchingHeuristic.pickBranchLiteral();
+        JAM_LOG_SOLVER(info, "Picked decision literal " << decision << ", now at decision level "
+                                                        << m_trail.getCurrentDecisionLevel());
         JAM_ASSERT(decision != CNFLit::getUndefinedLiteral(),
                    "The branching heuristic is not expected to return an undefined literal");
         m_trail.addAssignment(decision);
@@ -303,6 +311,8 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         if (conflictingClause != nullptr) {
             typename ST::Clause *learntClause;
             auto conflictHandlingResult = deriveClause(*conflictingClause, &learntClause);
+            JAM_LOG_SOLVER(info, "Backtracking to decision level "
+                                     << conflictHandlingResult.backtrackLevel);
             backtrackToLevel(conflictHandlingResult.backtrackLevel);
             if (conflictHandlingResult.learntUnitClause) {
                 // Perform a restart to check for unsatisfiability during unit-clause
@@ -337,6 +347,7 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     typename ST::Trail::DecisionLevel backtrackLevel;
 
     auto learnt = m_conflictAnalyzer.computeConflictClause(conflicting);
+    JAM_LOG_SOLVER(info, "Learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
     if (learnt.size() == 1) {
         m_unitClauses.push_back(learnt[0]);
         backtrackLevel = 0;
