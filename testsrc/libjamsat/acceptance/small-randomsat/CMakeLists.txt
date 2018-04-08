@@ -10,6 +10,6 @@ foreach(cnfproblem ${cnfproblems})
 
     set(testname "libjamsat_acceptance_tests/small-randomsat/${cnfproblemBasename}")
     add_test(NAME ${testname}
-             COMMAND CDCLTestDriver ${cnfproblem})
+             COMMAND CDCLTestDriver --fail-on-parse-error ${cnfproblem})
     set_tests_properties(${testname} PROPERTIES PASS_REGULAR_EXPRESSION ${expected_result_regex})
 endforeach()
