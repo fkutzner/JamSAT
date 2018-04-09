@@ -192,6 +192,7 @@ private:
 
     std::vector<CNFLit> m_unitClauses;
     std::vector<typename ST::Clause *> m_problemClauses;
+    typename std::vector<typename ST::Clause *>::size_type m_newProblemClausesBeginIdx;
     std::vector<typename ST::Clause *> m_learntClauses;
     std::unordered_map<CNFLit, std::vector<CNFLit>> m_binaryClauses;
 
@@ -214,6 +215,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_maxVar(0)
   , m_unitClauses()
   , m_problemClauses()
+  , m_newProblemClausesBeginIdx(0)
   , m_learntClauses()
   , m_binaryClauses()
   , m_stamps(getMaxLit(CNFVar{0}).getRawValue())
@@ -425,9 +427,11 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
     m_stamps.increaseSizeTo(getMaxLit(m_maxVar).getRawValue());
 
-    for (auto clause : m_problemClauses) {
-        m_propagation.registerClause(*clause);
+    for (auto newClausesIt = m_problemClauses.begin() + m_newProblemClausesBeginIdx;
+         newClausesIt != m_problemClauses.end(); ++newClausesIt) {
+        m_propagation.registerClause(**newClausesIt);
     }
+    m_newProblemClausesBeginIdx = m_problemClauses.size();
 
     for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
         m_branchingHeuristic.setEligibleForDecisions(i, true);
