@@ -399,6 +399,13 @@ constexpr bool operator<=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 
 /**
+ * \brief Computes the literal L with variable \p var such that L > ~L
+ * \param var   A CNF variable
+ * \return      The literal L with variable \p var such that L > ~L
+ */
+constexpr CNFLit getMaxLit(CNFVar var) noexcept;
+
+/**
  * \brief StampMap key for CNFVar
  *
  * \ingroup JamSAT_CNFProblem
@@ -527,6 +534,10 @@ constexpr bool operator<=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
 
 constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
     return lhs.getRawValue() >= rhs.getRawValue();
+}
+
+constexpr CNFLit getMaxLit(CNFVar var) noexcept {
+    return CNFLit{var, CNFSign::POSITIVE};
 }
 }
 

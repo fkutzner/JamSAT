@@ -216,7 +216,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_problemClauses()
   , m_learntClauses()
   , m_binaryClauses()
-  , m_stamps(CNFLit{CNFVar{0}, CNFSign::POSITIVE}.getRawValue())
+  , m_stamps(getMaxLit(CNFVar{0}).getRawValue())
   , m_detectedUNSAT(false) {}
 
 template <typename ST>
@@ -424,7 +424,7 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     m_propagation.increaseMaxVarTo(m_maxVar);
     m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
     m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
-    m_stamps.increaseSizeTo(CNFLit{m_maxVar, CNFSign::POSITIVE}.getRawValue());
+    m_stamps.increaseSizeTo(getMaxLit(m_maxVar).getRawValue());
 
     for (auto clause : m_problemClauses) {
         m_propagation.registerClause(*clause);

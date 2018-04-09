@@ -155,6 +155,12 @@ TEST(UnitCNFProblem, variableOfUndefinedLiteralIsUndefiend) {
     EXPECT_EQ(undefinedLiteralVar, CNFVar::getUndefinedVariable());
 }
 
+TEST(UnitCNFProblem, maxLitForVarIsGreaterThanNegate) {
+    CNFVar testInput{4};
+    CNFLit maxLit = getMaxLit(testInput);
+    EXPECT_GT(maxLit, ~maxLit);
+}
+
 #if !defined(NDEBUG)
 TEST(UnitCNFProblem, cannotNegateUndefinedLiteral) {
     CNFLit underTest = CNFLit::getUndefinedLiteral();

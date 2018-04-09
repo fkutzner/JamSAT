@@ -144,8 +144,7 @@ public:
         FlatteningIterator<typename BoundedMap<CNFLit, WatcherList>::const_iterator>;
     using WatcherRange = boost::iterator_range<WatcherIterator>;
 
-    explicit Watchers(CNFVar maxVar)
-      : m_maxVar(maxVar), m_watchers(CNFLit{maxVar, CNFSign::POSITIVE}) {}
+    explicit Watchers(CNFVar maxVar) : m_maxVar(maxVar), m_watchers(getMaxLit(maxVar)) {}
 
     WatcherTraversal<WatcherT> getWatchers(CNFLit literal) noexcept {
         JAM_ASSERT(literal.getRawValue() < static_cast<CNFLit::RawLiteral>(m_watchers.size()),
@@ -183,7 +182,7 @@ public:
         JAM_ASSERT(newMaxVar >= m_maxVar,
                    "Argument newMaxVar must not be smaller than the previous maximum variable");
         JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
-        m_watchers.increaseSizeTo(CNFLit{newMaxVar, CNFSign::POSITIVE});
+        m_watchers.increaseSizeTo(getMaxLit(newMaxVar));
         m_maxVar = newMaxVar;
     }
 
