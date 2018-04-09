@@ -30,6 +30,7 @@
 #include <atomic>
 #include <cstdint>
 #include <ostream>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/optional.hpp>
@@ -43,9 +44,11 @@
 #include <libjamsat/clausedb/HeapletClauseDB.h>
 #include <libjamsat/solver/ClauseMinimization.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
+#include <libjamsat/solver/LiteralBlockDistance.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/RangeUtils.h>
+#include <libjamsat/utils/StampMap.h>
 
 #if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_SOLVER_LOGGING)
 #include <boost/log/trivial.hpp>
@@ -168,8 +171,11 @@ private:
         bool learntUnitClause;
         typename ST::Trail::DecisionLevel backtrackLevel;
     };
+
     ConflictHandlingResult deriveClause(typename ST::Clause &conflicting,
                                         typename ST::Clause **learntOut);
+
+    void optimizeLearntClause(std::vector<CNFLit> &learntClause);
 
     void backtrackToLevel(typename ST::Trail::DecisionLevel level);
 
@@ -187,7 +193,9 @@ private:
     std::vector<CNFLit> m_unitClauses;
     std::vector<typename ST::Clause *> m_problemClauses;
     std::vector<typename ST::Clause *> m_learntClauses;
-    BoundedMap<CNFLit, std::vector<CNFLit>> m_binaryClauses;
+    std::unordered_map<CNFLit, std::vector<CNFLit>> m_binaryClauses;
+
+    StampMap<uint16_t, CNFVarKey, CNFLitKey, typename ST::Trail::DecisionLevelKey> m_stamps;
 
     bool m_detectedUNSAT;
 };
@@ -207,7 +215,8 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_unitClauses()
   , m_problemClauses()
   , m_learntClauses()
-  , m_binaryClauses(CNFLit{CNFVar{0}, CNFSign::POSITIVE})
+  , m_binaryClauses()
+  , m_stamps(CNFLit{CNFVar{0}, CNFSign::POSITIVE}.getRawValue())
   , m_detectedUNSAT(false) {}
 
 template <typename ST>
@@ -227,10 +236,6 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
     CNFVar oldMaxVar = m_maxVar;
     for (auto lit : compressedClause) {
         m_maxVar = std::max(m_maxVar, lit.getVariable());
-    }
-
-    if (m_maxVar > oldMaxVar) {
-        m_binaryClauses.increaseSizeTo(CNFLit{m_maxVar, CNFSign::POSITIVE});
     }
 
     if (compressedClause.size() == 2) {
@@ -344,6 +349,17 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 }
 
 template <typename ST>
+void CDCLSatSolver<ST>::optimizeLearntClause(std::vector<CNFLit> &learntClause) {
+    eraseRedundantLiterals(learntClause, m_propagation, m_trail, m_stamps);
+    if (learntClause.size() < 30 /* TODO: make constant configurable */) {
+        LBD lbd = getLBD(learntClause, m_trail, m_stamps);
+        if (lbd <= 6 /* TODO: make constant configurable */) {
+            resolveWithBinaries(learntClause, m_binaryClauses, learntClause[0], m_stamps);
+        }
+    }
+}
+
+template <typename ST>
 typename CDCLSatSolver<ST>::ConflictHandlingResult
 CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::Clause **learntOut) {
     /* TODO: bad_alloc handling... */
@@ -351,13 +367,13 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     typename ST::Trail::DecisionLevel backtrackLevel = 0;
 
     auto learnt = m_conflictAnalyzer.computeConflictClause(conflicting);
+    optimizeLearntClause(learnt);
+
     JAM_LOG_SOLVER(info, "Learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
     if (learnt.size() == 1) {
         m_unitClauses.push_back(learnt[0]);
     } else {
         auto &learntClause = m_clauseDB.allocate(learnt.size());
-        // TODO: fill learnt clause
-        // TODO: simplify learnt clause
         std::copy(learnt.begin(), learnt.end(), learntClause.begin());
         *learntOut = &learntClause;
 
@@ -408,6 +424,7 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     m_propagation.increaseMaxVarTo(m_maxVar);
     m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
     m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
+    m_stamps.increaseSizeTo(CNFLit{m_maxVar, CNFSign::POSITIVE}.getRawValue());
 
     for (auto clause : m_problemClauses) {
         m_propagation.registerClause(*clause);
