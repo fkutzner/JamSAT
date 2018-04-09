@@ -398,6 +398,28 @@ constexpr bool operator<=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
  */
 constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 
+/**
+ * \brief StampMap key for CNFVar
+ *
+ * \ingroup JamSAT_CNFProblem
+ */
+struct CNFVarKey {
+    using Type = CNFVar;
+
+    static size_t getIndex(CNFVar variable) { return static_cast<size_t>(variable.getRawValue()); }
+};
+
+/**
+ * \brief StampMap key for CNFLit
+ *
+ * \ingroup JamSAT_CNFProblem
+ */
+struct CNFLitKey {
+    using Type = CNFLit;
+
+    static size_t getIndex(CNFLit literal) { return static_cast<size_t>(literal.getRawValue()); }
+};
+
 /********** Implementation ****************************** */
 
 constexpr CNFVar::CNFVar() noexcept : m_value(std::numeric_limits<int>::max() >> 1) {}

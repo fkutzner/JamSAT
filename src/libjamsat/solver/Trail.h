@@ -69,6 +69,15 @@ public:
     using const_iterator = decltype(m_trail)::const_iterator;
 
     /**
+     * \brief StampMap key for Trail::DecisionLevel
+     */
+    struct DecisionLevelKey {
+        using Type = DecisionLevel;
+
+        static size_t getIndex(DecisionLevel variable) { return static_cast<size_t>(variable); }
+    };
+
+    /**
      * \brief Constructs a new trail.
      *
      * \param maxVar    The maximum variable which will occur on the trail. \p maxVar must be a

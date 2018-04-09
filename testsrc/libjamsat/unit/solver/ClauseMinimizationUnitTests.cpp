@@ -42,18 +42,6 @@
 namespace jamsat {
 using TrivialClause = std::vector<CNFLit>;
 
-struct CNFVarKey {
-    using Type = CNFVar;
-
-    static size_t getIndex(CNFVar variable) { return static_cast<size_t>(variable.getRawValue()); }
-};
-
-struct CNFLitKey {
-    using Type = CNFLit;
-
-    static size_t getIndex(CNFLit literal) { return static_cast<size_t>(literal.getRawValue()); }
-};
-
 template <typename Container>
 bool isPermutation(const Container &c1, const Container &c2) {
     return std::is_permutation(c1.begin(), c1.end(), c2.begin(), c2.end());
