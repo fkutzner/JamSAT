@@ -211,7 +211,7 @@ FlatteningIterator<I> &FlatteningIterator<I>::operator++() {
 }
 
 template <typename I>
-typename FlatteningIterator<I>::FlatteningIterator FlatteningIterator<I>::operator++(int dummy) {
+FlatteningIterator<I> FlatteningIterator<I>::operator++(int dummy) {
     (void)dummy;
     FlatteningIterator<I> copy = *this;
     this->operator++();
