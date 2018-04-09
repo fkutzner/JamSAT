@@ -233,7 +233,6 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
     std::vector<CNFLit> compressedClause = withoutRedundancies(clause.begin(), clause.end());
     JAM_LOG_SOLVER(info, "Adding clause (" << toString(clause.begin(), clause.end()) << ")");
 
-    CNFVar oldMaxVar = m_maxVar;
     for (auto lit : compressedClause) {
         m_maxVar = std::max(m_maxVar, lit.getVariable());
     }
