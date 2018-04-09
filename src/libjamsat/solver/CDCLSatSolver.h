@@ -431,8 +431,10 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     }
 
     for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
-        // Note: no real support for assumptions yet...
         m_branchingHeuristic.setEligibleForDecisions(i, true);
+    }
+    for (CNFLit assumption : assumptions) {
+        m_branchingHeuristic.setEligibleForDecisions(assumption.getVariable(), false);
     }
 
     TBool intermediateResult = TBool::INDETERMINATE;
