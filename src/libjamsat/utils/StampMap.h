@@ -153,6 +153,11 @@ public:
      * map.
      */
     explicit StampMap<T>(typename StampMapBase<T>::size_type maxKey) : StampMapBase<T>(maxKey) {}
+
+protected:
+    // TODO: refactor the inheritance hierarchy to remove these method declarations
+    void setStamped();
+    bool isStamped();
 };
 
 /**
@@ -206,6 +211,8 @@ public:
     void setStamped(const typename K::Type &key, typename StampMapBase<T>::Stamp stamp,
                     bool stamped) noexcept;
 
+    using StampMap<T, Ks...>::setStamped;
+
     /**
      * \brief Determines if the given key is stamped.
      *
@@ -217,6 +224,8 @@ public:
      */
     bool isStamped(const typename K::Type &key, const typename StampMapBase<T>::Stamp stamp) const
         noexcept;
+
+    using StampMap<T, Ks...>::isStamped;
 };
 
 /********** Implementation ****************************** */

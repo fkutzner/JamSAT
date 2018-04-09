@@ -35,12 +35,22 @@ namespace jamsat {
 
 struct IntStampKey {
     using Type = int;
-    static size_t getIndex(int x) { return (x >= 0) ? 2 * x : -2 * x + 1; }
+    static size_t getIndex(int x) { return (x >= 0) ? (2 * x) : (-2 * x + 1); }
 };
 
 struct ComplexStampKey {
     using Type = std::complex<char>;
-    static size_t getIndex(const Type &x) { return 2 * x.real() + 2 * x.imag() + 1; }
+    static size_t getIndex(const Type &x) { return 2 * x.real() + x.imag(); }
+};
+
+struct IntWrapper {
+    int m_x;
+    explicit IntWrapper(int x) : m_x(x) {}
+};
+
+struct IntWrapperKey {
+    using Type = IntWrapper;
+    static size_t getIndex(const Type &x) { return x.m_x; }
 };
 
 TEST(UnitUtils, StampMap_singleKeyTypeReadWrite) {
@@ -59,20 +69,21 @@ TEST(UnitUtils, StampMap_singleKeyTypeReadWrite) {
 }
 
 TEST(UnitUtils, StampMap_twoKeyTypesReadWrite) {
-    StampMap<uint64_t, ComplexStampKey, IntStampKey> underTest{32};
+    StampMap<uint64_t, ComplexStampKey, IntWrapperKey> underTest{32};
     auto stampContext = underTest.createContext();
     auto stamp = stampContext.getStamp();
 
     ComplexStampKey::Type testValue1{3, 0};
     ComplexStampKey::Type testValue2{2, 5};
+    IntWrapperKey::Type testValue3{6};
 
-    EXPECT_FALSE(underTest.isStamped(3, stamp));
+    EXPECT_FALSE(underTest.isStamped(testValue3, stamp));
     EXPECT_FALSE(underTest.isStamped(testValue1, stamp));
     EXPECT_FALSE(underTest.isStamped(testValue2, stamp));
 
     underTest.setStamped(testValue1, stamp, true);
     EXPECT_TRUE(underTest.isStamped(testValue1, stamp));
-    EXPECT_TRUE(underTest.isStamped(3, stamp)); // mapped to same internal key
+    EXPECT_TRUE(underTest.isStamped(testValue3, stamp)); // mapped to same internal key
     EXPECT_FALSE(underTest.isStamped(testValue2, stamp));
 }
 
