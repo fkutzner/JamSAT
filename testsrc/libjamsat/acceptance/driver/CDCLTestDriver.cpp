@@ -52,11 +52,11 @@ int main(int argc, char **argv) {
     solver.addProblem(problem);
     auto result = solver.solve({});
     if (result.isSatisfiable == jamsat::TBool::TRUE) {
-        std::cout << "SATISFIABLE" << std::endl;
+        std::cout << "Satisfiable:1" << std::endl;
     } else if (result.isSatisfiable == jamsat::TBool::FALSE) {
-        std::cout << "UNSATISTIABLE" << std::endl;
+        std::cout << "Satisfiable:0" << std::endl;
     } else {
-        std::cout << "INDETERMINATE" << std::endl;
+        std::cout << "Satisfiable:-1" << std::endl;
     }
 
     return EXIT_SUCCESS;
