@@ -122,6 +122,7 @@ if(JAMSAT_ENABLE_LOGGING)
   add_definitions(-DJAM_ENABLE_CDCLITEST_LOGGING)
   add_definitions(-DJAM_ENABLE_REDUCE_LOGGING)
   add_definitions(-DJAM_ENABLE_SOLVER_LOGGING)
+  add_definitions(-DJAM_ENABLE_MINIMIZER_LOGGING)
 endif()
 
 ### Add JamSAT sources

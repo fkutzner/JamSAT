@@ -169,7 +169,6 @@ private:
 
     struct ConflictHandlingResult {
         bool learntUnitClause;
-        bool learntEmptyClause;
         typename ST::Trail::DecisionLevel backtrackLevel;
     };
 
@@ -241,6 +240,12 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
     }
 
     if (compressedClause.size() == 2) {
+        if (compressedClause[0] == ~compressedClause[1]) {
+            // The clause is satisfied under any complete assignment and can be ignored.
+            // This check is not a performance optimization: some subsystems expect that no
+            // clause (l -l) exist for any literal l.
+            return;
+        }
         m_binaryClauses[compressedClause[0]].push_back(compressedClause[1]);
         m_binaryClauses[compressedClause[1]].push_back(compressedClause[0]);
     }
@@ -329,9 +334,6 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
                 // Perform a restart to check for unsatisfiability during unit-clause
                 // propagation
                 return TBool::INDETERMINATE;
-            } else if (conflictHandlingResult.learntEmptyClause) {
-                // Derived the empty clause via resolution => the problem is unsatisfiable
-                return TBool::FALSE;
             }
 
             conflictingClause = m_propagation.registerClause(*learntClause);
@@ -356,10 +358,14 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 template <typename ST>
 void CDCLSatSolver<ST>::optimizeLearntClause(std::vector<CNFLit> &learntClause) {
     eraseRedundantLiterals(learntClause, m_propagation, m_trail, m_stamps);
+    JAM_LOG_SOLVER(info, "  After redundant literal removal: ("
+                             << toString(learntClause.begin(), learntClause.end()) << ")");
     if (learntClause.size() < 30 /* TODO: make constant configurable */) {
         LBD lbd = getLBD(learntClause, m_trail, m_stamps);
         if (lbd <= 6 /* TODO: make constant configurable */) {
             resolveWithBinaries(learntClause, m_binaryClauses, learntClause[0], m_stamps);
+            JAM_LOG_SOLVER(info, "  After resolution with binary clauses: ("
+                                     << toString(learntClause.begin(), learntClause.end()) << ")");
         }
     }
 }
@@ -377,6 +383,8 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     optimizeLearntClause(learnt);
     JAM_LOG_SOLVER(info,
                    "Optimized learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
+
+    JAM_ASSERT(learnt.size() > 0, "The empty clause is not expected to be directly derivable");
 
     if (learnt.size() == 1) {
         m_unitClauses.push_back(learnt[0]);
@@ -398,7 +406,7 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
         }
     }
 
-    return ConflictHandlingResult{learnt.size() == 1, learnt.size() == 0, backtrackLevel};
+    return ConflictHandlingResult{learnt.size() == 1, backtrackLevel};
 }
 
 template <typename ST>
@@ -453,7 +461,7 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     }
 
     if (intermediateResult == TBool::FALSE) {
-        m_detectedUNSAT = true;
+        m_detectedUNSAT = true; // TODO: do this only when no assumption failed.
     }
 
     m_isSolving.store(false);
