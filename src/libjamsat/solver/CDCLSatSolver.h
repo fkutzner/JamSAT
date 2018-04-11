@@ -368,9 +368,14 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     typename ST::Trail::DecisionLevel backtrackLevel = 0;
 
     auto learnt = m_conflictAnalyzer.computeConflictClause(conflicting);
-    optimizeLearntClause(learnt);
 
     JAM_LOG_SOLVER(info, "Learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
+    if (learnt.size() > 1) {
+        optimizeLearntClause(learnt);
+    }
+    JAM_LOG_SOLVER(info,
+                   "Optimized learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
+
     if (learnt.size() == 1) {
         m_unitClauses.push_back(learnt[0]);
     } else {
