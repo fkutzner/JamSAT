@@ -315,10 +315,10 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         JAM_ASSERT(decision != CNFLit::getUndefinedLiteral(),
                    "The branching heuristic is not expected to return an undefined literal");
         m_trail.addAssignment(decision);
+
         auto conflictingClause = m_propagation.propagateUntilFixpoint(decision);
-
-
-        if (conflictingClause != nullptr) {
+        while (conflictingClause != nullptr) {
+            JAM_LOG_SOLVER(info, "Last propagation resulted in a conflict");
             typename ST::Clause *learntClause;
             auto conflictHandlingResult = deriveClause(*conflictingClause, &learntClause);
             JAM_LOG_SOLVER(info, "Backtracking to decision level "
@@ -330,19 +330,19 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
                 return TBool::INDETERMINATE;
             }
 
-            m_propagation.registerClause(*learntClause);
-
+            conflictingClause = m_propagation.registerClause(*learntClause);
             --conflictsUntilMaintenance;
-            if (conflictsUntilMaintenance == 0) {
-                // TODO: do post-learning stuff (clausedb cleaning, adjustment of heuristics,
-                // inprocessing, ...)
+        }
 
-                if (m_stopRequested.load()) {
-                    return TBool::INDETERMINATE;
-                }
+        if (conflictsUntilMaintenance <= 0) {
+            // TODO: do post-learning stuff (clausedb cleaning, adjustment of heuristics,
+            // inprocessing, ...)
 
-                conflictsUntilMaintenance = 5000;
+            if (m_stopRequested.load()) {
+                return TBool::INDETERMINATE;
             }
+
+            conflictsUntilMaintenance = 5000;
         }
     }
 
