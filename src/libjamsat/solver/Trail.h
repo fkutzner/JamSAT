@@ -106,6 +106,18 @@ public:
     void shrinkToDecisionLevel(DecisionLevel level) noexcept;
 
     /**
+     * \brief Removes all literals from the trail which have been assigned on
+     * decision levels greater than \p level and sets the current decision level
+     * to \p level.
+     *
+     * Literals on decision level \p level are not removed from the trail.
+     *
+     * \param level The target decision level. \p level must be smaller than the
+     * current decision level.
+     */
+    void revisitDecisionLevel(DecisionLevel level) noexcept;
+
+    /**
      * \brief Adds a literal to the end of the trail. Note that this literal will
      * belong to the current decision level.
      */

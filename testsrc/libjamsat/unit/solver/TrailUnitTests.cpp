@@ -206,6 +206,38 @@ TEST(UnitSolver, unshrinkedDecisionLevelsRemainIntactAfterShrink) {
     EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{6}), 1ul);
 }
 
+TEST(UnitSolver, assignmentsBecomeIndeterminateOnRevisit) {
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{6}, CNFSign::POSITIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
+
+    underTest.revisitDecisionLevel(1);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBool::FALSE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{5}), TBool::TRUE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{6}), TBool::INDETERMINATE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBool::INDETERMINATE);
+}
+
+TEST(UnitSolver, undiscardedDecisionLevelsRemainIntactAfterRevisit) {
+    Trail underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
+    underTest.addAssignment(CNFLit{CNFVar{6}, CNFSign::POSITIVE});
+    underTest.newDecisionLevel();
+    underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
+
+    underTest.revisitDecisionLevel(1);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{4}), 0ul);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{5}), 1ul);
+    EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{6}), 1ul);
+}
+
 TEST(UnitSolver, assignmentRangeMatchesAssignment) {
     Trail underTest{CNFVar{8}};
     CNFLit lit1{CNFVar{4}, CNFSign::NEGATIVE};

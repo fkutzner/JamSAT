@@ -56,6 +56,19 @@ void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
     m_trailLimits.resize(level + 1);
 }
 
+void Trail::revisitDecisionLevel(Trail::DecisionLevel level) noexcept {
+    JAM_ASSERT(
+        level < m_trailLimits.size() - 1,
+        "Cannot revisit current decision level or a decision level higher than the current one");
+
+    for (auto i = m_trail.begin() + m_trailLimits[level + 1]; i != m_trail.end(); ++i) {
+        m_assignments[(*i).getVariable()] = TBool::INDETERMINATE;
+    }
+
+    m_trail.pop_to(m_trailLimits[level + 1]);
+    m_trailLimits.resize(level + 1);
+}
+
 void Trail::addAssignment(CNFLit literal) noexcept {
     JAM_ASSERT(literal.getVariable().getRawValue() <
                    static_cast<CNFVar::RawVariable>(m_assignments.size()),
