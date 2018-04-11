@@ -177,7 +177,9 @@ private:
 
     void optimizeLearntClause(std::vector<CNFLit> &learntClause);
 
+    void prepareBacktrack(typename ST::Trail::DecisionLevel level);
     void backtrackToLevel(typename ST::Trail::DecisionLevel level);
+    void backtrackAll();
 
 
     typename ST::Trail m_trail;
@@ -305,7 +307,7 @@ CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
 template <typename ST>
 TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumptions) {
     JAM_LOG_SOLVER(info, "Restarting the solver, backtracking to decision level 0.");
-    backtrackToLevel(0);
+    backtrackAll();
     if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT ||
         propagateUnitClauses(assumptions) != UnitClausePropagationResult::CONSISTENT) {
         return TBool::FALSE;
@@ -329,12 +331,14 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             auto conflictHandlingResult = deriveClause(*conflictingClause, &learntClause);
             JAM_LOG_SOLVER(info, "Backtracking to decision level "
                                      << conflictHandlingResult.backtrackLevel);
-            backtrackToLevel(conflictHandlingResult.backtrackLevel);
+
             if (conflictHandlingResult.learntUnitClause) {
                 // Perform a restart to check for unsatisfiability during unit-clause
                 // propagation
                 return TBool::INDETERMINATE;
             }
+
+            backtrackToLevel(conflictHandlingResult.backtrackLevel);
 
             conflictingClause = m_propagation.registerClause(*learntClause);
             --conflictsUntilMaintenance;
@@ -410,7 +414,7 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::backtrackToLevel(typename ST::Trail::DecisionLevel level) {
+void CDCLSatSolver<ST>::prepareBacktrack(typename ST::Trail::DecisionLevel level) {
     for (auto currentDL = m_trail.getCurrentDecisionLevel(); currentDL >= level; --currentDL) {
         for (auto lit : m_trail.getDecisionLevelAssignments(currentDL)) {
             m_branchingHeuristic.reset(lit.getVariable());
@@ -419,7 +423,19 @@ void CDCLSatSolver<ST>::backtrackToLevel(typename ST::Trail::DecisionLevel level
             break;
         }
     }
-    m_trail.shrinkToDecisionLevel(level);
+}
+
+template <typename ST>
+void CDCLSatSolver<ST>::backtrackToLevel(typename ST::Trail::DecisionLevel level) {
+    JAM_ASSERT(level < m_trail.getCurrentDecisionLevel(), "Cannot backtrack to current level");
+    prepareBacktrack(level + 1);
+    m_trail.revisitDecisionLevel(level);
+}
+
+template <typename ST>
+void CDCLSatSolver<ST>::backtrackAll() {
+    prepareBacktrack(0);
+    m_trail.shrinkToDecisionLevel(0);
 }
 
 template <typename ST>
@@ -467,7 +483,7 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     m_isSolving.store(false);
     m_stopRequested.store(false);
     SolvingResult result = createSolvingResult(intermediateResult);
-    backtrackToLevel(0);
+    backtrackAll();
     return result;
 }
 }
