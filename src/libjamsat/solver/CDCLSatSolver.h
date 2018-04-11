@@ -169,6 +169,7 @@ private:
 
     struct ConflictHandlingResult {
         bool learntUnitClause;
+        bool learntEmptyClause;
         typename ST::Trail::DecisionLevel backtrackLevel;
     };
 
@@ -328,6 +329,9 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
                 // Perform a restart to check for unsatisfiability during unit-clause
                 // propagation
                 return TBool::INDETERMINATE;
+            } else if (conflictHandlingResult.learntEmptyClause) {
+                // Derived the empty clause via resolution => the problem is unsatisfiable
+                return TBool::FALSE;
             }
 
             conflictingClause = m_propagation.registerClause(*learntClause);
@@ -370,15 +374,13 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     auto learnt = m_conflictAnalyzer.computeConflictClause(conflicting);
 
     JAM_LOG_SOLVER(info, "Learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
-    if (learnt.size() > 1) {
-        optimizeLearntClause(learnt);
-    }
+    optimizeLearntClause(learnt);
     JAM_LOG_SOLVER(info,
                    "Optimized learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
 
     if (learnt.size() == 1) {
         m_unitClauses.push_back(learnt[0]);
-    } else {
+    } else if (learnt.size() > 1) {
         auto &learntClause = m_clauseDB.allocate(learnt.size());
         std::copy(learnt.begin(), learnt.end(), learntClause.begin());
         *learntOut = &learntClause;
@@ -396,7 +398,7 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
         }
     }
 
-    return ConflictHandlingResult{learnt.size() == 1, backtrackLevel};
+    return ConflictHandlingResult{learnt.size() == 1, learnt.size() == 0, backtrackLevel};
 }
 
 template <typename ST>
