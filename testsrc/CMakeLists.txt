@@ -30,9 +30,18 @@ function(add_fuzzing_execution_target TARGET_NAME SEED_DIRECTORY)
     add_custom_command(TARGET ${TARGET_NAME}-run PRE_BUILD
                        COMMAND ${AFL_FUZZER}
                                 -i ${SEED_DIRECTORY}
-                                -o $<TARGET_FILE_DIR:${TARGET_NAME}>/fuzzer-findings
+                                -o $<TARGET_FILE_DIR:${TARGET_NAME}>/{TARGET_NAME}-fuzzer-findings
                                 $<TARGET_FILE:${TARGET_NAME}>)
+
+    add_custom_target(${TARGET_NAME}-continue)
+    add_custom_command(TARGET ${TARGET_NAME}-continue PRE_BUILD
+                       COMMAND ${AFL_FUZZER}
+                                -i -
+                                -o $<TARGET_FILE_DIR:${TARGET_NAME}>/{TARGET_NAME}-fuzzer-findings
+                                $<TARGET_FILE:${TARGET_NAME}>)
+
     add_dependencies(${TARGET_NAME}-run ${TARGET_NAME})
+    add_dependencies(${TARGET_NAME}-continue ${TARGET_NAME})
   endif()
 endfunction()
 
