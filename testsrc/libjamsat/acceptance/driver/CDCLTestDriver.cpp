@@ -2,8 +2,7 @@
 #include <libjamsat/solver/CDCLSatSolver.h>
 #include <libjamsat/utils/Assert.h>
 
-#include <minisat/core/Solver.h>
-#include <minisat/core/SolverTypes.h>
+#include <toolbox/testutils/Minisat.h>
 
 #include <cstdlib>
 #include <fstream>
@@ -40,28 +39,11 @@ CheckMinisatResult checkResultWithMinisat(jamsat::CNFProblem &problem, jamsat::T
         return CheckMinisatResult::SKIPPED;
     }
 
-    Minisat::Solver solver;
-    for (unsigned int i = 0; i <= problem.getMaxVar().getRawValue(); ++i) {
-        solver.newVar();
-    }
+    jamsat::TBool satisfiable = jamsat::isSatisfiableViaMinisat(problem);
 
-    for (auto &clause : problem.getClauses()) {
-        Minisat::vec<Minisat::Lit> minisatClause;
-        for (auto lit : clause) {
-            Minisat::Lit minisatLit =
-                Minisat::mkLit(static_cast<Minisat::Var>(lit.getVariable().getRawValue()));
-            minisatClause.push(lit.getSign() == jamsat::CNFSign::POSITIVE ? minisatLit
-                                                                          : ~minisatLit);
-        }
-        solver.addClause(minisatClause);
-    }
+    JAM_ASSERT(satisfiable == result, "Minisat and JamSAT produced different SAT results");
 
-    bool satisfiable = solver.solve();
-    bool equalSatResults = (satisfiable == (result == jamsat::TBool::TRUE));
-
-    JAM_ASSERT(equalSatResults, "Minisat and JamSAT produced different SAT results");
-
-    if (equalSatResults) {
+    if (satisfiable == result) {
         return CheckMinisatResult::MATCH;
     } else {
         return CheckMinisatResult::NO_MATCH;
