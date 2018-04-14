@@ -28,6 +28,7 @@
 #include <libjamsat/solver/CDCLSatSolver.h>
 
 #include <toolbox/fuzz/FuzzingEntryPoint.h>
+#include <toolbox/testutils/Minisat.h>
 
 #include <iostream>
 
@@ -57,5 +58,8 @@ void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
     solver.addProblem(problem);
     auto result = solver.solve({});
     std::cout << (result.isSatisfiable == TBool::TRUE ? "SAT" : "INDET-OR-UNSAT");
+
+    auto minisatResult = isSatisfiableViaMinisat(problem);
+    assert(result.isSatisfiable == minisatResult);
 }
 }
