@@ -1,3 +1,10 @@
+### Find minisat
+set(MINISAT_IMPORT_STATIC_LIBRARY ON)
+find_package(Minisat 2.1.0)
+
+if (NOT Minisat_FOUND)
+  message(FATAL_ERROR "Could not find Minisat. Is an installation of https://github.com/fkutzner/minisat in your CMAKE_PREFIX_PATH?")
+endif()
 
 ### Set up fuzzing
 
