@@ -13,7 +13,6 @@ option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
 option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
-option(JAMSAT_ENABLE_TESTING "Enable testing" ON)
 
 ### Language options
 set(CMAKE_CXX_STANDARD 14)
@@ -22,14 +21,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 ### Find libraries
 
-
-set(JAMSAT_REQUIRED_BOOST_LIBRARIES iostreams)
-
 if (JAMSAT_ENABLE_LOGGING)
     list(APPEND JAMSAT_REQUIRED_BOOST_LIBRARIES log log_setup)
 endif()
 
-#add_definitions(-DBOOST_ALL_DYN_LINK)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost
     1.54.0
