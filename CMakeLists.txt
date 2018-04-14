@@ -49,6 +49,10 @@ include_directories(SYSTEM lib/state_ptr/include)
 
 ### Compiler arguments
 
+# Opt out of boost's linker magic, which causes linker errors on Windows.
+# See https://www.boost.org/doc/libs/1_57_0/libs/config/doc/html/index.html
+add_definitions(-DBOOST_ALL_NO_LIB)
+
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(COMPILING_WITH_CLANG true)
   set(COMPILING_WITH_GNULIKE true)
