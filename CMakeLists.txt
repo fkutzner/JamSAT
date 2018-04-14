@@ -23,9 +23,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 if (JAMSAT_ENABLE_LOGGING)
     list(APPEND JAMSAT_REQUIRED_BOOST_LIBRARIES log log_setup)
+
+    # TODO: support dynamic boost libraries
+    set(Boost_USE_STATIC_LIBS ON)
 endif()
 
-set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost
     1.54.0
     REQUIRED
