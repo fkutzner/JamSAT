@@ -1,4 +1,5 @@
 ### Find minisat
+
 set(MINISAT_IMPORT_STATIC_LIBRARY ON)
 find_package(Minisat 2.1.0)
 
