@@ -410,6 +410,19 @@ TEST(UnitCNFProblem, parseMultipleClauseDIMACSProblem) {
     EXPECT_EQ(underTest.getMaxVar(), CNFVar{5});
 }
 
+TEST(UnitCNFProblem, parseDIMACSProblemRecognizingMaxVarInFirstClause) {
+    std::stringstream conduit;
+    conduit << "p cnf 6 2" << std::endl;
+    conduit << "6 2 0" << std::endl;
+    conduit << "2 4 0" << std::endl;
+
+    CNFProblem underTest;
+    conduit >> underTest;
+    ASSERT_FALSE(conduit.fail());
+    ASSERT_EQ(underTest.getSize(), 2ull);
+    EXPECT_EQ(underTest.getMaxVar(), CNFVar{5});
+}
+
 TEST(UnitCNFProblem, parseDIMACSProblemWithBadClauseFails) {
     SuppressLoggedWarningsRAII suppressWarnings;
     std::stringstream conduit;

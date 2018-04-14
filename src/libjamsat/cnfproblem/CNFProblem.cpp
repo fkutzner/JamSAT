@@ -45,7 +45,8 @@ CNFProblem::CNFProblem() : m_clauses({}), m_maxVar(CNFVar::getUndefinedVariable(
 void CNFProblem::addClause(const CNFClause &clause) noexcept {
     for (auto literal : clause) {
         CNFVar variable = literal.getVariable();
-        if (isEmpty() || variable.getRawValue() > m_maxVar.getRawValue()) {
+        if (m_maxVar == CNFVar::getUndefinedVariable() ||
+            variable.getRawValue() > m_maxVar.getRawValue()) {
             m_maxVar = variable;
         }
     }
@@ -56,7 +57,8 @@ void CNFProblem::addClause(const CNFClause &clause) noexcept {
 void CNFProblem::addClause(CNFClause &&clause) noexcept {
     for (auto literal : clause) {
         CNFVar variable = literal.getVariable();
-        if (isEmpty() || variable.getRawValue() > m_maxVar.getRawValue()) {
+        if (m_maxVar == CNFVar::getUndefinedVariable() ||
+            variable.getRawValue() > m_maxVar.getRawValue()) {
             m_maxVar = variable;
         }
     }
@@ -171,6 +173,7 @@ std::istream &readDIMACSClauses(std::istream &input, DIMACSHeader problemHeader,
             JAM_LOG_CNFPROBLEM(warning, "Failed parsing DIMACS clause no. " << i);
             return input;
         }
+
         problem.addClause(std::move(newClause));
 
         if (static_checked_cast<unsigned int>(problem.getMaxVar().getRawValue()) + 1 >
