@@ -4,13 +4,14 @@ set -e
 # For this script, it's assumed that the current working directory is an empty
 # directory where the build files can be placed.
 
+# Build Minisat (a testing dependency of JamSAT), installing in ../minisat-install
 build_minisat() {
   mkdir ../minisat-build
   pushd ../minisat-build
   git clone https://github.com/fkutzner/minisat
   mkdir build
   cd build
-  cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=${PWD}/../../minisat-install ../minisat
+  cmake -DONLY_LIBRARIES=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=${PWD}/../../minisat-install ../minisat
   cmake --build . --target install
   popd
 }
@@ -39,6 +40,8 @@ process_coverage_results() {
   lcov --remove coverage.info 'lib/*' 'testsrc/*' '/usr/*' --output-file coverage.info
   lcov --list coverage.info
 }
+
+build_minisat
 
 if [ "${SONARSOURCE_SCAN}" != "1" ]
 then
