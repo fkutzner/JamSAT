@@ -25,6 +25,7 @@
 */
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
+#include <libjamsat/utils/Assert.h>
 #include <toolbox/fuzz/FuzzingEntryPoint.h>
 
 #include <iostream>
@@ -35,6 +36,15 @@ namespace jamsat {
 void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
     CNFProblem underTest;
     fuzzerInput >> underTest;
-    std::cout << underTest << std::endl;
+
+    if (fuzzerInput.fail()) {
+        return;
+    }
+
+    for (auto &clause : underTest.getClauses()) {
+        for (auto lit : clause) {
+            JAM_ASSERT(lit.getVariable() <= underTest.getMaxVar(), "Invalid literal");
+        }
+    }
 }
 }
