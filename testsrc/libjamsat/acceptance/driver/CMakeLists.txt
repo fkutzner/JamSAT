@@ -3,5 +3,3 @@ add_executable(CDCLTestDriver
 )
 
 target_link_libraries(CDCLTestDriver jamcore)
-target_include_directories(CDCLTestDriver PRIVATE ${PROJECT_SOURCE_DIR}/testsrc
-                                                  ${PROJECT_SOURCE_DIR}/src)

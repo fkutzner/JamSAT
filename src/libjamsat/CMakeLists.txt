@@ -1,5 +1,3 @@
-include_directories(${PROJECT_SOURCE_DIR}/src)
-
 set(JAMSAT_LIBRARY_FOLDER_NAME "JamSAT Library")
 
 # Adds a JamSAT core library.
@@ -8,6 +6,7 @@ set(JAMSAT_LIBRARY_FOLDER_NAME "JamSAT Library")
 # of the given source files.
 function(add_jamsat_core_library TARGET)
   add_library(${TARGET} OBJECT ${ARGN})
+  target_include_directories(${TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/src)
   set_property(TARGET ${TARGET} PROPERTY FOLDER ${JAMSAT_LIBRARY_FOLDER_NAME})
   # TODO: automatically add the objects to jamcore
 endfunction()
@@ -29,5 +28,8 @@ add_library(
   $<TARGET_OBJECTS:jamsatProof>
 )
 set_property(TARGET jamcore PROPERTY FOLDER ${JAMSAT_LIBRARY_FOLDER_NAME})
+
+# Allow targets linking to jamcore to find its include files:
+target_include_directories(jamcore PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
 target_link_libraries(jamcore ${JAMSAT_LIB_DEPS})

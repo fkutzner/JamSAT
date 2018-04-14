@@ -7,12 +7,12 @@ set(JAMSAT_LIBRARY_INTEGRATIONTEST_FOLDER_NAME "JamSAT Library/Integration Tests
 function(add_jamsat_core_integrationtest_library TARGET)
   add_library(${TARGET} OBJECT ${ARGN})
   set_property(TARGET ${TARGET} PROPERTY FOLDER ${JAMSAT_LIBRARY_INTEGRATIONTEST_FOLDER_NAME})
-  target_include_directories(${TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include
-                                              ${PROJECT_SOURCE_DIR}/lib/googletest/googlemock/include)
-  target_include_directories(${TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/testsrc
-                                               ${PROJECT_SOURCE_DIR}/src)
 
-  # TODO: automatically add the objects to libjamsat_integration_tests
+  get_property(jamcore_include_dirs TARGET jamcore PROPERTY INCLUDE_DIRECTORIES)
+  get_property(gtest_include_dirs TARGET gtest PROPERTY INCLUDE_DIRECTORIES)
+  target_include_directories(${TARGET} PRIVATE ${jamcore_include_dirs})
+  target_include_directories(${TARGET} PRIVATE ${gtest_include_dirs})
+  target_include_directories(${TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/testsrc)
 endfunction()
 
 add_subdirectory(solver)
