@@ -29,9 +29,11 @@
 #include <sstream>
 #include <string>
 
+#if defined(JAMSAT_ENABLE_LOGGING)
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/trivial.hpp>
+#endif
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
@@ -41,11 +43,17 @@ namespace {
 class SuppressLoggedWarningsRAII {
 public:
     SuppressLoggedWarningsRAII() {
+#if defined(JAMSAT_ENABLE_LOGGING)
         auto filter = boost::log::trivial::severity > boost::log::trivial::warning;
         boost::log::core::get()->set_filter(filter);
+#endif
     }
 
-    ~SuppressLoggedWarningsRAII() { boost::log::core::get()->reset_filter(); }
+    ~SuppressLoggedWarningsRAII() {
+#if defined(JAMSAT_ENABLE_LOGGING)
+        boost::log::core::get()->reset_filter();
+#endif
+    }
 };
 }
 
