@@ -7,3 +7,4 @@ add_fuzzing_target(barecdclsolver_fuzzer BareCDCLSolverFuzzingTarget.cpp ${CMAKE
 SET(JAMSAT_LIBRARY_FUZZ_FOLDER_NAME "JamSAT Library/Fuzzing Targets")
 set_property(TARGET trivial_fuzzer PROPERTY FOLDER ${JAMSAT_LIBRARY_FUZZ_FOLDER_NAME})
 set_property(TARGET cnfproblem_fuzzer PROPERTY FOLDER ${JAMSAT_LIBRARY_FUZZ_FOLDER_NAME})
+set_property(TARGET barecdclsolver_fuzzer PROPERTY FOLDER ${JAMSAT_LIBRARY_FUZZ_FOLDER_NAME})
