@@ -476,10 +476,6 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
         intermediateResult = solveUntilRestart(assumptions);
     }
 
-    if (intermediateResult == TBool::FALSE) {
-        m_detectedUNSAT = true; // TODO: do this only when no assumption failed.
-    }
-
     m_isSolving.store(false);
     m_stopRequested.store(false);
     SolvingResult result = createSolvingResult(intermediateResult);
