@@ -280,7 +280,7 @@ typename CDCLSatSolver<ST>::UnitClausePropagationResult
 CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
     JAM_LOG_SOLVER(info, "Propagating unit clauses...");
     for (auto unit : units) {
-        auto assignment = m_trail.getAssignment(unit);
+        auto assignment = m_trail.getAssignment(unit.getVariable());
         if (assignment != TBool::INDETERMINATE &&
             toTBool(unit.getSign() == CNFSign::POSITIVE) != assignment) {
             JAM_LOG_SOLVER(info, "Detected conflict at unit clause " << unit);
