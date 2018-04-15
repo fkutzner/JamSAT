@@ -28,6 +28,7 @@
 
 #include <libjamsat/solver/CDCLSatSolver.h>
 #include <toolbox/cnfgenerators/Rule110.h>
+#include <toolbox/testutils/Minisat.h>
 
 namespace jamsat {
 
@@ -67,11 +68,14 @@ TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
     for (auto &clause : cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
+
+    ASSERT_EQ(isSatisfiableViaMinisat(cnfProblem), TBool::TRUE)
+        << "Bad test case: the problem is expected to be satisfiable";
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::TRUE);
 }
 
 TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {
-    Rule110PredecessorStateProblem problem{"1xxx0", "00010", 5};
+    Rule110PredecessorStateProblem problem{"1x1x1", "01010", 7};
     auto cnfProblem = problem.getCNFEncoding();
 
     CDCLSatSolver<>::Configuration testConfig;
@@ -81,6 +85,8 @@ TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {
     for (auto &clause : cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
+    ASSERT_EQ(isSatisfiableViaMinisat(cnfProblem), TBool::FALSE)
+        << "Bad test case: the problem is expected not to be satisfiable";
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::FALSE);
 }
 }

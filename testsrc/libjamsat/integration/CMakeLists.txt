@@ -24,7 +24,7 @@ add_executable(libjamsat_integration_testsuite
   $<TARGET_OBJECTS:cnfgenerators>
 )
 
-target_link_libraries(libjamsat_integration_testsuite jamcore gtest gtest_main)
+target_link_libraries(libjamsat_integration_testsuite jamcore jamsatTestUtils gtest gtest_main)
 set_property(TARGET libjamsat_integration_testsuite
              PROPERTY FOLDER ${JAMSAT_LIBRARY_INTEGRATIONTEST_FOLDER_NAME})
 add_test(
