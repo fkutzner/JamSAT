@@ -15,11 +15,12 @@ option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
 
 option(JAMSAT_DISABLE_BOOST_LINKING_SETUP "Don't override linker settings for Boost" OFF)
+option(JAMSAT_LINK_VERBOSE "Print information about linked dependencies" OFF)
 
 ### Load CMake code
 
-# Defines COMPILING_WITH_* and PLATFORM_SUPPORTS_* variables
-include(etc/cmake/Platform.cmake)
+include(etc/cmake/Utils.cmake)
+include(etc/cmake/Platform.cmake) # Defines COMPILING_WITH_* and PLATFORM_SUPPORTS_* variables
 
 ### Language options
 set(CMAKE_CXX_STANDARD 14)
@@ -52,6 +53,10 @@ if(UNIX AND Boost_USE_MULTITHREADED)
 endif()
 
 include_directories(SYSTEM lib/state_ptr/include)
+
+if(JAMSAT_LINK_VERBOSE)
+  message_list(STATUS "${JAMSAT_LIB_DEPS}" "JamSAT will be linked to the following external libraries:")
+endif()
 
 
 ### Fix DLL lookup e.g. on Windows

@@ -7,6 +7,11 @@ if (NOT Minisat_FOUND)
   message(FATAL_ERROR "Could not find Minisat. Is an installation of https://github.com/fkutzner/minisat in your CMAKE_PREFIX_PATH?")
 endif()
 
+# If this becomes more than one library, create a suitable JAMSAT_TEST_LIB_DEPS variable
+if(JAMSAT_LINK_VERBOSE)
+  message_list(STATUS ${Minisat_LIBRARY} "JamSAT tests will additionally be linked to the following external libraries:")
+endif()
+
 ### Set up fuzzing
 
 set(JAMSAT_FUZZ_ADAPTER_LIBRARY jamsatFuzzGenericFuzzAdapter)
