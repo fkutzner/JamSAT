@@ -72,17 +72,17 @@
 extern "C" {
 #endif
 
-const char *JAMSAT_PUBLIC_API ipasir_signature();
-void *JAMSAT_PUBLIC_API ipasir_init();
-void JAMSAT_PUBLIC_API ipasir_release(void *solver);
-void JAMSAT_PUBLIC_API ipasir_add(void *solver, int lit_or_zero);
-void JAMSAT_PUBLIC_API ipasir_assume(void *solver, int lit);
-int JAMSAT_PUBLIC_API ipasir_solve(void *solver);
-int JAMSAT_PUBLIC_API ipasir_val(void *solver, int lit);
-int JAMSAT_PUBLIC_API ipasir_failed(void *solver, int lit);
-void JAMSAT_PUBLIC_API ipasir_set_terminate(void *solver, void *state,
+JAMSAT_PUBLIC_API const char *ipasir_signature();
+JAMSAT_PUBLIC_API void *ipasir_init();
+JAMSAT_PUBLIC_API void ipasir_release(void *solver);
+JAMSAT_PUBLIC_API void ipasir_add(void *solver, int lit_or_zero);
+JAMSAT_PUBLIC_API void ipasir_assume(void *solver, int lit);
+JAMSAT_PUBLIC_API int ipasir_solve(void *solver);
+JAMSAT_PUBLIC_API int ipasir_val(void *solver, int lit);
+JAMSAT_PUBLIC_API int ipasir_failed(void *solver, int lit);
+JAMSAT_PUBLIC_API void ipasir_set_terminate(void *solver, void *state,
                                             int (*terminate)(void *state));
-void JAMSAT_PUBLIC_API ipasir_set_learn(void *solver, void *state, int max_length,
+JAMSAT_PUBLIC_API void ipasir_set_learn(void *solver, void *state, int max_length,
                                         void (*learn)(void *state, int *clause));
 
 #if defined(__cplusplus)
