@@ -16,9 +16,11 @@ function(add_jamsat_core_integrationtest_library TARGET)
 endfunction()
 
 add_subdirectory(solver)
+add_subdirectory(api)
 
 add_executable(libjamsat_integration_testsuite
   $<TARGET_OBJECTS:solver_integration_tests>
+  $<TARGET_OBJECTS:api_ipasir_integration_tests>
 
   # From toolbox/cnfgenerators:
   $<TARGET_OBJECTS:cnfgenerators>

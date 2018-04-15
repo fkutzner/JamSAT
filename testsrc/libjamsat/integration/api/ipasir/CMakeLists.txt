@@ -1,0 +1,3 @@
+add_jamsat_core_integrationtest_library(api_ipasir_integration_tests
+  IPASIRIntegrationTests.cpp
+)

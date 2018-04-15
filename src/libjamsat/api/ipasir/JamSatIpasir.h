@@ -43,45 +43,47 @@
 #define JAMSAT_IPASIR_H_INCLUDED
 
 #if defined _WIN32 || defined __CYGWIN__
-    #ifdef BUILDING_JAMSAT_SOLIB
-        #ifdef __GNUC__
-            #define JAMSAT_PUBLIC_API __attribute__((dllexport))
-        #elif _MSC_VER
-            #define JAMSAT_PUBLIC_API __declspec(dllexport)
-        #else
-            #warning "Unknown compiler. Not adding visibility information to exported symbols."
-        #endif
-    #else
-        #ifdef __GNUC__
-            #define JAMSAT_PUBLIC_API __attribute__((dllimport))
-        #elif _MSC_VER
-            #define JAMSAT_PUBLIC_API __declspec(dllimport)
-        #else
-            #warning "Unknown compiler. Not adding visibility information to exported symbols."
-        #endif
-    #endif
+#ifdef BUILDING_JAMSAT_SOLIB
+#ifdef __GNUC__
+#define JAMSAT_PUBLIC_API __attribute__((dllexport))
+#elif _MSC_VER
+#define JAMSAT_PUBLIC_API __declspec(dllexport)
 #else
-    #ifdef __GNUC__
-        #define JAMSAT_PUBLIC_API __attribute__((visibility ("default")))
-    #else
-        #warning "Unknown compiler. Not adding visibility information to exported symbols."
-    #endif
+#warning "Unknown compiler. Not adding visibility information to exported symbols."
+#endif
+#else
+#ifdef __GNUC__
+#define JAMSAT_PUBLIC_API __attribute__((dllimport))
+#elif _MSC_VER
+#define JAMSAT_PUBLIC_API __declspec(dllimport)
+#else
+#warning "Unknown compiler. Not adding visibility information to exported symbols."
+#endif
+#endif
+#else
+#ifdef __GNUC__
+#define JAMSAT_PUBLIC_API __attribute__((visibility("default")))
+#else
+#warning "Unknown compiler. Not adding visibility information to exported symbols."
+#endif
 #endif
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-const char * JAMSAT_PUBLIC_API ipasir_signature ();
-void * JAMSAT_PUBLIC_API ipasir_init ();
-void JAMSAT_PUBLIC_API ipasir_release (void * solver);
-void JAMSAT_PUBLIC_API ipasir_add (void * solver, int lit_or_zero);
-void JAMSAT_PUBLIC_API ipasir_assume (void * solver, int lit);
-int JAMSAT_PUBLIC_API ipasir_solve (void * solver);
-int JAMSAT_PUBLIC_API ipasir_val (void * solver, int lit);
-int JAMSAT_PUBLIC_API ipasir_failed (void * solver, int lit);
-void JAMSAT_PUBLIC_API ipasir_set_terminate (void * solver, void * state, int (*terminate)(void * state));
-void JAMSAT_PUBLIC_API ipasir_set_learn (void * solver, void * state, int max_length, void (*learn)(void * state, int * clause));
+const char *JAMSAT_PUBLIC_API ipasir_signature();
+void *JAMSAT_PUBLIC_API ipasir_init();
+void JAMSAT_PUBLIC_API ipasir_release(void *solver);
+void JAMSAT_PUBLIC_API ipasir_add(void *solver, int lit_or_zero);
+void JAMSAT_PUBLIC_API ipasir_assume(void *solver, int lit);
+int JAMSAT_PUBLIC_API ipasir_solve(void *solver);
+int JAMSAT_PUBLIC_API ipasir_val(void *solver, int lit);
+int JAMSAT_PUBLIC_API ipasir_failed(void *solver, int lit);
+void JAMSAT_PUBLIC_API ipasir_set_terminate(void *solver, void *state,
+                                            int (*terminate)(void *state));
+void JAMSAT_PUBLIC_API ipasir_set_learn(void *solver, void *state, int max_length,
+                                        void (*learn)(void *state, int *clause));
 
 #if defined(__cplusplus)
 }

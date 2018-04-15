@@ -25,13 +25,13 @@
 */
 
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
-#include <libjamsat/solver/CDCLSatSolver.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
+#include <libjamsat/solver/CDCLSatSolver.h>
 #include <libjamsat/utils/Assert.h>
 
-#include <vector>
-#include <memory>
 #include <cmath>
+#include <memory>
+#include <vector>
 
 namespace jamsat {
 namespace {
@@ -54,16 +54,13 @@ public:
     void add(int lit_or_zero) {
         if (lit_or_zero != 0) {
             m_clauseAddBuffer.push_back(ipasirLitToCNFLit(lit_or_zero));
-        }
-        else {
+        } else {
             m_solver->addClause(m_clauseAddBuffer);
             m_clauseAddBuffer.clear();
         }
     }
 
-    void assume(int lit) {
-        m_assumptionBuffer.push_back(ipasirLitToCNFLit(lit));
-    }
+    void assume(int lit) { m_assumptionBuffer.push_back(ipasirLitToCNFLit(lit)); }
 
     int solve() {
         auto result = m_solver->solve(m_assumptionBuffer);
@@ -90,13 +87,13 @@ public:
         return 0;
     }
 
-    void setTerminate(void * state, int (*terminate)(void * state)) {
+    void setTerminate(void *state, int (*terminate)(void *state)) {
         JAM_ASSERT(false, "IPASIR set_terminate() is not implemented yet");
         (void)state;
         (void)terminate;
     }
 
-    void setLearn(void * state, int max_length, void (*learn)(void * state, int * clause)) {
+    void setLearn(void *state, int max_length, void (*learn)(void *state, int *clause)) {
         JAM_ASSERT(false, "IPASIR set_learn() is not implemented yet");
         (void)state;
         (void)learn;
@@ -108,48 +105,48 @@ private:
     CNFClause m_clauseAddBuffer;
     std::vector<CNFLit> m_assumptionBuffer;
 };
-
 }
 }
 
 extern "C" {
-const char * ipasir_signature () {
+const char *ipasir_signature() {
     return nullptr;
 }
 
-void * ipasir_init () {
-    return reinterpret_cast<void*>(new jamsat::IPASIRContext{});
+void *ipasir_init() {
+    return reinterpret_cast<void *>(new jamsat::IPASIRContext{});
 }
 
-void ipasir_release (void * solver) {
-    delete(reinterpret_cast<jamsat::IPASIRContext*>(solver));
+void ipasir_release(void *solver) {
+    delete (reinterpret_cast<jamsat::IPASIRContext *>(solver));
 }
 
-void ipasir_add (void * solver, int lit_or_zero) {
-    reinterpret_cast<jamsat::IPASIRContext*>(solver)->add(lit_or_zero);
+void ipasir_add(void *solver, int lit_or_zero) {
+    reinterpret_cast<jamsat::IPASIRContext *>(solver)->add(lit_or_zero);
 }
 
-void ipasir_assume (void * solver, int lit) {
-    reinterpret_cast<jamsat::IPASIRContext*>(solver)->assume(lit);
+void ipasir_assume(void *solver, int lit) {
+    reinterpret_cast<jamsat::IPASIRContext *>(solver)->assume(lit);
 }
 
-int ipasir_solve (void * solver) {
-    return reinterpret_cast<jamsat::IPASIRContext*>(solver)->solve();
+int ipasir_solve(void *solver) {
+    return reinterpret_cast<jamsat::IPASIRContext *>(solver)->solve();
 }
 
-int ipasir_val (void * solver, int lit) {
-    return reinterpret_cast<jamsat::IPASIRContext*>(solver)->val(lit);
+int ipasir_val(void *solver, int lit) {
+    return reinterpret_cast<jamsat::IPASIRContext *>(solver)->val(lit);
 }
 
-int ipasir_failed (void * solver, int lit) {
-    return reinterpret_cast<jamsat::IPASIRContext*>(solver)->failed(lit);
+int ipasir_failed(void *solver, int lit) {
+    return reinterpret_cast<jamsat::IPASIRContext *>(solver)->failed(lit);
 }
 
-void ipasir_set_terminate (void * solver, void * state, int (*terminate)(void * state)) {
-    reinterpret_cast<jamsat::IPASIRContext*>(solver)->setTerminate(state, terminate);
+void ipasir_set_terminate(void *solver, void *state, int (*terminate)(void *state)) {
+    reinterpret_cast<jamsat::IPASIRContext *>(solver)->setTerminate(state, terminate);
 }
 
-void ipasir_set_learn (void * solver, void * state, int max_length, void (*learn)(void * state, int * clause)) {
-    reinterpret_cast<jamsat::IPASIRContext*>(solver)->setLearn(state, max_length, learn);
+void ipasir_set_learn(void *solver, void *state, int max_length,
+                      void (*learn)(void *state, int *clause)) {
+    reinterpret_cast<jamsat::IPASIRContext *>(solver)->setLearn(state, max_length, learn);
 }
 }
