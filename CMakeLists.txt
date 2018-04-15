@@ -16,6 +16,7 @@ option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
 
 option(JAMSAT_DISABLE_BOOST_LINKING_SETUP "Don't override linker settings for Boost" OFF)
 option(JAMSAT_LINK_VERBOSE "Print information about linked dependencies" OFF)
+option(JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB "Enables symbol hiding for the static JamSAT library" OFF)
 
 ### Load CMake code
 
@@ -80,7 +81,12 @@ if (JAMSAT_ENABLE_LOGGING AND NOT Boost_USE_STATIC_LIBS)
 endif()
 
 if(COMPILING_WITH_GNULIKE)
-  add_general_compile_options(-Wall -Wextra -pedantic-errors -fvisibility=hidden)
+  add_general_compile_options(-Wall -Wextra -pedantic-errors)
+  if(JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB)
+    add_general_compile_options(-fvisibility=hidden)
+  else()
+    add_dso_compile_options(-fvisibility=hidden)
+  endif()
 
   if(JAMSAT_DISABLE_OPTIMIZATIONS)
     add_general_compile_options(-fno-inline -O0)
