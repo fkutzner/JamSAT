@@ -46,12 +46,21 @@ public:
     using SolverType = CDCLSatSolver<>;
 
     IPASIRContext() {
-        typename SolverType::Configuration config;
-        config.clauseMemoryLimit = 10485760;
-        m_solver = std::make_unique<SolverType>(config);
+        // TODO: add a configuration function for this
+        // TODO: remove the bound in the default case?
+        m_config.clauseMemoryLimit = 1024ull * 1024ull * 8192ull;
+        m_solver.reset(nullptr);
+    }
+
+    // TODO: Add a reconfigure method to the solver
+    void ensureSolverExists() {
+        if (!m_solver) {
+            m_solver = std::make_unique<SolverType>(m_config);
+        }
     }
 
     void add(int lit_or_zero) {
+        ensureSolverExists();
         if (lit_or_zero != 0) {
             m_clauseAddBuffer.push_back(ipasirLitToCNFLit(lit_or_zero));
         } else {
@@ -60,9 +69,13 @@ public:
         }
     }
 
-    void assume(int lit) { m_assumptionBuffer.push_back(ipasirLitToCNFLit(lit)); }
+    void assume(int lit) {
+        ensureSolverExists();
+        m_assumptionBuffer.push_back(ipasirLitToCNFLit(lit));
+    }
 
     int solve() {
+        ensureSolverExists();
         auto result = m_solver->solve(m_assumptionBuffer);
         m_assumptionBuffer.clear();
 
@@ -101,6 +114,7 @@ public:
     }
 
 private:
+    typename SolverType::Configuration m_config;
     std::unique_ptr<CDCLSatSolver<>> m_solver;
     CNFClause m_clauseAddBuffer;
     std::vector<CNFLit> m_assumptionBuffer;

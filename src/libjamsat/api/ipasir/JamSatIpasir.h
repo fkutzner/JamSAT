@@ -84,9 +84,9 @@ extern JAMSAT_PUBLIC_API int ipasir_solve(void *solver);
 extern JAMSAT_PUBLIC_API int ipasir_val(void *solver, int lit);
 extern JAMSAT_PUBLIC_API int ipasir_failed(void *solver, int lit);
 extern JAMSAT_PUBLIC_API void ipasir_set_terminate(void *solver, void *state,
-                                            int (*terminate)(void *state));
-JAMSAT_PUBLIC_API void ipasir_set_learn(void *solver, void *state, int max_length,
-                                        void (*learn)(void *state, int *clause));
+                                                   int (*terminate)(void *state));
+extern JAMSAT_PUBLIC_API void ipasir_set_learn(void *solver, void *state, int max_length,
+                                               void (*learn)(void *state, int *clause));
 
 #if defined(__cplusplus)
 }
