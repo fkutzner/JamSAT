@@ -6,7 +6,7 @@ macro(jamsat_configure_jamcore_library TARGET IS_SHARED)
     set_property(TARGET ${TARGET} PROPERTY FOLDER ${JAMSAT_LIBRARY_FOLDER_NAME})
 
     if(${IS_SHARED})
-        jamsat_configure_solib_target(${TARGET})
+        jamsat_configure_dso_target(${TARGET})
         set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE)
     else()
         jamsat_configure_target(${TARGET})
@@ -22,10 +22,8 @@ function(add_jamsat_core_library TARGET)
   add_library(${TARGET} OBJECT ${ARGN})
   jamsat_configure_jamcore_library(${TARGET} FALSE)
 
-  if(JAMSAT_BUILD_SOLIBS_SEPARATELY)
-    add_library(${TARGET}-so OBJECT ${ARGN})
-    jamsat_configure_jamcore_library(${TARGET}-so TRUE)
-  endif()
+  add_library(${TARGET}-dso OBJECT ${ARGN})
+  jamsat_configure_jamcore_library(${TARGET}-dso TRUE)
 endfunction()
 
 add_subdirectory(cnfproblem)
@@ -46,26 +44,23 @@ set(jamcore-objects
   $<TARGET_OBJECTS:jamsatApiIPASIR>
 )
 
-if(JAMSAT_BUILD_SOLIBS_SEPARATELY)
-  set(jamcore-shared-objects
-    $<TARGET_OBJECTS:jamsatCnfProblem-so>
-    $<TARGET_OBJECTS:jamsatUtils-so>
-    $<TARGET_OBJECTS:jamsatClauseDB-so>
-    $<TARGET_OBJECTS:jamsatSolver-so>
-    $<TARGET_OBJECTS:jamsatBranching-so>
-    $<TARGET_OBJECTS:jamsatProof-so>
-    $<TARGET_OBJECTS:jamsatApiIPASIR-so>
-  )
-else()
-  set(jamcore-shared-objects ${jamcore-objects})
-endif()
+set(jamcore-dso-objects
+  $<TARGET_OBJECTS:jamsatCnfProblem-dso>
+  $<TARGET_OBJECTS:jamsatUtils-dso>
+  $<TARGET_OBJECTS:jamsatClauseDB-dso>
+  $<TARGET_OBJECTS:jamsatSolver-dso>
+  $<TARGET_OBJECTS:jamsatBranching-dso>
+  $<TARGET_OBJECTS:jamsatProof-dso>
+  $<TARGET_OBJECTS:jamsatApiIPASIR-dso>
+)
+
 
 add_library(jamcore STATIC ${jamcore-objects})
 jamsat_configure_jamcore_library(jamcore FALSE)
 target_link_libraries(jamcore ${JAMSAT_LIB_DEPS})
 set_property(TARGET jamcore PROPERTY OUTPUT_NAME "jamsats")
 
-add_library(jamcore-shared SHARED ${jamcore-shared-objects})
-jamsat_configure_jamcore_library(jamcore-shared TRUE)
-target_link_libraries(jamcore-shared ${JAMSAT_LIB_DEPS})
-set_property(TARGET jamcore-shared PROPERTY OUTPUT_NAME "jamsatd")
+add_library(jamcore-dso SHARED ${jamcore-dso-objects})
+jamsat_configure_jamcore_library(jamcore-dso TRUE)
+target_link_libraries(jamcore-dso ${JAMSAT_LIB_DEPS})
+set_property(TARGET jamcore-dso PROPERTY OUTPUT_NAME "jamsatd")
