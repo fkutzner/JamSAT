@@ -57,6 +57,16 @@ TEST(SolverIntegration, CDCLSatSolver_problemConsistingOfUnitClauseIsSatisfiable
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::TRUE);
 }
 
+TEST(SolverIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsatisfiable) {
+    CDCLSatSolver<>::Configuration testConfig;
+    testConfig.clauseMemoryLimit = 1048576ULL;
+
+    CDCLSatSolver<> underTest{testConfig};
+    underTest.addClause({CNFLit{CNFVar{1}, CNFSign::POSITIVE}});
+    underTest.addClause({CNFLit{CNFVar{1}, CNFSign::NEGATIVE}});
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::FALSE);
+}
+
 TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
     Rule110PredecessorStateProblem problem{"1xxx0", "0xx10", 5};
     auto cnfProblem = problem.getCNFEncoding();

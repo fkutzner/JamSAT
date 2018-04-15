@@ -445,7 +445,7 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
         return createSolvingResult(TBool::FALSE);
     }
 
-    if (m_problemClauses.empty()) {
+    if (m_problemClauses.empty() && m_unitClauses.empty()) {
         return createSolvingResult(TBool::TRUE);
     }
 
