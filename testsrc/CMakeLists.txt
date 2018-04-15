@@ -71,6 +71,7 @@ function(add_fuzzing_target TARGET_NAME TARGET_FILE SEED_DIRECTORY)
   endif()
 
   add_executable(${TARGET_NAME} $<TARGET_OBJECTS:${JAMSAT_FUZZ_ADAPTER_LIBRARY}> ${TARGET_FILE})
+  jamsat_configure_target(${TARGET_NAME})
   target_link_libraries(${TARGET_NAME} jamcore)
   target_include_directories(${TARGET_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/testsrc)
   add_fuzzing_execution_target(${TARGET_NAME} ${SEED_DIRECTORY})

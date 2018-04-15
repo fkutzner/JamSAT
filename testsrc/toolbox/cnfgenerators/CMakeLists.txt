@@ -6,6 +6,7 @@ add_library(cnfgenerators OBJECT
   Rule110.h
   Rule110.cpp
 )
+jamsat_configure_target(cnfgenerators)
 
 target_include_directories(cnfgenerators PRIVATE ${PROJECT_SOURCE_DIR}/testsrc
                                                  ${PROJECT_SOURCE_DIR}/src)

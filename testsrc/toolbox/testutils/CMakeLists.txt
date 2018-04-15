@@ -5,6 +5,7 @@ add_library(jamsatTestUtils STATIC
   Minisat.cpp
   Minisat.h
 )
+jamsat_configure_target(jamsatTestUtils)
 
 target_include_directories(jamsatTestUtils PUBLIC ${PROJECT_SOURCE_DIR}/testsrc)
 

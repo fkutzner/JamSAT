@@ -6,6 +6,7 @@ set(JAMSAT_LIBRARY_UNITTEST_FOLDER_NAME "JamSAT Library/Unit Tests")
 # of the given source files.
 function(add_jamsat_core_unittest_library TARGET)
   add_library(${TARGET} OBJECT ${ARGN})
+  jamsat_configure_target(${TARGET})
   set_property(TARGET ${TARGET} PROPERTY FOLDER ${JAMSAT_LIBRARY_UNITTEST_FOLDER_NAME})
 
   get_property(jamcore_include_dirs TARGET jamcore PROPERTY INCLUDE_DIRECTORIES)
@@ -31,6 +32,7 @@ add_executable(libjamsat_unit_testsuite
   $<TARGET_OBJECTS:utils_unit_tests>
   $<TARGET_OBJECTS:proof_unit_tests>
 )
+jamsat_configure_target(libjamsat_unit_testsuite)
 
 target_link_libraries(libjamsat_unit_testsuite jamcore jamsatTestUtils gtest gtest_main)
 set_property(TARGET libjamsat_unit_testsuite PROPERTY FOLDER ${JAMSAT_LIBRARY_UNITTEST_FOLDER_NAME})

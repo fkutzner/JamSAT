@@ -6,6 +6,7 @@ set(JAMSAT_LIBRARY_INTEGRATIONTEST_FOLDER_NAME "JamSAT Library/Integration Tests
 # of the given source files.
 function(add_jamsat_core_integrationtest_library TARGET)
   add_library(${TARGET} OBJECT ${ARGN})
+  jamsat_configure_target(${TARGET})
   set_property(TARGET ${TARGET} PROPERTY FOLDER ${JAMSAT_LIBRARY_INTEGRATIONTEST_FOLDER_NAME})
 
   get_property(jamcore_include_dirs TARGET jamcore PROPERTY INCLUDE_DIRECTORIES)
@@ -25,6 +26,7 @@ add_executable(libjamsat_integration_testsuite
   # From toolbox/cnfgenerators:
   $<TARGET_OBJECTS:cnfgenerators>
 )
+jamsat_configure_target(libjamsat_integration_testsuite)
 
 target_link_libraries(libjamsat_integration_testsuite jamcore jamsatTestUtils gtest gtest_main)
 set_property(TARGET libjamsat_integration_testsuite
