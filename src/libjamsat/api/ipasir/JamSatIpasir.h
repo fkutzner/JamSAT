@@ -42,31 +42,34 @@
 #ifndef JAMSAT_IPASIR_H_INCLUDED
 #define JAMSAT_IPASIR_H_INCLUDED
 
-#if defined _WIN32 || defined __CYGWIN__
-#ifdef BUILDING_JAMSAT_SOLIB
-#ifdef __GNUC__
-#define JAMSAT_PUBLIC_API __attribute__((dllexport))
-#elif _MSC_VER
-#define JAMSAT_PUBLIC_API __declspec(dllexport)
+/* clang-format off */
+#if defined(JAMSAT_SHARED_LIB)
+    #if defined(_WIN32) || defined(__CYGWIN__)
+        #if defined(BUILDING_JAMSAT_SHARED_LIB)
+            #if defined(__GNUC__)
+                #define JAMSAT_PUBLIC_API __attribute__((dllexport))
+            #elif defined(_MSC_VER)
+                #define JAMSAT_PUBLIC_API __declspec(dllexport)
+            #endif
+        #else
+            #if defined(__GNUC__)
+                #define JAMSAT_PUBLIC_API __attribute__((dllimport))
+            #elif defined(_MSC_VER)
+                #define JAMSAT_PUBLIC_API __declspec(dllimport)
+            #endif
+        #endif
+    #elif defined(__GNUC__)
+        #define JAMSAT_PUBLIC_API __attribute__((visibility("default")))
+    #endif
+
+    #if !defined(JAMSAT_PUBLIC_API)
+        #warning "Unknown compiler. Not adding visibility information to exported symbols."
+    #endif
 #else
-#warning "Unknown compiler. Not adding visibility information to exported symbols."
+    #define JAMSAT_PUBLIC_API
 #endif
-#else
-#ifdef __GNUC__
-#define JAMSAT_PUBLIC_API __attribute__((dllimport))
-#elif _MSC_VER
-#define JAMSAT_PUBLIC_API __declspec(dllimport)
-#else
-#warning "Unknown compiler. Not adding visibility information to exported symbols."
-#endif
-#endif
-#else
-#ifdef __GNUC__
-#define JAMSAT_PUBLIC_API __attribute__((visibility("default")))
-#else
-#warning "Unknown compiler. Not adding visibility information to exported symbols."
-#endif
-#endif
+/* clang-format on */
+
 
 #if defined(__cplusplus)
 extern "C" {
