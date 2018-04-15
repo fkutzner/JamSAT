@@ -26,7 +26,7 @@ macro(jamsat_configure_solib_target TARGET)
 
   if(PLATFORM_REQUIRES_EXTRA_PIC_FOR_SOLIBS)
     if(COMPILING_WITH_GNULIKE)
-      target_compile_options(${TARGET} -fPIC)
+      target_compile_options(${TARGET} PRIVATE -fPIC)
     else()
       message(WARNING "PIC compiler flags unknown for this compiler. Not adding PIC flags for shared libraries.")
     endif()
