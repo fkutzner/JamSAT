@@ -19,9 +19,9 @@ option(JAMSAT_LINK_VERBOSE "Print information about linked dependencies" OFF)
 
 ### Load CMake code
 
+include(etc/cmake/Platform.cmake) # Defines COMPILING_WITH_* and PLATFORM_SUPPORTS_* variables
 include(etc/cmake/CompilerOptions.cmake)
 include(etc/cmake/Utils.cmake)
-include(etc/cmake/Platform.cmake) # Defines COMPILING_WITH_* and PLATFORM_SUPPORTS_* variables
 
 ### Language options
 set(CMAKE_CXX_STANDARD 14)

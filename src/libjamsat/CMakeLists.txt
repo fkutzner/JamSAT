@@ -66,6 +66,6 @@ target_link_libraries(jamcore ${JAMSAT_LIB_DEPS})
 set_property(TARGET jamcore PROPERTY OUTPUT_NAME "jamsats")
 
 add_library(jamcore-shared SHARED ${jamcore-shared-objects})
-jamsat_configure_jamcore_library(jamcore-shared FALSE)
+jamsat_configure_jamcore_library(jamcore-shared TRUE)
 target_link_libraries(jamcore-shared ${JAMSAT_LIB_DEPS})
 set_property(TARGET jamcore-shared PROPERTY OUTPUT_NAME "jamsatd")
