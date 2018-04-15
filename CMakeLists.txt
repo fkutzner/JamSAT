@@ -138,7 +138,7 @@ add_subdirectory(src)
 
 ### Enable testing
 
-add_subdirectory(lib/googletest)
+add_subdirectory(lib/googletest EXCLUDE_FROM_ALL)
 enable_testing()
 add_subdirectory(testsrc)
 
