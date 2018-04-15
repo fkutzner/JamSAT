@@ -14,6 +14,8 @@ option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
 
+option(JAMSAT_DISABLE_BOOST_LINKING_SETUP "Don't override linker settings for Boost" OFF)
+
 ### Language options
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED 14)
@@ -22,10 +24,21 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ### Find libraries
 
 if (JAMSAT_ENABLE_LOGGING)
-    list(APPEND JAMSAT_REQUIRED_BOOST_LIBRARIES log log_setup)
+  list(APPEND JAMSAT_REQUIRED_BOOST_LIBRARIES log log_setup)
+endif()
 
-    # TODO: support dynamic boost libraries
+if (NOT JAMSAT_DISABLE_BOOST_LINKING_SETUP)
+  if(WIN32 OR CYGWIN)
+    # TODO: Nice Boost DLL lookup
     set(Boost_USE_STATIC_LIBS ON)
+  elseif(UNIX AND NOT CYGWIN)
+    # JamSAT creates both dynamic and static libraries.
+    set(Boost_USE_STATIC_LIBS OFF)
+  else()
+    message(WARNING "This platform has not been taken into account with regard to Boost linking.")
+    message(WARNING "Defaulting to linking the dynamic Boost libraries.")
+    set(Boost_USE_STATIC_LIBS OFF)
+  endif()
 endif()
 
 find_package(Boost
@@ -35,12 +48,11 @@ find_package(Boost
       ${JAMSAT_REQUIRED_BOOST_LIBRARIES}
 )
 
-
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 set(JAMSAT_LIB_DEPS ${Boost_LIBRARIES})
-if(UNIX)
-  # TODO: use single-threaded Boost if possible
+
+if(UNIX AND Boost_USE_MULTITHREADED)
   set(JAMSAT_LIB_DEPS ${JAMSAT_LIB_DEPS} pthread)
 endif()
 
@@ -52,6 +64,11 @@ include_directories(SYSTEM lib/state_ptr/include)
 # Opt out of boost's linker magic, which causes linker errors on Windows.
 # See https://www.boost.org/doc/libs/1_57_0/libs/config/doc/html/index.html
 add_definitions(-DBOOST_ALL_NO_LIB)
+
+# BOOST_ALL_NO_LIB does not disable boost's linker magic entirely :(
+if (JAMSAT_ENABLE_LOGGING AND NOT Boost_USE_STATIC_LIBS)
+    add_definitions(-DBOOST_LOG_DYN_LINK=1)
+endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(COMPILING_WITH_CLANG true)
