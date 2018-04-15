@@ -16,6 +16,11 @@ option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
 
 option(JAMSAT_DISABLE_BOOST_LINKING_SETUP "Don't override linker settings for Boost" OFF)
 
+### Load CMake code
+
+# Defines COMPILING_WITH_* and PLATFORM_SUPPORTS_* variables
+include(etc/cmake/Platform.cmake)
+
 ### Language options
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED 14)
@@ -28,17 +33,7 @@ if (JAMSAT_ENABLE_LOGGING)
 endif()
 
 if (NOT JAMSAT_DISABLE_BOOST_LINKING_SETUP)
-  if(WIN32 OR CYGWIN)
-    # TODO: Nice Boost DLL lookup
-    set(Boost_USE_STATIC_LIBS ON)
-  elseif(UNIX AND NOT CYGWIN)
-    # JamSAT creates both dynamic and static libraries.
-    set(Boost_USE_STATIC_LIBS OFF)
-  else()
-    message(WARNING "This platform has not been taken into account with regard to Boost linking.")
-    message(WARNING "Defaulting to linking the dynamic Boost libraries.")
-    set(Boost_USE_STATIC_LIBS OFF)
-  endif()
+  set(Boost_USE_STATIC_LIBS OFF)
 endif()
 
 find_package(Boost
@@ -59,6 +54,14 @@ endif()
 include_directories(SYSTEM lib/state_ptr/include)
 
 
+### Fix DLL lookup e.g. on Windows
+
+if ((NOT PLATFORM_SUPPORTS_RPATH_LIKE_SO_LOOKUP)
+    AND PLATFORM_SUPPORTS_SO_LOOKUP_IN_PATH)
+  set(JAMSAT_CTEST_PATH_PREFIIX "${Boost_LIBRARY_DIRS}")
+  # TODO: fix separators in ${Boost_LIBRARY_DIRS} add path to ctests
+endif()
+
 ### Compiler arguments
 
 # Opt out of boost's linker magic, which causes linker errors on Windows.
@@ -68,18 +71,6 @@ add_definitions(-DBOOST_ALL_NO_LIB)
 # BOOST_ALL_NO_LIB does not disable boost's linker magic entirely :(
 if (JAMSAT_ENABLE_LOGGING AND NOT Boost_USE_STATIC_LIBS)
     add_definitions(-DBOOST_LOG_DYN_LINK=1)
-endif()
-
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set(COMPILING_WITH_CLANG true)
-  set(COMPILING_WITH_GNULIKE true)
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(COMPILING_WITH_GXX true)
-  set(COMPILING_WITH_GNULIKE true)
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  set(COMPILING_WITH_MSVC true)
-else()
-  message(WARNING "Unknown compiler ${CMAKE_CXX_COMPILER_ID}, compiling with default parameters.")
 endif()
 
 if(COMPILING_WITH_GNULIKE)
