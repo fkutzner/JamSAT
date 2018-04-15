@@ -170,6 +170,9 @@ if(JAMSAT_ENABLE_SANITIZERS OR PLATFORM_REQUIRES_EXTRA_PIC_FOR_SOLIBS)
   set(JAMSAT_BUILD_SOLIBS_SEPARATELY ON)
 endif()
 
+### Compile dependencies added via git submodules
+add_subdirectory(lib)
+
 ### Add JamSAT sources
 
 add_subdirectory(src)
@@ -177,7 +180,6 @@ add_subdirectory(src)
 
 ### Enable testing
 
-add_subdirectory(lib/googletest EXCLUDE_FROM_ALL)
 enable_testing()
 add_subdirectory(testsrc)
 
