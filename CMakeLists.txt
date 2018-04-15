@@ -149,23 +149,25 @@ if(JAMSAT_ENABLE_LOGGING)
   )
 endif()
 
+add_solib_compile_options(-DJAMSAT_SHARED_LIB -DBUILDING_JAMSAT_SHARED_LIB)
+
 # Now: compile options for all targets are listed in JAMSAT_COMPILE_OPTIONS
 #      compile options for targets supporting sanitizers are listed in
 #        JAMSAT_SANITIZER_COMPILE_OPTIONS
 
 message_list(STATUS "${JAMSAT_COMPILE_OPTIONS}" "General compiler options:")
 message_list(STATUS "${JAMSAT_SANITIZER_COMPILE_OPTIONS}" "Sanitizing-related compiler options:")
+message_list(STATUS "${JAMSAT_SOLIB_COMPILE_OPTIONS}" "Shared-object/DLL compiler options:")
 
 ### Place artifacts in the artifacts/ subdirectories of the build root
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/bin)
 
-### Determine whether shared libraries need to be built separately
-
-set(JAMSAT_BUILD_SEPARATE_SOLIBS OFF)
+### Determine whether shared libraries need to be built separately from the static code
+set(JAMSAT_BUILD_SOLIBS_SEPARATELY OFF)
 if(JAMSAT_ENABLE_SANITIZERS OR PLATFORM_REQUIRES_EXTRA_PIC_FOR_SOLIBS)
-  set(JAMSAT_BUILD_SEPARATE_SOLIBS ON)
+  set(JAMSAT_BUILD_SOLIBS_SEPARATELY ON)
 endif()
 
 ### Add JamSAT sources

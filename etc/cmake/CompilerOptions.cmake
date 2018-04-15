@@ -2,6 +2,10 @@ macro(add_general_compile_options OPTION)
   list(APPEND JAMSAT_COMPILE_OPTIONS ${OPTION} ${ARGN})
 endmacro()
 
+macro(add_solib_compile_options OPTION)
+  list(APPEND JAMSAT_SOLIB_COMPILE_OPTIONS ${OPTION} ${ARGN})
+endmacro()
+
 macro(add_sanitizer_compile_options OPTION)
   list(APPEND JAMSAT_SANITIZER_COMPILE_OPTIONS ${OPTION} ${ARGN})
 endmacro()
@@ -18,4 +22,5 @@ endmacro()
 
 macro(jamsat_configure_solib_target TARGET)
   target_compile_options(${TARGET} PRIVATE ${JAMSAT_COMPILE_OPTIONS})
+  target_compile_options(${TARGET} PRIVATE ${JAMSAT_SOLIB_COMPILE_OPTIONS})
 endmacro()
