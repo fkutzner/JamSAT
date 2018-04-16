@@ -344,7 +344,7 @@ uintptr_t getEffectiveHeapletSize(uintptr_t proposedSize) {
 
     void *test = nullptr;
     while (test == nullptr && realSize != 0) {
-        void *test = std::malloc(realSize);
+        test = std::malloc(realSize);
         if (test != nullptr) {
             std::free(test);
             return realSize;
