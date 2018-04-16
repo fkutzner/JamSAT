@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -337,22 +338,43 @@ inline bool Heaplet::test_isRegionInHeaplet(const void *ptr, size_type length) c
 #endif
 }
 
+namespace {
+uintptr_t getEffectiveHeapletSize(uintptr_t proposedSize) {
+    uintptr_t realSize = proposedSize;
+
+    void *test = nullptr;
+    while (test == nullptr && realSize != 0) {
+        void *test = std::malloc(realSize);
+        if (test != nullptr) {
+            std::free(test);
+            return realSize;
+        }
+        realSize /= 2;
+        std::cerr << "c Warning: decreasing heaplet size from " << proposedSize << " to "
+                  << realSize << std::endl;
+    }
+
+    JAM_ASSERT(realSize != 0, "Could not allocate any memory for heaplets");
+    return 0;
+}
+}
+
 template <typename ClauseT>
 HeapletClauseDB<ClauseT>::HeapletClauseDB(size_type heapletSize, size_type memoryLimit)
-  : m_heapletSize(heapletSize)
+  : m_heapletSize(getEffectiveHeapletSize(heapletSize))
   , m_memoryLimit(memoryLimit)
   , m_activeHeaplets()
   , m_binaryHeaplets()
   , m_freeHeapletPool() {
 
-    size_type numHeaplets = memoryLimit / heapletSize;
+    size_type numHeaplets = memoryLimit / m_heapletSize;
 
     JAM_ASSERT(numHeaplets >= 2, "Insufficient memoryLimit");
     for (size_type i = 0; i < (numHeaplets - 2); ++i) {
-        m_freeHeapletPool.emplace_back(heapletSize);
+        m_freeHeapletPool.emplace_back(m_heapletSize);
     }
-    m_activeHeaplets.emplace_back(heapletSize);
-    m_binaryHeaplets.emplace_back(heapletSize);
+    m_activeHeaplets.emplace_back(m_heapletSize);
+    m_binaryHeaplets.emplace_back(m_heapletSize);
 
     // needed for exception safety:
     m_activeHeaplets.reserve(numHeaplets);
