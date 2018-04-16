@@ -32,4 +32,5 @@ int main(int argc, char **argv) {
     ipasir_add(solver, 0);
     int result = ipasir_solve(solver);
     ipasir_release(solver);
+    return result;
 }
