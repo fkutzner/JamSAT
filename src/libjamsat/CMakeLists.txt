@@ -2,7 +2,7 @@ set(JAMSAT_LIBRARY_FOLDER_NAME "JamSAT Library")
 
 # Sets include directories, folders, ... for the given jamcore sub-library.
 macro(jamsat_configure_jamcore_library TARGET IS_SHARED)
-    target_include_directories(${TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/src)
+    target_include_directories(${TARGET} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
     set_property(TARGET ${TARGET} PROPERTY FOLDER ${JAMSAT_LIBRARY_FOLDER_NAME})
 
     if(${IS_SHARED})
@@ -64,3 +64,31 @@ add_library(jamcore-dso SHARED ${jamcore-dso-objects})
 jamsat_configure_jamcore_library(jamcore-dso TRUE)
 target_link_libraries(jamcore-dso ${JAMSAT_LIB_DEPS})
 set_property(TARGET jamcore-dso PROPERTY OUTPUT_NAME "jamsatd")
+
+
+
+### Installation
+
+# Automatically add the directory containing the jamsat header directory
+# to clients linking against jamcore or jamcore-dso
+target_include_directories(jamcore INTERFACE $<INSTALL_INTERFACE:include>)
+target_include_directories(jamcore-dso INTERFACE $<INSTALL_INTERFACE:include>)
+
+# JamSAT DSO clients should automatically define JAMSAT_SHARED_LIB to make
+# __declspec(dllimport) work properly
+target_compile_definitions(jamcore-dso INTERFACE -DJAMSAT_SHARED_LIB)
+
+# Install API headers
+install(FILES api/ipasir/JamSatIpasir.h DESTINATION include/jamsat)
+
+# Install JamSAT libraries
+install(
+  TARGETS jamcore-dso jamcore
+  EXPORT JamSAT
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+
+# Generate and install CMake scripts for find_package
+install(EXPORT JamSAT DESTINATION lib/cmake/JamSAT FILE JamSATConfig.cmake)
