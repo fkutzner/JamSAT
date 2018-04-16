@@ -30,6 +30,7 @@
 #include <libjamsat/utils/Assert.h>
 
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -48,7 +49,12 @@ public:
     IPASIRContext() {
         // TODO: add a configuration function for this
         // TODO: remove the bound in the default case?
-        m_config.clauseMemoryLimit = 1024ull * 1024ull * 8192ull;
+        uint64_t defaultMemLimit = 1024ull * 1024ull * 8192ull;
+        if (defaultMemLimit > std::numeric_limits<uintptr_t>::max()) {
+            defaultMemLimit = std::numeric_limits<uintptr_t>::max();
+        }
+
+        m_config.clauseMemoryLimit = defaultMemLimit;
         m_solver.reset(nullptr);
     }
 
