@@ -46,6 +46,7 @@
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/LiteralBlockDistance.h>
 #include <libjamsat/solver/Propagation.h>
+#include <libjamsat/solver/RestartPolicies.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/RangeUtils.h>
 #include <libjamsat/utils/StampMap.h>
@@ -68,6 +69,7 @@ struct CDCLSatSolverDefaultTypes {
     using ConflictAnalyzer = FirstUIPLearning<CDCLSatSolverDefaultTypes::Trail, Propagation,
                                               CDCLSatSolverDefaultTypes::Clause>;
     using BranchingHeuristic = VSIDSBranchingHeuristic<CDCLSatSolverDefaultTypes::Trail>;
+    using RestartPolicy = GlucoseRestartPolicy;
 };
 
 /**
@@ -187,6 +189,7 @@ private:
     typename ST::BranchingHeuristic m_branchingHeuristic;
     typename ST::ConflictAnalyzer m_conflictAnalyzer;
     typename ST::ClauseDB m_clauseDB;
+    typename ST::RestartPolicy m_restartPolicy;
 
     std::atomic<bool> m_stopRequested;
     std::atomic<bool> m_isSolving;
@@ -212,6 +215,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_branchingHeuristic(CNFVar{0}, m_trail)
   , m_conflictAnalyzer(CNFVar{0}, m_trail, m_propagation)
   , m_clauseDB(config.clauseMemoryLimit / 128, config.clauseMemoryLimit)
+  , m_restartPolicy(typename ST::RestartPolicy::Options{})
   , m_stopRequested(false)
   , m_isSolving(false)
   , m_maxVar(0)
@@ -338,6 +342,8 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
                 return TBool::INDETERMINATE;
             }
 
+            LBD learntClauseLBD = (*learntClause).template getLBD<LBD>();
+            m_restartPolicy.registerConflict({learntClauseLBD});
             backtrackToLevel(conflictHandlingResult.backtrackLevel);
 
             conflictingClause = m_propagation.registerClause(*learntClause);
@@ -353,6 +359,12 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             }
 
             conflictsUntilMaintenance = 5000;
+        }
+
+        if (m_restartPolicy.shouldRestart()) {
+            JAM_LOG_SOLVER(info, "Performing restart");
+            m_restartPolicy.registerRestart();
+            return TBool::INDETERMINATE;
         }
     }
 
