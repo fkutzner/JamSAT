@@ -395,6 +395,8 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     } else if (learnt.size() > 1) {
         auto &learntClause = m_clauseDB.allocate(learnt.size());
         std::copy(learnt.begin(), learnt.end(), learntClause.begin());
+        learntClause.setLBD(getLBD(learntClause, m_trail, m_stamps));
+
         *learntOut = &learntClause;
 
         if (learnt.size() == 2) {
