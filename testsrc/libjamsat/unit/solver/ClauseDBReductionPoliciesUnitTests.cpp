@@ -136,15 +136,15 @@ void test_GlucoseClauseDBReductionPolicy_markedForDeletion(
 
     GlucoseClauseDBReductionPolicy<Clause, std::vector<Clause *>, int> underTest{10, learntClauses};
     ASSERT_TRUE(underTest.shouldReduceDB());
-    auto toDelete = underTest.getClausesMarkedForDeletion(knownGoods);
+    auto toDeleteBegin = underTest.getClausesMarkedForDeletion(knownGoods);
 
     for (auto idx : expectedDeletedIndices) {
         Clause *expected = originalLearntClauses[idx];
-        ASSERT_TRUE(std::find(toDelete.begin(), toDelete.end(), expected) != learntClauses.end())
+        ASSERT_TRUE(std::find(toDeleteBegin, learntClauses.end(), expected) != learntClauses.end())
             << "Clause at index " << idx << " has not been marked for deletion.";
     }
 
-    ASSERT_TRUE(std::distance(toDelete.begin(), toDelete.end()) ==
+    ASSERT_TRUE(std::distance(toDeleteBegin, learntClauses.end()) ==
                 static_cast<int>(expectedDeletedIndices.size()))
         << "More clauses marked for deletion than expected";
 }

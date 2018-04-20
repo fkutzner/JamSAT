@@ -29,8 +29,6 @@
 #include <algorithm>
 #include <cstdint>
 
-#include <boost/range.hpp>
-
 #include <libjamsat/utils/Assert.h>
 
 #if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_REDUCE_LOGGING)
@@ -83,8 +81,8 @@ public:
     bool shouldReduceDB() const noexcept;
 
     /**
-     * \brief Returns a range of clauses in \p learntClauses which should be purged from the
-     *        clause database.
+     * \brief Moves clauses to be deleted in \p learntClauses to the end of \p learntClauses
+     *        and returns an iterator pointing past the last clause not to be deleted.
      *
      * The elements in \p learntClauses are rearranged by this method.
      *
@@ -95,10 +93,9 @@ public:
      * \param knownGoodClauses  The amount of "known good" learnt clauses which will never be
      *                          removed from the clause database and are not included in
      *                          \p learntClauses.
-     * \returns The range of range of clauses in \p learntClauses which should be purged from
-     *          the clause database.
+     * \returns An iterator pointing past the last clause not to be deleted.
      */
-    boost::iterator_range<typename LearntClauseSeq::iterator>
+    typename LearntClauseSeq::iterator
     getClausesMarkedForDeletion(typename LearntClauseSeq::size_type knownGoodClauses) noexcept;
 
 private:
@@ -133,11 +130,10 @@ bool GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::shouldRe
 }
 
 template <class ClauseT, class LearntClauseSeq, typename LBDType>
-boost::iterator_range<typename LearntClauseSeq::iterator>
+typename LearntClauseSeq::iterator
 GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::getClausesMarkedForDeletion(
     typename LearntClauseSeq::size_type knownGoodClauses) noexcept {
 
-    using LearntClauseItRange = boost::iterator_range<typename LearntClauseSeq::iterator>;
     using LearntClauseIdx = typename LearntClauseSeq::size_type;
 
     JAM_ASSERT(shouldReduceDB(), "Clause DB reduction not allowed at this point");
@@ -149,7 +145,7 @@ GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::getClausesMar
     LearntClauseIdx midIndex = (knownGoodClauses + m_learntClauses.size()) / 2;
     if (midIndex >= m_learntClauses.size()) {
         JAM_LOG_REDUCE(info, "Selecting no clauses for reduction: too few learnt clauses");
-        return LearntClauseItRange{m_learntClauses.end(), m_learntClauses.end()};
+        return m_learntClauses.end();
     }
 
     std::sort(m_learntClauses.begin(), m_learntClauses.end(), [](ClauseT *lhs, ClauseT *rhs) {
@@ -158,11 +154,11 @@ GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::getClausesMar
 
     if (m_learntClauses[midIndex]->template getLBD<LBDType>() <= static_cast<LBDType>(3)) {
         JAM_LOG_REDUCE(info, "Selecting no clauses for reduction: LBD values are too low");
-        return LearntClauseItRange{m_learntClauses.end(), m_learntClauses.end()};
+        return m_learntClauses.end();
     }
 
     JAM_LOG_REDUCE(info,
                    "Selecting " << (m_learntClauses.size() - midIndex) << " clauses for reduction");
-    return LearntClauseItRange{m_learntClauses.begin() + midIndex, m_learntClauses.end()};
+    return m_learntClauses.begin() + midIndex;
 }
 }
