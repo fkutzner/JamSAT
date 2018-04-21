@@ -440,10 +440,16 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
             m_learntClauses.push_back(&learntClause);
         }
 
+        auto litWithMaxDecisionLevel = learntClause.begin() + 1;
         for (auto lit = learntClause.begin() + 1; lit != learntClause.end(); ++lit) {
-            backtrackLevel =
+            auto currentBacktrackLevel =
                 std::max(backtrackLevel, m_trail.getAssignmentDecisionLevel(lit->getVariable()));
+            if (currentBacktrackLevel > backtrackLevel) {
+                litWithMaxDecisionLevel = lit;
+                backtrackLevel = currentBacktrackLevel;
+            }
         }
+        std::swap(*litWithMaxDecisionLevel, learntClause[1]);
     }
 
     return ConflictHandlingResult{learnt.size() == 1, backtrackLevel};
