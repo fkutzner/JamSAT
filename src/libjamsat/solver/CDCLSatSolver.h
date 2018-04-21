@@ -440,6 +440,19 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
             m_learntClauses.push_back(&learntClause);
         }
 
+        // Place a non-asserting literal with the highest decision level second in
+        // the clause to make sure that any new assignments get propagated correctly,
+        // as the first two literals will be watched initially.
+        // This way, the two watched literals are guaranteed to lose their assignments
+        // when the solver backtracks from the current decision level.
+        // Otherwise, the following might happen: suppose that the third literal L3 of
+        // a learnt 3-literal clause is on decision level D3, and the second literal L2
+        // is on level D2, with D3 > D2. The first literal has been forced to TRUE on
+        // level D3+1.
+        // When backtracking to D2, the assignment of L2 remains, so the second
+        // watcher watches an already-assigned literal. If ~L3 is propagated again
+        // now, the propagation system would fail to notice that the clause forces an
+        // assignment.
         auto litWithMaxDecisionLevel = learntClause.begin() + 1;
         for (auto lit = learntClause.begin() + 1; lit != learntClause.end(); ++lit) {
             auto currentBacktrackLevel =
