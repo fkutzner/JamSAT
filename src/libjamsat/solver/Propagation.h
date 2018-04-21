@@ -31,6 +31,7 @@
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/solver/Watcher.h>
+#include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/Printers.h>
 #include <libjamsat/utils/Truth.h>
@@ -269,6 +270,12 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &claus
     // By method contract, if secondLiteralAssignment != INDETERMINATE, we need
     // to propagate the first literal.
     if (secondLiteralAssignment != TBool::INDETERMINATE) {
+        JAM_EXPENSIVE_ASSERT(
+            std::all_of(
+                clause.begin() + 1, clause.end(),
+                [this](CNFLit l) { return m_assignmentProvider.getAssignment(l) == TBool::FALSE; }),
+            "Added a clause requiring first-literal propagation which does not actually "
+            "force the first literal");
         JAM_LOG_PROPAGATION(info, "Propagating first literal of registered clause.");
         m_assignmentProvider.addAssignment(clause[0]);
         auto confl = propagateUntilFixpoint(clause[0]);
@@ -531,7 +538,7 @@ bool Propagation<AssignmentProvider, ClauseT>::isAssignmentReason(
 template <class AssignmentProvider, class ClauseT>
 void Propagation<AssignmentProvider, ClauseT>::updateAssignmentReason(
     const ClauseT &oldClause, const ClauseT &newClause) noexcept {
-    JAM_ASSERT(oldClause == newClause, "Arguments oldClause and newClause must be equal");
+    JAM_EXPENSIVE_ASSERT(oldClause == newClause, "Arguments oldClause and newClause must be equal");
     for (auto var : {oldClause[0].getVariable(), oldClause[1].getVariable()}) {
         if (m_reasons[var] == &oldClause) {
             m_reasons[var] = &newClause;
