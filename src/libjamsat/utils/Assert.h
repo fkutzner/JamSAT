@@ -34,6 +34,12 @@
 
 #define JAM_ASSERT(x, message) assert((x) && message)
 
+#if defined(JAM_ENABLE_EXPENSIVE_ASSERTIONS)
+#define JAM_EXPENSIVE_ASSERT(x, message) JAM_ASSERT(x, message)
+#else
+#define JAM_EXPENSIVE_ASSERT(x, message)
+#endif
+
 #if !defined(NDEBUG)
 #define JAM_ASSERT_ENABLED
 #endif

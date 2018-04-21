@@ -13,6 +13,7 @@ option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
 option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
+option(JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS "Enable more thorough, but expensive assertions" OFF)
 
 option(JAMSAT_DISABLE_BOOST_LINKING_SETUP "Don't override linker settings for Boost" OFF)
 option(JAMSAT_LINK_VERBOSE "Print information about linked dependencies" OFF)
@@ -153,6 +154,10 @@ if(JAMSAT_ENABLE_LOGGING)
     -DJAM_ENABLE_SOLVER_LOGGING
     -DJAM_ENABLE_MINIMIZER_LOGGING
   )
+endif()
+
+if(JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS)
+    add_general_compile_options(-DJAM_ENABLE_EXPENSIVE_ASSERTIONS)
 endif()
 
 add_dso_compile_options(-DJAMSAT_SHARED_LIB -DBUILDING_JAMSAT_SHARED_LIB)
