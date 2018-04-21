@@ -30,7 +30,8 @@
 #include <algorithm>
 
 namespace jamsat {
-Clause::Clause(size_type size) noexcept : m_size(size), m_anchor(CNFLit::getUndefinedLiteral()) {}
+Clause::Clause(size_type size) noexcept
+  : m_size(size), m_lbd(0), m_anchor(CNFLit::getUndefinedLiteral()) {}
 
 CNFLit &Clause::operator[](size_type index) noexcept {
     JAM_ASSERT(index < m_size, "Index out of bounds");

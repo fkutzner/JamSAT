@@ -86,7 +86,7 @@ public:
      * Note: if the \p LBD is larger than the maximum LBD value storable
      * by the clause, that maximum is stored instead.
      *
-     * \param LBD  the clause's new LBD value.
+     * \param LBD  the clause's new LBD value. `LBD >= 1` must hold.
      */
     template <typename LBDType>
     void setLBD(LBDType LBD) noexcept;
@@ -204,7 +204,7 @@ auto Clause::getLBD() const noexcept -> LBDType {
 
 template <typename LBDType>
 void Clause::setLBD(LBDType LBD) noexcept {
-    JAM_ASSERT(LBD >= 0, "LBD out of range");
+    JAM_ASSERT(LBD > 0, "LBD out of range");
     if (LBD <= std::numeric_limits<decltype(m_lbd)>::max()) {
         m_lbd = static_checked_cast<decltype(m_lbd)>(LBD);
     } else {
