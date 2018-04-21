@@ -441,8 +441,11 @@ void HeapletClauseDB<ClauseT>::retain(const ClauseTIterable &clausePointers,
 
         auto size = oldClause->size();
 
-        if (size == 0ull) {
-            // the clause has already been relocated
+        if (size <= 2ull) {
+            // if size == 0, the clause has already been relocated.
+            // size == 1 is precluded: unary clauses are not stored in this clause DB.
+            // Don't deal with clauses of size 2: they are never deleted and never need
+            //   to be relocated, since they are stored in a separate part of memory.
             continue;
         }
 
