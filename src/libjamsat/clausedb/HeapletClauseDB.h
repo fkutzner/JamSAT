@@ -227,7 +227,7 @@ public:
      *                          `ClauseT`.
      */
     template <typename ClauseTIterable, typename ClauseTPtrOutputIter>
-    void retain(const ClauseTIterable &clausePointers, ReasonClausePredicateFunc m_isReasonClause,
+    void retain(ClauseTIterable &clausePointers, ReasonClausePredicateFunc m_isReasonClause,
                 RelocateReasonClauseFunc m_relocateReasonClause,
                 boost::optional<ClauseTPtrOutputIter> relocedReceiver);
 
@@ -420,7 +420,7 @@ ClauseT &HeapletClauseDB<ClauseT>::allocate(typename ClauseT::size_type size) {
 
 template <typename ClauseT>
 template <typename ClauseTIterable, typename ClauseTPtrOutputIter>
-void HeapletClauseDB<ClauseT>::retain(const ClauseTIterable &clausePointers,
+void HeapletClauseDB<ClauseT>::retain(ClauseTIterable &clausePointers,
                                       ReasonClausePredicateFunc isReasonClauseFn,
                                       RelocateReasonClauseFunc relocateReasonClauseFn,
                                       boost::optional<ClauseTPtrOutputIter> relocedReceiver) {
