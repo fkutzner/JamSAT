@@ -42,6 +42,7 @@
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/clausedb/HeapletClauseDB.h>
+#include <libjamsat/solver/ClauseDBReductionPolicies.h>
 #include <libjamsat/solver/ClauseMinimization.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/LiteralBlockDistance.h>
@@ -70,6 +71,8 @@ struct CDCLSatSolverDefaultTypes {
                                               CDCLSatSolverDefaultTypes::Clause>;
     using BranchingHeuristic = VSIDSBranchingHeuristic<CDCLSatSolverDefaultTypes::Trail>;
     using RestartPolicy = GlucoseRestartPolicy;
+    using ClauseDBReductionPolicy =
+        GlucoseClauseDBReductionPolicy<jamsat::Clause, std::vector<jamsat::Clause *>, LBD>;
 };
 
 /**
@@ -183,6 +186,8 @@ private:
     void backtrackToLevel(typename ST::Trail::DecisionLevel level);
     void backtrackAll();
 
+    void reduceClauseDB();
+
 
     typename ST::Trail m_trail;
     typename ST::Propagation m_propagation;
@@ -200,6 +205,9 @@ private:
     typename std::vector<typename ST::Clause *>::size_type m_newProblemClausesBeginIdx;
     std::vector<typename ST::Clause *> m_learntClauses;
     std::unordered_map<CNFLit, std::vector<CNFLit>> m_binaryClauses;
+    uint64_t m_amntBinariesLearnt;
+
+    typename ST::ClauseDBReductionPolicy m_clauseDBReductionPolicy;
 
     StampMap<uint16_t, CNFVarKey, CNFLitKey, typename ST::Trail::DecisionLevelKey> m_stamps;
 
@@ -224,6 +232,8 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_newProblemClausesBeginIdx(0)
   , m_learntClauses()
   , m_binaryClauses()
+  , m_amntBinariesLearnt(0)
+  , m_clauseDBReductionPolicy(1300, m_learntClauses)
   , m_stamps(getMaxLit(CNFVar{0}).getRawValue())
   , m_detectedUNSAT(false) {}
 
@@ -336,6 +346,8 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             JAM_LOG_SOLVER(info, "Backtracking to decision level "
                                      << conflictHandlingResult.backtrackLevel);
 
+            m_clauseDBReductionPolicy.registerConflict();
+
             if (conflictHandlingResult.learntUnitClause) {
                 // Perform a restart to check for unsatisfiability during unit-clause
                 // propagation
@@ -365,6 +377,11 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             JAM_LOG_SOLVER(info, "Performing restart");
             m_restartPolicy.registerRestart();
             return TBool::INDETERMINATE;
+        }
+
+        if (m_clauseDBReductionPolicy.shouldReduceDB()) {
+            JAM_LOG_SOLVER(info, "Reducing the clause database...");
+            reduceClauseDB();
         }
     }
 
@@ -414,6 +431,9 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
         if (learnt.size() == 2) {
             m_binaryClauses[learnt[0]].push_back(learnt[1]);
             m_binaryClauses[learnt[1]].push_back(learnt[0]);
+            ++m_amntBinariesLearnt;
+            // No need to store pointers to binaries, since they are never relocated by
+            // the clause allocator.
         } else {
             m_learntClauses.push_back(&learntClause);
         }
@@ -495,5 +515,17 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     SolvingResult result = createSolvingResult(intermediateResult);
     backtrackAll();
     return result;
+}
+
+template <typename ST>
+void CDCLSatSolver<ST>::reduceClauseDB() {
+    auto amountKnownGood = m_problemClauses.size() + m_amntBinariesLearnt;
+    auto toDeleteBegin = m_clauseDBReductionPolicy.getClausesMarkedForDeletion(amountKnownGood);
+
+    (void)amountKnownGood;
+    (void)toDeleteBegin;
+    // TODO: reduce DB
+    // TODO first: "flat" iteration over non-binary problem clauses and learnts;
+    //              don't store binaries in m_problemClauses
 }
 }
