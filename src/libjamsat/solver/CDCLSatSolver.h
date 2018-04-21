@@ -531,10 +531,8 @@ void CDCLSatSolver<ST>::reduceClauseDB() {
     auto toDeleteBegin = m_clauseDBReductionPolicy.getClausesMarkedForDeletion(amountKnownGood);
 
     if (toDeleteBegin == m_learntClauses.end()) {
-        // No clauses to be deleted
         return;
     }
-
 
     std::vector<typename ST::Clause *> clausesAfterRelocation;
     m_clauseDB.retain(
@@ -553,6 +551,7 @@ void CDCLSatSolver<ST>::reduceClauseDB() {
     // Re-register relocated clauses:
     m_problemClauses.clear();
     m_learntClauses.clear();
+    // The reasons have already been updated to point at the relocated clauses, so keep them:
     m_propagation.clear(ST::Propagation::ClearMode::KEEP_REASONS);
     for (auto clausePtr : clausesAfterRelocation) {
         if (clausePtr->template getLBD<LBD>() != 0) {
@@ -561,11 +560,9 @@ void CDCLSatSolver<ST>::reduceClauseDB() {
             m_problemClauses.push_back(clausePtr);
         }
 
-        // TODO: this doesn't strictly adhere to the Propagation interface:
-        // There are no FALSE assignments to propagate at this point, and no conflicts to resolve,
-        // so the first two literals of the clause are either INDETERMINATE or TRUE. The latter
-        // case is not yet compatible with registerClause().
-        m_propagation.registerClause(*clausePtr);
+        // The clause has been removed during clear(), so it's okay to re-register
+        // it in the exact same state:
+        m_propagation.registerEquivalentSubstitutingClause(*clausePtr);
     }
 }
 }
