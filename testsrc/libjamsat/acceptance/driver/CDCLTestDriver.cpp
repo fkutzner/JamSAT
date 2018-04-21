@@ -14,7 +14,8 @@ namespace {
 void printUsage() {
     std::cerr << "Usage: SmallRandomSATTestDriver (--fail-on-parse-error|--no-fail-on-parse-error) "
                  "(--check-result|--no-check-result) "
-                 "<FILENAME>\n";
+                 "<FILENAME>\n"
+              << " If <FILENAME> is " - ", the problem is read from stdin.\n";
 }
 
 int getParseErrorExitValue(std::string const &parseErrorMode) {
@@ -57,21 +58,32 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    std::ifstream cnfFile{argv[3]};
-    if (!cnfFile || !cnfFile.is_open()) {
-        std::cerr << "Error: could not open file " << argv[1] << "\n";
-        return EXIT_FAILURE;
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+
+    std::istream *cnfFile;
+    std::ifstream cnfPhysFile;
+
+    if (std::string{argv[3]} == "-") {
+        cnfFile = &std::cin;
+    } else {
+        cnfPhysFile = std::ifstream{argv[3]};
+        if (!cnfPhysFile || !cnfPhysFile.is_open()) {
+            std::cerr << "Error: could not open file " << argv[1] << "\n";
+            return EXIT_FAILURE;
+        }
+        cnfFile = &cnfPhysFile;
     }
 
     jamsat::CNFProblem problem;
-    cnfFile >> problem;
-    if (cnfFile.fail()) {
+    *cnfFile >> problem;
+    if (cnfFile->fail()) {
         std::cerr << "Error: could not parse " << argv[1] << "\n";
         return getParseErrorExitValue(argv[1]);
     }
 
     typename SolverType::Configuration config;
-    config.clauseMemoryLimit = 10485760;
+    config.clauseMemoryLimit = 1048576ull * 1024ull;
 
 
     SolverType solver{config};
