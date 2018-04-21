@@ -535,11 +535,12 @@ void CDCLSatSolver<ST>::reduceClauseDB() {
         return;
     }
 
-    auto retainedClauses = boost::range::join(
-        m_problemClauses, boost::make_iterator_range(m_learntClauses.begin(), toDeleteBegin));
+
     std::vector<typename ST::Clause *> clausesAfterRelocation;
     m_clauseDB.retain(
-        retainedClauses,
+        boost::range::join(
+            boost::make_iterator_range(m_problemClauses.begin(), m_problemClauses.end()),
+            boost::make_iterator_range(m_learntClauses.begin(), toDeleteBegin)),
         [this](typename ST::Clause const &clause) {
             return m_propagation.isAssignmentReason(clause, this->m_trail);
         },

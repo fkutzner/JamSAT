@@ -227,7 +227,7 @@ public:
      *                          `ClauseT`.
      */
     template <typename ClauseTIterable, typename ClauseTPtrOutputIter>
-    void retain(ClauseTIterable &clausePointers, ReasonClausePredicateFunc m_isReasonClause,
+    void retain(ClauseTIterable const &clausePointers, ReasonClausePredicateFunc m_isReasonClause,
                 RelocateReasonClauseFunc m_relocateReasonClause,
                 boost::optional<ClauseTPtrOutputIter> relocedReceiver);
 
@@ -420,7 +420,7 @@ ClauseT &HeapletClauseDB<ClauseT>::allocate(typename ClauseT::size_type size) {
 
 template <typename ClauseT>
 template <typename ClauseTIterable, typename ClauseTPtrOutputIter>
-void HeapletClauseDB<ClauseT>::retain(ClauseTIterable &clausePointers,
+void HeapletClauseDB<ClauseT>::retain(ClauseTIterable const &clausePointers,
                                       ReasonClausePredicateFunc isReasonClauseFn,
                                       RelocateReasonClauseFunc relocateReasonClauseFn,
                                       boost::optional<ClauseTPtrOutputIter> relocedReceiver) {
@@ -434,7 +434,7 @@ void HeapletClauseDB<ClauseT>::retain(ClauseTIterable &clausePointers,
 
     // Postponing the announcement of reason clause replacements for exception safety
     std::vector<std::pair<const ClauseT *, const ClauseT *>> reasonClauses;
-    for (auto oldClauseConst : clausePointers) {
+    for (ClauseT const *const oldClauseConst : clausePointers) {
         // This const_cast is safe since the clause memory is guaranteed to be non-constant:
         ClauseT *oldClause = const_cast<ClauseT *>(oldClauseConst);
         // TODO: eliminate the const_cast? It's safe, but rather ugly.
