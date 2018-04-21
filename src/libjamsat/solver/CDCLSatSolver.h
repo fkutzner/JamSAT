@@ -34,6 +34,8 @@
 #include <vector>
 
 #include <boost/optional.hpp>
+#include <boost/range.hpp>
+#include <boost/range/join.hpp>
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/proof/DRUPCertificate.h>
@@ -522,10 +524,42 @@ void CDCLSatSolver<ST>::reduceClauseDB() {
     auto amountKnownGood = m_problemClauses.size() + m_amntBinariesLearnt;
     auto toDeleteBegin = m_clauseDBReductionPolicy.getClausesMarkedForDeletion(amountKnownGood);
 
-    (void)amountKnownGood;
-    (void)toDeleteBegin;
-    // TODO: reduce DB
-    // TODO first: "flat" iteration over non-binary problem clauses and learnts;
-    //              don't store binaries in m_problemClauses
+    if (toDeleteBegin == m_learntClauses.end()) {
+        // No clauses to be deleted
+        return;
+    }
+
+    auto retainedClauses =
+        boost::range::join(m_problemClauses, boost::make_iterator_range(m_learntClauses.begin(),
+                                                                        m_learntClauses.end()));
+    std::vector<typename ST::Clause *> clausesAfterRelocation;
+    m_clauseDB.retain(
+        retainedClauses,
+        [this](typename ST::Clause const &clause) {
+            return m_propagation.isAssignmentReason(clause, this->m_trail);
+        },
+        [this](typename ST::Clause const &reason, typename ST::Clause const &relocatedTo) {
+            m_propagation.updateAssignmentReason(reason, relocatedTo);
+        },
+        boost::optional<decltype(std::back_inserter(clausesAfterRelocation))>{
+            std::back_inserter(clausesAfterRelocation)});
+
+    // Re-register relocated clauses:
+    m_problemClauses.clear();
+    m_learntClauses.clear();
+    m_propagation.clear(ST::Propagation::ClearMode::KEEP_REASONS);
+    for (auto clausePtr : clausesAfterRelocation) {
+        if (clausePtr->template getLBD<LBD>() != 0) {
+            m_learntClauses.push_back(clausePtr);
+        } else {
+            m_problemClauses.push_back(clausePtr);
+        }
+
+        // TODO: this doesn't strictly adhere to the Propagation interface:
+        // There are no FALSE assignments to propagate at this point, and no conflicts to resolve,
+        // so the first two literals of the clause are either INDETERMINATE or TRUE. The latter
+        // case is not yet compatible with registerClause().
+        m_propagation.registerClause(*clausePtr);
+    }
 }
 }
