@@ -183,4 +183,71 @@ TEST(UnitClauseDB, notTooLargeLBDValueIsStored) {
 
     EXPECT_EQ(underTest->getLBD<uint64_t>(), smallLBDValue);
 }
+
+TEST(UnitClauseDB, clauseIsEqualToSelf) {
+    auto underTest = createHeapClause(2);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    EXPECT_TRUE(*underTest == *underTest);
+    EXPECT_FALSE(*underTest != *underTest);
+}
+
+TEST(UnitClauseDB, clauseIsEqualToEqualClause) {
+    auto underTest = createHeapClause(2);
+    auto otherClause = createHeapClause(2);
+
+    underTest->setLBD(1);
+    otherClause->setLBD(1);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    (*otherClause)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*otherClause)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+
+    EXPECT_TRUE(*underTest == *otherClause);
+    EXPECT_FALSE(*underTest != *otherClause);
+}
+
+TEST(UnitClauseDB, clauseIsNotEqualToClauseOfDifferentSize) {
+    auto underTest = createHeapClause(2);
+    auto otherClause = createHeapClause(1);
+
+    underTest->setLBD(1);
+    otherClause->setLBD(1);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    (*otherClause)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+
+    EXPECT_FALSE(*underTest == *otherClause);
+    EXPECT_TRUE(*underTest != *otherClause);
+}
+
+TEST(UnitClauseDB, clauseIsNotEqualToClauseOfDifferentLBD) {
+    auto underTest = createHeapClause(2);
+    auto otherClause = createHeapClause(2);
+
+    underTest->setLBD(1);
+    otherClause->setLBD(3);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    (*otherClause)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*otherClause)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+
+    EXPECT_FALSE(*underTest == *otherClause);
+    EXPECT_TRUE(*underTest != *otherClause);
+}
+
+TEST(UnitClauseDB, clauseIsNotEqualToClauseWithDifferentLiterals) {
+    auto underTest = createHeapClause(2);
+    auto otherClause = createHeapClause(2);
+
+    underTest->setLBD(1);
+    otherClause->setLBD(1);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    (*otherClause)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*otherClause)[1] = CNFLit{CNFVar{1}, CNFSign::POSITIVE};
+
+    EXPECT_FALSE(*underTest == *otherClause);
+    EXPECT_TRUE(*underTest != *otherClause);
+}
 }

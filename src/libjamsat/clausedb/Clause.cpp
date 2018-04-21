@@ -115,4 +115,18 @@ std::ostream &operator<<(std::ostream &stream, const Clause &clause) {
     stream << ")";
     return stream;
 }
+
+bool Clause::operator==(Clause const &rhs) const noexcept {
+    if (this == &rhs) {
+        return true;
+    }
+    if (size() != rhs.size() || this->m_lbd != rhs.m_lbd) {
+        return false;
+    }
+    return std::equal(begin(), end(), rhs.begin());
+}
+
+bool Clause::operator!=(Clause const &rhs) const noexcept {
+    return !(*this == rhs);
+}
 }

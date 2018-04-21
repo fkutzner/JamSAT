@@ -163,6 +163,9 @@ public:
 
     friend std::unique_ptr<Clause> createHeapClause(size_type size);
 
+    bool operator==(Clause const &rhs) const noexcept;
+    bool operator!=(Clause const &rhs) const noexcept;
+
 private:
     /**
      * \brief Constructs a clause object of the given size.
