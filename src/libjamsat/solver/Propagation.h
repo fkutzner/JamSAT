@@ -86,22 +86,42 @@ public:
     /**
      * \brief Registers a clause in the propagation system.
      *
-     * This method may only be called if one of the following conditions is
-     * satisfied:
+     * This method may only be called if one of the following conditions is satisfied:
      *
-     * - No literals occurring in \p clause have an assignment.
-     * - All literals occurring in \p clause except for the first one are assigned
+     * (1) No literals occurring in \p clause have an assignment.
+     * (2) All literals occurring in \p clause except for the first one are assigned
      * to FALSE.
      *
-     * If the second condition holds and the first literal in \p clause has no
+     * If the condition (2) holds and the first literal in \p clause has no
      * assignment, the value of the first literal gets propagated until fixpoint.
      *
-     * \param clause    The clause to be registered, which must exist until this
+     * \param clause        The clause to be registered, which must exist until this
      * is destroyed or it is deregistered from this.
      * \returns         A conflicting clause if adding \clause caused a
      * propagation and a conflict occured; nullptr otherwise.
      */
     ClauseT *registerClause(ClauseT &clause);
+
+
+    /**
+     * \brief Re-registers a clause with the propagation system.
+     *
+     * This method may only be called if the following conditions are met:
+     *
+     * (1) `clear()` has been invoked
+     * (2) Neither `propagate()` nor `propagateToFixpoint()` has been invoked since the
+     *     last invocation of `clear()`
+     * (3) During the last call to `clear()`, a clause `C` has been removed from
+     *     the propagation system with `C` containing exactly the literals contained
+     *     in `clause`, in the same order.
+     *
+     * No assignments are propagated.
+     *
+     * Typical usage: re-register clauses after relocation during clause database cleanup.
+     *
+     * \param clause    The clause to be inserted.
+     */
+    void registerEquivalentSubstitutingClause(ClauseT &clause);
 
     enum class ClearMode { NO_KEEP_REASONS, KEEP_REASONS };
 
@@ -225,6 +245,7 @@ public:
 
 private:
     ClauseT *propagateBinaries(CNFLit toPropagate, size_t &amountOfNewFacts);
+    ClauseT *registerClause(ClauseT &clause, bool autoPropagate);
 
     AssignmentProvider &m_assignmentProvider;
     BoundedMap<CNFVar, const ClauseT *> m_reasons;
@@ -254,7 +275,8 @@ Propagation<AssignmentProvider, ClauseT>::Propagation(CNFVar maxVar,
 }
 
 template <class AssignmentProvider, class ClauseT>
-ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause) {
+ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause,
+                                                                  bool autoPropagate) {
     JAM_ASSERT(clause.size() >= 2ull, "Illegally small clause argument");
     JAM_LOG_PROPAGATION(info, "Registering clause " << &clause << " ("
                                                     << toString(clause.begin(), clause.end())
@@ -265,6 +287,10 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &claus
     auto &targetWatchList = (clause.size() <= 2 ? m_binaryWatchers : m_watchers);
     targetWatchList.addWatcher(clause[0], watcher2);
     targetWatchList.addWatcher(clause[1], watcher1);
+
+    if (!autoPropagate) {
+        return nullptr;
+    }
 
     TBool secondLiteralAssignment = m_assignmentProvider.getAssignment(clause[1]);
     // By method contract, if secondLiteralAssignment != INDETERMINATE, we need
@@ -284,6 +310,19 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &claus
         return confl;
     }
     return nullptr;
+}
+
+template <class AssignmentProvider, class ClauseT>
+ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause) {
+    // Register with auto-propagation enabled:
+    return registerClause(clause, true);
+}
+
+template <class AssignmentProvider, class ClauseT>
+void Propagation<AssignmentProvider, ClauseT>::registerEquivalentSubstitutingClause(
+    ClauseT &clause) {
+    // Register with auto-propagation disabled
+    registerClause(clause, false);
 }
 
 template <class AssignmentProvider, class ClauseT>
@@ -538,8 +577,9 @@ bool Propagation<AssignmentProvider, ClauseT>::isAssignmentReason(
 template <class AssignmentProvider, class ClauseT>
 void Propagation<AssignmentProvider, ClauseT>::updateAssignmentReason(
     const ClauseT &oldClause, const ClauseT &newClause) noexcept {
-    JAM_EXPENSIVE_ASSERT(oldClause == newClause, "Arguments oldClause and newClause must be equal");
-    for (auto var : {oldClause[0].getVariable(), oldClause[1].getVariable()}) {
+    // JAM_EXPENSIVE_ASSERT(oldClause == newClause, "Arguments oldClause and newClause must be
+    // equal");
+    for (auto var : {newClause[0].getVariable(), newClause[1].getVariable()}) {
         if (m_reasons[var] == &oldClause) {
             m_reasons[var] = &newClause;
         }

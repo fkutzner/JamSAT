@@ -476,5 +476,56 @@ TEST(UnitSolver, clearClausesInPropagation_withReasonsKept) {
     test_clearClausesInPropagation(true);
 }
 
+namespace {
+enum class SubstitutionClauseReinsertionTestMode { TEST_NO_PROPAGATION, TEST_PRESENCE };
+
+void substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode mode) {
+    using PropagationTy = Propagation<TestAssignmentProvider, TrivialClause>;
+
+    CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::NEGATIVE};
+    CNFLit lit4{CNFVar{4}, CNFSign::POSITIVE};
+    TrivialClause clause1{lit2, lit1, lit3, lit4};
+    TrivialClause clause2{lit1, lit2, ~lit4};
+
+    TestAssignmentProvider assignments;
+    CNFVar maxVar{6};
+    PropagationTy underTest(maxVar, assignments);
+
+    assignments.addAssignment(lit4);
+    assignments.addAssignment(~lit2);
+    underTest.registerClause(clause1);
+    underTest.registerClause(clause2);
+
+    // clause2 should have forced the assignment of lit1:
+    ASSERT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBool::TRUE);
+
+    // Simulate backtracking. Later, it is checked that lit1 has no forced assignment.
+    assignments.popLiteral();
+    underTest.clear(PropagationTy::ClearMode::KEEP_REASONS);
+    underTest.registerEquivalentSubstitutingClause(clause2);
+
+    if (mode == SubstitutionClauseReinsertionTestMode::TEST_NO_PROPAGATION) {
+        EXPECT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBool::INDETERMINATE);
+        return;
+    }
+
+    ASSERT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBool::INDETERMINATE);
+    // Test that the clause is present: provoke a conflict
+    assignments.addAssignment(~lit1);
+    auto result = underTest.propagateUntilFixpoint(~lit1);
+    EXPECT_EQ(result, &clause2);
+}
+}
+
+TEST(UnitSolver, reregisteringEquivalentClauseDoesNotCausePropagation) {
+    substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode::TEST_NO_PROPAGATION);
+}
+
+TEST(UnitSolver, clausesArePresentAfterReregistration) {
+    substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode::TEST_PRESENCE);
+}
+
 // TODO: test watcher restoration
 }
