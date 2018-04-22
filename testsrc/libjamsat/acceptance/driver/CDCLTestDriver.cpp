@@ -36,7 +36,7 @@ bool isCheckingWithMinisatEnabled(std::string const &checkParameter) {
 enum class CheckMinisatResult { MATCH, NO_MATCH, SKIPPED };
 
 CheckMinisatResult checkResultWithMinisat(jamsat::CNFProblem &problem, jamsat::TBool result) {
-    if (result == jamsat::TBool::INDETERMINATE) {
+    if (!isDeterminate(result)) {
         return CheckMinisatResult::SKIPPED;
     }
 

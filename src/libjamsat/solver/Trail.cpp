@@ -73,7 +73,7 @@ void Trail::addAssignment(CNFLit literal) noexcept {
     JAM_ASSERT(literal.getVariable().getRawValue() <
                    static_cast<CNFVar::RawVariable>(m_assignments.size()),
                "Variable out of bounds");
-    JAM_ASSERT(getAssignment(literal.getVariable()) == TBool::INDETERMINATE,
+    JAM_ASSERT(!isDeterminate(getAssignment(literal.getVariable())),
                "Variable has already been assigned");
 
     m_trail.push_back(literal);
@@ -128,10 +128,10 @@ TBool Trail::getAssignment(CNFLit literal) const noexcept {
     JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_assignments.size()),
                "Variable out of bounds");
     TBool variableAssignment = getAssignment(variable);
-    if (variableAssignment == TBool::INDETERMINATE || literal.getSign() == CNFSign::POSITIVE) {
+    if (!isDeterminate(variableAssignment) || literal.getSign() == CNFSign::POSITIVE) {
         return variableAssignment;
     }
-    return variableAssignment == TBool::FALSE ? TBool::TRUE : TBool::FALSE;
+    return negate(variableAssignment);
 }
 
 TBool Trail::getPhase(CNFVar variable) const noexcept {

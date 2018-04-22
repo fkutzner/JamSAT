@@ -85,10 +85,10 @@ public:
         auto result = m_solver->solve(m_assumptionBuffer);
         m_assumptionBuffer.clear();
 
-        if (result.isSatisfiable == TBool::TRUE) {
+        if (isTrue(result.isSatisfiable)) {
             return 10;
         }
-        if (result.isSatisfiable == TBool::FALSE) {
+        if (isFalse(result.isSatisfiable)) {
             return 20;
         }
         return 0;

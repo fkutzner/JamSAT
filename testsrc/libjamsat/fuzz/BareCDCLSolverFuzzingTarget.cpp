@@ -57,7 +57,7 @@ void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
     FuzzedSolver solver{config};
     solver.addProblem(problem);
     auto result = solver.solve({});
-    std::cout << (result.isSatisfiable == TBool::TRUE ? "SAT" : "INDET-OR-UNSAT");
+    std::cout << (isTrue(result.isSatisfiable) ? "SAT" : "INDET-OR-UNSAT");
 
     auto minisatResult = isSatisfiableViaMinisat(problem);
     assert(result.isSatisfiable == minisatResult);

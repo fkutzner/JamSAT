@@ -86,7 +86,7 @@ public:
 
 private:
     void addUnitClause(const CNFLit unitLit) {
-        if (m_trail.getAssignment(unitLit) == TBool::INDETERMINATE) {
+        if (!isDeterminate(m_trail.getAssignment(unitLit))) {
             m_trail.addAssignment(unitLit);
             m_propagation.propagateUntilFixpoint(unitLit);
         }

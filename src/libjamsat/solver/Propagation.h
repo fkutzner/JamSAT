@@ -295,11 +295,11 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &claus
     TBool secondLiteralAssignment = m_assignmentProvider.getAssignment(clause[1]);
     // By method contract, if secondLiteralAssignment != INDETERMINATE, we need
     // to propagate the first literal.
-    if (secondLiteralAssignment != TBool::INDETERMINATE) {
+    if (isDeterminate(secondLiteralAssignment)) {
         JAM_EXPENSIVE_ASSERT(
             std::all_of(
                 clause.begin() + 1, clause.end(),
-                [this](CNFLit l) { return m_assignmentProvider.getAssignment(l) == TBool::FALSE; }),
+                [this](CNFLit l) { return isFalse(m_assignmentProvider.getAssignment(l)); }),
             "Added a clause requiring first-literal propagation which does not actually "
             "force the first literal");
         JAM_LOG_PROPAGATION(info, "Propagating first literal of registered clause.");
@@ -391,10 +391,10 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateBinaries(CNFLit toPr
         CNFLit secondLit = currentWatcher.getOtherWatchedLiteral();
         TBool assignment = m_assignmentProvider.getAssignment(secondLit);
 
-        if (assignment == TBool::FALSE) {
+        if (isFalse(assignment)) {
             // conflict case:
             return &currentWatcher.getClause();
-        } else if (assignment == TBool::INDETERMINATE) {
+        } else if (!isDeterminate(assignment)) {
             // propagation case:
             ++amountOfNewFacts;
             ClauseT *reason = &currentWatcher.getClause();
@@ -437,7 +437,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
         CNFLit otherWatchedLit = currentWatcher.getOtherWatchedLiteral();
         TBool assignment = m_assignmentProvider.getAssignment(otherWatchedLit);
 
-        if (assignment == TBool::TRUE) {
+        if (isTrue(assignment)) {
             // The clause is already satisfied and can be ignored for propagation.
             ++watcherListTraversal;
             continue;
@@ -449,7 +449,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
         // the swap at (*), so restore it
         otherWatchedLit = clause[1 - currentWatcher.getIndex()];
         assignment = m_assignmentProvider.getAssignment(otherWatchedLit);
-        if (assignment == TBool::TRUE) {
+        if (isTrue(assignment)) {
             // The clause is already satisfied and can be ignored for propagation.
             ++watcherListTraversal;
             continue;
@@ -462,7 +462,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
         bool actionIsForced = true;
         for (typename ClauseT::size_type i = 2; i < clause.size(); ++i) {
             CNFLit currentLiteral = clause[i];
-            if (m_assignmentProvider.getAssignment(currentLiteral) != TBool::FALSE) {
+            if (!isFalse(m_assignmentProvider.getAssignment(currentLiteral))) {
                 // The FALSE literal is moved into the unwatched of the clause here,
                 // such that an INDETERMINATE or TRUE literal gets watched.
                 //
@@ -485,7 +485,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
         if (actionIsForced) {
             // Invariant holding here: all literals in the clause beyond the second
             // literal have the value FALSE.
-            if (assignment == TBool::FALSE) {
+            if (isFalse(assignment)) {
                 // Conflict case: all literals are FALSE. Return the conflicting clause.
                 watcherListTraversal.finishedTraversal();
                 JAM_LOG_PROPAGATION(info, "  Current assignment is conflicting at clause "

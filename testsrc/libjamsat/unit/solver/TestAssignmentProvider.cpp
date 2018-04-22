@@ -42,10 +42,10 @@ TBool TestAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
 
 TBool TestAssignmentProvider::getAssignment(CNFLit literal) const noexcept {
     auto varAssgn = getAssignment(literal.getVariable());
-    if (literal.getSign() == CNFSign::POSITIVE || varAssgn == TBool::INDETERMINATE) {
+    if (literal.getSign() == CNFSign::POSITIVE || !isDeterminate(varAssgn)) {
         return varAssgn;
     }
-    return varAssgn == TBool::FALSE ? TBool::TRUE : TBool::FALSE;
+    return negate(varAssgn);
 }
 
 void TestAssignmentProvider::addAssignment(CNFLit literal) noexcept {

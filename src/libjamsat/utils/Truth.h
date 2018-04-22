@@ -63,6 +63,8 @@ inline Bool toBool(bool rawValue) {
     return rawValue ? Bool::TRUE : Bool::FALSE;
 }
 
+// TODO: refactor towards TBool class, representing INDETERMINATE both by
+// values 3 and 4 for better trail/propagation performance
 /**
  * \ingroup JamSAT_Utils
  *
@@ -100,7 +102,27 @@ bool toBool(TBool value);
  * \param value   The TBool value to be checked.
  * \returns       true iff \p value == TBool::INDETERMINATE.
  */
-bool isDeterminate(TBool value);
+constexpr bool isDeterminate(TBool value);
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief Checks if the given TBool value is true.
+ *
+ * \param value   The TBool value to be checked.
+ * \returns       true iff \p value == TBool::TRUE.
+ */
+constexpr bool isTrue(TBool value);
+
+/**
+ * \ingroup JamSAT_Utils
+ *
+ * \brief Checks if the given TBool value is false.
+ *
+ * \param value   The TBool value to be checked.
+ * \returns       true iff \p value == TBool::FALSE.
+ */
+constexpr bool isFalse(TBool value);
 
 /**
  * \ingroup JamSAT_Utils
@@ -209,8 +231,16 @@ inline bool toRawBool(TBool value) {
     return value == TBool::TRUE;
 }
 
-inline bool isDeterminate(TBool value) {
+constexpr bool isDeterminate(TBool value) {
     return value != TBool::INDETERMINATE;
+}
+
+constexpr bool isTrue(TBool value) {
+    return value == TBool::TRUE;
+}
+
+constexpr bool isFalse(TBool value) {
+    return value == TBool::FALSE;
 }
 
 inline TBool toTBool(bool value) {

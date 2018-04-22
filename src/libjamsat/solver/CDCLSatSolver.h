@@ -297,13 +297,13 @@ CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
     JAM_LOG_SOLVER(info, "Propagating unit clauses...");
     for (auto unit : units) {
         auto assignment = m_trail.getAssignment(unit.getVariable());
-        if (assignment != TBool::INDETERMINATE &&
+        if (isDeterminate(assignment) &&
             toTBool(unit.getSign() == CNFSign::POSITIVE) != assignment) {
             JAM_LOG_SOLVER(info, "Detected conflict at unit clause " << unit);
             return UnitClausePropagationResult::CONFLICTING;
         }
 
-        if (assignment == TBool::INDETERMINATE) {
+        if (!isDeterminate(assignment)) {
             m_trail.addAssignment(unit);
         } else {
             JAM_ASSERT(toTBool(unit.getSign() == CNFSign::POSITIVE) == assignment,
@@ -527,7 +527,7 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     }
 
     TBool intermediateResult = TBool::INDETERMINATE;
-    while (intermediateResult == TBool::INDETERMINATE && !m_stopRequested.load()) {
+    while (!isDeterminate(intermediateResult) && !m_stopRequested.load()) {
         intermediateResult = solveUntilRestart(assumptions);
     }
 

@@ -123,7 +123,7 @@ void SimpleCDCL::addClause(const CNFClause &clause) {
 SimpleCDCL::UnitPropagationResult SimpleCDCL::propagateUnitClauses() {
     JAM_LOG_CDCLITEST(info, "Propagating unit clauses...");
     for (auto unitClauseLit : m_unitClauses) {
-        if (m_trail.getAssignment(unitClauseLit) != TBool::INDETERMINATE) {
+        if (isDeterminate(m_trail.getAssignment(unitClauseLit))) {
             auto assignment = m_trail.getAssignment(unitClauseLit);
             auto litIsPositive = toTBool(unitClauseLit.getSign() == CNFSign::POSITIVE);
             if (assignment == litIsPositive) {

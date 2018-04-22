@@ -236,7 +236,7 @@ CNFLit VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept
     CNFVar branchingVar = CNFVar::getUndefinedVariable();
     while (!m_variableOrder.empty()) {
         branchingVar = popFromActivityHeap();
-        if (m_assignmentProvider.getAssignment(branchingVar) == TBool::INDETERMINATE &&
+        if (!isDeterminate(m_assignmentProvider.getAssignment(branchingVar)) &&
             isEligibleForDecisions(branchingVar)) {
             CNFSign sign = static_cast<CNFSign>(m_assignmentProvider.getPhase(branchingVar));
             return CNFLit{branchingVar, sign};
