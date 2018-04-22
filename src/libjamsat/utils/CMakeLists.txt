@@ -1,6 +1,7 @@
 add_jamsat_core_library(jamsatUtils
   Assert.h
   Truth.h
+  Truth.cpp
   BoundedMap.h
   BoundedStack.h
   FaultInjector.h

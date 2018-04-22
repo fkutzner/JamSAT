@@ -74,7 +74,7 @@ public:
 
     TBool solve() {
         if (allVariablesAssigned()) {
-            return TBool::TRUE;
+            return TBools::TRUE;
         }
 
         CNFVar firstBranchingVariable = getBranchingVariable();
@@ -175,7 +175,7 @@ TEST(IntegrationSolver, SimpleDPLL_satisfiableFormula) {
     conduit >> testData;
 
     SimpleDPLL underTest{testData};
-    EXPECT_EQ(underTest.solve(), TBool::TRUE);
+    EXPECT_EQ(underTest.solve(), TBools::TRUE);
 }
 
 TEST(IntegrationSolver, SimpleDPLL_unsatisfiableFormula) {
@@ -199,7 +199,7 @@ TEST(IntegrationSolver, SimpleDPLL_unsatisfiableFormula) {
     conduit >> testData;
 
     SimpleDPLL underTest{testData};
-    EXPECT_EQ(underTest.solve(), TBool::FALSE);
+    EXPECT_EQ(underTest.solve(), TBools::FALSE);
 }
 
 TEST(IntegrationSolver, SimpleDPLL_random5SAT_satisfiableFormula) {
@@ -243,7 +243,7 @@ TEST(IntegrationSolver, SimpleDPLL_random5SAT_satisfiableFormula) {
     conduit >> testData;
 
     SimpleDPLL underTest{testData};
-    EXPECT_EQ(underTest.solve(), TBool::TRUE);
+    EXPECT_EQ(underTest.solve(), TBools::TRUE);
 }
 
 TEST(IntegrationSolver, SimpleDPLL_random4SAT_satisfiableFormula) {
@@ -277,6 +277,6 @@ TEST(IntegrationSolver, SimpleDPLL_random4SAT_satisfiableFormula) {
     conduit >> testData;
 
     SimpleDPLL underTest{testData};
-    EXPECT_EQ(underTest.solve(), TBool::TRUE);
+    EXPECT_EQ(underTest.solve(), TBools::TRUE);
 }
 }

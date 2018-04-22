@@ -24,21 +24,10 @@
 
 */
 
-#pragma once
-
-#include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
-/**
- * \brief Checks (using Minisat) whether the given CNF problem is satisfiable
- *
- * \ingroup JamSAT_TestInfrastructure
- *
- * \param problem   The CNF problem to be solved.
- *
- * \return TBools::TRUE if \p problem is satisfiable, TBools::FALSE if \p problem is not
- * satisfiable.
- */
-TBool isSatisfiableViaMinisat(CNFProblem const &problem);
+constexpr TBool TBools::FALSE;
+constexpr TBool TBools::TRUE;
+constexpr TBool TBools::INDETERMINATE;
 }

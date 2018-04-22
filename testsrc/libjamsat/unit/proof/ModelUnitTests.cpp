@@ -35,41 +35,41 @@ namespace jamsat {
 TEST(UnitProof, Model_valuesAreIndeterminateByDefault) {
     auto underTest = createModel(CNFVar{7});
     for (CNFVar i = CNFVar{0}; i <= CNFVar{7}; i = nextCNFVar(i)) {
-        EXPECT_EQ(underTest->getAssignment(i), TBool::INDETERMINATE)
+        EXPECT_EQ(underTest->getAssignment(i), TBools::INDETERMINATE)
             << "Variable " << i << " not assigned INDETERMINATE";
     }
 }
 
 TEST(UnitProof, Model_storesValues) {
     auto underTest = createModel(CNFVar{7});
-    underTest->setAssignment(CNFVar{4}, TBool::FALSE);
-    underTest->setAssignment(CNFVar{5}, TBool::TRUE);
-    EXPECT_EQ(underTest->getAssignment(CNFVar{4}), TBool::FALSE);
-    EXPECT_EQ(underTest->getAssignment(CNFVar{5}), TBool::TRUE);
+    underTest->setAssignment(CNFVar{4}, TBools::FALSE);
+    underTest->setAssignment(CNFVar{5}, TBools::TRUE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{4}), TBools::FALSE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{5}), TBools::TRUE);
 }
 
 TEST(UnitProof, Model_valuesCanBeOverridden) {
     auto underTest = createModel(CNFVar{7});
-    underTest->setAssignment(CNFVar{4}, TBool::FALSE);
-    underTest->setAssignment(CNFVar{4}, TBool::TRUE);
-    EXPECT_EQ(underTest->getAssignment(CNFVar{4}), TBool::TRUE);
+    underTest->setAssignment(CNFVar{4}, TBools::FALSE);
+    underTest->setAssignment(CNFVar{4}, TBools::TRUE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{4}), TBools::TRUE);
 }
 
 TEST(UnitProof, Model_variablesHigherThanMaxAreIndeterminate) {
     auto underTest = createModel(CNFVar{7});
-    EXPECT_EQ(underTest->getAssignment(CNFVar{14}), TBool::INDETERMINATE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{14}), TBools::INDETERMINATE);
 }
 
 TEST(UnitProof, Model_sizeIsAutomaticallyIncreased) {
     auto underTest = createModel(CNFVar{7});
-    underTest->setAssignment(CNFVar{14}, TBool::TRUE);
-    EXPECT_EQ(underTest->getAssignment(CNFVar{14}), TBool::TRUE);
+    underTest->setAssignment(CNFVar{14}, TBools::TRUE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{14}), TBools::TRUE);
 }
 
 TEST(UnitProof, Model_checkForEmptyProblemSucceeds) {
     auto underTest = createModel(CNFVar{10});
     CNFProblem empty;
-    ASSERT_EQ(underTest->check(empty), TBool::TRUE);
+    ASSERT_EQ(underTest->check(empty), TBools::TRUE);
 }
 
 namespace {
@@ -89,36 +89,36 @@ CNFProblem createModelTestCNFProblem() {
 TEST(UnitProof, Model_checkForSatisfyingAssignmentSucceeds) {
     CNFProblem testData = createModelTestCNFProblem();
     auto underTest = createModel(CNFVar{10});
-    underTest->setAssignment(CNFVar{0}, TBool::FALSE);
-    underTest->setAssignment(CNFVar{1}, TBool::TRUE);
-    underTest->setAssignment(CNFVar{2}, TBool::FALSE);
-    underTest->setAssignment(CNFVar{3}, TBool::TRUE);
-    underTest->setAssignment(CNFVar{4}, TBool::INDETERMINATE);
+    underTest->setAssignment(CNFVar{0}, TBools::FALSE);
+    underTest->setAssignment(CNFVar{1}, TBools::TRUE);
+    underTest->setAssignment(CNFVar{2}, TBools::FALSE);
+    underTest->setAssignment(CNFVar{3}, TBools::TRUE);
+    underTest->setAssignment(CNFVar{4}, TBools::INDETERMINATE);
 
-    ASSERT_EQ(underTest->check(testData), TBool::TRUE);
+    ASSERT_EQ(underTest->check(testData), TBools::TRUE);
 }
 
 TEST(UnitProof, Model_checkForCompletelyIndeterminateAssignmentFails) {
     CNFProblem testData = createModelTestCNFProblem();
     auto underTest = createModel(CNFVar{10});
-    underTest->setAssignment(CNFVar{0}, TBool::INDETERMINATE);
-    underTest->setAssignment(CNFVar{1}, TBool::INDETERMINATE);
-    underTest->setAssignment(CNFVar{2}, TBool::INDETERMINATE);
-    underTest->setAssignment(CNFVar{3}, TBool::INDETERMINATE);
-    underTest->setAssignment(CNFVar{4}, TBool::INDETERMINATE);
+    underTest->setAssignment(CNFVar{0}, TBools::INDETERMINATE);
+    underTest->setAssignment(CNFVar{1}, TBools::INDETERMINATE);
+    underTest->setAssignment(CNFVar{2}, TBools::INDETERMINATE);
+    underTest->setAssignment(CNFVar{3}, TBools::INDETERMINATE);
+    underTest->setAssignment(CNFVar{4}, TBools::INDETERMINATE);
 
-    ASSERT_EQ(underTest->check(testData), TBool::FALSE);
+    ASSERT_EQ(underTest->check(testData), TBools::FALSE);
 }
 
 TEST(UnitProof, Model_checkForNonsatisfyingAssignmentFails) {
     CNFProblem testData = createModelTestCNFProblem();
     auto underTest = createModel(CNFVar{10});
-    underTest->setAssignment(CNFVar{0}, TBool::FALSE);
-    underTest->setAssignment(CNFVar{1}, TBool::FALSE);
-    underTest->setAssignment(CNFVar{2}, TBool::FALSE);
-    underTest->setAssignment(CNFVar{3}, TBool::TRUE);
-    underTest->setAssignment(CNFVar{4}, TBool::TRUE);
+    underTest->setAssignment(CNFVar{0}, TBools::FALSE);
+    underTest->setAssignment(CNFVar{1}, TBools::FALSE);
+    underTest->setAssignment(CNFVar{2}, TBools::FALSE);
+    underTest->setAssignment(CNFVar{3}, TBools::TRUE);
+    underTest->setAssignment(CNFVar{4}, TBools::TRUE);
 
-    ASSERT_EQ(underTest->check(testData), TBool::FALSE);
+    ASSERT_EQ(underTest->check(testData), TBools::FALSE);
 }
 }

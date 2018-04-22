@@ -209,7 +209,7 @@ public:
      * passed to the constructor. \p variable must be a variable with a
      * determinate truth value.
      * \returns the value of the last assignment of \p variable . If \p variable
-     * has not been assigned yet, the result is TBool::FALSE.
+     * has not been assigned yet, the result is TBools::FALSE.
      */
     TBool getPhase(CNFVar variable) const noexcept;
 

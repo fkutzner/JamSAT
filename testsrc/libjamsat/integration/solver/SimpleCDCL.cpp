@@ -244,7 +244,7 @@ TEST(IntegrationSolver, SimpleCDCL_unsatOnConflictInUnitPropagation) {
         underTest.addClause(clause);
     }
 
-    EXPECT_EQ(underTest.isProblemSatisfiable(), TBool::FALSE);
+    EXPECT_EQ(underTest.isProblemSatisfiable(), TBools::FALSE);
 }
 
 TEST(IntegrationSolver, SimpleCDCL_smallUnsatisfiableProblem) {
@@ -270,7 +270,7 @@ TEST(IntegrationSolver, SimpleCDCL_smallUnsatisfiableProblem) {
         underTest.addClause(clause);
     }
 
-    EXPECT_EQ(underTest.isProblemSatisfiable(), TBool::FALSE);
+    EXPECT_EQ(underTest.isProblemSatisfiable(), TBools::FALSE);
 }
 
 TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
@@ -294,7 +294,7 @@ TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
         underTest.addClause(clause);
     }
 
-    EXPECT_EQ(underTest.isProblemSatisfiable(), TBool::FALSE);
+    EXPECT_EQ(underTest.isProblemSatisfiable(), TBools::FALSE);
 }
 
 TEST(IntegrationSolver, SimpleCDCL_rule110_reachable) {
@@ -305,6 +305,6 @@ TEST(IntegrationSolver, SimpleCDCL_rule110_reachable) {
     for (auto &clause : cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
-    EXPECT_EQ(underTest.isProblemSatisfiable(), TBool::TRUE);
+    EXPECT_EQ(underTest.isProblemSatisfiable(), TBools::TRUE);
 }
 }

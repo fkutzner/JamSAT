@@ -75,7 +75,7 @@ TEST(UnitSolver, falsingSingleLiteralInBinaryClauseCausesPropagation) {
     auto conflictingClause = underTest.propagate(~lit2, amntNewFacts);
     EXPECT_EQ(conflictingClause, nullptr); // no conflict expected
     EXPECT_EQ(amntNewFacts, 1ull);
-    EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBool::FALSE);
+    EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBools::FALSE);
 }
 
 TEST(UnitSolver, reasonsAreRecordedDuringPropagation) {
@@ -114,8 +114,8 @@ TEST(UnitSolver, propagateWithSingleTrueClauseCausesNoPropagation) {
     auto conflictingClause = underTest.propagate(~lit2, amntNewFacts);
     EXPECT_EQ(conflictingClause, nullptr); // no conflict expected
     EXPECT_EQ(amntNewFacts, 0ull);
-    EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBool::FALSE);
-    EXPECT_EQ(assignments.getAssignment(CNFVar{2}), TBool::TRUE);
+    EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBools::FALSE);
+    EXPECT_EQ(assignments.getAssignment(CNFVar{2}), TBools::TRUE);
 }
 
 TEST(UnitSolver, propagateWithTernaryClause) {
@@ -137,7 +137,7 @@ TEST(UnitSolver, propagateWithTernaryClause) {
     assignments.addAssignment(~lit2);
     underTest.propagate(~lit2, newFacts);
     EXPECT_EQ(newFacts, 1ull);
-    EXPECT_EQ(assignments.getAssignment(lit3), TBool::TRUE);
+    EXPECT_EQ(assignments.getAssignment(lit3), TBools::TRUE);
 }
 
 TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
@@ -173,7 +173,7 @@ TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
     conflictingClause = underTest.propagate(~lit2, newFacts);
     EXPECT_EQ(newFacts, 1ull);
     EXPECT_EQ(conflictingClause, nullptr);
-    EXPECT_EQ(assignments.getAssignment(lit3), TBool::TRUE);
+    EXPECT_EQ(assignments.getAssignment(lit3), TBools::TRUE);
 }
 
 TEST(UnitSolver, registerClauseWithUnassignedLiteralsCausesNoPropagation) {
@@ -187,9 +187,9 @@ TEST(UnitSolver, registerClauseWithUnassignedLiteralsCausesNoPropagation) {
     Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
     underTest.registerClause(ternaryClause);
 
-    EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBool::INDETERMINATE);
-    EXPECT_EQ(assignments.getAssignment(CNFVar{2}), TBool::INDETERMINATE);
-    EXPECT_EQ(assignments.getAssignment(CNFVar{3}), TBool::INDETERMINATE);
+    EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBools::INDETERMINATE);
+    EXPECT_EQ(assignments.getAssignment(CNFVar{2}), TBools::INDETERMINATE);
+    EXPECT_EQ(assignments.getAssignment(CNFVar{3}), TBools::INDETERMINATE);
 }
 
 TEST(UnitSolver, registerClauseWithAssignedLiteralsCausesPropagation) {
@@ -206,9 +206,9 @@ TEST(UnitSolver, registerClauseWithAssignedLiteralsCausesPropagation) {
     Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
     underTest.registerClause(ternaryClause);
 
-    EXPECT_EQ(assignments.getAssignment(lit1), TBool::TRUE);
-    EXPECT_EQ(assignments.getAssignment(lit2), TBool::FALSE);
-    EXPECT_EQ(assignments.getAssignment(lit3), TBool::FALSE);
+    EXPECT_EQ(assignments.getAssignment(lit1), TBools::TRUE);
+    EXPECT_EQ(assignments.getAssignment(lit2), TBools::FALSE);
+    EXPECT_EQ(assignments.getAssignment(lit3), TBools::FALSE);
 }
 
 TEST(UnitSolver, propagateUntilFixpointPropagatesTransitively) {
@@ -236,11 +236,11 @@ TEST(UnitSolver, propagateUntilFixpointPropagatesTransitively) {
     auto conflictingClause = underTest.propagateUntilFixpoint(~lit1);
 
     EXPECT_EQ(conflictingClause, nullptr);
-    EXPECT_EQ(assignments.getAssignment(lit1), TBool::FALSE);
-    EXPECT_EQ(assignments.getAssignment(lit2), TBool::TRUE);
-    EXPECT_EQ(assignments.getAssignment(lit3), TBool::FALSE);
-    EXPECT_EQ(assignments.getAssignment(lit4), TBool::TRUE);
-    EXPECT_EQ(assignments.getAssignment(lit5), TBool::TRUE);
+    EXPECT_EQ(assignments.getAssignment(lit1), TBools::FALSE);
+    EXPECT_EQ(assignments.getAssignment(lit2), TBools::TRUE);
+    EXPECT_EQ(assignments.getAssignment(lit3), TBools::FALSE);
+    EXPECT_EQ(assignments.getAssignment(lit4), TBools::TRUE);
+    EXPECT_EQ(assignments.getAssignment(lit5), TBools::TRUE);
 }
 
 TEST(UnitSolver, propagateUntilFixpointReportsImmediateConflicts) {
@@ -300,7 +300,7 @@ TEST(UnitSolver, propagateAfterIncreasingMaximumVariable) {
     underTest.registerClause(forcingClause);
     assignments.addAssignment(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
     underTest.propagateUntilFixpoint(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
-    EXPECT_EQ(assignments.getAssignment(CNFVar{6}), TBool::TRUE);
+    EXPECT_EQ(assignments.getAssignment(CNFVar{6}), TBools::TRUE);
 }
 
 TEST(UnitSolver, propagateAfterEraseToBeDeletedDoesNotPropagateDeletedClauses) {
@@ -331,13 +331,13 @@ TEST(UnitSolver, propagateAfterEraseToBeDeletedDoesNotPropagateDeletedClauses) {
     ASSERT_EQ(conflictingClause, nullptr);
     conflictingClause = underTest.propagateUntilFixpoint(~lit2);
     ASSERT_EQ(conflictingClause, nullptr);
-    EXPECT_EQ(assignments.getAssignment(CNFVar{3}), TBool::INDETERMINATE)
+    EXPECT_EQ(assignments.getAssignment(CNFVar{3}), TBools::INDETERMINATE)
         << "Clause c1 has not been erased";
 
     assignments.addAssignment(lit3);
     conflictingClause = underTest.propagateUntilFixpoint(lit3);
     ASSERT_EQ(conflictingClause, nullptr);
-    EXPECT_NE(assignments.getAssignment(CNFVar{5}), TBool::INDETERMINATE)
+    EXPECT_NE(assignments.getAssignment(CNFVar{5}), TBools::INDETERMINATE)
         << "More clauses erased than expected";
 }
 
@@ -463,7 +463,7 @@ void test_clearClausesInPropagation(bool withKeepReasons) {
     underTest.propagateUntilFixpoint(~lit3);
     assignments.addAssignment(~lit2);
     auto conflicting = underTest.propagateUntilFixpoint(~lit2);
-    EXPECT_EQ(assignments.getAssignment(lit4), TBool::INDETERMINATE);
+    EXPECT_EQ(assignments.getAssignment(lit4), TBools::INDETERMINATE);
     EXPECT_EQ(conflicting, nullptr);
 }
 }
@@ -499,7 +499,7 @@ void substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode mod
     underTest.registerClause(clause2);
 
     // clause2 should have forced the assignment of lit1:
-    ASSERT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBool::TRUE);
+    ASSERT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBools::TRUE);
 
     // Simulate backtracking. Later, it is checked that lit1 has no forced assignment.
     assignments.popLiteral();
@@ -507,11 +507,11 @@ void substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode mod
     underTest.registerEquivalentSubstitutingClause(clause2);
 
     if (mode == SubstitutionClauseReinsertionTestMode::TEST_NO_PROPAGATION) {
-        EXPECT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBool::INDETERMINATE);
+        EXPECT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBools::INDETERMINATE);
         return;
     }
 
-    ASSERT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBool::INDETERMINATE);
+    ASSERT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBools::INDETERMINATE);
     // Test that the clause is present: provoke a conflict
     assignments.addAssignment(~lit1);
     auto result = underTest.propagateUntilFixpoint(~lit1);

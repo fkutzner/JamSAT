@@ -139,23 +139,23 @@ TEST(UnitSolver, trailDecisionLevelIteratorsRemainValidAfterAdd) {
 TEST(UnitSolver, emptyTrailHasIndeterminateAssignment) {
     Trail underTest{CNFVar{10}};
     for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
-        EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBool::INDETERMINATE);
+        EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBools::INDETERMINATE);
         CNFLit iLit = CNFLit{CNFVar{i}, CNFSign::POSITIVE};
-        EXPECT_EQ(underTest.getAssignment(iLit), TBool::INDETERMINATE);
-        EXPECT_EQ(underTest.getAssignment(~iLit), TBool::INDETERMINATE);
+        EXPECT_EQ(underTest.getAssignment(iLit), TBools::INDETERMINATE);
+        EXPECT_EQ(underTest.getAssignment(~iLit), TBools::INDETERMINATE);
     }
 }
 
 TEST(UnitSolver, variablesOnTrailHaveAssignment) {
     Trail underTest{CNFVar{10}};
     underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
-    EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBool::FALSE);
-    EXPECT_EQ(underTest.getAssignment(CNFLit{CNFVar{4}, CNFSign::POSITIVE}), TBool::FALSE);
-    EXPECT_EQ(underTest.getAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE}), TBool::TRUE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBools::FALSE);
+    EXPECT_EQ(underTest.getAssignment(CNFLit{CNFVar{4}, CNFSign::POSITIVE}), TBools::FALSE);
+    EXPECT_EQ(underTest.getAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE}), TBools::TRUE);
 
     for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
         if (i != 4) {
-            EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBool::INDETERMINATE);
+            EXPECT_EQ(underTest.getAssignment(CNFVar{i}), TBools::INDETERMINATE);
         }
     }
 }
@@ -185,10 +185,10 @@ TEST(UnitSolver, assignmentsBecomeIndeterminateOnShrink) {
     underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
 
     underTest.shrinkToDecisionLevel(1);
-    EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBool::FALSE);
-    EXPECT_EQ(underTest.getAssignment(CNFVar{5}), TBool::INDETERMINATE);
-    EXPECT_EQ(underTest.getAssignment(CNFVar{6}), TBool::INDETERMINATE);
-    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBool::INDETERMINATE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBools::FALSE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{5}), TBools::INDETERMINATE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{6}), TBools::INDETERMINATE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBools::INDETERMINATE);
 }
 
 TEST(UnitSolver, unshrinkedDecisionLevelsRemainIntactAfterShrink) {
@@ -217,10 +217,10 @@ TEST(UnitSolver, assignmentsBecomeIndeterminateOnRevisit) {
     underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
 
     underTest.revisitDecisionLevel(1);
-    EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBool::FALSE);
-    EXPECT_EQ(underTest.getAssignment(CNFVar{5}), TBool::TRUE);
-    EXPECT_EQ(underTest.getAssignment(CNFVar{6}), TBool::INDETERMINATE);
-    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBool::INDETERMINATE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{4}), TBools::FALSE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{5}), TBools::TRUE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{6}), TBools::INDETERMINATE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBools::INDETERMINATE);
 }
 
 TEST(UnitSolver, undiscardedDecisionLevelsRemainIntactAfterRevisit) {
@@ -276,16 +276,16 @@ TEST(UnitSolver, assignmentRangeIteratorsRemainValidAfterAdd) {
 
 TEST(UnitSolver, variablePhaseIsNegativeByDefault) {
     Trail underTest{CNFVar{16384}};
-    EXPECT_EQ(underTest.getPhase(CNFVar{1024}), TBool::FALSE);
+    EXPECT_EQ(underTest.getPhase(CNFVar{1024}), TBools::FALSE);
 }
 
 TEST(UnitSolver, variablePhaseIsSavedInTrail) {
     Trail underTest{CNFVar{24}};
     underTest.addAssignment(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
-    EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBool::TRUE);
+    EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBools::TRUE);
     underTest.shrinkToDecisionLevel(0);
     EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
-    EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBool::TRUE);
+    EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBools::TRUE);
 }
 
 TEST(UnitSolver, sizeOneTrailWithoutAssignmentHasNoCompleteAssignment) {
@@ -329,16 +329,16 @@ TEST(UnitSolver, trailMaxVariableCanBeIncreased) {
     underTest.newDecisionLevel();
 
     underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
-    ASSERT_EQ(underTest.getAssignment(CNFVar{5}), TBool::TRUE);
+    ASSERT_EQ(underTest.getAssignment(CNFVar{5}), TBools::TRUE);
     underTest.increaseMaxVarTo(CNFVar{7});
-    ASSERT_EQ(underTest.getAssignment(CNFVar{5}), TBool::TRUE);
+    ASSERT_EQ(underTest.getAssignment(CNFVar{5}), TBools::TRUE);
 
-    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBool::INDETERMINATE);
-    EXPECT_EQ(underTest.getPhase(CNFVar{7}), TBool::FALSE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBools::INDETERMINATE);
+    EXPECT_EQ(underTest.getPhase(CNFVar{7}), TBools::FALSE);
     underTest.addAssignment(CNFLit{CNFVar{7}, CNFSign::POSITIVE});
     ASSERT_EQ(underTest.getNumberOfAssignments(), 2ull);
-    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBool::TRUE);
+    EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBools::TRUE);
     EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{7}), 1ull);
-    EXPECT_EQ(underTest.getPhase(CNFVar{7}), TBool::TRUE);
+    EXPECT_EQ(underTest.getPhase(CNFVar{7}), TBools::TRUE);
 }
 }

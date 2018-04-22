@@ -89,9 +89,9 @@ int main(int argc, char **argv) {
     SolverType solver{config};
     solver.addProblem(problem);
     auto result = solver.solve({});
-    if (result.isSatisfiable == jamsat::TBool::TRUE) {
+    if (result.isSatisfiable == jamsat::TBools::TRUE) {
         std::cout << "Satisfiable:1" << std::endl;
-    } else if (result.isSatisfiable == jamsat::TBool::FALSE) {
+    } else if (result.isSatisfiable == jamsat::TBools::FALSE) {
         std::cout << "Satisfiable:0" << std::endl;
     } else {
         std::cout << "Satisfiable:-1" << std::endl;

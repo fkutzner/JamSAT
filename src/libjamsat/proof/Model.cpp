@@ -57,7 +57,7 @@ private:
 };
 
 ModelImpl::ModelImpl(CNFVar maxVar)
-  : Model(), m_assignments(maxVar, TBool::INDETERMINATE), m_currentMaxVar(maxVar) {}
+  : Model(), m_assignments(maxVar, TBools::INDETERMINATE), m_currentMaxVar(maxVar) {}
 
 ModelImpl::~ModelImpl() {}
 
@@ -73,21 +73,22 @@ TBool ModelImpl::getAssignment(CNFVar variable) const noexcept {
     if (variable <= m_currentMaxVar) {
         return m_assignments[variable];
     }
-    return TBool::INDETERMINATE;
+    return TBools::INDETERMINATE;
 }
 
 TBool ModelImpl::check(const jamsat::CNFProblem &problem) const noexcept {
     for (auto &clause : problem.getClauses()) {
         bool satisfied = false;
         for (auto lit : clause) {
-            TBool expectedValue = (lit.getSign() == CNFSign::POSITIVE) ? TBool::TRUE : TBool::FALSE;
+            TBool expectedValue =
+                (lit.getSign() == CNFSign::POSITIVE) ? TBools::TRUE : TBools::FALSE;
             satisfied |= (getAssignment(lit.getVariable()) == expectedValue);
         }
         if (!satisfied) {
-            return TBool::FALSE;
+            return TBools::FALSE;
         }
     }
-    return TBool::TRUE;
+    return TBools::TRUE;
 }
 
 std::unique_ptr<Model> createModel(CNFVar maxVar) {

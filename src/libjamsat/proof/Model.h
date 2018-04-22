@@ -56,7 +56,7 @@ public:
     /**
      * \brief Gets the assignment of the given variable.
      *
-     * If the variable has not been assigned via setAssignment(), TBool::INDETERMINATE
+     * If the variable has not been assigned via setAssignment(), TBools::INDETERMINATE
      * is returned.
      *
      * \param variable  A regular variable.
@@ -68,7 +68,7 @@ public:
      * \brief Checks the proof.
      *
      * \param problem       A CNF problem.
-     * \returns             TBool::TRUE if the model is a model for \p problem; TBool::FALSE
+     * \returns             TBools::TRUE if the model is a model for \p problem; TBools::FALSE
      *                      otherwise.
      */
     virtual TBool check(const CNFProblem &problem) const noexcept = 0;

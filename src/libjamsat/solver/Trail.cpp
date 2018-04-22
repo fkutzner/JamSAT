@@ -31,9 +31,9 @@ namespace jamsat {
 Trail::Trail(CNFVar maxVar)
   : m_trail(maxVar.getRawValue() + 1)
   , m_trailLimits({0})
-  , m_assignments(maxVar, TBool::INDETERMINATE)
+  , m_assignments(maxVar, TBools::INDETERMINATE)
   , m_assignmentLevel(maxVar)
-  , m_phases(maxVar, TBool::FALSE) {
+  , m_phases(maxVar, TBools::FALSE) {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
 
@@ -49,7 +49,7 @@ void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
     JAM_ASSERT(level < m_trailLimits.size(),
                "Cannot shrink to a decision level higher than the current one");
     for (auto i = m_trail.begin() + m_trailLimits[level]; i != m_trail.end(); ++i) {
-        m_assignments[(*i).getVariable()] = TBool::INDETERMINATE;
+        m_assignments[(*i).getVariable()] = TBools::INDETERMINATE;
     }
 
     m_trail.pop_to(m_trailLimits[level]);
@@ -62,7 +62,7 @@ void Trail::revisitDecisionLevel(Trail::DecisionLevel level) noexcept {
         "Cannot revisit current decision level or a decision level higher than the current one");
 
     for (auto i = m_trail.begin() + m_trailLimits[level + 1]; i != m_trail.end(); ++i) {
-        m_assignments[(*i).getVariable()] = TBool::INDETERMINATE;
+        m_assignments[(*i).getVariable()] = TBools::INDETERMINATE;
     }
 
     m_trail.pop_to(m_trailLimits[level + 1]);
@@ -78,7 +78,7 @@ void Trail::addAssignment(CNFLit literal) noexcept {
 
     m_trail.push_back(literal);
 
-    TBool value = static_cast<TBool>(literal.getSign());
+    TBool value = TBool::fromUnderlyingValue(static_cast<TBool::UnderlyingType>(literal.getSign()));
     m_assignments[literal.getVariable()] = value;
     m_assignmentLevel[literal.getVariable()] = getCurrentDecisionLevel();
     m_phases[literal.getVariable()] = value;
@@ -156,9 +156,9 @@ void Trail::increaseMaxVarTo(CNFVar newMaxVar) {
     m_phases.increaseSizeTo(newMaxVar);
 
     for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
-        m_assignments[i] = TBool::INDETERMINATE;
+        m_assignments[i] = TBools::INDETERMINATE;
         m_assignmentLevel[i] = 0;
-        m_phases[i] = TBool::FALSE;
+        m_phases[i] = TBools::FALSE;
     }
 }
 }

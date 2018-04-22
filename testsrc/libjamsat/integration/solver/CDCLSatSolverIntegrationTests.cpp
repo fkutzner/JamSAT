@@ -38,14 +38,14 @@ TEST(SolverIntegration, CDCLSatSolver_problemWithEmptyClauseIsUnsatisfiable) {
     CDCLSatSolver<> underTest{testConfig};
 
     underTest.addClause({});
-    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::FALSE);
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::FALSE);
 }
 
 TEST(SolverIntegration, CDCLSatSolver_problemWithNoClausesIsTriviallySatisfiable) {
     CDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
     CDCLSatSolver<> underTest{testConfig};
-    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::TRUE);
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::TRUE);
 }
 
 TEST(SolverIntegration, CDCLSatSolver_problemConsistingOfUnitClauseIsSatisfiable) {
@@ -54,7 +54,7 @@ TEST(SolverIntegration, CDCLSatSolver_problemConsistingOfUnitClauseIsSatisfiable
 
     CDCLSatSolver<> underTest{testConfig};
     underTest.addClause({CNFLit{CNFVar{1}, CNFSign::POSITIVE}});
-    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::TRUE);
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::TRUE);
 }
 
 TEST(SolverIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsatisfiable) {
@@ -64,7 +64,7 @@ TEST(SolverIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsatis
     CDCLSatSolver<> underTest{testConfig};
     underTest.addClause({CNFLit{CNFVar{1}, CNFSign::POSITIVE}});
     underTest.addClause({CNFLit{CNFVar{1}, CNFSign::NEGATIVE}});
-    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::FALSE);
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::FALSE);
 }
 
 TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
@@ -79,9 +79,9 @@ TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
         underTest.addClause(clause);
     }
 
-    ASSERT_EQ(isSatisfiableViaMinisat(cnfProblem), TBool::TRUE)
+    ASSERT_EQ(isSatisfiableViaMinisat(cnfProblem), TBools::TRUE)
         << "Bad test case: the problem is expected to be satisfiable";
-    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::TRUE);
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::TRUE);
 }
 
 TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {
@@ -95,8 +95,8 @@ TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {
     for (auto &clause : cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
-    ASSERT_EQ(isSatisfiableViaMinisat(cnfProblem), TBool::FALSE)
+    ASSERT_EQ(isSatisfiableViaMinisat(cnfProblem), TBools::FALSE)
         << "Bad test case: the problem is expected not to be satisfiable";
-    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBool::FALSE);
+    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::FALSE);
 }
 }

@@ -37,7 +37,7 @@ TBool TestAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
     if (possibleAssgn != m_assignments.end()) {
         return possibleAssgn->second;
     }
-    return TBool::INDETERMINATE;
+    return TBools::INDETERMINATE;
 }
 
 TBool TestAssignmentProvider::getAssignment(CNFLit literal) const noexcept {
@@ -52,7 +52,7 @@ void TestAssignmentProvider::addAssignment(CNFLit literal) noexcept {
     JAM_ASSERT(literal.getVariable().getRawValue() < 1024,
                "literal variable too large for TestAssignmentProvider");
     m_assignments[literal.getVariable()] =
-        (literal.getSign() == CNFSign::POSITIVE ? TBool::TRUE : TBool::FALSE);
+        (literal.getSign() == CNFSign::POSITIVE ? TBools::TRUE : TBools::FALSE);
     m_trail.push_back(literal);
 }
 

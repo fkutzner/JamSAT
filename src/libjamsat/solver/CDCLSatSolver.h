@@ -149,8 +149,8 @@ public:
      *                      emitted.
      *
      * \return If the memory limit has been exceeded or `stop()` has been called
-     *         during the execution of `solve()`, `TBool::INDETERMINATE` is
-     *         returned. Otherwise, TBool::TRUE rsp. TBool::FALSE is returned if
+     *         during the execution of `solve()`, `TBools::INDETERMINATE` is
+     *         returned. Otherwise, TBools::TRUE rsp. TBools::FALSE is returned if
      *         the CNF problem instance is satsifiable rsp. unsatisfiable with
      *         respect to the setting of \p assumptions .
      */
@@ -326,7 +326,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
     backtrackAll();
     if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT ||
         propagateUnitClauses(assumptions) != UnitClausePropagationResult::CONSISTENT) {
-        return TBool::FALSE;
+        return TBools::FALSE;
     }
 
     int conflictsUntilMaintenance = 5000;
@@ -353,7 +353,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             if (conflictHandlingResult.learntUnitClause) {
                 // Perform a restart to check for unsatisfiability during unit-clause
                 // propagation
-                return TBool::INDETERMINATE;
+                return TBools::INDETERMINATE;
             }
 
             LBD learntClauseLBD = (*learntClause).template getLBD<LBD>();
@@ -369,7 +369,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             // inprocessing, ...)
 
             if (m_stopRequested.load()) {
-                return TBool::INDETERMINATE;
+                return TBools::INDETERMINATE;
             }
 
             conflictsUntilMaintenance = 5000;
@@ -378,7 +378,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         if (m_restartPolicy.shouldRestart()) {
             JAM_LOG_SOLVER(info, "Performing restart");
             m_restartPolicy.registerRestart();
-            return TBool::INDETERMINATE;
+            return TBools::INDETERMINATE;
         }
 
         if (m_clauseDBReductionPolicy.shouldReduceDB()) {
@@ -387,7 +387,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         }
     }
 
-    return TBool::TRUE;
+    return TBools::TRUE;
 }
 
 template <typename ST>
@@ -497,11 +497,11 @@ template <typename ST>
 typename CDCLSatSolver<ST>::SolvingResult
 CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     if (m_detectedUNSAT) {
-        return createSolvingResult(TBool::FALSE);
+        return createSolvingResult(TBools::FALSE);
     }
 
     if (m_problemClauses.empty() && m_unitClauses.empty()) {
-        return createSolvingResult(TBool::TRUE);
+        return createSolvingResult(TBools::TRUE);
     }
 
     m_stopRequested.store(false);
@@ -526,7 +526,7 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
         m_branchingHeuristic.setEligibleForDecisions(assumption.getVariable(), false);
     }
 
-    TBool intermediateResult = TBool::INDETERMINATE;
+    TBool intermediateResult = TBools::INDETERMINATE;
     while (!isDeterminate(intermediateResult) && !m_stopRequested.load()) {
         intermediateResult = solveUntilRestart(assumptions);
     }

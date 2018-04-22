@@ -57,7 +57,7 @@ public:
     TBool getPhase(CNFVar variable) const noexcept {
         auto result = m_phases.find(variable);
         if (result == m_phases.end()) {
-            return TBool::FALSE;
+            return TBools::FALSE;
         }
         return result->second;
     }
@@ -70,14 +70,14 @@ private:
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_allAssignedCausesUndefToBePicked) {
     CNFVar maxVar{10};
-    FakeAssignmentProvider fakeAssignmentProvider{TBool::TRUE};
+    FakeAssignmentProvider fakeAssignmentProvider{TBools::TRUE};
     VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
     EXPECT_EQ(underTest.pickBranchLiteral(), CNFLit::getUndefinedLiteral());
 }
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_singleVariableGetsPicked) {
     CNFVar maxVar{0};
-    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    FakeAssignmentProvider fakeAssignmentProvider{TBools::INDETERMINATE};
     VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
     underTest.setEligibleForDecisions(CNFVar{0}, true);
@@ -88,7 +88,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_singleVariableGetsPicked) {
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_variablesInitiallyHaveSameActivities) {
     CNFVar maxVar{10};
-    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    FakeAssignmentProvider fakeAssignmentProvider{TBools::INDETERMINATE};
     VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
     for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
@@ -138,7 +138,7 @@ void addDefaultConflictSequence(Heuristic &underTest) {
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_usingVariablesInConflictCausesReordering) {
     CNFVar maxVar{10};
-    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    FakeAssignmentProvider fakeAssignmentProvider{TBools::INDETERMINATE};
     VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
     addDefaultConflictSequence(underTest);
@@ -148,7 +148,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_usingVariablesInConflictCausesReorde
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_ineligibleVariableDoesNotGetPicked) {
     CNFVar maxVar{10};
-    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    FakeAssignmentProvider fakeAssignmentProvider{TBools::INDETERMINATE};
     VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
     addDefaultConflictSequence(underTest);
@@ -159,10 +159,10 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_ineligibleVariableDoesNotGetPicked) 
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_assignedVariableDoesNotGetPicked) {
     CNFVar maxVar{10};
-    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    FakeAssignmentProvider fakeAssignmentProvider{TBools::INDETERMINATE};
     VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
-    fakeAssignmentProvider.setAssignment(CNFVar{4}, TBool::TRUE);
+    fakeAssignmentProvider.setAssignment(CNFVar{4}, TBools::TRUE);
     addDefaultConflictSequence(underTest);
 
     expectVariableSequence(underTest, {CNFVar{5}, CNFVar{3}});
@@ -170,7 +170,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_assignedVariableDoesNotGetPicked) {
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_variableActivityDecaysWhenTooLarge) {
     CNFVar maxVar{10};
-    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    FakeAssignmentProvider fakeAssignmentProvider{TBools::INDETERMINATE};
     VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
 
     addDefaultConflictSequence(underTest);
@@ -189,13 +189,13 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_variableActivityDecaysWhenTooLarge) 
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_signsAreSelectedByPhase) {
     CNFVar maxVar{10};
-    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    FakeAssignmentProvider fakeAssignmentProvider{TBools::INDETERMINATE};
     VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{maxVar, fakeAssignmentProvider};
     addDefaultConflictSequence(underTest);
 
-    fakeAssignmentProvider.setPhase(CNFVar{5}, TBool::TRUE);
-    fakeAssignmentProvider.setPhase(CNFVar{4}, TBool::TRUE);
-    fakeAssignmentProvider.setPhase(CNFVar{3}, TBool::FALSE);
+    fakeAssignmentProvider.setPhase(CNFVar{5}, TBools::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{4}, TBools::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{3}, TBools::FALSE);
 
     expectLiteralSequence(underTest, {CNFLit{CNFVar{5}, CNFSign::POSITIVE},
                                       CNFLit{CNFVar{4}, CNFSign::POSITIVE},
@@ -204,19 +204,19 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_signsAreSelectedByPhase) {
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_addedVariablesAreUsedForDecisions) {
     CNFVar initialMaxVar{5};
-    FakeAssignmentProvider fakeAssignmentProvider{TBool::INDETERMINATE};
+    FakeAssignmentProvider fakeAssignmentProvider{TBools::INDETERMINATE};
     VSIDSBranchingHeuristic<FakeAssignmentProvider> underTest{initialMaxVar,
                                                               fakeAssignmentProvider};
 
     for (CNFVar i = CNFVar{0}; i < CNFVar{5}; i = nextCNFVar(i)) {
         underTest.setEligibleForDecisions(i, true);
     }
-    fakeAssignmentProvider.setPhase(CNFVar{0}, TBool::TRUE);
-    fakeAssignmentProvider.setPhase(CNFVar{1}, TBool::TRUE);
-    fakeAssignmentProvider.setPhase(CNFVar{2}, TBool::FALSE);
-    fakeAssignmentProvider.setPhase(CNFVar{3}, TBool::FALSE);
-    fakeAssignmentProvider.setPhase(CNFVar{4}, TBool::FALSE);
-    fakeAssignmentProvider.setPhase(CNFVar{5}, TBool::FALSE);
+    fakeAssignmentProvider.setPhase(CNFVar{0}, TBools::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{1}, TBools::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{2}, TBools::FALSE);
+    fakeAssignmentProvider.setPhase(CNFVar{3}, TBools::FALSE);
+    fakeAssignmentProvider.setPhase(CNFVar{4}, TBools::FALSE);
+    fakeAssignmentProvider.setPhase(CNFVar{5}, TBools::FALSE);
 
     underTest.seenInConflict(CNFVar{2});
     underTest.seenInConflict(CNFVar{2});
@@ -226,8 +226,8 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_addedVariablesAreUsedForDecisions) {
     underTest.seenInConflict(CNFVar{0});
 
     underTest.increaseMaxVarTo(CNFVar{8});
-    fakeAssignmentProvider.setPhase(CNFVar{7}, TBool::TRUE);
-    fakeAssignmentProvider.setPhase(CNFVar{8}, TBool::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{7}, TBools::TRUE);
+    fakeAssignmentProvider.setPhase(CNFVar{8}, TBools::TRUE);
     underTest.setEligibleForDecisions(CNFVar{7}, true);
     underTest.setEligibleForDecisions(CNFVar{8}, true);
     for (int i = 0; i < 10; ++i) {

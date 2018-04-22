@@ -238,7 +238,8 @@ CNFLit VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept
         branchingVar = popFromActivityHeap();
         if (!isDeterminate(m_assignmentProvider.getAssignment(branchingVar)) &&
             isEligibleForDecisions(branchingVar)) {
-            CNFSign sign = static_cast<CNFSign>(m_assignmentProvider.getPhase(branchingVar));
+            CNFSign sign = static_cast<CNFSign>(
+                m_assignmentProvider.getPhase(branchingVar).getUnderlyingValue());
             return CNFLit{branchingVar, sign};
         }
     };
