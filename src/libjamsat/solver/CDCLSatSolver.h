@@ -237,7 +237,10 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_amntBinariesLearnt(0)
   , m_clauseDBReductionPolicy(1300, m_learntClauses)
   , m_stamps(getMaxLit(CNFVar{0}).getRawValue())
-  , m_detectedUNSAT(false) {}
+  , m_detectedUNSAT(false) {
+    m_conflictAnalyzer.setOnSeenVariableCallback(
+        [this](CNFVar var) { m_branchingHeuristic.seenInConflict(var); });
+}
 
 template <typename ST>
 void CDCLSatSolver<ST>::stop() noexcept {
@@ -343,8 +346,11 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         auto conflictingClause = m_propagation.propagateUntilFixpoint(decision);
         while (conflictingClause != nullptr) {
             JAM_LOG_SOLVER(info, "Last propagation resulted in a conflict");
+            m_branchingHeuristic.beginHandlingConflict();
             typename ST::Clause *learntClause;
             auto conflictHandlingResult = deriveClause(*conflictingClause, &learntClause);
+            m_branchingHeuristic.endHandlingConflict();
+
             JAM_LOG_SOLVER(info, "Backtracking to decision level "
                                      << conflictHandlingResult.backtrackLevel);
 
