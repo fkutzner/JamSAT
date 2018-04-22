@@ -277,15 +277,15 @@ inline bool toRawBool(TBool value) {
 }
 
 constexpr bool isDeterminate(TBool value) {
-    return value != TBools::INDETERMINATE;
+    return value.getUnderlyingValue() <= 1;
 }
 
 constexpr bool isTrue(TBool value) {
-    return value == TBools::TRUE;
+    return value.getUnderlyingValue() == TBools::TRUE.getUnderlyingValue();
 }
 
 constexpr bool isFalse(TBool value) {
-    return value == TBools::FALSE;
+    return value.getUnderlyingValue() == TBools::FALSE.getUnderlyingValue();
 }
 
 inline TBool toTBool(bool value) {
@@ -293,13 +293,8 @@ inline TBool toTBool(bool value) {
 }
 
 inline TBool negate(const TBool a) {
-    if (a.getUnderlyingValue() == 0) {
-        return TBools::TRUE;
-    }
-    if (a.getUnderlyingValue() == 1) {
-        return TBools::FALSE;
-    }
-    return TBools::INDETERMINATE;
+    auto raw = a.getUnderlyingValue();
+    return TBool::fromUnderlyingValue(raw ^ 1U);
 }
 
 inline TBool operator*(const TBool lhs, const TBool rhs) {

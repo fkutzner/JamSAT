@@ -128,10 +128,9 @@ TBool Trail::getAssignment(CNFLit literal) const noexcept {
     JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_assignments.size()),
                "Variable out of bounds");
     TBool variableAssignment = getAssignment(variable);
-    if (!isDeterminate(variableAssignment) || literal.getSign() == CNFSign::POSITIVE) {
-        return variableAssignment;
-    }
-    return negate(variableAssignment);
+    TBool::UnderlyingType sign = static_cast<TBool::UnderlyingType>(literal.getSign());
+    // TODO: further optimize if neccessary: flip CNFSign constants to get rid of the subtraction
+    return TBool::fromUnderlyingValue(variableAssignment.getUnderlyingValue() ^ (1 - sign));
 }
 
 TBool Trail::getPhase(CNFVar variable) const noexcept {
