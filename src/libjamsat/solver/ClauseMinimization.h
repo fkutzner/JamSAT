@@ -124,64 +124,76 @@ void resolveWithBinaries(LiteralContainer &literals, const BinaryClausesProvider
 /********** Implementation ****************************** */
 
 namespace erl_detail {
-template <class ReasonProvider, class DecisionLevelProvider, class StampMapT>
-bool isRedundant(CNFLit literal, const ReasonProvider &reasonProvider,
-                 const DecisionLevelProvider &dlProvider, StampMapT &tempStamps,
-                 typename StampMapT::Stamp currentStamp) {
 
-    // TODO: profiling showed that the allocations made in this function are too expensive
+// LiteralRedundancyChecker allows reusing m_work and m_stampCleanup by the isRedundant
+// function, saving allocations which were prone to become a bottleneck.
+class LiteralRedundancyChecker {
+public:
+    template <class ReasonProvider, class DecisionLevelProvider, class StampMapT>
+    bool isRedundant(CNFLit literal, const ReasonProvider &reasonProvider,
+                     const DecisionLevelProvider &dlProvider, StampMapT &tempStamps,
+                     typename StampMapT::Stamp currentStamp) {
 
-    if (dlProvider.getAssignmentDecisionLevel(literal.getVariable()) ==
-        dlProvider.getCurrentDecisionLevel()) {
-        return false;
-    }
+        if (dlProvider.getAssignmentDecisionLevel(literal.getVariable()) ==
+            dlProvider.getCurrentDecisionLevel()) {
+            return false;
+        }
 
-    std::vector<CNFVar> work{literal.getVariable()};
+        m_work.clear();
+        m_work.push_back(literal.getVariable());
 
-    // If the redundancy check fails, all stamps added here must be removed. Collect them:
-    std::vector<CNFVar> stampCleanup;
+        // If the redundancy check fails, all stamps added here must be removed. Collect them in
+        // m_stampCleanup:
+        m_stampCleanup.clear();
 
-    while (!work.empty()) {
-        CNFVar workItem = work.back();
-        work.pop_back();
+        while (!m_work.empty()) {
+            CNFVar workItem = m_work.back();
+            m_work.pop_back();
 
-        auto clausePtr = reasonProvider.getAssignmentReason(workItem);
-        JAM_LOG_MINIMIZER(info, "  Checking if lits with variable " << workItem << " and reason "
-                                                                    << clausePtr
-                                                                    << " are redundant.");
-        JAM_ASSERT(clausePtr != nullptr, "Can't determine redundancy of reasonless literals");
+            auto clausePtr = reasonProvider.getAssignmentReason(workItem);
+            JAM_LOG_MINIMIZER(info, "  Checking if lits with variable "
+                                        << workItem << " and reason " << clausePtr
+                                        << " are redundant.");
+            JAM_ASSERT(clausePtr != nullptr, "Can't determine redundancy of reasonless literals");
 
 
-        for (CNFLit lit : *clausePtr) {
-            CNFVar var = lit.getVariable();
-            auto varLevel = dlProvider.getAssignmentDecisionLevel(var);
+            for (CNFLit lit : *clausePtr) {
+                CNFVar var = lit.getVariable();
+                auto varLevel = dlProvider.getAssignmentDecisionLevel(var);
 
-            if (varLevel == 0 || tempStamps.isStamped(var, currentStamp)) {
-                JAM_LOG_MINIMIZER(info,
-                                  "    Reason lit " << lit << " is on level 0 or has been visited");
-                continue;
-            }
-
-            if (reasonProvider.getAssignmentReason(var) != nullptr) {
-                JAM_LOG_MINIMIZER(info,
-                                  "    Reason lit " << lit << " not checked yet, adding to queue");
-                tempStamps.setStamped(var, currentStamp, true);
-                work.push_back(var);
-                stampCleanup.push_back(var);
-            } else {
-                JAM_LOG_MINIMIZER(info,
-                                  "    Reason lit " << lit << " has no reason => not redundant");
-                for (auto var : stampCleanup) {
-                    tempStamps.setStamped(var, currentStamp, false);
+                if (varLevel == 0 || tempStamps.isStamped(var, currentStamp)) {
+                    JAM_LOG_MINIMIZER(info, "    Reason lit "
+                                                << lit << " is on level 0 or has been visited");
+                    continue;
                 }
-                return false;
+
+                if (reasonProvider.getAssignmentReason(var) != nullptr) {
+                    JAM_LOG_MINIMIZER(info, "    Reason lit "
+                                                << lit << " not checked yet, adding to queue");
+                    tempStamps.setStamped(var, currentStamp, true);
+                    m_work.push_back(var);
+                    m_stampCleanup.push_back(var);
+                } else {
+                    JAM_LOG_MINIMIZER(info, "    Reason lit " << lit
+                                                              << " has no reason => not redundant");
+                    for (auto var : m_stampCleanup) {
+                        tempStamps.setStamped(var, currentStamp, false);
+                    }
+                    return false;
+                }
             }
         }
+
+        JAM_LOG_MINIMIZER(info, "Literal " << literal << " is redundant");
+        return true;
     }
 
-    JAM_LOG_MINIMIZER(info, "Literal " << literal << " is redundant");
-    return true;
-}
+private:
+    // no information contained in m_work and m_stampCleanup is reused by isRedundant()
+    // - these member variables purely exist to save allocations.
+    std::vector<CNFVar> m_work;
+    std::vector<CNFVar> m_stampCleanup;
+};
 }
 
 template <class LiteralContainer, class ReasonProvider, class DecisionLevelProvider,
@@ -196,12 +208,16 @@ void eraseRedundantLiterals(LiteralContainer &literals, const ReasonProvider &re
         tempStamps.setStamped(literal.getVariable(), stamp, true);
     }
 
-    auto isRedundant = [&reasonProvider, &dlProvider, &tempStamps, &stamp](CNFLit literal) {
+    erl_detail::LiteralRedundancyChecker redundancyChecker;
+
+    auto isRedundant = [&reasonProvider, &dlProvider, &tempStamps, &stamp,
+                        &redundancyChecker](CNFLit literal) {
         auto reason = reasonProvider.getAssignmentReason(literal.getVariable());
         if (reason != nullptr) {
             JAM_LOG_MINIMIZER(info, "Checking if lit " << literal << " with reason " << reason
                                                        << " is redundant.");
-            return erl_detail::isRedundant(literal, reasonProvider, dlProvider, tempStamps, stamp);
+            return redundancyChecker.isRedundant(literal, reasonProvider, dlProvider, tempStamps,
+                                                 stamp);
         }
         return dlProvider.getAssignmentDecisionLevel(literal.getVariable()) == 0;
     };
