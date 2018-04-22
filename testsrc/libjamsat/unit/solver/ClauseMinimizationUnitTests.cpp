@@ -231,6 +231,44 @@ TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveLiteralsOnCurrentLevel) {
     EXPECT_TRUE(isPermutation(testData, expected));
 }
 
+TEST(UnitSolver, eraseRedundantLiterals_regression_doesNotMarkNonredundantLitAsRedundant) {
+    TestReasonProvider<TrivialClause> reasonProvider;
+
+    TrivialClause reasonFor3{CNFLit{CNFVar{3}, CNFSign::POSITIVE},
+                             CNFLit{CNFVar{7}, CNFSign::POSITIVE}};
+    reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
+
+    TrivialClause reasonFor7{CNFLit{CNFVar{7}, CNFSign::NEGATIVE},
+                             CNFLit{CNFVar{1}, CNFSign::POSITIVE}};
+    reasonProvider.setAssignmentReason(CNFVar{7}, reasonFor7);
+
+    // Variable 1 has no reason clause.
+
+    TrivialClause reasonFor2{CNFLit{CNFVar{7}, CNFSign::POSITIVE},
+                             CNFLit{CNFVar{2}, CNFSign::POSITIVE}};
+    reasonProvider.setAssignmentReason(CNFVar{2}, reasonFor2);
+
+    TestAssignmentProvider dlProvider;
+    dlProvider.setCurrentDecisionLevel(2);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 1);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{2}, 1);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{7}, 1);
+    dlProvider.setAssignmentDecisionLevel(CNFVar{6}, 2);
+
+    TrivialClause testData{CNFLit{CNFVar{6}, CNFSign::POSITIVE},
+                           CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+                           CNFLit{CNFVar{2}, CNFSign::NEGATIVE}};
+
+    StampMap<int, CNFVarKey> tempStamps{1024};
+
+    TrivialClause expected = testData;
+    eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+
+    // neither -3 nor -2 is redundant, since var. 1 has no reason clause and is not unit
+    EXPECT_TRUE(isPermutation(testData, expected));
+}
+
 TEST(UnitSolver, resolveWithBinaries_emptyClauseIsFixpoint) {
     CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
     // representing binary clauses as a map from first literals to a list of
