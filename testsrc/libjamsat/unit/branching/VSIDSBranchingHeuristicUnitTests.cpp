@@ -184,7 +184,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_variableActivityDecaysWhenTooLarge) 
 
     underTest.seenInConflict(CNFVar{3});
 
-    expectVariableSequence(underTest, {CNFVar{3}, CNFVar{4}, CNFVar{5}});
+    expectVariableSequence(underTest, {CNFVar{4}, CNFVar{3}, CNFVar{5}});
 }
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_signsAreSelectedByPhase) {

@@ -267,6 +267,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {
         auto &activity = m_activity[CNFVar{rawVariable}];
         activity = 1e-100 * activity;
     }
+    m_activityBumpDelta *= 1e-100;
 }
 
 template <class AssignmentProvider>
