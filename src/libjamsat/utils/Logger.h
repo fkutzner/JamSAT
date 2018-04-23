@@ -26,9 +26,10 @@
 
 #pragma once
 
+#include <cstdint>
+
 #if defined(JAM_ENABLE_LOGGING)
 #include <boost/log/trivial.hpp>
-#include <cstdint>
 
 namespace jamsat {
 namespace detail_logger {

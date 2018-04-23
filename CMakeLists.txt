@@ -13,6 +13,7 @@ option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
 option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
+option(JAMSAT_LOGGING_DEFAULT_START_EPOCH "The default logging epoch in which logging starts" 0)
 option(JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS "Enable more thorough, but expensive assertions" OFF)
 
 option(JAMSAT_DISABLE_BOOST_LINKING_SETUP "Don't override linker settings for Boost" OFF)
@@ -153,6 +154,7 @@ if(JAMSAT_ENABLE_LOGGING)
     -DJAM_ENABLE_REDUCE_LOGGING
     -DJAM_ENABLE_SOLVER_LOGGING
     -DJAM_ENABLE_MINIMIZER_LOGGING
+    -DJAM_LOG_DEFAULT_STARTLOGGINGEPOCH=${JAMSAT_LOGGING_DEFAULT_START_EPOCH}
   )
 endif()
 

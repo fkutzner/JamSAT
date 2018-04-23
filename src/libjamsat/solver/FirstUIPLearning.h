@@ -35,11 +35,11 @@
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/FaultInjector.h>
+#include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/Truth.h>
 
-#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_CA_LOGGING)
-#include <boost/log/trivial.hpp>
-#define JAM_LOG_CA(x, y) BOOST_LOG_TRIVIAL(x) << "[resolu] " << y
+#if defined(JAM_ENABLE_CA_LOGGING)
+#define JAM_LOG_CA(x, y) JAM_LOG(x, "resolu", y)
 #else
 #define JAM_LOG_CA(x, y)
 #endif

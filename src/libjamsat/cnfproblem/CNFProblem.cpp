@@ -30,10 +30,10 @@
 #include <sstream>
 
 #include <libjamsat/utils/Casts.h>
+#include <libjamsat/utils/Logger.h>
 
-#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_CNFPROBLEM_LOGGING)
-#include <boost/log/trivial.hpp>
-#define JAM_LOG_CNFPROBLEM(x, y) BOOST_LOG_TRIVIAL(x) << "[cnfprb] " << y
+#if defined(JAM_ENABLE_CNFPROBLEM_LOGGING)
+#define JAM_LOG_CNFPROBLEM(x, y) JAM_LOG(x, "cnfprb", y)
 #else
 #define JAM_LOG_CNFPROBLEM(x, y)
 #endif

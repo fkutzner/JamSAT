@@ -38,14 +38,14 @@
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/ControlFlow.h>
+#include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/Truth.h>
 
 #include <toolbox/cnfgenerators/GateStructure.h>
 #include <toolbox/cnfgenerators/Rule110.h>
 
-#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_CDCLITEST_LOGGING)
-#include <boost/log/trivial.hpp>
-#define JAM_LOG_CDCLITEST(x, y) BOOST_LOG_TRIVIAL(x) << "[cdclitest] " << y
+#if defined(JAM_ENABLE_CDCLITEST_LOGGING)
+#define JAM_LOG_CDCLITEST(x, y) JAM_LOG(x, "cdclitest", y)
 #else
 #define JAM_LOG_CDCLITEST(x, y)
 #endif

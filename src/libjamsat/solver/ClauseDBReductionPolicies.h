@@ -30,10 +30,10 @@
 #include <cstdint>
 
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/Logger.h>
 
-#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_REDUCE_LOGGING)
-#include <boost/log/trivial.hpp>
-#define JAM_LOG_REDUCE(x, y) BOOST_LOG_TRIVIAL(x) << "[reduce] " << y
+#if defined(JAM_ENABLE_REDUCE_LOGGING)
+#define JAM_LOG_REDUCE(x, y) JAM_LOG(x, "reduce", y)
 #else
 #define JAM_LOG_REDUCE(x, y)
 #endif

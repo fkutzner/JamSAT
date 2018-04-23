@@ -30,10 +30,10 @@
 #include <vector>
 
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/Logger.h>
 
-#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_MINIMIZER_LOGGING)
-#include <boost/log/trivial.hpp>
-#define JAM_LOG_MINIMIZER(x, y) BOOST_LOG_TRIVIAL(x) << "[minmiz] " << y
+#if defined(JAM_ENABLE_MINIMIZER_LOGGING)
+#define JAM_LOG_MINIMIZER(x, y) JAM_LOG(x, "minmiz", y)
 #else
 #define JAM_LOG_MINIMIZER(x, y)
 #endif

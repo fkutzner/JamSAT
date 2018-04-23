@@ -51,12 +51,12 @@
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/RestartPolicies.h>
 #include <libjamsat/solver/Trail.h>
+#include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/RangeUtils.h>
 #include <libjamsat/utils/StampMap.h>
 
-#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_SOLVER_LOGGING)
-#include <boost/log/trivial.hpp>
-#define JAM_LOG_SOLVER(x, y) BOOST_LOG_TRIVIAL(x) << "[cdcldr] " << y
+#if defined(JAM_ENABLE_SOLVER_LOGGING)
+#define JAM_LOG_SOLVER(x, y) JAM_LOG(x, "cdcldr", y)
 #else
 #define JAM_LOG_SOLVER(x, y)
 #endif
@@ -335,6 +335,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
     int conflictsUntilMaintenance = 5000;
 
     while (!m_trail.isVariableAssignmentComplete()) {
+        loggingEpochElapsed();
         m_trail.newDecisionLevel();
         auto decision = m_branchingHeuristic.pickBranchLiteral();
         JAM_LOG_SOLVER(info, "Picked decision literal " << decision << ", now at decision level "

@@ -33,12 +33,12 @@
 #include <libjamsat/solver/Watcher.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
+#include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/Printers.h>
 #include <libjamsat/utils/Truth.h>
 
-#if defined(JAM_ENABLE_LOGGING) && defined(JAM_ENABLE_PROPAGATION_LOGGING)
-#include <boost/log/trivial.hpp>
-#define JAM_LOG_PROPAGATION(x, y) BOOST_LOG_TRIVIAL(x) << "[propgt] " << y
+#if defined(JAM_ENABLE_PROPAGATION_LOGGING)
+#define JAM_LOG_PROPAGATION(x, y) JAM_LOG(x, "propgt", y)
 #else
 #define JAM_LOG_PROPAGATION(x, y)
 #endif
