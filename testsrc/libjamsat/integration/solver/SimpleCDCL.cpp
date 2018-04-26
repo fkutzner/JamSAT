@@ -30,7 +30,6 @@
 
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/clausedb/Clause.h>
-#include <libjamsat/clausedb/HeapClauseDB.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/solver/ClauseMinimization.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
@@ -43,6 +42,8 @@
 
 #include <toolbox/cnfgenerators/GateStructure.h>
 #include <toolbox/cnfgenerators/Rule110.h>
+
+#include "HeapClauseDB.h"
 
 #if defined(JAM_ENABLE_CDCLITEST_LOGGING)
 #define JAM_LOG_CDCLITEST(x, y) JAM_LOG(x, "cdclitest", y)

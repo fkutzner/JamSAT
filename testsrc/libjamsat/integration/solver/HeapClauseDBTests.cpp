@@ -29,8 +29,9 @@
 #include <vector>
 
 #include <libjamsat/clausedb/Clause.h>
-#include <libjamsat/clausedb/HeapClauseDB.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+
+#include "HeapClauseDB.h"
 
 namespace jamsat {
 using TrivialClause = std::vector<CNFLit>;

@@ -554,8 +554,6 @@ void CDCLSatSolver<ST>::reduceClauseDB() {
         return;
     }
 
-    JAM_LOG_SOLVER(info, "Reducing the clause database...");
-
     for (auto toDelete = toDeleteBegin; toDelete != m_learntClauses.end(); ++toDelete) {
         if (!m_propagation.isAssignmentReason(**toDelete, m_trail)) {
             (*toDelete)->setFlag(ST::Clause::Flag::SCHEDULED_FOR_DELETION);
