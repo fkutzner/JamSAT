@@ -28,6 +28,8 @@
 
 #include <libjamsat/utils/Assert.h>
 
+#include <cstdint>
+
 namespace jamsat {
 /**
  * \ingroup JamSAT_Utils
