@@ -35,7 +35,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/range.hpp>
-#include <boost/range/join.hpp>
+#include <boost/range/adaptor/filtered.hpp>
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/proof/DRUPCertificate.h>
@@ -554,11 +554,23 @@ void CDCLSatSolver<ST>::reduceClauseDB() {
         return;
     }
 
+    JAM_LOG_SOLVER(info, "Reducing the clause database...");
+
+    for (auto toDelete = toDeleteBegin; toDelete != m_learntClauses.end(); ++toDelete) {
+        if (!m_propagation.isAssignmentReason(**toDelete, m_trail)) {
+            (*toDelete)->setFlag(ST::Clause::Flag::SCHEDULED_FOR_DELETION);
+        }
+    }
+
+    auto clausesInPropOrder = m_propagation.getClausesInPropagationOrder();
+
     std::vector<typename ST::Clause *> clausesAfterRelocation;
     m_clauseDB.retain(
-        boost::range::join(
-            boost::make_iterator_range(m_problemClauses.begin(), m_problemClauses.end()),
-            boost::make_iterator_range(m_learntClauses.begin(), toDeleteBegin)),
+        boost::adaptors::filter(clausesInPropOrder,
+                                [](typename ST::Clause const *clause) {
+                                    return !clause->getFlag(
+                                        ST::Clause::Flag::SCHEDULED_FOR_DELETION);
+                                }),
         [this](typename ST::Clause const &clause) {
             return m_propagation.isAssignmentReason(clause, this->m_trail);
         },
@@ -574,14 +586,12 @@ void CDCLSatSolver<ST>::reduceClauseDB() {
     // The reasons have already been updated to point at the relocated clauses, so keep them:
     m_propagation.clear(ST::Propagation::ClearMode::KEEP_REASONS);
     for (auto clausePtr : clausesAfterRelocation) {
+        clausePtr->clearFlag(ST::Clause::Flag::SCHEDULED_FOR_DELETION);
         if (clausePtr->template getLBD<LBD>() != 0) {
             m_learntClauses.push_back(clausePtr);
         } else {
             m_problemClauses.push_back(clausePtr);
         }
-
-        // The clause has been removed during clear(), so it's okay to re-register
-        // it in the exact same state:
         m_propagation.registerEquivalentSubstitutingClause(*clausePtr);
     }
 }
