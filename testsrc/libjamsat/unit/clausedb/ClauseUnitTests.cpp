@@ -154,6 +154,7 @@ TEST(UnitClauseDB, assignClause) {
     auto assignee = createHeapClause(3);
     auto source = createHeapClause(3);
 
+    source->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
     source->setLBD<int>(10);
     (*source)[0] = CNFLit{CNFVar{100}, CNFSign::POSITIVE};
     (*source)[1] = CNFLit{CNFVar{10}, CNFSign::NEGATIVE};
@@ -162,6 +163,7 @@ TEST(UnitClauseDB, assignClause) {
     *assignee = *source;
 
     EXPECT_EQ(assignee->getLBD<int>(), 10);
+    EXPECT_TRUE(assignee->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
     EXPECT_TRUE(std::equal(assignee->begin(), assignee->end(), source->begin(), source->end()));
 }
 
@@ -249,5 +251,24 @@ TEST(UnitClauseDB, clauseIsNotEqualToClauseWithDifferentLiterals) {
 
     EXPECT_FALSE(*underTest == *otherClause);
     EXPECT_TRUE(*underTest != *otherClause);
+}
+
+TEST(UnitClauseDB, clauseFlagsAreClearAfterConstruction) {
+    auto underTest = createHeapClause(2);
+    EXPECT_FALSE(underTest->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+}
+
+TEST(UnitClauseDB, setClauseFlag) {
+    auto underTest = createHeapClause(2);
+    underTest->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
+    EXPECT_TRUE(underTest->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+}
+
+TEST(UnitClauseDB, clearClauseFlag) {
+    auto underTest = createHeapClause(2);
+    underTest->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
+    ASSERT_TRUE(underTest->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+    underTest->clearFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
+    EXPECT_FALSE(underTest->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
 }
 }

@@ -31,7 +31,7 @@
 
 namespace jamsat {
 Clause::Clause(size_type size) noexcept
-  : m_size(size), m_lbd(0), m_anchor(CNFLit::getUndefinedLiteral()) {}
+  : m_size(size), m_lbd(0), m_flags(0), m_anchor(CNFLit::getUndefinedLiteral()) {}
 
 CNFLit &Clause::operator[](size_type index) noexcept {
     JAM_ASSERT(index < m_size, "Index out of bounds");
@@ -77,6 +77,7 @@ Clause &Clause::operator=(const Clause &other) noexcept {
                "Illegal argument: other clause must not be larger than the assignee");
 
     this->m_lbd = other.m_lbd;
+    this->m_flags = other.m_flags;
     this->m_size = other.m_size;
     std::copy(other.begin(), other.end(), this->begin());
     return *this;
@@ -129,5 +130,18 @@ bool Clause::operator==(Clause const &rhs) const noexcept {
 
 bool Clause::operator!=(Clause const &rhs) const noexcept {
     return !(*this == rhs);
+}
+
+
+void Clause::setFlag(Flag flag) noexcept {
+    m_flags |= static_cast<std::underlying_type_t<Flag>>(flag);
+}
+
+void Clause::clearFlag(Flag flag) noexcept {
+    m_flags &= ~(static_cast<std::underlying_type_t<Flag>>(flag));
+}
+
+bool Clause::getFlag(Flag flag) const noexcept {
+    return (m_flags & static_cast<std::underlying_type_t<Flag>>(flag)) != 0;
 }
 }

@@ -46,11 +46,16 @@ namespace jamsat {
  * \brief The internal clause data structure
  */
 class Clause {
+private:
+    using flag_type = uint16_t;
+
 public:
     using size_type = uint32_t;
     using iterator = CNFLit *;
     using const_iterator = const CNFLit *;
     using lbd_type = uint16_t;
+
+    enum class Flag : flag_type { SCHEDULED_FOR_DELETION = 1 };
 
     /**
      * \brief Returns a reference to a literal within the clause.
@@ -161,6 +166,28 @@ public:
      */
     static Clause *constructIn(void *target, size_type size);
 
+    /**
+     * \brief Sets the given flag for the clause.
+     *
+     * \param flag      A value of Clause::Flags; the flag to be set.
+     */
+    void setFlag(Flag flag) noexcept;
+
+    /**
+     * \brief Clears the given flag for the clause.
+     *
+     * \param flag      A value of Clause::Flags; the flag to be cleared.
+     */
+    void clearFlag(Flag flag) noexcept;
+
+    /**
+     * \brief Checks whether the given flag is set.
+     *
+     * \param flag      A value of Clause::Flags; the flag to be set.
+     * \return          true iff \p flag is set.
+     */
+    bool getFlag(Flag flag) const noexcept;
+
     friend std::unique_ptr<Clause> createHeapClause(size_type size);
 
     bool operator==(Clause const &rhs) const noexcept;
@@ -179,6 +206,7 @@ private:
 
     size_type m_size;
     lbd_type m_lbd;
+    flag_type m_flags;
     CNFLit m_anchor;
 };
 
