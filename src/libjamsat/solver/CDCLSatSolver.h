@@ -35,7 +35,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/range.hpp>
-#include <boost/range/adaptor/filtered.hpp>
+
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/proof/DRUPCertificate.h>
@@ -44,6 +44,7 @@
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/clausedb/HeapletClauseDB.h>
+#include <libjamsat/solver/ClauseDBReduction.h>
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
 #include <libjamsat/solver/ClauseMinimization.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
@@ -187,9 +188,6 @@ private:
     void prepareBacktrack(typename ST::Trail::DecisionLevel level);
     void backtrackToLevel(typename ST::Trail::DecisionLevel level);
     void backtrackAll();
-
-    void reduceClauseDB();
-
 
     typename ST::Trail m_trail;
     typename ST::Propagation m_propagation;
@@ -390,7 +388,12 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 
         if (m_clauseDBReductionPolicy.shouldReduceDB()) {
             JAM_LOG_SOLVER(info, "Reducing the clause database...");
-            reduceClauseDB();
+            auto amountKnownGood = m_problemClauses.size() + m_amntBinariesLearnt;
+            auto toDeleteBegin =
+                m_clauseDBReductionPolicy.getClausesMarkedForDeletion(amountKnownGood);
+            reduceClauseDB(m_clauseDB, m_propagation, m_trail,
+                           boost::make_iterator_range(toDeleteBegin, m_learntClauses.end()),
+                           m_problemClauses, m_learntClauses);
         }
     }
 
@@ -543,54 +546,5 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     SolvingResult result = createSolvingResult(intermediateResult);
     backtrackAll();
     return result;
-}
-
-template <typename ST>
-void CDCLSatSolver<ST>::reduceClauseDB() {
-    auto amountKnownGood = m_problemClauses.size() + m_amntBinariesLearnt;
-    auto toDeleteBegin = m_clauseDBReductionPolicy.getClausesMarkedForDeletion(amountKnownGood);
-
-    if (toDeleteBegin == m_learntClauses.end()) {
-        return;
-    }
-
-    for (auto toDelete = toDeleteBegin; toDelete != m_learntClauses.end(); ++toDelete) {
-        if (!m_propagation.isAssignmentReason(**toDelete, m_trail)) {
-            (*toDelete)->setFlag(ST::Clause::Flag::SCHEDULED_FOR_DELETION);
-        }
-    }
-
-    auto clausesInPropOrder = m_propagation.getClausesInPropagationOrder();
-
-    std::vector<typename ST::Clause *> clausesAfterRelocation;
-    m_clauseDB.retain(
-        boost::adaptors::filter(clausesInPropOrder,
-                                [](typename ST::Clause const *clause) {
-                                    return !clause->getFlag(
-                                        ST::Clause::Flag::SCHEDULED_FOR_DELETION);
-                                }),
-        [this](typename ST::Clause const &clause) {
-            return m_propagation.isAssignmentReason(clause, this->m_trail);
-        },
-        [this](typename ST::Clause const &reason, typename ST::Clause const &relocatedTo) {
-            m_propagation.updateAssignmentReason(reason, relocatedTo);
-        },
-        boost::optional<decltype(std::back_inserter(clausesAfterRelocation))>{
-            std::back_inserter(clausesAfterRelocation)});
-
-    // Re-register relocated clauses:
-    m_problemClauses.clear();
-    m_learntClauses.clear();
-    // The reasons have already been updated to point at the relocated clauses, so keep them:
-    m_propagation.clear(ST::Propagation::ClearMode::KEEP_REASONS);
-    for (auto clausePtr : clausesAfterRelocation) {
-        clausePtr->clearFlag(ST::Clause::Flag::SCHEDULED_FOR_DELETION);
-        if (clausePtr->template getLBD<LBD>() != 0) {
-            m_learntClauses.push_back(clausePtr);
-        } else {
-            m_problemClauses.push_back(clausePtr);
-        }
-        m_propagation.registerEquivalentSubstitutingClause(*clausePtr);
-    }
 }
 }
