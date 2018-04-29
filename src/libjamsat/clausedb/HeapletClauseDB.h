@@ -338,8 +338,8 @@ inline bool Heaplet::test_isRegionInHeaplet(const void *ptr, size_type length) c
 #endif
 }
 
-namespace {
-uintptr_t getEffectiveHeapletSize(uintptr_t proposedSize) {
+namespace clausedb_detail {
+inline uintptr_t getEffectiveHeapletSize(uintptr_t proposedSize) {
     uintptr_t realSize = proposedSize;
 
     void *test = nullptr;
@@ -361,7 +361,7 @@ uintptr_t getEffectiveHeapletSize(uintptr_t proposedSize) {
 
 template <typename ClauseT>
 HeapletClauseDB<ClauseT>::HeapletClauseDB(size_type heapletSize, size_type memoryLimit)
-  : m_heapletSize(getEffectiveHeapletSize(heapletSize))
+  : m_heapletSize(clausedb_detail::getEffectiveHeapletSize(heapletSize))
   , m_memoryLimit(memoryLimit)
   , m_activeHeaplets()
   , m_binaryHeaplets()
