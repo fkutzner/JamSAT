@@ -67,8 +67,8 @@ TEST(SolverIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsatis
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::FALSE);
 }
 
-TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
-    Rule110PredecessorStateProblem problem{"1xxx0", "0xx10", 5};
+TEST(SolverIntegration, CDCLSatSolver_rule110_reachable) {
+    Rule110PredecessorStateProblem problem{"xx1xx", "x1xxx", 7};
     auto rule110Encoding = problem.getCNFEncoding();
 
     CDCLSatSolver<>::Configuration testConfig;
@@ -86,7 +86,7 @@ TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
     EXPECT_TRUE(isTrue(solvingResult.model->check(rule110Encoding.cnfProblem)));
 }
 
-TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {
+TEST(SolverIntegration, CDCLSatSolver_rule110_unreachable) {
     Rule110PredecessorStateProblem problem{"1x1x1", "01010", 7};
     auto rule110Encoding = problem.getCNFEncoding();
 
@@ -100,5 +100,35 @@ TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {
     ASSERT_EQ(isSatisfiableViaMinisat(rule110Encoding.cnfProblem), TBools::FALSE)
         << "Bad test case: the problem is expected not to be satisfiable";
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::FALSE);
+}
+
+TEST(SolverIntegration, CDCLSatSolver_rule110_incremental) {
+    Rule110PredecessorStateProblem problem{"xxxxxxxx", "11010111", 6};
+    auto rule110Encoding = problem.getCNFEncoding();
+
+    CDCLSatSolver<>::Configuration testConfig;
+    testConfig.clauseMemoryLimit = 1048576ULL;
+    CDCLSatSolver<> underTest{testConfig};
+    underTest.addProblem(rule110Encoding.cnfProblem);
+
+    auto &inputs = rule110Encoding.freeInputs;
+    ASSERT_EQ(inputs.size(), 8ULL);
+
+    // Should be satistiable with input "xxxxxxx1":
+    auto result = underTest.solve({inputs[7]});
+    EXPECT_EQ(result.isSatisfiable, TBools::TRUE);
+
+    // Should not be satisfiable with input "1x1x1x11":
+    result = underTest.solve({inputs[0], inputs[2], inputs[4], inputs[6], inputs[7]});
+    EXPECT_EQ(result.isSatisfiable, TBools::FALSE);
+
+    // Should be satistiable with input "xxxxxxxx":
+    result = underTest.solve({});
+    EXPECT_EQ(result.isSatisfiable, TBools::TRUE);
+
+    // Should be satistiable with input "00000001":
+    result = underTest.solve({~inputs[0], ~inputs[1], ~inputs[2], ~inputs[3], ~inputs[4],
+                              ~inputs[5], ~inputs[6], inputs[7]});
+    EXPECT_EQ(result.isSatisfiable, TBools::TRUE);
 }
 }
