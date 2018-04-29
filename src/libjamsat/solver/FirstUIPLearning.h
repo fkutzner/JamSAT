@@ -450,11 +450,12 @@ std::vector<CNFLit> FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::compu
         JAM_LOG_CA(info, "Finished conflict resolution.");
         return result;
     } catch (std::bad_alloc &oomException) {
+        (void)oomException;
         // Restore class invariant A before throwing on the exception.
         for (CNFVar::RawVariable v = 0; v <= m_maxVar.getRawValue(); ++v) {
             m_stamps[CNFVar{v}] = 0;
         }
-        throw oomException;
+        throw;
     }
 }
 
