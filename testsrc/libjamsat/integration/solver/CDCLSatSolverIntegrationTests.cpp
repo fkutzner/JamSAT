@@ -81,7 +81,9 @@ TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
 
     ASSERT_EQ(isSatisfiableViaMinisat(cnfProblem), TBools::TRUE)
         << "Bad test case: the problem is expected to be satisfiable";
-    EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::TRUE);
+    auto solvingResult = underTest.solve({});
+    ASSERT_EQ(solvingResult.isSatisfiable, TBools::TRUE);
+    EXPECT_TRUE(isTrue(solvingResult.model->check(cnfProblem)));
 }
 
 TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {

@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <memory>
 #include <ostream>
 #include <unordered_map>
 #include <vector>
@@ -44,6 +45,7 @@
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/clausedb/HeapletClauseDB.h>
+#include <libjamsat/proof/Model.h>
 #include <libjamsat/solver/ClauseDBReduction.h>
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
 #include <libjamsat/solver/ClauseMinimization.h>
@@ -90,6 +92,7 @@ class CDCLSatSolver {
 public:
     struct SolvingResult {
         TBool isSatisfiable;
+        std::unique_ptr<Model> model;
     };
 
     /**
@@ -289,7 +292,15 @@ void CDCLSatSolver<ST>::addProblem(const CNFProblem &problem) {
 
 template <typename ST>
 typename CDCLSatSolver<ST>::SolvingResult CDCLSatSolver<ST>::createSolvingResult(TBool result) {
-    return SolvingResult{result};
+    std::unique_ptr<Model> model{nullptr};
+    if (isTrue(result)) {
+        model = createModel(m_maxVar);
+        for (CNFLit lit : m_trail.getAssignments(0)) {
+            model->setAssignment(lit.getVariable(),
+                                 lit.getSign() == CNFSign::POSITIVE ? TBools::TRUE : TBools::FALSE);
+        }
+    }
+    return SolvingResult{result, std::move(model)};
 }
 
 template <typename ST>

@@ -29,7 +29,7 @@ int getParseErrorExitValue(std::string const &parseErrorMode) {
     return EXIT_FAILURE;
 }
 
-bool isCheckingWithMinisatEnabled(std::string const &checkParameter) {
+bool isCheckingResultEnabled(std::string const &checkParameter) {
     return checkParameter == "--check-result";
 }
 
@@ -89,19 +89,29 @@ int main(int argc, char **argv) {
     SolverType solver{config};
     solver.addProblem(problem);
     auto result = solver.solve({});
+
+    bool checkResultEnabled = isCheckingResultEnabled(argv[2]);
+    if (checkResultEnabled) {
+        if (jamsat::isTrue(result.isSatisfiable)) {
+            bool problemSatisfied = jamsat::isTrue(result.model->check(problem));
+            JAM_ASSERT(problemSatisfied,
+                       "The assignment produced by the solver does not satisfy the formula");
+            if (!problemSatisfied) {
+                return EXIT_FAILURE;
+            }
+        }
+
+        if (checkResultWithMinisat(problem, result.isSatisfiable) == CheckMinisatResult::NO_MATCH) {
+            return EXIT_FAILURE;
+        }
+    }
+
     if (result.isSatisfiable == jamsat::TBools::TRUE) {
         std::cout << "Satisfiable:1" << std::endl;
     } else if (result.isSatisfiable == jamsat::TBools::FALSE) {
         std::cout << "Satisfiable:0" << std::endl;
     } else {
         std::cout << "Satisfiable:-1" << std::endl;
-    }
-
-    bool checkWithMinisat = isCheckingWithMinisatEnabled(argv[2]);
-
-    if (checkWithMinisat &&
-        checkResultWithMinisat(problem, result.isSatisfiable) == CheckMinisatResult::NO_MATCH) {
-        return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
