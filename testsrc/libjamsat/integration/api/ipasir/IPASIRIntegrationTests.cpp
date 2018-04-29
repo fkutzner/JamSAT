@@ -43,9 +43,9 @@ TEST(IpasirIntegration, solveWithImmediateConflict) {
     EXPECT_EQ(result, 20);
 }
 
-TEST(IpasirIntegration, solveMiniSatisfiableProblem) {
-    void *solver = ipasir_init();
-    auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
+namespace {
+// Adds the problem (1 2) (-2 3) (-1 -3)
+void addMiniSatisfiableProblem(void *solver) {
     ipasir_add(solver, 1);
     ipasir_add(solver, 2);
     ipasir_add(solver, 0);
@@ -55,8 +55,16 @@ TEST(IpasirIntegration, solveMiniSatisfiableProblem) {
     ipasir_add(solver, 0);
 
     ipasir_add(solver, -1);
-    ipasir_add(solver, -3);
+    ipasir_add(solver, 3);
     ipasir_add(solver, 0);
+}
+}
+
+TEST(IpasirIntegration, solveMiniSatisfiableProblem) {
+    void *solver = ipasir_init();
+    auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
+
+    addMiniSatisfiableProblem(solver);
 
     int result = ipasir_solve(solver);
     EXPECT_EQ(result, 10);
@@ -67,4 +75,19 @@ TEST(IpasirIntegration, solveMiniSatisfiableProblem) {
 
     // One of the literals 1 and 2 must also be assigned "true"
     EXPECT_TRUE(ipasir_val(solver, 2) == 2 || ipasir_val(solver, 1) == 1);
+}
+
+TEST(IpasirIntegration, assumptionsAreClearedBetweenSolveCalls) {
+    void *solver = ipasir_init();
+    auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
+
+    addMiniSatisfiableProblem(solver);
+
+    // Force a top-level conflict:
+    ipasir_assume(solver, -1);
+    ipasir_assume(solver, -3);
+    ASSERT_EQ(ipasir_solve(solver), 20);
+
+    // No assumptions for second call ~> should be satisfiable
+    ASSERT_EQ(ipasir_solve(solver), 10);
 }
