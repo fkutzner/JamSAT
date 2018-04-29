@@ -60,4 +60,11 @@ TEST(IpasirIntegration, solveMiniSatisfiableProblem) {
 
     int result = ipasir_solve(solver);
     EXPECT_EQ(result, 10);
+
+    // The literal 3 must be assigned "true" in all satisfying assignments
+    EXPECT_EQ(ipasir_val(solver, 3), 3);
+    EXPECT_EQ(ipasir_val(solver, -3), 3);
+
+    // One of the literals 1 and 2 must also be assigned "true"
+    EXPECT_TRUE(ipasir_val(solver, 2) == 2 || ipasir_val(solver, 1) == 1);
 }

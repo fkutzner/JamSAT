@@ -56,6 +56,9 @@ public:
 
         m_config.clauseMemoryLimit = defaultMemLimit;
         m_solver.reset(nullptr);
+        m_clauseAddBuffer = CNFClause{};
+        m_assumptionBuffer = std::vector<CNFLit>{};
+        m_result = typename SolverType::SolvingResult{};
     }
 
     // TODO: Add a reconfigure method to the solver
@@ -82,22 +85,39 @@ public:
 
     int solve() {
         ensureSolverExists();
-        auto result = m_solver->solve(m_assumptionBuffer);
+        m_result = m_solver->solve(m_assumptionBuffer);
         m_assumptionBuffer.clear();
 
-        if (isTrue(result.isSatisfiable)) {
+        if (isTrue(m_result.isSatisfiable)) {
             return 10;
         }
-        if (isFalse(result.isSatisfiable)) {
+        if (isFalse(m_result.isSatisfiable)) {
             return 20;
         }
         return 0;
     }
 
     int val(int lit) {
-        JAM_ASSERT(false, "IPASIR val() is not implemented yet");
-        (void)lit;
-        return 0;
+        if (!isTrue(m_result.isSatisfiable)) {
+            // The client may call this function only in the SAT case
+            return 0;
+        }
+
+        JAM_ASSERT(m_result.model.get() != nullptr,
+                   "Obtained SAT result, but did not produce a model");
+        CNFLit internalLit = ipasirLitToCNFLit(lit);
+        TBool varAssignment = m_result.model->getAssignment(internalLit.getVariable());
+
+        if (!isDeterminate(varAssignment)) {
+            // "unimportant" case
+            return 0;
+        }
+
+        // Flip the assignment if neccessary:
+        TBool::UnderlyingType sign = static_cast<TBool::UnderlyingType>(internalLit.getSign());
+        TBool litAssignment =
+            TBool::fromUnderlyingValue(varAssignment.getUnderlyingValue() ^ (1 - sign));
+        return (isTrue(litAssignment) ? lit : -lit);
     }
 
     int failed(int lit) {
@@ -124,6 +144,7 @@ private:
     std::unique_ptr<CDCLSatSolver<>> m_solver;
     CNFClause m_clauseAddBuffer;
     std::vector<CNFLit> m_assumptionBuffer;
+    typename SolverType::SolvingResult m_result;
 };
 }
 }
