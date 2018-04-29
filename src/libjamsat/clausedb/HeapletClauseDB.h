@@ -30,7 +30,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -350,8 +349,6 @@ inline uintptr_t getEffectiveHeapletSize(uintptr_t proposedSize) {
             return realSize;
         }
         realSize /= 2;
-        std::cerr << "c Warning: decreasing heaplet size from " << proposedSize << " to "
-                  << realSize << std::endl;
     }
 
     JAM_ASSERT(realSize != 0, "Could not allocate any memory for heaplets");

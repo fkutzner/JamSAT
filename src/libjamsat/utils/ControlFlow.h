@@ -50,7 +50,6 @@ public:
      */
     explicit OnExitScope(std::function<void()> callOnExit) noexcept : m_callOnExit(callOnExit) {
         JAM_ASSERT(callOnExit, "callOnExit must be a callable function, but is not");
-        m_callOnExit = callOnExit;
     }
 
     OnExitScope &operator=(const OnExitScope &other) = delete;

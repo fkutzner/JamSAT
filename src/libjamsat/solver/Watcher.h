@@ -99,7 +99,9 @@ public:
 
     bool hasFinishedTraversal() const noexcept { return m_toTraverse == 0ull; }
 
-    void finishedTraversal() noexcept {}
+    void finishedTraversal() noexcept {
+        // Future implementations might lazily reorder watchers here
+    }
 
     WatcherTraversal &operator++() noexcept {
         JAM_ASSERT(m_toTraverse > 0ull, "Tried to traverse beyond the watcher list");

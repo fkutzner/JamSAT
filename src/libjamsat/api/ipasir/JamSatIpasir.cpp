@@ -49,7 +49,7 @@ public:
     IPASIRContext() {
         // TODO: add a configuration function for this
         // TODO: remove the bound in the default case?
-        uint64_t defaultMemLimit = 1024ull * 1024ull * 8192ull;
+        uint64_t defaultMemLimit = 1024ULL * 1024ULL * 8192ULL;
         if (defaultMemLimit > std::numeric_limits<uintptr_t>::max()) {
             defaultMemLimit = std::numeric_limits<uintptr_t>::max();
         }

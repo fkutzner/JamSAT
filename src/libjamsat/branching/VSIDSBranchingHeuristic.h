@@ -242,7 +242,7 @@ CNFLit VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept
                 m_assignmentProvider.getPhase(branchingVar).getUnderlyingValue());
             return CNFLit{branchingVar, sign};
         }
-    };
+    }
 
     return CNFLit::getUndefinedLiteral();
 }

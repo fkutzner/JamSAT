@@ -53,9 +53,12 @@ inline void setLoggingStartEpoch(uint64_t epoch) {
 
 #else
 
-inline void loggingEpochElapsed() {}
+inline void loggingEpochElapsed() {
+    // Logging disabled, therefore no action required
+}
 inline void setLoggingStartEpoch(uint64_t epoch) {
     (void)epoch;
+    // Logging disabled, therefore no action required
 }
 
 #define JAM_LOG(level, category, message)
