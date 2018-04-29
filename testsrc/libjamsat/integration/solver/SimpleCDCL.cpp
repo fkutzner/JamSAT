@@ -299,7 +299,7 @@ TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
 }
 
 TEST(IntegrationSolver, SimpleCDCL_rule110_reachable) {
-    Rule110PredecessorStateProblem problem{"1xxx0", "0xx10", 1};
+    Rule110PredecessorStateProblem problem{"xx1xx", "x1xxx", 7};
     auto rule110Encoding = problem.getCNFEncoding();
 
     SimpleCDCL underTest;

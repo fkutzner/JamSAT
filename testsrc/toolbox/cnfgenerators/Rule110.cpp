@@ -32,8 +32,8 @@
 
 
 namespace jamsat {
-Rule110PredecessorStateProblem::Rule110PredecessorStateProblem(const std::string &targetStateSpec,
-                                                               const std::string &sourceStateSpec,
+Rule110PredecessorStateProblem::Rule110PredecessorStateProblem(const std::string &sourceStateSpec,
+                                                               const std::string &targetStateSpec,
                                                                uint32_t numberOfIntermediateSteps)
   : m_targetStateSpec(targetStateSpec)
   , m_sourceStateSpec(sourceStateSpec)
@@ -65,7 +65,7 @@ Rule110PredecessorStateProblem::createConstraints(uint32_t step, uint32_t cellIn
         if (m_sourceStateSpec[cellIndex] != 'x') {
             result.push_back({lit});
         } else {
-            freeInputs.push_back(lit);
+            freeInputs.push_back(~lit);
         }
         // return early since there are no other "incoming" constraints for this cell
         return result;

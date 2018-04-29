@@ -71,14 +71,14 @@ public:
     /**
      * \brief Constructs a Rule110PredecessorStateProblem.
      *
-     * \param targetStateSpec   The specification of the source state.
-     * \param sourceStateSpec   The specification of the target state. The length of
+     * \param sourceStateSpec   The specification of the source state.
+     * \param targetStateSpec   The specification of the target state. The length of
      *                          \p sourceStateSpec must be equal to the length of
      *                          \p targetStateSpec.
      * \param numberOfIntermediateSteps The number of intermediate Rule 110 steps.
      */
-    Rule110PredecessorStateProblem(const std::string &targetStateSpec,
-                                   const std::string &sourceStateSpec,
+    Rule110PredecessorStateProblem(const std::string &sourceStateSpec,
+                                   const std::string &targetStateSpec,
                                    uint32_t numberOfIntermediateSteps);
 
     /**
