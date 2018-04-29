@@ -63,6 +63,11 @@ namespace jamsat {
  */
 class Rule110PredecessorStateProblem {
 public:
+    struct Rule110Encoding {
+        CNFProblem cnfProblem;
+        std::vector<CNFLit> freeInputs;
+    };
+
     /**
      * \brief Constructs a Rule110PredecessorStateProblem.
      *
@@ -79,10 +84,17 @@ public:
     /**
      * \brief Encodes the problem instance as a satisfiability problem instance in CNF.
      *
-     * \returns a CNF SAT problem instance which is satisfiable iff the target state is reachable
-     *   from the source state with exactly N intermediate steps.
+     * \returns a structure containing a CNF SAT problem instance which is satisfiable
+     *   iff the target state is reachable from the source state with exactly N
+     *   intermediate steps. The structure also contains a vector \p freeInputs constructed
+     *   as follows:
+     *   For each "x" in \p sourceStateSpec passed to the constructor
+     *   of this problem generator, a literal L is added to \p freeInputs
+     *   that models the value of the "x" cell: x is set to 1 iff L is
+     *   set to "true". The literals added to \p freeInputs are distinct
+     *   and model "x" cells in their order of appearance in \p sourceStateSpec.
      */
-    CNFProblem getCNFEncoding() const;
+    auto getCNFEncoding() const -> Rule110Encoding;
 
 private:
     std::string m_targetStateSpec;
@@ -91,6 +103,7 @@ private:
     uint32_t m_automatonWidth;
 
     CNFVar getCellVariable(uint32_t step, uint32_t cellIndex) const noexcept;
-    std::vector<CNFClause> createConstraints(uint32_t step, uint32_t cellIndex) const;
+    std::vector<CNFClause> createConstraints(uint32_t step, uint32_t cellIndex,
+                                             std::vector<CNFLit> &freeInputs) const;
 };
 }

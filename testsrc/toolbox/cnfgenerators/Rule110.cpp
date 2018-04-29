@@ -51,18 +51,21 @@ CNFVar Rule110PredecessorStateProblem::getCellVariable(uint32_t step, uint32_t c
     return CNFVar{v};
 }
 
-std::vector<CNFClause> Rule110PredecessorStateProblem::createConstraints(uint32_t step,
-                                                                         uint32_t cellIndex) const {
+std::vector<CNFClause>
+Rule110PredecessorStateProblem::createConstraints(uint32_t step, uint32_t cellIndex,
+                                                  std::vector<CNFLit> &freeInputs) const {
     JAM_ASSERT(cellIndex < m_automatonWidth, "Argument cellIndex out of bounds");
     JAM_ASSERT(step < m_numberOfIntermediateSteps + 2, "Argument step out of bounds");
 
     std::vector<CNFClause> result;
 
     if (step == 0) {
+        auto sign = (m_sourceStateSpec[cellIndex] == '1') ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
+        CNFLit lit{getCellVariable(step, cellIndex), sign};
         if (m_sourceStateSpec[cellIndex] != 'x') {
-            auto sign =
-                (m_sourceStateSpec[cellIndex] == '1') ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
-            result.push_back({CNFLit{getCellVariable(step, cellIndex), sign}});
+            result.push_back({lit});
+        } else {
+            freeInputs.push_back(lit);
         }
         // return early since there are no other "incoming" constraints for this cell
         return result;
@@ -110,13 +113,13 @@ std::vector<CNFClause> Rule110PredecessorStateProblem::createConstraints(uint32_
     return result;
 }
 
-CNFProblem Rule110PredecessorStateProblem::getCNFEncoding() const {
-    CNFProblem result;
+auto Rule110PredecessorStateProblem::getCNFEncoding() const -> Rule110Encoding {
+    Rule110Encoding result;
     for (uint32_t step = 0; step < (m_numberOfIntermediateSteps + 2); ++step) {
         for (uint32_t cellIndex = 0; cellIndex < m_targetStateSpec.size(); ++cellIndex) {
-            auto encoding = createConstraints(step, cellIndex);
+            auto encoding = createConstraints(step, cellIndex, result.freeInputs);
             for (auto clause : encoding) {
-                result.addClause(std::move(clause));
+                result.cnfProblem.addClause(std::move(clause));
             }
         }
     }

@@ -69,35 +69,35 @@ TEST(SolverIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsatis
 
 TEST(SolverIntegration, SimpleCDCL_rule110_reachable) {
     Rule110PredecessorStateProblem problem{"1xxx0", "0xx10", 5};
-    auto cnfProblem = problem.getCNFEncoding();
+    auto rule110Encoding = problem.getCNFEncoding();
 
     CDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
     CDCLSatSolver<> underTest{testConfig};
 
-    for (auto &clause : cnfProblem.getClauses()) {
+    for (auto &clause : rule110Encoding.cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
 
-    ASSERT_EQ(isSatisfiableViaMinisat(cnfProblem), TBools::TRUE)
+    ASSERT_EQ(isSatisfiableViaMinisat(rule110Encoding.cnfProblem), TBools::TRUE)
         << "Bad test case: the problem is expected to be satisfiable";
     auto solvingResult = underTest.solve({});
     ASSERT_EQ(solvingResult.isSatisfiable, TBools::TRUE);
-    EXPECT_TRUE(isTrue(solvingResult.model->check(cnfProblem)));
+    EXPECT_TRUE(isTrue(solvingResult.model->check(rule110Encoding.cnfProblem)));
 }
 
 TEST(SolverIntegration, SimpleCDCL_rule110_unreachable) {
     Rule110PredecessorStateProblem problem{"1x1x1", "01010", 7};
-    auto cnfProblem = problem.getCNFEncoding();
+    auto rule110Encoding = problem.getCNFEncoding();
 
     CDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
     CDCLSatSolver<> underTest{testConfig};
 
-    for (auto &clause : cnfProblem.getClauses()) {
+    for (auto &clause : rule110Encoding.cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
-    ASSERT_EQ(isSatisfiableViaMinisat(cnfProblem), TBools::FALSE)
+    ASSERT_EQ(isSatisfiableViaMinisat(rule110Encoding.cnfProblem), TBools::FALSE)
         << "Bad test case: the problem is expected not to be satisfiable";
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::FALSE);
 }

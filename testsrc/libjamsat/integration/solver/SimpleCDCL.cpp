@@ -300,10 +300,10 @@ TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
 
 TEST(IntegrationSolver, SimpleCDCL_rule110_reachable) {
     Rule110PredecessorStateProblem problem{"1xxx0", "0xx10", 1};
-    auto cnfProblem = problem.getCNFEncoding();
+    auto rule110Encoding = problem.getCNFEncoding();
 
     SimpleCDCL underTest;
-    for (auto &clause : cnfProblem.getClauses()) {
+    for (auto &clause : rule110Encoding.cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
     EXPECT_EQ(underTest.isProblemSatisfiable(), TBools::TRUE);
