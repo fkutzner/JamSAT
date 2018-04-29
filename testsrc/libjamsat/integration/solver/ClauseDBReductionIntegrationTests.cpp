@@ -143,7 +143,7 @@ auto makeClauses(HeapletClauseDB<Clause> &clauseDB, Propagation<Trail, Clause> &
                  CNFVar maxVar, bool isLearnt) -> std::vector<Clause *> {
     std::vector<Clause *> result;
 
-    std::mt19937_64 rng{static_cast<std::mt19937_64::result_type>(nClauses)};
+    std::mt19937_64 rng; // using no random seed => deterministic results
 
     std::uniform_int_distribution<CNFVar::RawVariable> randomVarDistribution{0,
                                                                              maxVar.getRawValue()};
@@ -202,8 +202,18 @@ TEST(IntegrationClauseDBReduction, reduceDeletesNonreasonClauses) {
     checkedReduceClauseDB(clauseDB, propagation, trail, toDelete, problemClauses, learntClauses);
 }
 
+void tryCreateForcingAssignment(Trail &trail, Propagation<Trail, Clause> &propagation,
+                                Clause const *clause) {
+    for (auto lit : *clause) {
+        if (!isDeterminate(trail.getAssignment(lit))) {
+            trail.addAssignment(~lit);
+            propagation.propagateUntilFixpoint(~lit);
+        }
+    }
+}
+
 TEST(IntegrationClauseDBReduction, reducePreservesReasonClauses) {
-    CNFVar maxVar{100};
+    CNFVar maxVar{2000};
     Trail trail{maxVar};
     Propagation<Trail, Clause> propagation{maxVar, trail};
     HeapletClauseDB<Clause> clauseDB{256ULL, 1048576ULL};
@@ -212,23 +222,29 @@ TEST(IntegrationClauseDBReduction, reducePreservesReasonClauses) {
     std::vector<Clause *> learntClauses = makeClauses(clauseDB, propagation, 150, maxVar, true);
     auto toDelete = boost::make_iterator_range(learntClauses.end() - 100, learntClauses.end());
 
+    // pick clauses in problemClauses and try to make them reason clauses:
+    trail.newDecisionLevel();
+    for (size_t i = 0; i < 20; ++i) {
+        tryCreateForcingAssignment(trail, propagation, problemClauses[i]);
+    }
+
+    ASSERT_TRUE(std::any_of(problemClauses.begin(), problemClauses.end(),
+                            [&propagation, &trail](Clause const *clause) {
+                                return propagation.isAssignmentReason(*clause, trail);
+                            }))
+        << "Bad test data: did not create reason clauses in problemClauses";
+
     // pick clauses in toDelete and try to make them reason clauses:
     trail.newDecisionLevel();
-    for (int i = 0; i < 10; ++i) {
-        auto clause = *(toDelete.begin() + i * 5);
-        for (auto lit : *clause) {
-            if (!isDeterminate(trail.getAssignment(lit))) {
-                trail.addAssignment(~lit);
-                propagation.propagateUntilFixpoint(~lit);
-            }
-        }
+    for (int i = 0; i < 50; ++i) {
+        tryCreateForcingAssignment(trail, propagation, *(toDelete.begin() + i));
     }
 
     ASSERT_TRUE(std::any_of(toDelete.begin(), toDelete.end(),
                             [&propagation, &trail](Clause const *clause) {
                                 return propagation.isAssignmentReason(*clause, trail);
                             }))
-        << "Bad test data: toDelete does not contain assignment reasons";
+        << "Bad test data: did not create reason clauses in toDelete";
     checkedReduceClauseDB(clauseDB, propagation, trail, toDelete, problemClauses, learntClauses);
 }
 }
