@@ -336,8 +336,12 @@ template <typename ST>
 TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumptions) {
     JAM_LOG_SOLVER(info, "Restarting the solver, backtracking to decision level 0.");
     backtrackAll();
-    if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT ||
-        propagateUnitClauses(assumptions) != UnitClausePropagationResult::CONSISTENT) {
+    if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT) {
+        return TBools::FALSE;
+    }
+    m_trail.newDecisionLevel();
+    if (propagateUnitClauses(assumptions) != UnitClausePropagationResult::CONSISTENT) {
+        // TODO: do final conflict analysis here
         return TBools::FALSE;
     }
 
@@ -368,15 +372,24 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 
             if (conflictHandlingResult.learntUnitClause) {
                 // Perform a restart to check for unsatisfiability during unit-clause
-                // propagation
+                // propagation, and to have the unit clause on level 0
                 return TBools::INDETERMINATE;
             }
 
             LBD learntClauseLBD = (*learntClause).template getLBD<LBD>();
             m_restartPolicy.registerConflict({learntClauseLBD});
-            backtrackToLevel(conflictHandlingResult.backtrackLevel);
 
+            backtrackToLevel(conflictHandlingResult.backtrackLevel);
             conflictingClause = m_propagation.registerClause(*learntClause);
+
+            if (conflictHandlingResult.backtrackLevel == 1 && conflictingClause != nullptr) {
+                // Propagating the unit clauses and the assumptions now forces an assignment
+                // under which some clause is already "false". Under the current assumptions,
+                // the problem is not satisfiable. Perform a final restart to do
+                // conflict analysis:
+                return TBools::INDETERMINATE;
+            }
+
             --conflictsUntilMaintenance;
         }
 
