@@ -3,6 +3,7 @@ add_jamsat_core_library(jamsatSolver
   Trail.h
   Propagation.h
   Watcher.h
+  AssignmentAnalysis.h
   FirstUIPLearning.h
   LiteralBlockDistance.h
   ClauseMinimization.h

@@ -46,6 +46,7 @@
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/clausedb/HeapletClauseDB.h>
 #include <libjamsat/proof/Model.h>
+#include <libjamsat/solver/AssignmentAnalysis.h>
 #include <libjamsat/solver/ClauseDBReduction.h>
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
 #include <libjamsat/solver/ClauseMinimization.h>
@@ -93,6 +94,7 @@ public:
     struct SolvingResult {
         TBool isSatisfiable;
         std::unique_ptr<Model> model;
+        std::vector<CNFLit> failedAssumptions;
     };
 
     /**
@@ -171,12 +173,19 @@ public:
     void stop() noexcept;
 
 private:
-    SolvingResult createSolvingResult(TBool result);
+    SolvingResult createSolvingResult(TBool result, std::vector<CNFLit> const &failedAssumptions);
 
     enum UnitClausePropagationResult { CONSISTENT, CONFLICTING };
-    UnitClausePropagationResult propagateUnitClauses(const std::vector<CNFLit> &units);
 
-    TBool solveUntilRestart(const std::vector<CNFLit> &assumptions);
+
+    UnitClausePropagationResult propagateOnSystemLevels(std::vector<CNFLit> const &toPropagate,
+                                                        std::vector<CNFLit> *failedAssumptions);
+    UnitClausePropagationResult propagateUnitClauses(std::vector<CNFLit> const &units);
+    UnitClausePropagationResult propagateAssumptions(std::vector<CNFLit> const &assumptions,
+                                                     std::vector<CNFLit> &failedAssumptions);
+
+    TBool solveUntilRestart(const std::vector<CNFLit> &assumptions,
+                            std::vector<CNFLit> &failedAssumptions);
 
     struct ConflictHandlingResult {
         bool learntUnitClause;
@@ -291,8 +300,10 @@ void CDCLSatSolver<ST>::addProblem(const CNFProblem &problem) {
 }
 
 template <typename ST>
-typename CDCLSatSolver<ST>::SolvingResult CDCLSatSolver<ST>::createSolvingResult(TBool result) {
+typename CDCLSatSolver<ST>::SolvingResult
+CDCLSatSolver<ST>::createSolvingResult(TBool result, std::vector<CNFLit> const &failedAssumptions) {
     std::unique_ptr<Model> model{nullptr};
+
     if (isTrue(result)) {
         model = createModel(m_maxVar);
         for (CNFLit lit : m_trail.getAssignments(0)) {
@@ -300,18 +311,25 @@ typename CDCLSatSolver<ST>::SolvingResult CDCLSatSolver<ST>::createSolvingResult
                                  lit.getSign() == CNFSign::POSITIVE ? TBools::TRUE : TBools::FALSE);
         }
     }
-    return SolvingResult{result, std::move(model)};
+    return SolvingResult{result, std::move(model),
+                         isFalse(result) ? std::move(failedAssumptions) : std::vector<CNFLit>{}};
 }
 
 template <typename ST>
 typename CDCLSatSolver<ST>::UnitClausePropagationResult
-CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
-    JAM_LOG_SOLVER(info, "Propagating unit clauses...");
-    for (auto unit : units) {
+CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const &toPropagate,
+                                           std::vector<CNFLit> *failedAssumptions) {
+    JAM_LOG_SOLVER(info, "Propagating system-level assignments on level "
+                             << m_trail.getCurrentDecisionLevel());
+
+    for (auto unit : toPropagate) {
         auto assignment = m_trail.getAssignment(unit.getVariable());
         if (isDeterminate(assignment) &&
             toTBool(unit.getSign() == CNFSign::POSITIVE) != assignment) {
             JAM_LOG_SOLVER(info, "Detected conflict at unit clause " << unit);
+            if (failedAssumptions != nullptr) {
+                *failedAssumptions = analyzeAssignment(m_propagation, m_trail, m_stamps, unit);
+            }
             return UnitClausePropagationResult::CONFLICTING;
         }
 
@@ -324,6 +342,9 @@ CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
 
         if (m_propagation.propagateUntilFixpoint(unit) != nullptr) {
             JAM_LOG_SOLVER(info, "Detected conflict at unit clause " << unit);
+            if (failedAssumptions != nullptr) {
+                *failedAssumptions = analyzeAssignment(m_propagation, m_trail, m_stamps, unit);
+            }
             return UnitClausePropagationResult::CONFLICTING;
         }
 
@@ -333,14 +354,29 @@ CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
 }
 
 template <typename ST>
-TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumptions) {
+typename CDCLSatSolver<ST>::UnitClausePropagationResult
+CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
+    return propagateOnSystemLevels(units, nullptr);
+}
+
+template <typename ST>
+typename CDCLSatSolver<ST>::UnitClausePropagationResult
+CDCLSatSolver<ST>::propagateAssumptions(std::vector<CNFLit> const &assumptions,
+                                        std::vector<CNFLit> &failedAssumptions) {
+    return propagateOnSystemLevels(assumptions, &failedAssumptions);
+}
+
+template <typename ST>
+TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumptions,
+                                           std::vector<CNFLit> &failedAssumptions) {
     JAM_LOG_SOLVER(info, "Restarting the solver, backtracking to decision level 0.");
     backtrackAll();
     if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT) {
         return TBools::FALSE;
     }
     m_trail.newDecisionLevel();
-    if (propagateUnitClauses(assumptions) != UnitClausePropagationResult::CONSISTENT) {
+    if (propagateAssumptions(assumptions, failedAssumptions) !=
+        UnitClausePropagationResult::CONSISTENT) {
         // TODO: do final conflict analysis here
         return TBools::FALSE;
     }
@@ -531,11 +567,11 @@ template <typename ST>
 typename CDCLSatSolver<ST>::SolvingResult
 CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
     if (m_detectedUNSAT) {
-        return createSolvingResult(TBools::FALSE);
+        return createSolvingResult(TBools::FALSE, {});
     }
 
     if (m_problemClauses.empty() && m_unitClauses.empty()) {
-        return createSolvingResult(TBools::TRUE);
+        return createSolvingResult(TBools::TRUE, {});
     }
 
     m_stopRequested.store(false);
@@ -560,14 +596,15 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
         m_branchingHeuristic.setEligibleForDecisions(assumption.getVariable(), false);
     }
 
+    std::vector<CNFLit> failedAssumptions;
     TBool intermediateResult = TBools::INDETERMINATE;
     while (!isDeterminate(intermediateResult) && !m_stopRequested.load()) {
-        intermediateResult = solveUntilRestart(assumptions);
+        intermediateResult = solveUntilRestart(assumptions, failedAssumptions);
     }
 
     m_isSolving.store(false);
     m_stopRequested.store(false);
-    SolvingResult result = createSolvingResult(intermediateResult);
+    SolvingResult result = createSolvingResult(intermediateResult, std::move(failedAssumptions));
     backtrackAll();
     return result;
 }
