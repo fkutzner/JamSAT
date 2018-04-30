@@ -158,7 +158,7 @@ private:
 
 extern "C" {
 const char *ipasir_signature() {
-    return nullptr;
+    return JAMSAT_SIGNATURE;
 }
 
 void *ipasir_init() {

@@ -1,5 +1,7 @@
-project(JamSAT)
 cmake_minimum_required(VERSION 3.2.2)
+cmake_policy(VERSION 3.2.2)
+
+project(JamSAT VERSION 0.0.1)
 
 ### Options
 
@@ -161,6 +163,8 @@ endif()
 if(JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS)
     add_general_compile_options(-DJAM_ENABLE_EXPENSIVE_ASSERTIONS)
 endif()
+
+add_general_compile_options(-DJAMSAT_SIGNATURE="JamSAT ${JamSAT_VERSION}")
 
 add_dso_compile_options(-DJAMSAT_SHARED_LIB -DBUILDING_JAMSAT_SHARED_LIB)
 
