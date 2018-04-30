@@ -59,6 +59,12 @@ namespace jamsat {
  */
 template <typename ReasonProviderTy, typename TrailTy, typename StampMapTy>
 std::vector<CNFLit> analyzeAssignment(ReasonProviderTy &reasonProvider, TrailTy &trail,
+                                      StampMapTy &stamps, CNFLit query);
+
+/********** Implementation ****************************** */
+
+template <typename ReasonProviderTy, typename TrailTy, typename StampMapTy>
+std::vector<CNFLit> analyzeAssignment(ReasonProviderTy &reasonProvider, TrailTy &trail,
                                       StampMapTy &stamps, CNFLit query) {
     const auto stampContext = stamps.createContext();
     const auto stamp = stampContext.getStamp();
