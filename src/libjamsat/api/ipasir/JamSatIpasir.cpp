@@ -32,6 +32,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 namespace jamsat {
@@ -87,6 +88,7 @@ public:
         ensureSolverExists();
         m_result = m_solver->solve(m_assumptionBuffer);
         m_assumptionBuffer.clear();
+        m_failedAssumptions.clear();
 
         if (isTrue(m_result.isSatisfiable)) {
             return 10;
@@ -121,9 +123,13 @@ public:
     }
 
     int failed(int lit) {
-        JAM_ASSERT(false, "IPASIR failed() is not implemented yet");
-        (void)lit;
-        return 0;
+        if (m_failedAssumptions.empty() && !m_result.failedAssumptions.empty()) {
+            m_failedAssumptions.insert(m_result.failedAssumptions.begin(),
+                                       m_result.failedAssumptions.end());
+        }
+        auto found =
+            (m_failedAssumptions.find(ipasirLitToCNFLit(lit)) != m_failedAssumptions.end());
+        return found ? 1 : 0;
     }
 
     void setTerminate(void *state, int (*terminate)(void *state)) {
@@ -145,6 +151,7 @@ private:
     CNFClause m_clauseAddBuffer;
     std::vector<CNFLit> m_assumptionBuffer;
     typename SolverType::SolvingResult m_result;
+    std::unordered_set<CNFLit> m_failedAssumptions;
 };
 }
 }

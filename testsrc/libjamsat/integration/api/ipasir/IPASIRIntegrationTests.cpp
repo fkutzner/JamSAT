@@ -91,3 +91,23 @@ TEST(IpasirIntegration, assumptionsAreClearedBetweenSolveCalls) {
     // No assumptions for second call ~> should be satisfiable
     ASSERT_EQ(ipasir_solve(solver), 10);
 }
+
+TEST(IpasirIntegration, assumptionsLeadingToUnsatAreMarkedAsFailed) {
+    void *solver = ipasir_init();
+    auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
+
+    ipasir_add(solver, 1);
+    ipasir_add(solver, 2);
+    ipasir_add(solver, 0);
+
+    ipasir_add(solver, -2);
+    ipasir_add(solver, 0);
+
+    ipasir_assume(solver, -1);
+
+    ASSERT_EQ(ipasir_solve(solver), 20);
+    EXPECT_EQ(ipasir_failed(solver, -1), 1);
+    EXPECT_EQ(ipasir_failed(solver, 1), 0);
+    EXPECT_EQ(ipasir_failed(solver, -2), 0);
+    EXPECT_EQ(ipasir_failed(solver, 2), 0);
+}
