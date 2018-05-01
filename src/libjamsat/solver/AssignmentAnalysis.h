@@ -34,13 +34,16 @@
 namespace jamsat {
 
 /**
- * \brief Collect the literals on the current decision level (i.e.
+ * \brief Collect the reason-less literals on the current decision level (i.e.
  *        literals representing a variable assignment) that led to the assignment
  *        of a given literal \p query.
  *
  * Usage example: use this function to analyze conflicts on the decision level where
  * assumption literals are stored (and propagated) to obtain a superset of the assumptions
  * that were used to obtain an UNSAT result.
+ *
+ * Note: \p query is always included in the result, even when \p query has
+ * an assignment reason.
  *
  * \param reasonProvider    A provider of reason clauses.
  * \param trail             A provider of variable assignments and decision level information.
@@ -91,13 +94,14 @@ std::vector<CNFLit> analyzeAssignment(ReasonProviderTy &reasonProvider, TrailTy 
             }
             stamps.setStamped(lit.getVariable(), stamp, true);
             if (trail.getAssignmentDecisionLevel(lit.getVariable()) == currentDecisionLevel) {
-                // ~lit must be on the trail: the only positive-assigned literal of
-                // the clause is the one whose assignment it has forced. The algorithm arrived
-                // here via that positive-assigned literal, so its variable must have been
-                // stamped further up the outer loop.
-                result.push_back(~lit);
                 if (reasonProvider.getAssignmentReason(lit.getVariable()) != nullptr) {
                     toAnalyze.push_back(lit.getVariable());
+                } else {
+                    // ~lit must be on the trail: the only positive-assigned literal of
+                    // the clause is the one whose assignment it has forced. The algorithm arrived
+                    // here via that positive-assigned literal, so its variable must have been
+                    // stamped further up the outer loop.
+                    result.push_back(~lit);
                 }
             }
         }

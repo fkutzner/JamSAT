@@ -87,7 +87,7 @@ TEST(UnitSolver, AssignmentAnalysisProducesFailingAssumptionsForReasonfulConflic
     reasonProvider.setAssignmentReason(lit4.getVariable(), reasonFor4);
     reasonProvider.setAssignmentReason(lit5.getVariable(), reasonFor5);
 
-    std::vector<CNFLit> expected{lit3, lit4, lit5, lit6, lit7};
+    std::vector<CNFLit> expected{lit3, lit5, lit6, lit7};
     auto result = analyzeAssignment(reasonProvider, decisionLevelProvider, tempStamps, lit5);
     ASSERT_EQ(result.size(), expected.size());
     EXPECT_TRUE(std::is_permutation(expected.begin(), expected.end(), result.begin()))
