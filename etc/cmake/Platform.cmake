@@ -10,7 +10,7 @@
 # PLATFORM_SUPPORTS_SO_LOOKUP_IN_PATH        when the target platform supports
 #                                            lookup up shared objects in $PATH
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang"))
   set(COMPILING_WITH_CLANG true)
   set(COMPILING_WITH_GNULIKE true)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
