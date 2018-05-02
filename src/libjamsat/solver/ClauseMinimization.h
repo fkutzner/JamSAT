@@ -176,8 +176,8 @@ public:
                 } else {
                     JAM_LOG_MINIMIZER(info, "    Reason lit " << lit
                                                               << " has no reason => not redundant");
-                    for (auto var : m_stampCleanup) {
-                        tempStamps.setStamped(var, currentStamp, false);
+                    for (auto stampedVar : m_stampCleanup) {
+                        tempStamps.setStamped(stampedVar, currentStamp, false);
                     }
                     return false;
                 }

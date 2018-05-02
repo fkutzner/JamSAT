@@ -142,6 +142,10 @@ elseif(COMPILING_WITH_MSVC)
   # TR1 functions.
   add_general_compile_options(/wd4996)
 
+  # Suppress warnings about unused parameters. Some dependencies have functions
+  # with parameters that are only used in debug builds.
+  add_general_compile_options(/wd4100)
+
   add_general_compile_options(/W4)
 endif()
 
@@ -165,6 +169,7 @@ if(JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS)
 endif()
 
 add_general_compile_options(-DJAMSAT_SIGNATURE="JamSAT ${JamSAT_VERSION}")
+
 
 add_dso_compile_options(-DJAMSAT_SHARED_LIB -DBUILDING_JAMSAT_SHARED_LIB)
 

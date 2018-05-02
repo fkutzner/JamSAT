@@ -55,6 +55,7 @@
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/RestartPolicies.h>
 #include <libjamsat/solver/Trail.h>
+#include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/RangeUtils.h>
 #include <libjamsat/utils/StampMap.h>
@@ -286,7 +287,8 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
     } else if (compressedClause.size() == 1) {
         m_unitClauses.push_back(compressedClause[0]);
     } else {
-        auto &internalClause = m_clauseDB.allocate(compressedClause.size());
+        auto &internalClause = m_clauseDB.allocate(
+            static_checked_cast<typename ST::Clause::size_type>(compressedClause.size()));
         std::copy(compressedClause.begin(), compressedClause.end(), internalClause.begin());
         m_problemClauses.push_back(&internalClause);
     }
@@ -494,7 +496,8 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     if (learnt.size() == 1) {
         m_unitClauses.push_back(learnt[0]);
     } else if (learnt.size() > 1) {
-        auto &learntClause = m_clauseDB.allocate(learnt.size());
+        auto &learntClause =
+            m_clauseDB.allocate(static_checked_cast<typename ST::Clause::size_type>(learnt.size()));
         std::copy(learnt.begin(), learnt.end(), learntClause.begin());
         learntClause.setLBD(getLBD(learntClause, m_trail, m_stamps));
 

@@ -26,8 +26,16 @@
 
 #include <toolbox/testutils/Minisat.h>
 
+#if defined(_MSC_VER)
+#pragma warning(push, 0)
+#endif
+
 #include <minisat/core/Solver.h>
 #include <minisat/core/SolverTypes.h>
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 namespace jamsat {
 TBool isSatisfiableViaMinisat(CNFProblem const &problem) {
