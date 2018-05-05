@@ -209,7 +209,6 @@ private:
     typename ST::RestartPolicy m_restartPolicy;
 
     std::atomic<bool> m_stopRequested;
-    std::atomic<bool> m_isSolving;
     CNFVar m_maxVar;
 
     std::vector<CNFLit> m_unitClauses;
@@ -236,7 +235,6 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_clauseDB(config.clauseMemoryLimit / 128, config.clauseMemoryLimit)
   , m_restartPolicy(typename ST::RestartPolicy::Options{})
   , m_stopRequested(false)
-  , m_isSolving(false)
   , m_maxVar(0)
   , m_unitClauses()
   , m_problemClauses()
@@ -252,11 +250,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
 
 template <typename ST>
 void CDCLSatSolver<ST>::stop() noexcept {
-    if (m_isSolving.load() == true) {
-        // No race condition can happen here due to the order in which solve() sets
-        // m_isSolving and resets m_stopRequested
-        m_stopRequested.store(true);
-    }
+    m_stopRequested.store(true);
 }
 
 template <typename ST>
@@ -561,16 +555,10 @@ void CDCLSatSolver<ST>::backtrackAll() {
 template <typename ST>
 typename CDCLSatSolver<ST>::SolvingResult
 CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
+    m_stopRequested.store(false);
     if (m_detectedUNSAT) {
         return createSolvingResult(TBools::FALSE, {});
     }
-
-    if (m_problemClauses.empty() && m_unitClauses.empty()) {
-        return createSolvingResult(TBools::TRUE, {});
-    }
-
-    m_stopRequested.store(false);
-    m_isSolving.store(true);
 
     m_trail.increaseMaxVarTo(m_maxVar);
     m_propagation.increaseMaxVarTo(m_maxVar);
@@ -582,7 +570,6 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
          newClausesIt != m_problemClauses.end(); ++newClausesIt) {
         m_propagation.registerClause(**newClausesIt);
     }
-    m_newProblemClausesBeginIdx = m_problemClauses.size();
 
     for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
         m_branchingHeuristic.setEligibleForDecisions(i, true);
@@ -597,8 +584,11 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
         intermediateResult = solveUntilRestart(assumptions, failedAssumptions);
     }
 
-    m_isSolving.store(false);
-    m_stopRequested.store(false);
+    // Updating m_newProblemClausesBeginIdx late: pointers to binary clauses
+    // that were present at the beginning of this method's execution may have
+    // been remvoed from m_problemClauses during clause DB reduction
+    m_newProblemClausesBeginIdx = m_problemClauses.size();
+
     SolvingResult result = createSolvingResult(intermediateResult, std::move(failedAssumptions));
     backtrackAll();
     return result;
