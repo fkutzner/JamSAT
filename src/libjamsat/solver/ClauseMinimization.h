@@ -118,7 +118,7 @@ void eraseRedundantLiterals(LiteralContainer &literals, const ReasonProvider &re
  * \tparam StampMapT                TODO
  */
 template <class LiteralContainer, class BinaryClausesProvider, class StampMapT>
-void resolveWithBinaries(LiteralContainer &literals, const BinaryClausesProvider &binaryClauses,
+void resolveWithBinaries(LiteralContainer &literals, BinaryClausesProvider &binaryClauses,
                          CNFLit resolveAt, StampMapT &tempStamps) noexcept;
 
 /********** Implementation ****************************** */
@@ -226,17 +226,16 @@ void eraseRedundantLiterals(LiteralContainer &literals, const ReasonProvider &re
 }
 
 template <class LiteralContainer, class BinaryClausesProvider, class StampMapT>
-void resolveWithBinaries(LiteralContainer &literals, const BinaryClausesProvider &binaryClauses,
+void resolveWithBinaries(LiteralContainer &literals, BinaryClausesProvider &binaryClauses,
                          CNFLit resolveAt, StampMapT &tempStamps) noexcept {
     const auto stampContext = tempStamps.createContext();
     const auto stamp = stampContext.getStamp();
 
-    auto binaryClausesIter = binaryClauses.find(resolveAt);
-    if (binaryClausesIter == binaryClauses.end()) {
+    if (binaryClauses[resolveAt].empty()) {
         return;
     }
 
-    for (auto secondLiteral : binaryClausesIter->second) {
+    for (auto secondLiteral : binaryClauses[resolveAt]) {
         tempStamps.setStamped(secondLiteral, stamp, true);
     }
 

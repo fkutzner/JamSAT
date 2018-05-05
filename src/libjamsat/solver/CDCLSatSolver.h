@@ -31,7 +31,6 @@
 #include <cstdint>
 #include <memory>
 #include <ostream>
-#include <unordered_map>
 #include <vector>
 
 #include <boost/optional.hpp>
@@ -217,7 +216,6 @@ private:
     std::vector<typename ST::Clause *> m_problemClauses;
     typename std::vector<typename ST::Clause *>::size_type m_newProblemClausesBeginIdx;
     std::vector<typename ST::Clause *> m_learntClauses;
-    std::unordered_map<CNFLit, std::vector<CNFLit>> m_binaryClauses;
     uint64_t m_amntBinariesLearnt;
 
     typename ST::ClauseDBReductionPolicy m_clauseDBReductionPolicy;
@@ -244,7 +242,6 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_problemClauses()
   , m_newProblemClausesBeginIdx(0)
   , m_learntClauses()
-  , m_binaryClauses()
   , m_amntBinariesLearnt(0)
   , m_clauseDBReductionPolicy(1300, m_learntClauses)
   , m_stamps(getMaxLit(CNFVar{0}).getRawValue())
@@ -271,15 +268,11 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
         m_maxVar = std::max(m_maxVar, lit.getVariable());
     }
 
-    if (compressedClause.size() == 2) {
-        if (compressedClause[0] == ~compressedClause[1]) {
-            // The clause is satisfied under any complete assignment and can be ignored.
-            // This check is not a performance optimization: some subsystems expect that no
-            // clause (l -l) exist for any literal l.
-            return;
-        }
-        m_binaryClauses[compressedClause[0]].push_back(compressedClause[1]);
-        m_binaryClauses[compressedClause[1]].push_back(compressedClause[0]);
+    if (compressedClause.size() == 2 && compressedClause[0] == ~compressedClause[1]) {
+        // The clause is satisfied under any complete assignment and can be ignored.
+        // This check is not a performance optimization: some subsystems expect that no
+        // clause (l -l) exist for any literal l.
+        return;
     }
 
     if (compressedClause.empty()) {
@@ -470,7 +463,8 @@ void CDCLSatSolver<ST>::optimizeLearntClause(std::vector<CNFLit> &learntClause) 
     if (learntClause.size() < 30 /* TODO: make constant configurable */) {
         LBD lbd = getLBD(learntClause, m_trail, m_stamps);
         if (lbd <= 6 /* TODO: make constant configurable */) {
-            resolveWithBinaries(learntClause, m_binaryClauses, learntClause[0], m_stamps);
+            auto binariesMap = m_propagation.getBinariesMap();
+            resolveWithBinaries(learntClause, binariesMap, learntClause[0], m_stamps);
             JAM_LOG_SOLVER(info, "  After resolution with binary clauses: ("
                                      << toString(learntClause.begin(), learntClause.end()) << ")");
         }
@@ -504,8 +498,6 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
         *learntOut = &learntClause;
 
         if (learnt.size() == 2) {
-            m_binaryClauses[learnt[0]].push_back(learnt[1]);
-            m_binaryClauses[learnt[1]].push_back(learnt[0]);
             ++m_amntBinariesLearnt;
             // No need to store pointers to binaries, since they are never relocated by
             // the clause allocator.
