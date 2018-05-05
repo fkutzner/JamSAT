@@ -553,8 +553,11 @@ TEST(UnitSolver, binaryClausesCanBeQueriedInPropagation) {
     std::vector<CNFLit> expectedForNLit2{lit3, lit4};
     auto binariesWithNLit2 = binaryMap[~lit2];
     ASSERT_EQ(binariesWithNLit2.size(), expectedForNLit2.size());
-    EXPECT_TRUE(std::is_permutation(binariesWithNLit2.begin(), binariesWithNLit2.end(),
-                                    expectedForNLit2.begin()));
+
+    std::vector<CNFLit> binariesWithNLit2FwdRange{binariesWithNLit2.begin(),
+                                                  binariesWithNLit2.end()};
+    EXPECT_TRUE(std::is_permutation(binariesWithNLit2FwdRange.begin(),
+                                    binariesWithNLit2FwdRange.end(), expectedForNLit2.begin()));
 
     auto binariesWithPLit4 = binaryMap[lit4];
     ASSERT_EQ(binariesWithPLit4.size(), 1ULL);

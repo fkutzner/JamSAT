@@ -428,14 +428,16 @@ TEST(UnitSolver, binaryWatchersOccurInBlockerMap) {
     std::vector<CNFLit> expectedBlockersOfP0{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
                                              CNFLit{CNFVar{2}, CNFSign::POSITIVE}};
     ASSERT_EQ(blockersOfP0.size(), expectedBlockersOfP0.size());
-    EXPECT_TRUE(std::is_permutation(blockersOfP0.begin(), blockersOfP0.end(),
+    std::vector<CNFLit> blockersOfP0FwdRange{blockersOfP0.begin(), blockersOfP0.end()};
+    EXPECT_TRUE(std::is_permutation(blockersOfP0FwdRange.begin(), blockersOfP0FwdRange.end(),
                                     expectedBlockersOfP0.begin()));
 
     auto blockersOfP2 = blockerMap[CNFLit{CNFVar{2}, CNFSign::POSITIVE}];
     std::vector<CNFLit> expectedBlockersOfP2{CNFLit{CNFVar{0}, CNFSign::POSITIVE},
                                              CNFLit{CNFVar{1}, CNFSign::POSITIVE}};
     ASSERT_EQ(blockersOfP2.size(), expectedBlockersOfP2.size());
-    EXPECT_TRUE(std::is_permutation(blockersOfP2.begin(), blockersOfP2.end(),
+    std::vector<CNFLit> blockersOfP2FwdRange{blockersOfP2.begin(), blockersOfP2.end()};
+    EXPECT_TRUE(std::is_permutation(blockersOfP2FwdRange.begin(), blockersOfP2FwdRange.end(),
                                     expectedBlockersOfP2.begin()));
 
     auto blockersOfP10 = blockerMap[CNFLit{CNFVar{10}, CNFSign::POSITIVE}];
