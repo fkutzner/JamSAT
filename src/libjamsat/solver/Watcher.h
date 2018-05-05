@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <boost/range.hpp>
+#include <boost/range/adaptors.hpp>
 #include <vector>
 
 #include <putl/state_ptr.hpp>
@@ -135,6 +136,30 @@ private:
 };
 
 template <class ClauseT>
+class BlockerMap {
+private:
+    using WatcherT = Watcher<ClauseT>;
+    using WatcherList = std::vector<WatcherT>;
+    using BlockerRange = decltype(
+        boost::adaptors::transform(std::declval<WatcherList const &>(),
+                                   std::declval<std::function<CNFLit(const WatcherT &)>>()));
+
+    BoundedMap<CNFLit, WatcherList> const *m_watchers;
+
+public:
+    explicit BlockerMap(BoundedMap<CNFLit, WatcherList> const &watchers) noexcept
+      : m_watchers(&watchers) {}
+
+    BlockerRange operator[](CNFLit index) const noexcept {
+        std::function<CNFLit(const WatcherT &)> trans = [](const WatcherT &w) {
+            return w.getOtherWatchedLiteral();
+        };
+
+        return boost::adaptors::transform((*m_watchers)[index], trans);
+    }
+};
+
+template <class ClauseT>
 class Watchers {
 private:
     using WatcherList = std::vector<Watcher<ClauseT>>;
@@ -144,7 +169,9 @@ public:
 
     using WatcherIterator =
         FlatteningIterator<typename BoundedMap<CNFLit, WatcherList>::const_iterator>;
-    using WatcherRange = boost::iterator_range<WatcherIterator>;
+    using AllWatchersRange = boost::iterator_range<WatcherIterator>;
+
+    using BlockerMapT = BlockerMap<ClauseT>;
 
     explicit Watchers(CNFVar maxVar) : m_maxVar(maxVar), m_watchers(getMaxLit(maxVar)) {}
 
@@ -168,10 +195,12 @@ public:
         }
     }
 
-    WatcherRange getWatchersInTraversalOrder() const noexcept {
+    AllWatchersRange getWatchersInTraversalOrder() const noexcept {
         auto watcherLists = m_watchers.values();
         return {WatcherIterator{watcherLists.begin(), watcherLists.end()}, WatcherIterator{}};
     }
+
+    BlockerMapT getBlockerMap() const noexcept { return BlockerMap<ClauseT>{m_watchers}; }
 
     void eraseWatchersToBeDeleted() {
         for (CNFLit::RawLiteral i = 0; i <= m_maxVar.getRawValue(); ++i) {

@@ -401,5 +401,50 @@ TEST(UnitSolver, watchersAllOccurInCompleteWatchersTraversal) {
     auto watcherRange = underTest.getWatchersInTraversalOrder();
     expectRangeElementsSequencedEqual(watcherRange, expected);
 }
+
+TEST(UnitSolver, binaryWatchersOccurInBlockerMap) {
+    std::vector<TrivialClause> clauses = {
+        {CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE}},
+        {CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{2}, CNFSign::POSITIVE}},
+        {CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{3}, CNFSign::POSITIVE}},
+        {CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE}},
+    };
+
+    std::vector<TestWatcher> watchers;
+    for (auto &clause : clauses) {
+        watchers.emplace_back(clause, clause[1]);
+        watchers.emplace_back(clause, clause[0]);
+    }
+
+    TestWatchers underTest{CNFVar{10}};
+    for (decltype(watchers)::size_type i = 0; i < watchers.size(); i += 2) {
+        underTest.addWatcher(clauses[i / 2][0], watchers[i]);
+        underTest.addWatcher(clauses[i / 2][1], watchers[i + 1]);
+    }
+
+    auto blockerMap = underTest.getBlockerMap();
+
+    auto blockersOfP0 = blockerMap[CNFLit{CNFVar{0}, CNFSign::POSITIVE}];
+    std::vector<CNFLit> expectedBlockersOfP0{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+                                             CNFLit{CNFVar{2}, CNFSign::POSITIVE}};
+    ASSERT_EQ(blockersOfP0.size(), expectedBlockersOfP0.size());
+    EXPECT_TRUE(std::is_permutation(blockersOfP0.begin(), blockersOfP0.end(),
+                                    expectedBlockersOfP0.begin()));
+
+    auto blockersOfP2 = blockerMap[CNFLit{CNFVar{2}, CNFSign::POSITIVE}];
+    std::vector<CNFLit> expectedBlockersOfP2{CNFLit{CNFVar{0}, CNFSign::POSITIVE},
+                                             CNFLit{CNFVar{1}, CNFSign::POSITIVE}};
+    ASSERT_EQ(blockersOfP2.size(), expectedBlockersOfP2.size());
+    EXPECT_TRUE(std::is_permutation(blockersOfP2.begin(), blockersOfP2.end(),
+                                    expectedBlockersOfP2.begin()));
+
+    auto blockersOfP10 = blockerMap[CNFLit{CNFVar{10}, CNFSign::POSITIVE}];
+    EXPECT_TRUE(blockersOfP10.empty());
+
+
+    auto blockersOfP3 = blockerMap[CNFLit{CNFVar{3}, CNFSign::POSITIVE}];
+    ASSERT_EQ(blockersOfP3.size(), 1ULL);
+    EXPECT_EQ(*(blockersOfP3.begin()), (CNFLit{CNFVar{1}, CNFSign::POSITIVE}));
+}
 }
 }

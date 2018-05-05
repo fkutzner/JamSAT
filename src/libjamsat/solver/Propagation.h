@@ -64,7 +64,7 @@ class Propagation {
 private:
     using WatcherType = detail_propagation::Watcher<ClauseT>;
     using WatchersType = detail_propagation::Watchers<ClauseT>;
-    using WatchersRangeType = typename WatchersType::WatcherRange;
+    using WatchersRangeType = typename WatchersType::AllWatchersRange;
     using ClauseRangeType = decltype(boost::adaptors::transform(
         std::declval<WatchersRangeType>(),
         std::declval<std::function<const ClauseT *(const WatcherType &)>>()));
