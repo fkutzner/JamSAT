@@ -601,5 +601,5 @@ void Propagation<AssignmentProvider, ClauseT>::updateAssignmentReason(
 template <class AssignmentProvider, class ClauseT>
 auto Propagation<AssignmentProvider, ClauseT>::getBinariesMap() const noexcept -> BinariesMap {
     return m_binaryWatchers.getBlockerMap();
-};
+}
 }
