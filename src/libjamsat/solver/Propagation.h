@@ -72,6 +72,7 @@ private:
 public:
     using ClauseType = ClauseT;
     using ClauseRange = ClauseRangeType;
+    using BinariesMap = typename WatchersType::BlockerMapT;
 
     /**
      * \brief Constructs a new Propagation instance.
@@ -213,6 +214,17 @@ public:
      * \returns A range of clause pointers as described above.
      */
     ClauseRange getClausesInPropagationOrder() const noexcept;
+
+    /**
+     * \brief Returns a map representing the binary clauses registered with the
+     * propagation system.
+     *
+     * \return Let M be the value returned by this function. For each literal L with a
+     * variable no greater than the current maximum variable, M[L] returns a
+     * range containing exactly the literals L' such binary clause (L L') or
+     * (L' L) has been registered with the propagation system.
+     */
+    BinariesMap getBinariesMap() const noexcept;
 
 
     /**
@@ -585,4 +597,9 @@ void Propagation<AssignmentProvider, ClauseT>::updateAssignmentReason(
         }
     }
 }
+
+template <class AssignmentProvider, class ClauseT>
+auto Propagation<AssignmentProvider, ClauseT>::getBinariesMap() const noexcept -> BinariesMap {
+    return m_binaryWatchers.getBlockerMap();
+};
 }

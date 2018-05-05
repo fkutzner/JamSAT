@@ -527,5 +527,39 @@ TEST(UnitSolver, clausesArePresentAfterReregistration) {
     substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode::TEST_PRESENCE);
 }
 
+TEST(UnitSolver, binaryClausesCanBeQueriedInPropagation) {
+    CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    CNFLit lit4{CNFVar{4}, CNFSign::NEGATIVE};
+    CNFLit lit5{CNFVar{5}, CNFSign::POSITIVE};
+
+    TrivialClause c1{lit1, lit2};
+    TrivialClause c2{~lit2, lit3};
+    TrivialClause c3{~lit2, lit4};
+
+    TestAssignmentProvider assignments;
+
+    CNFVar maxVar{5};
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    underTest.registerClause(c1);
+    underTest.registerClause(c2);
+    underTest.registerClause(c3);
+
+    auto binaryMap = underTest.getBinariesMap();
+    EXPECT_TRUE(binaryMap[~lit1].empty());
+    EXPECT_TRUE(binaryMap[~lit3].empty());
+
+    std::vector<CNFLit> expectedForNLit2{lit3, lit4};
+    auto binariesWithNLit2 = binaryMap[~lit2];
+    ASSERT_EQ(binariesWithNLit2.size(), expectedForNLit2.size());
+    EXPECT_TRUE(std::is_permutation(binariesWithNLit2.begin(), binariesWithNLit2.end(),
+                                    expectedForNLit2.begin()));
+
+    auto binariesWithPLit4 = binaryMap[lit4];
+    ASSERT_EQ(binariesWithPLit4.size(), 1ULL);
+    EXPECT_EQ(*(binariesWithPLit4.begin()), ~lit2);
+}
+
 // TODO: test watcher restoration
 }
