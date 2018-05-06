@@ -12,4 +12,5 @@ add_jamsat_core_unittest_library(solver_unit_tests
   ClauseDBReductionPoliciesUnitTests.cpp
   ClauseMarkersUnitTests.cpp
   AssignmentAnalysisUnitTests.cpp
+  StatisticsUnitTests.cpp
 )
