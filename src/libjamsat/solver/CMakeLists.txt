@@ -14,4 +14,5 @@ add_jamsat_core_library(jamsatSolver
   Concepts.h
   CDCLSatSolver.h
   ClauseMarkers.h
+  Statistics.h
 )

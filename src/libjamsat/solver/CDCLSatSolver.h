@@ -53,11 +53,15 @@
 #include <libjamsat/solver/LiteralBlockDistance.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/RestartPolicies.h>
+#include <libjamsat/solver/Statistics.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/Casts.h>
+#include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/RangeUtils.h>
 #include <libjamsat/utils/StampMap.h>
+
+#include <iostream>
 
 #if defined(JAM_ENABLE_SOLVER_LOGGING)
 #define JAM_LOG_SOLVER(x, y) JAM_LOG(x, "cdcldr", y)
@@ -172,6 +176,7 @@ public:
      */
     void stop() noexcept;
 
+
 private:
     SolvingResult createSolvingResult(TBool result, std::vector<CNFLit> const &failedAssumptions);
 
@@ -220,6 +225,7 @@ private:
     typename ST::ClauseDBReductionPolicy m_clauseDBReductionPolicy;
 
     StampMap<uint16_t, CNFVarKey, CNFLitKey, typename ST::Trail::DecisionLevelKey> m_stamps;
+    Statistics<> m_statistics;
 
     bool m_detectedUNSAT;
 };
@@ -243,6 +249,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_amntBinariesLearnt(0)
   , m_clauseDBReductionPolicy(1300, m_learntClauses)
   , m_stamps(getMaxLit(CNFVar{0}).getRawValue())
+  , m_statistics()
   , m_detectedUNSAT(false) {
     m_conflictAnalyzer.setOnSeenVariableCallback(
         [this](CNFVar var) { m_branchingHeuristic.seenInConflict(var); });
@@ -358,6 +365,7 @@ CDCLSatSolver<ST>::propagateAssumptions(std::vector<CNFLit> const &assumptions,
 template <typename ST>
 TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumptions,
                                            std::vector<CNFLit> &failedAssumptions) {
+    m_statistics.registerRestart();
     JAM_LOG_SOLVER(info, "Restarting the solver, backtracking to decision level 0.");
     backtrackAll();
     if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT) {
@@ -376,6 +384,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         loggingEpochElapsed();
         m_trail.newDecisionLevel();
         auto decision = m_branchingHeuristic.pickBranchLiteral();
+        m_statistics.registerDecision();
         JAM_LOG_SOLVER(info, "Picked decision literal " << decision << ", now at decision level "
                                                         << m_trail.getCurrentDecisionLevel());
         JAM_ASSERT(decision != CNFLit::getUndefinedLiteral(),
@@ -384,6 +393,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 
         auto conflictingClause = m_propagation.propagateUntilFixpoint(decision);
         while (conflictingClause != nullptr) {
+            m_statistics.registerConflict();
             JAM_LOG_SOLVER(info, "Last propagation resulted in a conflict");
             m_branchingHeuristic.beginHandlingConflict();
             typename ST::Clause *learntClause;
@@ -419,13 +429,10 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         }
 
         if (conflictsUntilMaintenance <= 0) {
-            // TODO: do post-learning stuff (clausedb cleaning, adjustment of heuristics,
-            // inprocessing, ...)
-
+            std::cout << m_statistics;
             if (m_stopRequested.load()) {
                 return TBools::INDETERMINATE;
             }
-
             conflictsUntilMaintenance = 5000;
         }
 
@@ -555,6 +562,13 @@ void CDCLSatSolver<ST>::backtrackAll() {
 template <typename ST>
 typename CDCLSatSolver<ST>::SolvingResult
 CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
+    m_statistics.printStatisticsDescription(std::cout);
+    m_statistics.registerSolvingStart();
+    OnExitScope updateStatsOnExit{[this]() {
+        m_statistics.registerSolvingStop();
+        m_statistics.concludeEra();
+    }};
+
     m_stopRequested.store(false);
     if (m_detectedUNSAT) {
         return createSolvingResult(TBools::FALSE, {});
