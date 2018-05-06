@@ -108,7 +108,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
     CNFVar maxVar{9};
     FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
         maxVar, assignments, reasons);
-    auto result = underTest.computeConflictClause(conflictingClause);
+    std::vector<CNFLit> result;
+    underTest.computeConflictClause(conflictingClause, result);
     auto expectedClause = std::vector<CNFLit>{
         CNFLit(CNFVar{4}, CNFSign::NEGATIVE), CNFLit(CNFVar{6}, CNFSign::POSITIVE),
         CNFLit(CNFVar{9}, CNFSign::NEGATIVE), CNFLit(CNFVar{1}, CNFSign::NEGATIVE)};
@@ -155,7 +156,8 @@ TEST(UnitSolver, firstUIPLearningCallsSeenVariableCallback) {
     std::vector<CNFVar> seenVars;
     underTest.setOnSeenVariableCallback(
         [&seenVars](CNFVar seenVar) { seenVars.push_back(seenVar); });
-    auto result = underTest.computeConflictClause(conflictingClause);
+    std::vector<CNFLit> result;
+    underTest.computeConflictClause(conflictingClause, result);
 
     EXPECT_EQ(seenVars.size(), 5ull);
     EXPECT_NE(std::find(seenVars.begin(), seenVars.end(), CNFVar{1}), seenVars.end());
@@ -203,7 +205,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
     CNFVar maxVar{7};
     FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
         maxVar, assignments, reasons);
-    auto result = underTest.computeConflictClause(conflictingClause);
+    std::vector<CNFLit> result;
+    underTest.computeConflictClause(conflictingClause, result);
     auto expectedClause = std::vector<CNFLit>{~filler[1], ~filler[2], ~filler[3], ~assertingLit};
 
     // Check that the asserting literal is the first one
@@ -247,14 +250,15 @@ void test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(bool simulateOOM) {
     FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
         maxVar, assignments, reasons);
 
+    std::vector<CNFLit> result;
     if (!simulateOOM) {
-        auto result = underTest.computeConflictClause(conflictingClause);
+        underTest.computeConflictClause(conflictingClause, result);
         // Check that the asserting literal is the first one
         ASSERT_EQ(result.size(), 1ull);
         EXPECT_EQ(result[0], ~decisionLit);
     } else {
         try {
-            underTest.computeConflictClause(conflictingClause);
+            underTest.computeConflictClause(conflictingClause, result);
             FAIL() << "Expected a bad_alloc exception to be thrown";
         } catch (const std::bad_alloc &exception) {
         } catch (...) {
@@ -340,7 +344,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
     FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
         maxVar, assignments, reasons);
 
-    auto conflictClause = underTest.computeConflictClause(waerden6);
+    std::vector<CNFLit> conflictClause;
+    underTest.computeConflictClause(waerden6, conflictClause);
     auto expectedClause = std::vector<CNFLit>{CNFLit(CNFVar(4), CNFSign::POSITIVE),
                                               CNFLit(CNFVar(6), CNFSign::POSITIVE)};
     ASSERT_EQ(conflictClause.size(), 2ull);

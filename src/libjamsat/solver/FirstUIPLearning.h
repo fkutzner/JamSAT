@@ -80,13 +80,13 @@ public:
     /**
      * \brief Given a conflicting clause, computes a conflict clause.
      *
-     * \param conflictingClause  The conflicting clause, ie. a clause being
+     * \param[in] conflictingClause  The conflicting clause, ie. a clause being
      * falsified through propagation under the current assignment.
-     * \returns The conflict clause determined via resolutions of the conflicting
-     * clause with reason clauses. The asserting literal is placed first in the
-     * result.
+     * \param[out] result             The conflict clause determined via resolutions
+     * of the conflicting clause with reason clauses. The asserting literal is placed
+     * first in the result.
      */
-    std::vector<CNFLit> computeConflictClause(ClauseT &conflictingClause) const;
+    void computeConflictClause(ClauseT &conflictingClause, std::vector<CNFLit> &result) const;
 
 
     /**
@@ -390,15 +390,15 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::clearStamps(
 }
 
 template <class DLProvider, class ReasonProvider, class ClauseT>
-std::vector<CNFLit> FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::computeConflictClause(
-    ClauseT &conflictingClause) const {
+void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::computeConflictClause(
+    ClauseT &conflictingClause, std::vector<CNFLit> &result) const {
     // This implementation closely follows Donald Knuth's prosaic description
     // of first-UIP clause learning. See TAOCP, chapter 7.2.2.2.
     JAM_LOG_CA(info, "Beginning conflict analysis.");
     JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar), "Class inv. A violated");
 
     try {
-        std::vector<CNFLit> result;
+        result.clear();
 
         int unresolvedCount = initializeResult(conflictingClause, result);
         resolveUntilUIP(result, unresolvedCount);
@@ -413,7 +413,6 @@ std::vector<CNFLit> FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::compu
         JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
 
         JAM_LOG_CA(info, "Finished conflict resolution.");
-        return result;
     } catch (std::bad_alloc &oomException) {
         (void)oomException;
         // Restore class invariant A before throwing on the exception.

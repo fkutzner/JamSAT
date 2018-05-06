@@ -196,7 +196,8 @@ TBool SimpleCDCL::isProblemSatisfiable() {
                 OnExitScope notifyEndOfConflictHandling{
                     [this]() { this->m_branchingHeuristic.endHandlingConflict(); }};
 
-                auto learntClause = m_conflictAnalyzer.computeConflictClause(*conflictingClause);
+                std::vector<CNFLit> learntClause;
+                m_conflictAnalyzer.computeConflictClause(*conflictingClause, learntClause);
 
                 // Learning clauses until the solver learns a contradiction on the unit clause
                 // level (or finds a satisfying variable assignment)

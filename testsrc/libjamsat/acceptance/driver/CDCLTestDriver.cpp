@@ -92,6 +92,7 @@ int main(int argc, char **argv) {
 
     bool checkResultEnabled = isCheckingResultEnabled(argv[2]);
     if (checkResultEnabled) {
+        bool verified = false;
         if (jamsat::isTrue(result.isSatisfiable)) {
             bool problemSatisfied = jamsat::isTrue(result.model->check(problem));
             JAM_ASSERT(problemSatisfied,
@@ -99,9 +100,12 @@ int main(int argc, char **argv) {
             if (!problemSatisfied) {
                 return EXIT_FAILURE;
             }
-        }
 
-        if (checkResultWithMinisat(problem, result.isSatisfiable) == CheckMinisatResult::NO_MATCH) {
+            // satisfied => don't check again with minisat
+            verified = true;
+        }
+        if (!verified &&
+            checkResultWithMinisat(problem, result.isSatisfiable) == CheckMinisatResult::NO_MATCH) {
             return EXIT_FAILURE;
         }
     }

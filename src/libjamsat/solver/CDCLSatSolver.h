@@ -216,6 +216,8 @@ private:
     std::atomic<bool> m_stopRequested;
     CNFVar m_maxVar;
 
+    std::vector<CNFLit> m_lemmaBuffer;
+
     std::vector<CNFLit> m_unitClauses;
     std::vector<typename ST::Clause *> m_problemClauses;
     typename std::vector<typename ST::Clause *>::size_type m_newProblemClausesBeginIdx;
@@ -242,6 +244,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_restartPolicy(typename ST::RestartPolicy::Options{})
   , m_stopRequested(false)
   , m_maxVar(0)
+  , m_lemmaBuffer()
   , m_unitClauses()
   , m_problemClauses()
   , m_newProblemClausesBeginIdx(0)
@@ -487,26 +490,28 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
 
     typename ST::Trail::DecisionLevel backtrackLevel = 0;
 
-    auto learnt = m_conflictAnalyzer.computeConflictClause(conflicting);
+    // the lemma buffer gets cleared before being used in computeConflictClause
+    m_conflictAnalyzer.computeConflictClause(conflicting, m_lemmaBuffer);
 
     JAM_LOG_SOLVER(info, "Learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
-    optimizeLearntClause(learnt);
+    optimizeLearntClause(m_lemmaBuffer);
     JAM_LOG_SOLVER(info,
                    "Optimized learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
 
-    JAM_ASSERT(learnt.size() > 0, "The empty clause is not expected to be directly derivable");
+    JAM_ASSERT(m_lemmaBuffer.size() > 0,
+               "The empty clause is not expected to be directly derivable");
 
-    if (learnt.size() == 1) {
-        m_unitClauses.push_back(learnt[0]);
-    } else if (learnt.size() > 1) {
-        auto &learntClause =
-            m_clauseDB.allocate(static_checked_cast<typename ST::Clause::size_type>(learnt.size()));
-        std::copy(learnt.begin(), learnt.end(), learntClause.begin());
+    if (m_lemmaBuffer.size() == 1) {
+        m_unitClauses.push_back(m_lemmaBuffer[0]);
+    } else if (m_lemmaBuffer.size() > 1) {
+        auto &learntClause = m_clauseDB.allocate(
+            static_checked_cast<typename ST::Clause::size_type>(m_lemmaBuffer.size()));
+        std::copy(m_lemmaBuffer.begin(), m_lemmaBuffer.end(), learntClause.begin());
         learntClause.setLBD(getLBD(learntClause, m_trail, m_stamps));
 
         *learntOut = &learntClause;
 
-        if (learnt.size() == 2) {
+        if (m_lemmaBuffer.size() == 2) {
             ++m_amntBinariesLearnt;
             // No need to store pointers to binaries, since they are never relocated by
             // the clause allocator.
@@ -539,7 +544,7 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
         std::swap(*litWithMaxDecisionLevel, learntClause[1]);
     }
 
-    return ConflictHandlingResult{learnt.size() == 1, backtrackLevel};
+    return ConflictHandlingResult{m_lemmaBuffer.size() == 1, backtrackLevel};
 }
 
 template <typename ST>
