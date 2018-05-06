@@ -33,6 +33,8 @@
 
 #include <boost/format.hpp>
 
+#include <libjamsat/utils/SimpleMovingAverage.h>
+
 namespace jamsat {
 
 /**
@@ -45,6 +47,7 @@ struct AllEnabledStatisticsConfig {
     using CountPropagations = std::true_type;
     using CountDecisions = std::true_type;
     using CountRestarts = std::true_type;
+    using MeasureLemmaSize = std::true_type;
 };
 
 /**
@@ -56,6 +59,7 @@ struct AllEnabledStatisticsConfig {
  *  - CountPropagations
  *  - CountDecisions
  *  - CountRestarts
+ *  - MeasureLemmaSize
  * Each of these member types must be either std::true_type or std::false_type. Their meaning
  * directly follows from their name: the value of CountConflicts::value determines whether
  * conflicts shall be counted, etc.
@@ -73,7 +77,7 @@ public:
         uint64_t m_propagationCount = 0;
         uint64_t m_decisionCount = 0;
         uint64_t m_restartCount = 0;
-        double m_avgLemmaSize = 0.0;
+        SimpleMovingAverage<uint32_t> m_avgLemmaSize{1000};
         double m_avgLBD = 0.0;
         std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_startTime;
         std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_stopTime;
@@ -100,6 +104,14 @@ public:
      * \brief Notifies the statistics system that a restart has been performed.
      */
     void registerRestart() noexcept;
+
+
+    /**
+     * \brief Notifies the statistics that a lemma has been added
+     *
+     * \param length    The amount of literals contained in the added lemma
+     */
+    void registerLemma(uint32_t size) noexcept;
 
     /**
      * \brief Notifies the statistics system that the solver entered its main search
@@ -197,6 +209,13 @@ void Statistics<StatisticsConfig>::registerSolvingStop() noexcept {
 }
 
 template <typename StatisticsConfig>
+void Statistics<StatisticsConfig>::registerLemma(uint32_t size) noexcept {
+    if (StatisticsConfig::MeasureLemmaSize::value == true) {
+        m_currentEra.m_avgLemmaSize.add(size);
+    }
+}
+
+template <typename StatisticsConfig>
 void Statistics<StatisticsConfig>::concludeEra() noexcept {
     m_previousEra = m_currentEra;
     m_currentEra = Era{};
@@ -220,7 +239,8 @@ void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream &stre
            << "#P = amount of propagations; "
            << "#D = amount of decision literals picked;\n"
            << "  #R = amount of restarts performed; "
-           << "T = time passed since last solve() invocation\n";
+           << "T = time passed since last solve() invocation; "
+           << "L = avg. lemma size\n";
 }
 
 
@@ -234,6 +254,10 @@ auto operator<<(std::ostream &stream, const Statistics<StatisticsConfig> &stats)
     uint64_t millisElapsed =
         std::chrono::duration_cast<std::chrono::milliseconds>(now - currentEra.m_startTime).count();
     stream << "T: " << millisElapsed << "ms ";
+
+    if (StatisticsConfig::MeasureLemmaSize::value == true) {
+        stream << boost::format("| L: %4.2f ") % currentEra.m_avgLemmaSize.getAverage();
+    }
 
     if (StatisticsConfig::CountConflicts::value == true) {
         stream << "| #C: " << currentEra.m_conflictCount << " ";
