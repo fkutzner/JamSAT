@@ -336,7 +336,11 @@ CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const &toPropagat
                        "Illegal unit clause conflict");
         }
 
-        if (m_propagation.propagateUntilFixpoint(unit) != nullptr) {
+        auto amntAssignments = m_trail.getNumberOfAssignments();
+        bool unitConflict = (m_propagation.propagateUntilFixpoint(unit) != nullptr);
+        m_statistics.registerPropagations(m_trail.getNumberOfAssignments() - amntAssignments);
+
+        if (unitConflict) {
             JAM_LOG_SOLVER(info, "Detected conflict at unit clause " << unit);
             if (failedAssumptions != nullptr) {
                 *failedAssumptions = analyzeAssignment(m_propagation, m_trail, m_stamps, unit);
@@ -391,7 +395,10 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
                    "The branching heuristic is not expected to return an undefined literal");
         m_trail.addAssignment(decision);
 
+        auto amntAssignments = m_trail.getNumberOfAssignments();
         auto conflictingClause = m_propagation.propagateUntilFixpoint(decision);
+        m_statistics.registerPropagations(m_trail.getNumberOfAssignments() - amntAssignments);
+
         while (conflictingClause != nullptr) {
             m_statistics.registerConflict();
             JAM_LOG_SOLVER(info, "Last propagation resulted in a conflict");
@@ -415,7 +422,11 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             m_restartPolicy.registerConflict({learntClauseLBD});
 
             backtrackToLevel(conflictHandlingResult.backtrackLevel);
+
+            auto amntConflAssignments = m_trail.getNumberOfAssignments();
             conflictingClause = m_propagation.registerClause(*learntClause);
+            m_statistics.registerPropagations(m_trail.getNumberOfAssignments() -
+                                              amntConflAssignments);
 
             if (conflictHandlingResult.backtrackLevel == 1 && conflictingClause != nullptr) {
                 // Propagating the unit clauses and the assumptions now forces an assignment
