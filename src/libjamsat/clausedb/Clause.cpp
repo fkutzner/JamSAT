@@ -30,66 +30,13 @@
 #include <algorithm>
 
 namespace jamsat {
-Clause::Clause(size_type size) noexcept
-  : m_size(size), m_lbd(0), m_flags(0), m_anchor(CNFLit::getUndefinedLiteral()) {}
-
-CNFLit &Clause::operator[](size_type index) noexcept {
-    JAM_ASSERT(index < m_size, "Index out of bounds");
-    return *(&m_anchor + index);
-}
-
-const CNFLit &Clause::operator[](size_type index) const noexcept {
-    JAM_ASSERT(index < m_size, "Index out of bounds");
-    return *(&m_anchor + index);
-}
-
-Clause::size_type Clause::size() const noexcept {
-    return m_size;
-}
-
-void Clause::resize(size_type newSize) noexcept {
-    JAM_ASSERT(newSize <= m_size, "newSize may not be larger than the current size");
-    m_size = newSize;
-}
-
-Clause::iterator Clause::begin() noexcept {
-    return &m_anchor;
-}
-
-Clause::iterator Clause::end() noexcept {
-    return &m_anchor + m_size;
-}
-
-Clause::const_iterator Clause::begin() const noexcept {
-    return &m_anchor;
-}
-
-Clause::const_iterator Clause::end() const noexcept {
-    return &m_anchor + m_size;
-}
-
-Clause &Clause::operator=(const Clause &other) noexcept {
-    if (this == &other) {
-        return *this;
+std::ostream &operator<<(std::ostream &stream, const Clause &clause) {
+    stream << "( ";
+    for (auto lit : clause) {
+        stream << lit << " ";
     }
-
-    JAM_ASSERT(this->m_size >= other.m_size,
-               "Illegal argument: other clause must not be larger than the assignee");
-
-    this->m_lbd = other.m_lbd;
-    this->m_flags = other.m_flags;
-    this->m_size = other.m_size;
-    std::copy(other.begin(), other.end(), this->begin());
-    return *this;
-}
-
-size_t Clause::getAllocationSize(Clause::size_type clauseSize) {
-    JAM_ASSERT(clauseSize > 0, "clauseSize must be nonzero");
-    return sizeof(Clause) + (clauseSize - 1) * sizeof(CNFLit);
-}
-
-Clause *Clause::constructIn(void *target, size_type size) {
-    return new (target) Clause(size);
+    stream << ")";
+    return stream;
 }
 
 std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
@@ -107,41 +54,5 @@ std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
     }
 
     return std::unique_ptr<Clause>(result);
-}
-
-std::ostream &operator<<(std::ostream &stream, const Clause &clause) {
-    stream << "( ";
-    for (auto lit : clause) {
-        stream << lit << " ";
-    }
-    stream << ")";
-    return stream;
-}
-
-bool Clause::operator==(Clause const &rhs) const noexcept {
-    if (this == &rhs) {
-        return true;
-    }
-    if (size() != rhs.size() || this->m_lbd != rhs.m_lbd) {
-        return false;
-    }
-    return std::equal(begin(), end(), rhs.begin());
-}
-
-bool Clause::operator!=(Clause const &rhs) const noexcept {
-    return !(*this == rhs);
-}
-
-
-void Clause::setFlag(Flag flag) noexcept {
-    m_flags |= static_cast<std::underlying_type_t<Flag>>(flag);
-}
-
-void Clause::clearFlag(Flag flag) noexcept {
-    m_flags &= ~(static_cast<std::underlying_type_t<Flag>>(flag));
-}
-
-bool Clause::getFlag(Flag flag) const noexcept {
-    return (m_flags & static_cast<std::underlying_type_t<Flag>>(flag)) != 0;
 }
 }

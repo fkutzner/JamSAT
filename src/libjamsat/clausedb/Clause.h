@@ -221,6 +221,8 @@ std::unique_ptr<Clause> createHeapClause(Clause::size_type size);
 
 std::ostream &operator<<(std::ostream &stream, const Clause &clause);
 
+/********** Implementation ****************************** */
+
 template <typename LBDType>
 auto Clause::getLBD() const noexcept -> LBDType {
     if (m_lbd <= std::numeric_limits<LBDType>::max()) {
@@ -238,5 +240,94 @@ void Clause::setLBD(LBDType LBD) noexcept {
     } else {
         m_lbd = std::numeric_limits<decltype(m_lbd)>::max();
     }
+}
+
+inline Clause::Clause(size_type size) noexcept
+  : m_size(size), m_lbd(0), m_flags(0), m_anchor(CNFLit::getUndefinedLiteral()) {}
+
+inline CNFLit &Clause::operator[](size_type index) noexcept {
+    JAM_ASSERT(index < m_size, "Index out of bounds");
+    return *(&m_anchor + index);
+}
+
+inline const CNFLit &Clause::operator[](size_type index) const noexcept {
+    JAM_ASSERT(index < m_size, "Index out of bounds");
+    return *(&m_anchor + index);
+}
+
+inline Clause::size_type Clause::size() const noexcept {
+    return m_size;
+}
+
+inline void Clause::resize(size_type newSize) noexcept {
+    JAM_ASSERT(newSize <= m_size, "newSize may not be larger than the current size");
+    m_size = newSize;
+}
+
+inline Clause::iterator Clause::begin() noexcept {
+    return &m_anchor;
+}
+
+inline Clause::iterator Clause::end() noexcept {
+    return &m_anchor + m_size;
+}
+
+inline Clause::const_iterator Clause::begin() const noexcept {
+    return &m_anchor;
+}
+
+inline Clause::const_iterator Clause::end() const noexcept {
+    return &m_anchor + m_size;
+}
+
+inline Clause &Clause::operator=(const Clause &other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+
+    JAM_ASSERT(this->m_size >= other.m_size,
+               "Illegal argument: other clause must not be larger than the assignee");
+
+    this->m_lbd = other.m_lbd;
+    this->m_flags = other.m_flags;
+    this->m_size = other.m_size;
+    std::copy(other.begin(), other.end(), this->begin());
+    return *this;
+}
+
+inline size_t Clause::getAllocationSize(Clause::size_type clauseSize) {
+    JAM_ASSERT(clauseSize > 0, "clauseSize must be nonzero");
+    return sizeof(Clause) + (clauseSize - 1) * sizeof(CNFLit);
+}
+
+inline Clause *Clause::constructIn(void *target, size_type size) {
+    return new (target) Clause(size);
+}
+
+inline bool Clause::operator==(Clause const &rhs) const noexcept {
+    if (this == &rhs) {
+        return true;
+    }
+    if (size() != rhs.size() || this->m_lbd != rhs.m_lbd) {
+        return false;
+    }
+    return std::equal(begin(), end(), rhs.begin());
+}
+
+inline bool Clause::operator!=(Clause const &rhs) const noexcept {
+    return !(*this == rhs);
+}
+
+
+inline void Clause::setFlag(Flag flag) noexcept {
+    m_flags |= static_cast<std::underlying_type_t<Flag>>(flag);
+}
+
+inline void Clause::clearFlag(Flag flag) noexcept {
+    m_flags &= ~(static_cast<std::underlying_type_t<Flag>>(flag));
+}
+
+inline bool Clause::getFlag(Flag flag) const noexcept {
+    return (m_flags & static_cast<std::underlying_type_t<Flag>>(flag)) != 0;
 }
 }
