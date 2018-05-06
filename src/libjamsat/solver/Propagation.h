@@ -33,6 +33,7 @@
 #include <libjamsat/solver/Watcher.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
+#include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/Printers.h>
 #include <libjamsat/utils/Truth.h>
@@ -471,7 +472,6 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
         // literal pointing either to clause[0] or clause[1], but not to the literal
         // which is their index in m_watchers.
 
-        bool actionIsForced = true;
         for (typename ClauseT::size_type i = 2; i < clause.size(); ++i) {
             CNFLit currentLiteral = clause[i];
             if (!isFalse(m_assignmentProvider.getAssignment(currentLiteral))) {
@@ -489,35 +489,42 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
                 std::swap(clause[currentWatcher.getIndex()], clause[i]); // (*, see above)
                 m_watchers.addWatcher(currentLiteral, currentWatcher);
                 watcherListTraversal.removeCurrent();
-                actionIsForced = false;
-                break;
+
+                // No action is forced: skip to outer_continue to save some branches
+                // Unfortunately, clang doesn't seem to jump there automatically if
+                // some flag is set here and tested later :(
+                goto outer_continue;
             }
         }
 
-        if (actionIsForced) {
-            // Invariant holding here: all literals in the clause beyond the second
-            // literal have the value FALSE.
-            if (isFalse(assignment)) {
-                // Conflict case: all literals are FALSE. Return the conflicting clause.
-                watcherListTraversal.finishedTraversal();
-                JAM_LOG_PROPAGATION(info, "  Current assignment is conflicting at clause "
-                                              << &clause << ".");
-                return &clause;
-            } else {
-                // Propagation case: otherWatchedLit is the only remaining unassigned
-                // literal
-                ++amountOfNewFacts;
-                m_reasons[otherWatchedLit.getVariable()] = &clause;
-                JAM_LOG_PROPAGATION(info, "  Forced assignment: " << otherWatchedLit
-                                                                  << " Reason: " << &clause);
-                m_assignmentProvider.addAssignment(otherWatchedLit);
-            }
+        // An action is forced: otherwise, the jump to outer_continue would have
+        // been taken in the loop above
 
-            // Only advancing the traversal if an action is forced, since otherwise
-            // the current watcher has been removed via removeCurrent() and
-            // watcherListTraversal already points to the next watcher.
-            ++watcherListTraversal;
+        // Invariant holding here: all literals in the clause beyond the second
+        // literal have the value FALSE.
+        if (isFalse(assignment)) {
+            // Conflict case: all literals are FALSE. Return the conflicting clause.
+            watcherListTraversal.finishedTraversal();
+            JAM_LOG_PROPAGATION(info,
+                                "  Current assignment is conflicting at clause " << &clause << ".");
+            return &clause;
+        } else {
+            // Propagation case: otherWatchedLit is the only remaining unassigned
+            // literal
+            ++amountOfNewFacts;
+            m_reasons[otherWatchedLit.getVariable()] = &clause;
+            JAM_LOG_PROPAGATION(info, "  Forced assignment: " << otherWatchedLit
+                                                              << " Reason: " << &clause);
+            m_assignmentProvider.addAssignment(otherWatchedLit);
         }
+
+        // Only advancing the traversal if an action is forced, since otherwise
+        // the current watcher has been removed via removeCurrent() and
+        // watcherListTraversal already points to the next watcher.
+        ++watcherListTraversal;
+
+    outer_continue:
+        noOp();
     }
 
     watcherListTraversal.finishedTraversal();

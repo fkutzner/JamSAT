@@ -81,4 +81,13 @@ public:
 private:
     std::function<void()> m_callOnExit;
 };
+
+/**
+ * \brief A function without side-effects.
+ *
+ * noOp() can be used e.g. to place labels at the end of scopes.
+ *
+ * \ingroup JamSAT_Utils
+ */
+inline void noOp() noexcept {}
 }
