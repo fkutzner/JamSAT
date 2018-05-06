@@ -413,6 +413,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             if (conflictHandlingResult.learntUnitClause) {
                 // Perform a restart to check for unsatisfiability during unit-clause
                 // propagation, and to have the unit clause on level 0
+                m_statistics.registerLemma(1);
                 return TBools::INDETERMINATE;
             }
 
@@ -425,6 +426,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             conflictingClause = m_propagation.registerClause(*learntClause);
             m_statistics.registerPropagations(m_trail.getNumberOfAssignments() -
                                               amntConflAssignments);
+            m_statistics.registerLemma(learntClause->size());
 
             if (conflictHandlingResult.backtrackLevel == 1 && conflictingClause != nullptr) {
                 // Propagating the unit clauses and the assumptions now forces an assignment
@@ -450,7 +452,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 
         if (m_clauseDBReductionPolicy.shouldReduceDB()) {
             JAM_LOG_SOLVER(info, "Reducing the clause database...");
-            auto amountKnownGood = m_problemClauses.size() + m_amntBinariesLearnt;
+            auto amountKnownGood = m_amntBinariesLearnt;
             auto toDeleteBegin =
                 m_clauseDBReductionPolicy.getClausesMarkedForDeletion(amountKnownGood);
             reduceClauseDB(m_clauseDB, m_propagation, m_trail,
