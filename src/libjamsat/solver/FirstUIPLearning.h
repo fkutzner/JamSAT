@@ -354,8 +354,9 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
         const CNFVar resolveAtVar = resolveAtLit.getVariable();
         JAM_LOG_CA(info, "  Resolving at literal: " << resolveAtLit);
 
-        if (m_stamps[resolveAtVar] != 0 &&
-            m_dlProvider.getAssignmentDecisionLevel(resolveAtVar) == currentLevel) {
+        if (m_stamps[resolveAtVar] != 0) {
+            JAM_ASSERT(m_dlProvider.getAssignmentDecisionLevel(resolveAtVar) == currentLevel,
+                       "Expected to traverse only literals on the current decision level");
             auto reason = m_reasonProvider.getAssignmentReason(resolveAtVar);
 
             if (reason != nullptr) {
@@ -380,7 +381,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
         }
 
         if (cursor == trailIterators.begin()) {
-            JAM_LOG_CA(info, "  Reached the beginning of the trail with "
+            JAM_LOG_CA(info, "  Reached the beginning of the current decision level with "
                                  << unresolvedCount << " literals remaining to resolve.");
             break;
         }
