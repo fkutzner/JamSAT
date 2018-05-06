@@ -37,7 +37,7 @@ namespace jamsat {
 class GlucoseRestartPolicy {
 public:
     struct Options {
-        uint64_t movingAverageWindowSize = 5000;
+        uint64_t movingAverageWindowSize = 50;
         double K = 0.8f;
     };
 
