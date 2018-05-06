@@ -382,8 +382,6 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         return TBools::FALSE;
     }
 
-    int conflictsUntilMaintenance = 5000;
-
     while (!m_trail.isVariableAssignmentComplete()) {
         loggingEpochElapsed();
         m_trail.newDecisionLevel();
@@ -436,15 +434,12 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
                 return TBools::INDETERMINATE;
             }
 
-            --conflictsUntilMaintenance;
-        }
-
-        if (conflictsUntilMaintenance <= 0) {
-            std::cout << m_statistics;
-            if (m_stopRequested.load()) {
-                return TBools::INDETERMINATE;
+            if (m_statistics.getCurrentEra().m_conflictCount % 10000ULL == 0ULL) {
+                std::cout << m_statistics;
+                if (m_stopRequested.load()) {
+                    return TBools::INDETERMINATE;
+                }
             }
-            conflictsUntilMaintenance = 5000;
         }
 
         if (m_restartPolicy.shouldRestart()) {
