@@ -77,6 +77,7 @@ public:
         uint64_t m_propagationCount = 0;
         uint64_t m_decisionCount = 0;
         uint64_t m_restartCount = 0;
+        uint64_t m_unitLemmas = 0;
         SimpleMovingAverage<uint32_t> m_avgLemmaSize{1000};
         double m_avgLBD = 0.0;
         std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_startTime;
@@ -212,6 +213,9 @@ template <typename StatisticsConfig>
 void Statistics<StatisticsConfig>::registerLemma(uint32_t size) noexcept {
     if (StatisticsConfig::MeasureLemmaSize::value == true) {
         m_currentEra.m_avgLemmaSize.add(size);
+        if (size == 1) {
+            ++m_currentEra.m_unitLemmas;
+        }
     }
 }
 
@@ -257,6 +261,7 @@ auto operator<<(std::ostream &stream, const Statistics<StatisticsConfig> &stats)
 
     if (StatisticsConfig::MeasureLemmaSize::value == true) {
         stream << boost::format("| L: %4.2f ") % currentEra.m_avgLemmaSize.getAverage();
+        stream << "| #U: " << currentEra.m_unitLemmas << " ";
     }
 
     if (StatisticsConfig::CountConflicts::value == true) {
