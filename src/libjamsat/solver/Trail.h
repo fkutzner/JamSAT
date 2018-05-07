@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <vector>
 
 #include <boost/range.hpp>
@@ -58,14 +59,14 @@ namespace jamsat {
 class Trail {
 private:
     BoundedStack<CNFLit> m_trail;
-    std::vector<decltype(m_trail)::size_type> m_trailLimits;
+    std::vector<uint32_t> m_trailLimits;
     BoundedMap<CNFVar, TBool> m_assignments;
-    BoundedMap<CNFVar, decltype(m_trailLimits)::size_type> m_assignmentLevel;
+    BoundedMap<CNFVar, uint32_t> m_assignmentLevel;
     BoundedMap<CNFVar, TBool> m_phases;
 
 public:
     using size_type = decltype(m_trail)::size_type;
-    using DecisionLevel = decltype(m_trailLimits)::size_type;
+    using DecisionLevel = uint32_t;
     using const_iterator = decltype(m_trail)::const_iterator;
 
     /**
