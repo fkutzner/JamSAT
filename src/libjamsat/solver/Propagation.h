@@ -256,6 +256,17 @@ public:
      */
     void updateAssignmentReason(const ClauseT &oldClause, const ClauseT &newClause) noexcept;
 
+    /**
+     * \brief Returns the amount of assignments which have been placed on
+     * the trail during the last propagation to fixpoint, but have not been
+     * propagated.
+     *
+     * \return The amount of assignments which have been placed on
+     * the trail during the last propagation to fixpoint, but have not been
+     * propagated.
+     */
+    uint64_t getCurrentAmountOfUnpropagatedAssignments() const noexcept;
+
 private:
     ClauseT *propagateBinaries(CNFLit toPropagate, size_t &amountOfNewFacts);
     ClauseT *registerClause(ClauseT &clause, bool autoPropagate);
@@ -263,6 +274,17 @@ private:
     AssignmentProvider &m_assignmentProvider;
     BoundedMap<CNFVar, const ClauseT *> m_reasons;
     detail_propagation::Watchers<ClauseT> m_binaryWatchers;
+
+    /**
+     * \internal
+     *
+     * The number of the assignments which have been placed on the trail
+     * during the last propagation to fixpoint, but have not been propagated.
+     * Keeping track of this to enable more precise statistics. This value's
+     * computation is cheap enough to perform regardless of whether the
+     * amount of propagations is aggregated by the statistics system.
+     */
+    uint64_t m_unpropagatedStats;
 
     /**
      * \internal
@@ -283,6 +305,7 @@ Propagation<AssignmentProvider, ClauseT>::Propagation(CNFVar maxVar,
   : m_assignmentProvider(assignmentProvider)
   , m_reasons(maxVar)
   , m_binaryWatchers(maxVar)
+  , m_unpropagatedStats(0ULL)
   , m_watchers(maxVar) {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
@@ -366,9 +389,11 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(CNFLit
     // propagation queue.
     auto propagationQueue = m_assignmentProvider.getAssignments(trailEndIndex);
 
+    m_unpropagatedStats = 0ULL;
     size_t amountOfNewFacts = 0;
     ClauseT *conflictingClause = propagate(toPropagate, amountOfNewFacts);
     if (conflictingClause) {
+        m_unpropagatedStats = amountOfNewFacts;
         return conflictingClause;
     }
 
@@ -384,6 +409,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(CNFLit
         conflictingClause = propagate(*pqBegin, localNewFacts);
         pqEnd += localNewFacts;
         if (conflictingClause) {
+            m_unpropagatedStats = (propagationQueue.end() - propagationQueue.begin()) - 1;
             return conflictingClause;
         }
         ++pqBegin;
@@ -608,5 +634,11 @@ void Propagation<AssignmentProvider, ClauseT>::updateAssignmentReason(
 template <class AssignmentProvider, class ClauseT>
 auto Propagation<AssignmentProvider, ClauseT>::getBinariesMap() const noexcept -> BinariesMap {
     return m_binaryWatchers.getBlockerMap();
+}
+
+template <class AssignmentProvider, class ClauseT>
+auto Propagation<AssignmentProvider, ClauseT>::getCurrentAmountOfUnpropagatedAssignments() const
+    noexcept -> uint64_t {
+    return m_unpropagatedStats;
 }
 }

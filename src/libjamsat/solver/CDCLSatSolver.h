@@ -341,7 +341,9 @@ CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const &toPropagat
 
         auto amntAssignments = m_trail.getNumberOfAssignments();
         bool unitConflict = (m_propagation.propagateUntilFixpoint(unit) != nullptr);
-        m_statistics.registerPropagations(m_trail.getNumberOfAssignments() - amntAssignments);
+        m_statistics.registerPropagations(
+            m_trail.getNumberOfAssignments() -
+            m_propagation.getCurrentAmountOfUnpropagatedAssignments() - amntAssignments);
 
         if (unitConflict) {
             JAM_LOG_SOLVER(info, "Detected conflict at unit clause " << unit);
@@ -398,7 +400,9 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 
         auto amntAssignments = m_trail.getNumberOfAssignments();
         auto conflictingClause = m_propagation.propagateUntilFixpoint(decision);
-        m_statistics.registerPropagations(m_trail.getNumberOfAssignments() - amntAssignments);
+        m_statistics.registerPropagations(
+            m_trail.getNumberOfAssignments() -
+            m_propagation.getCurrentAmountOfUnpropagatedAssignments() - amntAssignments);
 
         while (conflictingClause != nullptr) {
             m_statistics.registerConflict();
@@ -427,8 +431,11 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 
             auto amntConflAssignments = m_trail.getNumberOfAssignments();
             conflictingClause = m_propagation.registerClause(*learntClause);
-            m_statistics.registerPropagations(m_trail.getNumberOfAssignments() -
-                                              amntConflAssignments);
+            m_statistics.registerPropagations(
+                m_trail.getNumberOfAssignments() -
+                m_propagation.getCurrentAmountOfUnpropagatedAssignments() -
+
+                amntConflAssignments);
             m_statistics.registerLemma(learntClause->size());
 
             if (conflictHandlingResult.backtrackLevel == 1 && conflictingClause != nullptr) {
