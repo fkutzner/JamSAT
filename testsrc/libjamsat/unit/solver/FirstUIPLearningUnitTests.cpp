@@ -91,8 +91,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
     assignments.addAssignment(~conflictingClause[1]);
     assignments.addAssignment(~conflictingClause[3]);
     assignments.addAssignment(~dummyReasonClause[1]);
-    assignments.addAssignment(~conflictingClause[0]);
     assignments.addAssignment(~conflictingClause[2]);
+    assignments.addAssignment(~conflictingClause[0]);
 
     assignments.setAssignmentDecisionLevel(CNFVar{4}, 2);
     assignments.setAssignmentDecisionLevel(CNFVar{1}, 3);
@@ -136,8 +136,8 @@ TEST(UnitSolver, firstUIPLearningCallsSeenVariableCallback) {
     assignments.addAssignment(~conflictingClause[1]);
     assignments.addAssignment(~conflictingClause[3]);
     assignments.addAssignment(~dummyReasonClause[1]);
-    assignments.addAssignment(~conflictingClause[0]);
     assignments.addAssignment(~conflictingClause[2]);
+    assignments.addAssignment(~conflictingClause[0]);
 
     assignments.setAssignmentDecisionLevel(CNFVar{4}, 2);
     assignments.setAssignmentDecisionLevel(CNFVar{1}, 3);

@@ -337,45 +337,28 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
                        "Expected to traverse only literals on the current decision level");
             auto reason = m_reasonProvider.getAssignmentReason(resolveAtVar);
 
-            if (reason != nullptr) {
-                unresolvedCount += addResolvent(*reason, resolveAtLit, result);
-                --unresolvedCount;
-                JAM_LOG_CA(info, "  Resolved with reason clause "
-                                     << &reason
-                                     << ". Remaining literals to resolve: " << unresolvedCount);
-            } else {
-                // resolveAtLit is on the current decision level and can't be
-                // removed from the result via resolution, so it must serve
-                // as the asserting literal.
-                JAM_LOG_CA(info, "  Found the asserting literal. Remaining literals to resolve: "
-                                     << unresolvedCount);
-                result[0] = ~resolveAtLit;
-                m_stamps[resolveAtVar] = 0;
-
-                // Not decreasing the unresolvedCount here, since this asserting
-                // literal cannot be resolved, and _all_ other literals on the current
-                // decision level need to be resolved.
-            }
+            JAM_ASSERT(reason != nullptr, "Encountered the UIP too early");
+            unresolvedCount += addResolvent(*reason, resolveAtLit, result);
+            --unresolvedCount;
+            JAM_LOG_CA(info, "  Resolved with reason clause "
+                                 << &reason
+                                 << ". Remaining literals to resolve: " << unresolvedCount);
         }
 
-        if (cursor == trailIterators.begin()) {
-            JAM_LOG_CA(info, "  Reached the beginning of the current decision level with "
-                                 << unresolvedCount << " literals remaining to resolve.");
-            break;
-        }
+        JAM_ASSERT(cursor != trailIterators.begin(), "Reached the beginning of the current "
+                                                     "decision level without finding the UIP");
         --cursor;
     }
 
-    // Collect the asserting literal
+    // Collect the asserting literal (UIP)
     // TODO: document this
-    if (result[0] == CNFLit::getUndefinedLiteral()) {
-        while (m_stamps[cursor->getVariable()] == 0) {
-            JAM_ASSERT(cursor != trailIterators.begin(), "Leaving legal DL");
-            --cursor;
-        }
-        result[0] = ~(*cursor);
-        m_stamps[cursor->getVariable()] = 0;
+    while (m_stamps[cursor->getVariable()] == 0) {
+        JAM_ASSERT(cursor != trailIterators.begin(), "No UIP found on current decision level");
+        --cursor;
     }
+    result[0] = ~(*cursor);
+    m_stamps[cursor->getVariable()] = 0;
+
 
     JAM_ASSERT(unresolvedCount == 1,
                "Implementation error: didn't find exactly one asserting literal");
