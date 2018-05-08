@@ -33,7 +33,8 @@ Trail::Trail(CNFVar maxVar)
   , m_trailLimits({0})
   , m_assignments(maxVar, TBools::INDETERMINATE)
   , m_assignmentLevel(maxVar)
-  , m_phases(maxVar, TBools::FALSE) {
+  , m_phases(maxVar, TBools::FALSE)
+  , m_currentDecisionLevel(0) {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
 }

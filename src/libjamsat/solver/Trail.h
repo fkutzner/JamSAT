@@ -63,6 +63,7 @@ private:
     BoundedMap<CNFVar, TBool> m_assignments;
     BoundedMap<CNFVar, uint32_t> m_assignmentLevel;
     BoundedMap<CNFVar, TBool> m_phases;
+    uint32_t m_currentDecisionLevel;
 
 public:
     using size_type = decltype(m_trail)::size_type;
@@ -230,10 +231,11 @@ public:
 
 inline void Trail::newDecisionLevel() noexcept {
     m_trailLimits.push_back(m_trail.size());
+    ++m_currentDecisionLevel;
 }
 
 inline Trail::DecisionLevel Trail::getCurrentDecisionLevel() const noexcept {
-    return m_trailLimits.size() - 1;
+    return m_currentDecisionLevel;
 }
 
 inline void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
@@ -245,6 +247,7 @@ inline void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
 
     m_trail.pop_to(m_trailLimits[level]);
     m_trailLimits.resize(level + 1);
+    m_currentDecisionLevel = level;
 }
 
 inline void Trail::revisitDecisionLevel(Trail::DecisionLevel level) noexcept {
@@ -258,6 +261,7 @@ inline void Trail::revisitDecisionLevel(Trail::DecisionLevel level) noexcept {
 
     m_trail.pop_to(m_trailLimits[level + 1]);
     m_trailLimits.resize(level + 1);
+    m_currentDecisionLevel = level;
 }
 
 inline void Trail::addAssignment(CNFLit literal) noexcept {
