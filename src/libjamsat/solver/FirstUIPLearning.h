@@ -245,7 +245,10 @@ int FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::initializeResult(
 
     // m_stamps is in a dirty state now, simulating out of memory conditions
     // for testing purposes (if enabled via FaultInjector)
+
+#ifdef JAM_ENABLE_TEST_FAULTS
     throwOnInjectedTestFault<std::bad_alloc>("FirstUIPLearning/low_memory");
+#endif
 
     // If unresolvedCount == 1, the single literal on the current decision level
     // would have gotten a forced assignment on a lower decision level, which
@@ -277,26 +280,31 @@ int FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::addResolvent(
         m_stamps[resolveAtLit.getVariable()] = 0;
     }
 
-    for (auto reasonLit : reason) {
-        if (reasonLit != resolveAtLit && m_stamps[reasonLit.getVariable()] == 0) {
-            m_stamps[reasonLit.getVariable()] = 1;
+    // Micro-optimization: no push_back to avoid branches in the next loop
+    // `result` is a reused array, so in most cases this will won't actually
+    // cause allocations
+    auto effectiveResultSize = result.size();
+    result.resize(effectiveResultSize + reason.size());
 
-            if (m_onSeenVariableCallback) {
-                m_onSeenVariableCallback(reasonLit.getVariable());
-            }
+    for (auto reasonLit : reason) {
+        if (resolveAtLit != reasonLit && m_stamps[reasonLit.getVariable()] == 0) {
+            m_stamps[reasonLit.getVariable()] = 1;
 
             if (m_dlProvider.getAssignmentDecisionLevel(reasonLit.getVariable()) == currentLevel) {
                 ++unresolvedCount;
             } else {
-                result.push_back(reasonLit);
+                result[effectiveResultSize++] = reasonLit;
             }
         }
     }
 
+    result.resize(effectiveResultSize);
+
+#ifdef JAM_ENABLE_TEST_FAULTS
     // m_stamps may be in a dirty state, simulating out of memory conditions
     // for testing purposes (if enabled via FaultInjector)
     throwOnInjectedTestFault<std::bad_alloc>("FirstUIPLearning/low_memory");
-
+#endif
     return unresolvedCount;
 }
 
@@ -333,6 +341,10 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
         JAM_LOG_CA(info, "  Resolving at literal: " << resolveAtLit);
 
         if (m_stamps[resolveAtVar] != 0) {
+            if (m_onSeenVariableCallback) {
+                m_onSeenVariableCallback(resolveAtLit.getVariable());
+            }
+
             JAM_ASSERT(m_dlProvider.getAssignmentDecisionLevel(resolveAtVar) == currentLevel,
                        "Expected to traverse only literals on the current decision level");
             auto reason = m_reasonProvider.getAssignmentReason(resolveAtVar);
@@ -369,6 +381,9 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::clearStamps(
     const std::vector<CNFLit> &lits) const noexcept {
     for (CNFLit w : lits) {
         m_stamps[w.getVariable()] = 0;
+        if (m_onSeenVariableCallback) {
+            m_onSeenVariableCallback(w.getVariable());
+        }
     }
 }
 

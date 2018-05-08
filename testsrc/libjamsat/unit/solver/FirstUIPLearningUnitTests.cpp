@@ -33,6 +33,9 @@
 
 #include "TestAssignmentProvider.h"
 #include "TestReasonProvider.h"
+
+#define JAM_ENABLE_TEST_FAULTS
+
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/utils/FaultInjector.h>
 
