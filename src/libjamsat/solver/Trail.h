@@ -242,7 +242,8 @@ inline void Trail::shrinkToDecisionLevel(Trail::DecisionLevel level) noexcept {
     JAM_ASSERT(level < m_trailLimits.size(),
                "Cannot shrink to a decision level higher than the current one");
     for (auto i = m_trail.begin() + m_trailLimits[level]; i != m_trail.end(); ++i) {
-        m_assignments[(*i).getVariable()] = TBools::INDETERMINATE;
+        m_phases[i->getVariable()] = m_assignments[(*i).getVariable()];
+        m_assignments[i->getVariable()] = TBools::INDETERMINATE;
     }
 
     m_trail.pop_to(m_trailLimits[level]);
@@ -256,7 +257,8 @@ inline void Trail::revisitDecisionLevel(Trail::DecisionLevel level) noexcept {
         "Cannot revisit current decision level or a decision level higher than the current one");
 
     for (auto i = m_trail.begin() + m_trailLimits[level + 1]; i != m_trail.end(); ++i) {
-        m_assignments[(*i).getVariable()] = TBools::INDETERMINATE;
+        m_phases[i->getVariable()] = m_assignments[(*i).getVariable()];
+        m_assignments[i->getVariable()] = TBools::INDETERMINATE;
     }
 
     m_trail.pop_to(m_trailLimits[level + 1]);
@@ -276,7 +278,6 @@ inline void Trail::addAssignment(CNFLit literal) noexcept {
     TBool value = TBool::fromUnderlyingValue(static_cast<TBool::UnderlyingType>(literal.getSign()));
     m_assignments[literal.getVariable()] = value;
     m_assignmentLevel[literal.getVariable()] = getCurrentDecisionLevel();
-    m_phases[literal.getVariable()] = value;
 }
 
 inline Trail::size_type Trail::getNumberOfAssignments() const noexcept {

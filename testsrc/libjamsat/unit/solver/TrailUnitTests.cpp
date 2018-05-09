@@ -282,7 +282,8 @@ TEST(UnitSolver, variablePhaseIsNegativeByDefault) {
 TEST(UnitSolver, variablePhaseIsSavedInTrail) {
     Trail underTest{CNFVar{24}};
     underTest.addAssignment(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
-    EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBools::TRUE);
+    // The phase should not have changed from the default until backtracking
+    EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBools::FALSE);
     underTest.shrinkToDecisionLevel(0);
     EXPECT_EQ(underTest.getNumberOfAssignments(), 0ull);
     EXPECT_EQ(underTest.getPhase(CNFVar{10}), TBools::TRUE);
@@ -339,6 +340,6 @@ TEST(UnitSolver, trailMaxVariableCanBeIncreased) {
     ASSERT_EQ(underTest.getNumberOfAssignments(), 2ull);
     EXPECT_EQ(underTest.getAssignment(CNFVar{7}), TBools::TRUE);
     EXPECT_EQ(underTest.getAssignmentDecisionLevel(CNFVar{7}), 1ull);
-    EXPECT_EQ(underTest.getPhase(CNFVar{7}), TBools::TRUE);
+    EXPECT_EQ(underTest.getPhase(CNFVar{7}), TBools::FALSE);
 }
 }
