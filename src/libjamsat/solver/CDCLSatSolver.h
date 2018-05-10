@@ -74,7 +74,7 @@ namespace jamsat {
 struct CDCLSatSolverDefaultTypes {
     using Clause = jamsat::Clause;
     using ClauseDB = jamsat::HeapletClauseDB<CDCLSatSolverDefaultTypes::Clause>;
-    using Trail = jamsat::Trail;
+    using Trail = jamsat::Trail<CDCLSatSolverDefaultTypes::Clause>;
     using Propagation =
         jamsat::Propagation<CDCLSatSolverDefaultTypes::Trail, CDCLSatSolverDefaultTypes::Clause>;
     using ConflictAnalyzer = FirstUIPLearning<CDCLSatSolverDefaultTypes::Trail, Propagation,

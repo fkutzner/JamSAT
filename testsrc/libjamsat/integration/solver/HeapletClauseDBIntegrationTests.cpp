@@ -56,8 +56,8 @@ TEST(IntegrationSolver, HeapletClauseDB_retainWatchedClauses) {
                        {CNFLit{CNFVar{9}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::POSITIVE},
                         CNFLit{CNFVar{11}, CNFSign::POSITIVE}})};
 
-    Trail trail{CNFVar{100}};
-    Propagation<Trail, Clause> propagation{CNFVar{100}, trail};
+    Trail<Clause> trail{CNFVar{100}};
+    Propagation<Trail<Clause>, Clause> propagation{CNFVar{100}, trail};
 
     propagation.registerClause(*clauses[0]);
     propagation.registerClause(*clauses[1]);

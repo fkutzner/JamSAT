@@ -66,8 +66,8 @@ public:
     TBool isProblemSatisfiable();
 
 private:
-    using TrailType = Trail;
-    using PropagationType = Propagation<Trail, Clause>;
+    using TrailType = Trail<Clause>;
+    using PropagationType = Propagation<TrailType, Clause>;
     using ConflictAnalysisType = FirstUIPLearning<TrailType, PropagationType, Clause>;
     using ClauseDBType = HeapClauseDB<Clause>;
     using BranchingHeuristicType = VSIDSBranchingHeuristic<TrailType>;

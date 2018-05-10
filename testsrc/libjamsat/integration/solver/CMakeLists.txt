@@ -4,5 +4,6 @@ add_jamsat_core_integrationtest_library(solver_integration_tests
   CDCLSatSolverIntegrationTests.cpp
   HeapClauseDB.h
   HeapClauseDBTests.cpp
+  HeapletClauseDBIntegrationTests.cpp
   ClauseDBReductionIntegrationTests.cpp
 )

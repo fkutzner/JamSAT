@@ -139,8 +139,8 @@ void checkedReduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, Tra
 
 // Inserts \p nClauses random clauses of lengths in [3...20] into ClauseDB
 // and returns a vector containing pointers to the inserted clauses.
-auto makeClauses(HeapletClauseDB<Clause> &clauseDB, Propagation<Trail, Clause> &trail, int nClauses,
-                 CNFVar maxVar, bool isLearnt) -> std::vector<Clause *> {
+auto makeClauses(HeapletClauseDB<Clause> &clauseDB, Propagation<Trail<Clause>, Clause> &trail,
+                 int nClauses, CNFVar maxVar, bool isLearnt) -> std::vector<Clause *> {
     std::vector<Clause *> result;
 
     std::mt19937_64 rng; // using no random seed => deterministic results
@@ -179,8 +179,8 @@ auto makeClauses(HeapletClauseDB<Clause> &clauseDB, Propagation<Trail, Clause> &
 }
 
 TEST(IntegrationClauseDBReduction, reduceIsConsistentOnEmptyProblem) {
-    Trail trail{CNFVar{100}};
-    Propagation<Trail, Clause> propagation{CNFVar{100}, trail};
+    Trail<Clause> trail{CNFVar{100}};
+    Propagation<Trail<Clause>, Clause> propagation{CNFVar{100}, trail};
     HeapletClauseDB<Clause> clauseDB{256ULL, 1048576ULL};
 
     std::vector<Clause *> problemClauses;
@@ -192,8 +192,8 @@ TEST(IntegrationClauseDBReduction, reduceIsConsistentOnEmptyProblem) {
 
 TEST(IntegrationClauseDBReduction, reduceDeletesNonreasonClauses) {
     CNFVar maxVar{100};
-    Trail trail{maxVar};
-    Propagation<Trail, Clause> propagation{maxVar, trail};
+    Trail<Clause> trail{maxVar};
+    Propagation<Trail<Clause>, Clause> propagation{maxVar, trail};
     HeapletClauseDB<Clause> clauseDB{256ULL, 1048576ULL};
 
     std::vector<Clause *> problemClauses = makeClauses(clauseDB, propagation, 20, maxVar, false);
@@ -202,7 +202,8 @@ TEST(IntegrationClauseDBReduction, reduceDeletesNonreasonClauses) {
     checkedReduceClauseDB(clauseDB, propagation, trail, toDelete, problemClauses, learntClauses);
 }
 
-void tryCreateForcingAssignment(Trail &trail, Propagation<Trail, Clause> &propagation,
+void tryCreateForcingAssignment(Trail<Clause> &trail,
+                                Propagation<Trail<Clause>, Clause> &propagation,
                                 Clause const *clause) {
     for (auto lit : *clause) {
         if (!isDeterminate(trail.getAssignment(lit))) {
@@ -214,8 +215,8 @@ void tryCreateForcingAssignment(Trail &trail, Propagation<Trail, Clause> &propag
 
 TEST(IntegrationClauseDBReduction, reducePreservesReasonClauses) {
     CNFVar maxVar{2000};
-    Trail trail{maxVar};
-    Propagation<Trail, Clause> propagation{maxVar, trail};
+    Trail<Clause> trail{maxVar};
+    Propagation<Trail<Clause>, Clause> propagation{maxVar, trail};
     HeapletClauseDB<Clause> clauseDB{256ULL, 1048576ULL};
 
     std::vector<Clause *> problemClauses = makeClauses(clauseDB, propagation, 20, maxVar, false);

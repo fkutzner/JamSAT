@@ -124,7 +124,7 @@ private:
     }
 
     bool allVariablesAssigned() {
-        auto maxAssignments = static_cast<Trail::size_type>(m_maxVar.getRawValue()) + 1;
+        auto maxAssignments = static_cast<Trail<Clause>::size_type>(m_maxVar.getRawValue()) + 1;
         return m_trail.getNumberOfAssignments() == maxAssignments;
     }
 
@@ -155,8 +155,8 @@ private:
         return solve(nextBranchingLit) || solve(~nextBranchingLit);
     }
 
-    Trail m_trail;
-    Propagation<Trail, Clause> m_propagation;
+    Trail<Clause> m_trail;
+    Propagation<Trail<Clause>, Clause> m_propagation;
     std::vector<std::unique_ptr<Clause>> m_clauses;
     CNFVar m_maxVar;
 };
