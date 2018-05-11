@@ -66,8 +66,12 @@ TEST(IntegrationSolver, HeapletClauseDB_retainWatchedClauses) {
     std::vector<Clause *> relocated;
     using BackInserterType = decltype(std::back_inserter(relocated));
 
-    ASSERT_NO_THROW(clauseDB.retain(
-        propagation.getClausesInPropagationOrder(), [](const Clause &c) { return false; }, {},
-        boost::optional<BackInserterType>{std::back_inserter(relocated)}));
+    ASSERT_NO_THROW(
+        clauseDB.retain(propagation.getClausesInPropagationOrder(),
+                        [](const Clause &c) {
+                            (void)c;
+                            return false;
+                        },
+                        {}, boost::optional<BackInserterType>{std::back_inserter(relocated)}));
 }
 }

@@ -60,6 +60,7 @@ void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
     std::cout << (isTrue(result.isSatisfiable) ? "SAT" : "INDET-OR-UNSAT");
 
     auto minisatResult = isSatisfiableViaMinisat(problem);
+    (void)minisatResult;
     assert(result.isSatisfiable == minisatResult);
 }
 }

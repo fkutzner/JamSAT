@@ -43,6 +43,7 @@ void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
 
     for (auto &clause : underTest.getClauses()) {
         for (auto lit : clause) {
+            (void)lit;
             JAM_ASSERT(lit.getVariable() <= underTest.getMaxVar(), "Invalid literal");
         }
     }

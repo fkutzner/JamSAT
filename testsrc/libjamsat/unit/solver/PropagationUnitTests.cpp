@@ -521,7 +521,6 @@ TEST(UnitSolver, binaryClausesCanBeQueriedInPropagation) {
     CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
     CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
     CNFLit lit4{CNFVar{4}, CNFSign::NEGATIVE};
-    CNFLit lit5{CNFVar{5}, CNFSign::POSITIVE};
 
     TrivialClause c1{lit1, lit2};
     TrivialClause c2{~lit2, lit3};

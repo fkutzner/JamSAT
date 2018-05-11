@@ -239,7 +239,7 @@ void resolveWithBinaries(LiteralContainer &literals, BinaryClausesProvider &bina
         tempStamps.setStamped(secondLiteral, stamp, true);
     }
 
-    auto mayRemoveByResolution = [&tempStamps, resolveAt, stamp](CNFLit literal) {
+    auto mayRemoveByResolution = [&tempStamps, stamp](CNFLit literal) {
         return tempStamps.isStamped(~literal, stamp);
     };
 
