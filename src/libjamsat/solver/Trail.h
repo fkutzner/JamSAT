@@ -62,7 +62,6 @@ private:
     BoundedStack<CNFLit> m_trail;
     std::vector<uint32_t> m_trailLimits;
     BoundedMap<CNFVar, TBool> m_assignments;
-    BoundedMap<CNFVar, uint32_t> m_assignmentLevel;
     BoundedMap<CNFVar, TBool> m_phases;
     uint32_t m_currentDecisionLevel;
 
@@ -136,6 +135,16 @@ public:
      * belong to the current decision level.
      */
     void addAssignment(CNFLit literal) noexcept;
+
+    /**
+     * \brief Adds an assignment to the end of the trail, represented as a literal.
+     * The added literal will belong to the current decision level.
+     *
+     * \param literal   The literal to be added.
+     * \param reason    The clause whose assignment has forced the addition of
+     *                  \p literal to the trail.
+     */
+    void addAssignment(CNFLit literal, ClauseT &reason) noexcept;
 
     /**
      * \brief Gets the number of current variable assignments.
@@ -237,6 +246,9 @@ public:
      *                      variable, and must be a regular variable.
      */
     void increaseMaxVarTo(CNFVar newMaxVar);
+
+    auto getAssignmentReason(CNFVar variable) const noexcept -> ClauseT const *;
+    void setAssignmentReason(CNFVar variable, ClauseT const *) const noexcept;
 };
 
 /********** Implementation ****************************** */
@@ -246,7 +258,6 @@ Trail<ClauseT>::Trail(CNFVar maxVar)
   : m_trail(maxVar.getRawValue() + 1)
   , m_trailLimits({0})
   , m_assignments(maxVar, TBools::INDETERMINATE)
-  , m_assignmentLevel(maxVar)
   , m_phases(maxVar, TBools::FALSE)
   , m_currentDecisionLevel(0)
   , m_reasonsAndALs(maxVar) {
@@ -306,7 +317,13 @@ void Trail<ClauseT>::addAssignment(CNFLit literal) noexcept {
 
     TBool value = TBool::fromUnderlyingValue(static_cast<TBool::UnderlyingType>(literal.getSign()));
     m_assignments[literal.getVariable()] = value;
-    m_assignmentLevel[literal.getVariable()] = getCurrentDecisionLevel();
+    m_reasonsAndALs[literal.getVariable()].m_assignmentLevel = getCurrentDecisionLevel();
+}
+
+template <typename ClauseT>
+void Trail<ClauseT>::addAssignment(CNFLit literal, ClauseT &reason) noexcept {
+    addAssignment(literal);
+    m_reasonsAndALs[literal.getVariable()].m_reason = &reason;
 }
 
 template <typename ClauseT>
@@ -345,7 +362,7 @@ template <typename ClauseT>
 auto Trail<ClauseT>::getAssignmentDecisionLevel(CNFVar variable) const noexcept -> DecisionLevel {
     JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_assignments.size()),
                "Variable out of bounds");
-    return m_assignmentLevel[variable];
+    return m_reasonsAndALs[variable].m_assignmentLevel;
 }
 
 template <typename ClauseT>
@@ -390,13 +407,19 @@ void Trail<ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
     CNFVar firstNewVar = CNFVar{static_cast<CNFVar::RawVariable>(m_assignments.size())};
     m_trail.increaseMaxSizeBy(amountNewVariables);
     m_assignments.increaseSizeTo(newMaxVar);
-    m_assignmentLevel.increaseSizeTo(newMaxVar);
+    m_reasonsAndALs.increaseSizeTo(newMaxVar);
     m_phases.increaseSizeTo(newMaxVar);
 
     for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
         m_assignments[i] = TBools::INDETERMINATE;
-        m_assignmentLevel[i] = 0;
+        m_reasonsAndALs[i].m_assignmentLevel = 0;
+        m_reasonsAndALs[i].m_reason = 0;
         m_phases[i] = TBools::FALSE;
     }
+}
+
+template <typename ClauseT>
+auto Trail<ClauseT>::getAssignmentReason(CNFVar variable) const noexcept -> ClauseT const * {
+    return m_reasonsAndALs[variable].m_reason;
 }
 }

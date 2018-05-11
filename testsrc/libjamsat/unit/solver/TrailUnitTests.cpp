@@ -164,6 +164,23 @@ TEST(UnitSolver, variablesOnTrailHaveAssignment) {
     }
 }
 
+TEST(UnitSolver, variablesOnTrailHaveNullReasonsByDefault) {
+    Trail<TrivialClause> underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+    EXPECT_EQ(underTest.getAssignmentReason(CNFVar{4}), nullptr);
+}
+
+TEST(UnitSolver, variablesOnTrailHaveCorrectReasonClauses) {
+    TrivialClause cl1, cl2;
+    Trail<TrivialClause> underTest{CNFVar{10}};
+    underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE}, cl1);
+    underTest.addAssignment(CNFLit{CNFVar{5}, CNFSign::NEGATIVE});
+    underTest.addAssignment(CNFLit{CNFVar{6}, CNFSign::NEGATIVE}, cl2);
+    EXPECT_EQ(underTest.getAssignmentReason(CNFVar{4}), &cl1);
+    EXPECT_EQ(underTest.getAssignmentReason(CNFVar{5}), nullptr);
+    EXPECT_EQ(underTest.getAssignmentReason(CNFVar{6}), &cl2);
+}
+
 TEST(UnitSolver, variablesOnTrailHaveCorrectDecisionLevel) {
     Trail<TrivialClause> underTest{CNFVar{10}};
     underTest.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
