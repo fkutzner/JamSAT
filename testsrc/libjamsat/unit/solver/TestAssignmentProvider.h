@@ -34,17 +34,21 @@
 #include <libjamsat/utils/BoundedStack.h>
 #include <libjamsat/utils/Truth.h>
 
+#include <vector>
+
 namespace jamsat {
 class TestAssignmentProvider {
 public:
     using DecisionLevel = size_t;
     using size_type = BoundedStack<CNFLit>::size_type;
+    using Clause = std::vector<CNFLit>;
 
     TestAssignmentProvider();
 
     TBool getAssignment(CNFVar variable) const noexcept;
     TBool getAssignment(CNFLit literal) const noexcept;
     void addAssignment(CNFLit literal) noexcept;
+    void addAssignment(CNFLit literal, Clause const &clause) noexcept;
     void popLiteral() noexcept;
     size_t getNumberOfAssignments() const noexcept;
 
@@ -59,10 +63,14 @@ public:
     DecisionLevel getCurrentDecisionLevel() const noexcept;
     void setCurrentDecisionLevel(DecisionLevel level) noexcept;
 
+    auto getAssignmentReason(CNFVar variable) const noexcept -> Clause const *;
+    void setAssignmentReason(CNFVar variable, Clause const *reason) noexcept;
+
 private:
     std::unordered_map<CNFVar, TBool> m_assignments;
     std::unordered_map<CNFVar, DecisionLevel> m_decisionLevels;
     DecisionLevel m_currentLevel;
     BoundedStack<CNFLit> m_trail;
+    std::unordered_map<CNFVar, Clause const *> m_reasons;
 };
 }

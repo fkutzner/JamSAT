@@ -40,7 +40,7 @@
 #include <libjamsat/utils/FaultInjector.h>
 
 namespace jamsat {
-using TrivialClause = std::vector<CNFLit>;
+using TrivialClause = TestAssignmentProvider::Clause;
 
 namespace {
 using DummyReasonProvider = TestReasonProvider<TrivialClause>;

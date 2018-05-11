@@ -37,7 +37,7 @@
 #include <vector>
 
 namespace jamsat {
-using TrivialClause = std::vector<CNFLit>;
+using TrivialClause = TestAssignmentProvider::Clause;
 
 TEST(UnitSolver, AssignmentAnalysisProducesUnitaryResultForReasonlessConflict) {
     TestAssignmentProvider decisionLevelProvider;

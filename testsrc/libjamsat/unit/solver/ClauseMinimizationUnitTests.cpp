@@ -40,7 +40,7 @@
 #include "TestReasonProvider.h"
 
 namespace jamsat {
-using TrivialClause = std::vector<CNFLit>;
+using TrivialClause = TestAssignmentProvider::Clause;
 
 template <typename Container>
 bool isPermutation(const Container &c1, const Container &c2) {

@@ -44,7 +44,7 @@ struct DecisionLevelKey {
 };
 
 using TestStampMap = StampMap<unsigned int, DecisionLevelKey>;
-using TestClause = std::vector<CNFLit>;
+using TestClause = TestAssignmentProvider::Clause;
 
 TEST(UnitSolver, getLBD_LBDofEmptyClauseIs0) {
     TestStampMap tempStamps{128};

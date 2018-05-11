@@ -125,15 +125,10 @@ public:
      */
     void registerEquivalentSubstitutingClause(ClauseT &clause);
 
-    enum class ClearMode { NO_KEEP_REASONS, KEEP_REASONS };
-
     /**
      * \brief Unregisters all clauses from the propagation system.
-     *
-     * \param mode     Iff set to NO_KEEP_REASONS, the reason clause assignments are cleared
-     *                 as well.
      */
-    void clear(ClearMode mode) noexcept;
+    void clear() noexcept;
 
     /**
      * \brief Removes clauses marked as "to be deleted" from the propagation system.
@@ -272,7 +267,6 @@ private:
     ClauseT *registerClause(ClauseT &clause, bool autoPropagate);
 
     AssignmentProvider &m_assignmentProvider;
-    BoundedMap<CNFVar, const ClauseT *> m_reasons;
     detail_propagation::Watchers<ClauseT> m_binaryWatchers;
 
     /**
@@ -303,7 +297,6 @@ template <class AssignmentProvider, class ClauseT>
 Propagation<AssignmentProvider, ClauseT>::Propagation(CNFVar maxVar,
                                                       AssignmentProvider &assignmentProvider)
   : m_assignmentProvider(assignmentProvider)
-  , m_reasons(maxVar)
   , m_binaryWatchers(maxVar)
   , m_unpropagatedStats(0ULL)
   , m_watchers(maxVar) {
@@ -339,10 +332,9 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &claus
             "Added a clause requiring first-literal propagation which does not actually "
             "force the first literal");
         JAM_LOG_PROPAGATION(info, "Propagating first literal of registered clause.");
-        m_assignmentProvider.addAssignment(clause[0]);
-        auto confl = propagateUntilFixpoint(clause[0]);
         // Fix the reason since this was not a decision:
-        m_reasons[clause[0].getVariable()] = &clause;
+        m_assignmentProvider.addAssignment(clause[0], clause);
+        auto confl = propagateUntilFixpoint(clause[0]);
         return confl;
     }
     return nullptr;
@@ -364,25 +356,17 @@ void Propagation<AssignmentProvider, ClauseT>::registerEquivalentSubstitutingCla
 template <class AssignmentProvider, class ClauseT>
 const ClauseT *Propagation<AssignmentProvider, ClauseT>::getAssignmentReason(CNFVar variable) const
     noexcept {
-    JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_reasons.size()),
-               "Variable out of bounds");
-    return m_reasons[variable];
+    return m_assignmentProvider.getAssignmentReason(variable);
 }
 
 template <class AssignmentProvider, class ClauseT>
 bool Propagation<AssignmentProvider, ClauseT>::hasForcedAssignment(CNFVar variable) const noexcept {
-    JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_reasons.size()),
-               "Variable out of bounds");
-    return m_reasons[variable] != nullptr;
+    return m_assignmentProvider.getAssignmentReason(variable) != nullptr;
 }
 
 template <class AssignmentProvider, class ClauseT>
 ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(CNFLit toPropagate) {
     JAM_LOG_PROPAGATION(info, "Propagating assignment until fixpoint: " << toPropagate);
-    JAM_ASSERT(toPropagate.getVariable().getRawValue() <
-                   static_cast<CNFVar::RawVariable>(m_reasons.size()),
-               "Literal variable out of bounds");
-    m_reasons[toPropagate.getVariable()] = nullptr;
     auto trailEndIndex = m_assignmentProvider.getNumberOfAssignments();
 
     // Using the space on the trail beyond its current last literal as a
@@ -436,11 +420,10 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateBinaries(CNFLit toPr
         } else if (!isDeterminate(assignment)) {
             // propagation case:
             ++amountOfNewFacts;
-            ClauseT *reason = &currentWatcher.getClause();
-            m_reasons[secondLit.getVariable()] = reason;
+            ClauseT &reason = currentWatcher.getClause();
             JAM_LOG_PROPAGATION(info,
                                 "  Forced assignment: " << secondLit << " Reason: " << reason);
-            m_assignmentProvider.addAssignment(secondLit);
+            m_assignmentProvider.addAssignment(secondLit, reason);
 
             ++watcherListTraversal;
             continue;
@@ -456,10 +439,6 @@ template <class AssignmentProvider, class ClauseT>
 ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
                                                              size_t &amountOfNewFacts) {
     JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
-    JAM_ASSERT(toPropagate.getVariable().getRawValue() <
-                   static_cast<CNFVar::RawVariable>(m_reasons.size()),
-               "Literal variable out of bounds");
-
     amountOfNewFacts = 0;
 
     if (ClauseT *conflict = propagateBinaries(toPropagate, amountOfNewFacts)) {
@@ -538,10 +517,9 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
             // Propagation case: otherWatchedLit is the only remaining unassigned
             // literal
             ++amountOfNewFacts;
-            m_reasons[otherWatchedLit.getVariable()] = &clause;
             JAM_LOG_PROPAGATION(info, "  Forced assignment: " << otherWatchedLit
                                                               << " Reason: " << &clause);
-            m_assignmentProvider.addAssignment(otherWatchedLit);
+            m_assignmentProvider.addAssignment(otherWatchedLit, clause);
         }
 
         // Only advancing the traversal if an action is forced, since otherwise
@@ -558,35 +536,19 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
 }
 
 template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::clear(ClearMode mode) noexcept {
+void Propagation<AssignmentProvider, ClauseT>::clear() noexcept {
     m_watchers.clear();
-    if (mode == ClearMode::NO_KEEP_REASONS) {
-        for (auto &clausePointer : m_reasons.values()) {
-            clausePointer = nullptr;
-        }
-    }
 }
 
 template <class AssignmentProvider, class ClauseT>
 void Propagation<AssignmentProvider, ClauseT>::eraseClausesToBeDeleted() {
-#if defined(JAM_ASSERT_ENABLED)
-    for (CNFLit assignment : m_assignmentProvider.getAssignments(0)) {
-        auto reason = m_reasons[assignment.getVariable()];
-        JAM_ASSERT(reason == nullptr || !isMarkedToBeDeleted(*reason),
-                   "Can't erase reason clauses");
-    }
-#endif
     m_watchers.eraseWatchersToBeDeleted();
 }
 
 template <class AssignmentProvider, class ClauseT>
 void Propagation<AssignmentProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
-    // TODO: assert that the assignment provider can provide assignments for newMaxVar.
-    JAM_ASSERT(newMaxVar >= CNFVar{static_cast<CNFVar::RawVariable>(m_reasons.size() - 1)},
-               "Argument newMaxVar must not be smaller than the previous maximum variable.");
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     m_watchers.increaseMaxVarTo(newMaxVar);
-    m_reasons.increaseSizeTo(newMaxVar);
     m_binaryWatchers.increaseMaxVarTo(newMaxVar);
 }
 
@@ -606,11 +568,11 @@ bool Propagation<AssignmentProvider, ClauseT>::isAssignmentReason(
     const ClauseT &clause, const DecisionLevelProvider &dlProvider) const noexcept {
     JAM_ASSERT(clause.size() >= 2, "Argument clause must at have a size of 2");
     for (auto var : {clause[0].getVariable(), clause[1].getVariable()}) {
-        if (m_reasons[var] != &clause) {
+        if (m_assignmentProvider.getAssignmentReason(var) != &clause) {
             continue;
         }
 
-        // The pointers in m_reasons do not get cleared eagerly during backtracking
+        // The reason pointers do not neccessarily get cleared eagerly during backtracking
         auto decisionLevel = dlProvider.getAssignmentDecisionLevel(var);
         if (decisionLevel <= dlProvider.getCurrentDecisionLevel()) {
             return true;
@@ -625,8 +587,8 @@ void Propagation<AssignmentProvider, ClauseT>::updateAssignmentReason(
     // JAM_EXPENSIVE_ASSERT(oldClause == newClause, "Arguments oldClause and newClause must be
     // equal");
     for (auto var : {newClause[0].getVariable(), newClause[1].getVariable()}) {
-        if (m_reasons[var] == &oldClause) {
-            m_reasons[var] = &newClause;
+        if (m_assignmentProvider.getAssignmentReason(var) == &oldClause) {
+            m_assignmentProvider.setAssignmentReason(var, &newClause);
         }
     }
 }

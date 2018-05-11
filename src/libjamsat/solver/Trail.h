@@ -66,7 +66,7 @@ private:
     uint32_t m_currentDecisionLevel;
 
     struct ReasonAndAssignmentLevel {
-        ClauseT *m_reason;
+        ClauseT const *m_reason;
         uint32_t m_assignmentLevel;
     };
 
@@ -144,7 +144,7 @@ public:
      * \param reason    The clause whose assignment has forced the addition of
      *                  \p literal to the trail.
      */
-    void addAssignment(CNFLit literal, ClauseT &reason) noexcept;
+    void addAssignment(CNFLit literal, ClauseT const &reason) noexcept;
 
     /**
      * \brief Gets the number of current variable assignments.
@@ -247,8 +247,22 @@ public:
      */
     void increaseMaxVarTo(CNFVar newMaxVar);
 
+    /**
+     * \brief Returns the assignment reason clause for \p variable.
+     *
+     * \param variable      A variable with an assignment.
+     * \returns             The assignment reason clause of \p variable. If \p variable has
+     *                      no assignment reason clause, `nullptr` is returned.
+     */
     auto getAssignmentReason(CNFVar variable) const noexcept -> ClauseT const *;
-    void setAssignmentReason(CNFVar variable, ClauseT const *) const noexcept;
+
+    /**
+     * \brief Sets the assignment reason clause for \p variable.
+     *
+     * \param variable      A variable with an assignment.
+     * \param reason        The reason clause for the assignment of \p variable.
+     */
+    void setAssignmentReason(CNFVar variable, ClauseT const *reason) noexcept;
 };
 
 /********** Implementation ****************************** */
@@ -318,10 +332,11 @@ void Trail<ClauseT>::addAssignment(CNFLit literal) noexcept {
     TBool value = TBool::fromUnderlyingValue(static_cast<TBool::UnderlyingType>(literal.getSign()));
     m_assignments[literal.getVariable()] = value;
     m_reasonsAndALs[literal.getVariable()].m_assignmentLevel = getCurrentDecisionLevel();
+    m_reasonsAndALs[literal.getVariable()].m_reason = nullptr;
 }
 
 template <typename ClauseT>
-void Trail<ClauseT>::addAssignment(CNFLit literal, ClauseT &reason) noexcept {
+void Trail<ClauseT>::addAssignment(CNFLit literal, ClauseT const &reason) noexcept {
     addAssignment(literal);
     m_reasonsAndALs[literal.getVariable()].m_reason = &reason;
 }
@@ -413,13 +428,22 @@ void Trail<ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
     for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
         m_assignments[i] = TBools::INDETERMINATE;
         m_reasonsAndALs[i].m_assignmentLevel = 0;
-        m_reasonsAndALs[i].m_reason = 0;
+        m_reasonsAndALs[i].m_reason = nullptr;
         m_phases[i] = TBools::FALSE;
     }
 }
 
 template <typename ClauseT>
 auto Trail<ClauseT>::getAssignmentReason(CNFVar variable) const noexcept -> ClauseT const * {
+    JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_assignments.size()),
+               "Variable out of bounds");
     return m_reasonsAndALs[variable].m_reason;
+}
+
+template <typename ClauseT>
+void Trail<ClauseT>::setAssignmentReason(CNFVar variable, ClauseT const *reason) noexcept {
+    JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_assignments.size()),
+               "Variable out of bounds");
+    m_reasonsAndALs[variable].m_reason = reason;
 }
 }

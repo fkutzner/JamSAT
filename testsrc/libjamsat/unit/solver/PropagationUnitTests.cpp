@@ -31,7 +31,7 @@
 #include <toolbox/testutils/RangeUtils.h>
 
 namespace jamsat {
-using TrivialClause = std::vector<CNFLit>;
+using TrivialClause = TestAssignmentProvider::Clause;
 
 TEST(UnitSolver, propagateWithoutClausesIsNoop) {
     TestAssignmentProvider assignments;
@@ -421,7 +421,7 @@ TEST(UnitSolver, replacementOfReasonClauseInPropagationSucceeds) {
 }
 
 namespace {
-void test_clearClausesInPropagation(bool withKeepReasons) {
+void test_clearClausesInPropagation() {
     using PropagationTy = Propagation<TestAssignmentProvider, TrivialClause>;
 
     CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
@@ -441,21 +441,14 @@ void test_clearClausesInPropagation(bool withKeepReasons) {
     underTest.registerClause(clause2);
     underTest.registerClause(clause3);
 
-    PropagationTy::ClearMode testClearMode = withKeepReasons
-                                                 ? PropagationTy::ClearMode::KEEP_REASONS
-                                                 : PropagationTy::ClearMode::NO_KEEP_REASONS;
 
     assignments.addAssignment(~lit5);
     underTest.propagateUntilFixpoint(~lit5);
     ASSERT_EQ(underTest.getAssignmentReason(lit6.getVariable()), &clause3);
 
-    underTest.clear(testClearMode);
+    underTest.clear();
 
-    if (testClearMode == PropagationTy::ClearMode::KEEP_REASONS) {
-        EXPECT_EQ(underTest.getAssignmentReason(lit6.getVariable()), &clause3);
-    } else {
-        EXPECT_EQ(underTest.getAssignmentReason(lit6.getVariable()), nullptr);
-    }
+    EXPECT_EQ(underTest.getAssignmentReason(lit6.getVariable()), &clause3);
 
     assignments.addAssignment(~lit1);
     underTest.propagateUntilFixpoint(~lit1);
@@ -468,12 +461,8 @@ void test_clearClausesInPropagation(bool withKeepReasons) {
 }
 }
 
-TEST(UnitSolver, clearClausesInPropagation_withReasonsCleared) {
-    test_clearClausesInPropagation(false);
-}
-
 TEST(UnitSolver, clearClausesInPropagation_withReasonsKept) {
-    test_clearClausesInPropagation(true);
+    test_clearClausesInPropagation();
 }
 
 namespace {
@@ -503,7 +492,7 @@ void substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode mod
 
     // Simulate backtracking. Later, it is checked that lit1 has no forced assignment.
     assignments.popLiteral();
-    underTest.clear(PropagationTy::ClearMode::KEEP_REASONS);
+    underTest.clear();
     underTest.registerEquivalentSubstitutingClause(clause2);
 
     if (mode == SubstitutionClauseReinsertionTestMode::TEST_NO_PROPAGATION) {
