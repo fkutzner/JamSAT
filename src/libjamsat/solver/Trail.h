@@ -77,9 +77,9 @@ private:
     BoundedMap<CNFVar, ReasonAndAssignmentLevel> m_reasonsAndALs;
 
 public:
-    using size_type = decltype(m_trail)::size_type;
+    using size_type = BoundedStack<CNFLit>::size_type;
     using DecisionLevel = uint32_t;
-    using const_iterator = decltype(m_trail)::const_iterator;
+    using const_iterator = BoundedStack<CNFLit>::const_iterator;
 
     /**
      * \brief StampMap key for Trail::DecisionLevel
