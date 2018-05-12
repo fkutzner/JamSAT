@@ -30,8 +30,11 @@
 #include <libjamsat/utils/Assert.h>
 
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
+#include <thread>
 #include <unordered_set>
 #include <vector>
 
@@ -47,6 +50,14 @@ class IPASIRContext {
 public:
     using SolverType = CDCLSatSolver<>;
 
+    struct IPASIRKillThreadContext {
+        std::mutex m_lock;
+        SolverType *m_solver;
+        std::function<bool()> m_userKillCallback;
+        bool m_parentIpasirContextExists;
+    };
+
+
     IPASIRContext() {
         // TODO: add a configuration function for this
         // TODO: remove the bound in the default case?
@@ -60,12 +71,17 @@ public:
         m_clauseAddBuffer = CNFClause{};
         m_assumptionBuffer = std::vector<CNFLit>{};
         m_result = typename SolverType::SolvingResult{};
+        m_killThreadContext = nullptr;
     }
 
     // TODO: Add a reconfigure method to the solver
     void ensureSolverExists() {
         if (!m_solver) {
             m_solver = std::make_unique<SolverType>(m_config);
+            if (m_killThreadContext != nullptr) {
+                std::lock_guard<std::mutex> lock(m_killThreadContext->m_lock);
+                m_killThreadContext->m_solver = m_solver.get();
+            }
         }
     }
 
@@ -133,9 +149,42 @@ public:
     }
 
     void setTerminate(void *state, int (*terminate)(void *state)) {
-        JAM_ASSERT(false, "IPASIR set_terminate() is not implemented yet");
-        (void)state;
-        (void)terminate;
+        bool launchNewThread = false;
+        if (m_killThreadContext == nullptr) {
+            m_killThreadContext = new IPASIRKillThreadContext();
+            m_killThreadContext->m_parentIpasirContextExists = true;
+            m_killThreadContext->m_solver = m_solver.get();
+            launchNewThread = true;
+        }
+
+        std::lock_guard<std::mutex> lock(m_killThreadContext->m_lock);
+        m_killThreadContext->m_userKillCallback = [terminate, state]() {
+            return terminate(state) != 0;
+        };
+
+        if (launchNewThread) {
+            std::thread killThread{
+                [](std::unique_ptr<IPASIRKillThreadContext> context) {
+                    while (true) {
+                        std::chrono::milliseconds period{100};
+                        std::this_thread::sleep_for(
+                            std::chrono::duration_cast<std::chrono::nanoseconds>(period));
+                        std::lock_guard<std::mutex> lock(context->m_lock);
+                        if (!context->m_parentIpasirContextExists) {
+                            return;
+                        }
+                        if (context->m_solver == nullptr) {
+                            continue;
+                        }
+                        if (context->m_userKillCallback()) {
+                            context->m_solver->stop();
+                        }
+                    }
+                },
+                std::unique_ptr<IPASIRKillThreadContext>{m_killThreadContext}};
+
+            killThread.detach();
+        }
     }
 
     void setLearn(void *state, int max_length, void (*learn)(void *state, int *clause)) {
@@ -145,6 +194,15 @@ public:
         (void)max_length;
     }
 
+    ~IPASIRContext() {
+        // Shut down the kill thread
+        if (m_killThreadContext != nullptr) {
+            std::lock_guard<std::mutex> lock(m_killThreadContext->m_lock);
+            m_killThreadContext->m_parentIpasirContextExists = false;
+            m_killThreadContext->m_solver = nullptr;
+        }
+    }
+
 private:
     typename SolverType::Configuration m_config;
     std::unique_ptr<CDCLSatSolver<>> m_solver;
@@ -152,6 +210,9 @@ private:
     std::vector<CNFLit> m_assumptionBuffer;
     typename SolverType::SolvingResult m_result;
     std::unordered_set<CNFLit> m_failedAssumptions;
+
+    // If the killThreadContext object exists, it is owned by the kill-thread
+    IPASIRKillThreadContext *m_killThreadContext;
 };
 }
 }

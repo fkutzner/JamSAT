@@ -28,6 +28,10 @@
 
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 #include <libjamsat/utils/ControlFlow.h>
+#include <toolbox/cnfgenerators/Rule110.h>
+
+#include <chrono>
+#include <thread>
 
 TEST(IpasirIntegration, solveWithImmediateConflict) {
     void *solver = ipasir_init();
@@ -110,4 +114,51 @@ TEST(IpasirIntegration, assumptionsLeadingToUnsatAreMarkedAsFailed) {
     EXPECT_EQ(ipasir_failed(solver, 1), 0);
     EXPECT_EQ(ipasir_failed(solver, -2), 0);
     EXPECT_EQ(ipasir_failed(solver, 2), 0);
+}
+
+namespace {
+void addHardProblem(void *ipasirSolver) {
+    jamsat::Rule110PredecessorStateProblem problem{"xxxxxxxxxxxxxxx0xxxxxxxxxxxxxxxxxxxxxxxxxx",
+                                                   "xxxxxxxxxxxxxx1000001xxxxxxxxxxxxxxxxxxxxx",
+                                                   500};
+    jamsat::CNFProblem const &cnfProblem = problem.getCNFEncoding().cnfProblem;
+
+    for (jamsat::CNFClause const &clause : cnfProblem.getClauses()) {
+        for (jamsat::CNFLit lit : clause) {
+            int var = lit.getVariable().getRawValue() + 1;
+            if (lit.getSign() == jamsat::CNFSign::NEGATIVE) {
+                var *= -1;
+            }
+            ipasir_add(ipasirSolver, var);
+        }
+        ipasir_add(ipasirSolver, 0);
+    }
+}
+
+int killCallbackFn(void *blob) {
+    int result = *(reinterpret_cast<volatile int *>(blob));
+    return result;
+}
+}
+
+TEST(IpasirIntegration, solverIsKilledOnTimeout) {
+    void *solver = ipasir_init();
+    auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
+    addHardProblem(solver);
+
+    int callbackResult = 0;
+
+    std::thread callbackChanger{
+        [](volatile int *callbackResult) {
+            std::chrono::seconds graceTime{2};
+            std::this_thread::sleep_for(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(graceTime));
+            *callbackResult = 1;
+        },
+        &callbackResult};
+
+    ipasir_set_terminate(solver, reinterpret_cast<void *>(&callbackResult), killCallbackFn);
+
+    EXPECT_EQ(ipasir_solve(solver), 0);
+    callbackChanger.join();
 }
