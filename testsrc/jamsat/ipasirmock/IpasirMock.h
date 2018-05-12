@@ -24,8 +24,4 @@
 
 */
 
-#include "JamSAT.h"
-
-int main(int argc, char **args) {
-    return jamsat::jamsatMain(argc, args);
-}
+#pragma once

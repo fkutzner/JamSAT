@@ -24,8 +24,15 @@
 
 */
 
-#include "JamSAT.h"
+#include <gtest/gtest.h>
 
-int main(int argc, char **args) {
-    return jamsat::jamsatMain(argc, args);
+#include <jamsat/JamSAT.h>
+#include <libjamsat/api/ipasir/JamSatIpasir.h>
+
+#include <iostream>
+
+namespace jamsat {
+TEST(IntegrationParsing, Signature) {
+    std::cout << ipasir_signature() << std::endl;
+}
 }

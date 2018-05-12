@@ -24,8 +24,15 @@
 
 */
 
-#include "JamSAT.h"
+#include <libjamsat/api/ipasir/JamSatIpasir.h>
 
-int main(int argc, char **args) {
-    return jamsat::jamsatMain(argc, args);
+#include <iostream>
+#include <zlib.h>
+
+namespace jamsat {
+
+int jamsatMain(int argc, char **argv) noexcept {
+    std::cout << ipasir_signature() << "\n";
+    return 0;
+}
 }

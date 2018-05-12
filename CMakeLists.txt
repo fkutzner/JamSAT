@@ -22,6 +22,8 @@ option(JAMSAT_DISABLE_BOOST_LINKING_SETUP "Don't override linker settings for Bo
 option(JAMSAT_LINK_VERBOSE "Print information about linked dependencies" OFF)
 option(JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB "Enables symbol hiding for the static JamSAT library" OFF)
 
+option(JAMSAT_DISABLE_FRONTEND "Disables building the standalone JamSAT executable." OFF)
+
 ### Load CMake code
 
 include(etc/cmake/Platform.cmake) # Defines COMPILING_WITH_* and PLATFORM_SUPPORTS_* variables

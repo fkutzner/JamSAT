@@ -1,2 +1,5 @@
 add_subdirectory(libjamsat)
-add_subdirectory(jamsat)
+
+if(NOT JAMSAT_DISABLE_FRONTEND)
+  add_subdirectory(jamsat)
+endif()

@@ -24,8 +24,61 @@
 
 */
 
-#include "JamSAT.h"
+#include "IpasirMock.h"
 
-int main(int argc, char **args) {
-    return jamsat::jamsatMain(argc, args);
+#include <libjamsat/api/ipasir/JamSatIpasir.h>
+
+extern "C" {
+const char *ipasir_signature() {
+    return "JamSAT IPASIR test mock";
+}
+
+void *ipasir_init() {
+    return nullptr;
+}
+
+void ipasir_release(void *solver) {
+    (void)solver;
+}
+
+void ipasir_add(void *solver, int lit_or_zero) {
+    (void)solver;
+    (void)lit_or_zero;
+}
+
+void ipasir_assume(void *solver, int lit) {
+    (void)solver;
+    (void)lit;
+}
+
+int ipasir_solve(void *solver) {
+    (void)solver;
+    return 0;
+}
+
+int ipasir_val(void *solver, int lit) {
+    (void)solver;
+    (void)lit;
+    return 0;
+}
+
+int ipasir_failed(void *solver, int lit) {
+    (void)solver;
+    (void)lit;
+    return 0;
+}
+
+void ipasir_set_terminate(void *solver, void *state, int (*terminate)(void *state)) {
+    (void)solver;
+    (void)state;
+    (void)terminate;
+}
+
+void ipasir_set_learn(void *solver, void *state, int max_length,
+                      void (*learn)(void *state, int *clause)) {
+    (void)solver;
+    (void)state;
+    (void)max_length;
+    (void)learn;
+}
 }
