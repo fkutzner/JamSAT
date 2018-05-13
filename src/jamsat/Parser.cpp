@@ -291,6 +291,11 @@ void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
         while (cursor != end) {
             long literal = strtol(cursor, &endCursor, 10);
 
+            if (errno == ERANGE && (literal == std::numeric_limits<long>::min() ||
+                                    literal == std::numeric_limits<long>::max())) {
+                throw std::runtime_error{"Literal out of range"};
+            }
+
             // Don't check for ERANGE error, instead directly check if
             // the literal fits in the range of int:
             if (literal < std::numeric_limits<int>::min() ||
