@@ -6,7 +6,9 @@ add_library(jamsatFrontend STATIC
   JamSAT.h
   JamSAT.cpp
   Parser.h
-  Parser.cpp)
+  Parser.cpp
+  Options.h
+  Options.cpp)
 jamsat_configure_target(jamsatFrontend)
 
 get_property(jamcore_include_dirs TARGET jamcore PROPERTY INCLUDE_DIRECTORIES)

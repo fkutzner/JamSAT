@@ -24,6 +24,7 @@
 
 */
 
+#include <jamsat/Options.h>
 #include <jamsat/Parser.h>
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
@@ -40,11 +41,13 @@ void printVersion() noexcept {
 }
 
 void printUsage() noexcept {
-    std::cerr << "Usage: jamsat <FILE>\n"
+    std::cerr << "Usage: jamsat [OPTION]... <FILE>\n"
               << "  Solves the SATISFIABILITY problem instance given in <FILE>.\n"
               << "  <FILE> is required to be formatted as described in Sec. 2.1 of\n"
               << "  http://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps\n"
-              << "  If <FILE> is -, the problem is read from the standard input.\n";
+              << "  If <FILE> is -, the problem is read from the standard input.\n"
+              << "\n";
+    printOptions(std::cerr, 2);
 }
 
 void printErrorMessage(std::string const &message) noexcept {
@@ -78,14 +81,30 @@ private:
 }
 
 int jamsatMain(int argc, char **argv) noexcept {
-    if (argc != 2) {
+    JamSATOptions options;
+    try {
+        options = parseOptions(argc, argv);
+    } catch (std::invalid_argument &e) {
+        std::cerr << "Error: " << e.what() << "\n";
         printUsage();
         return EXIT_FAILURE;
     }
 
+    if (options.m_printVersion) {
+        printVersion();
+        return EXIT_SUCCESS;
+    }
+
+    if (options.m_printHelp) {
+        printUsage();
+        return EXIT_SUCCESS;
+    }
+
     try {
         IpasirRAII wrappedSolver;
-        readProblem(wrappedSolver.getSolver(), argv[argc - 1]);
+        // TODO: set up timeout
+        // TODO: pass backend options to the solver
+        readProblem(wrappedSolver.getSolver(), options.m_problemFilename);
         return solve(wrappedSolver.getSolver());
     } catch (std::exception &e) {
         printErrorMessage(e.what());
