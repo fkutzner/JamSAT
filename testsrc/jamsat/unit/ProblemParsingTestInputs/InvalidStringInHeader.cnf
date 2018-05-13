@@ -1,0 +1,4 @@
+c The 'p' line is expected to begin with 'p cnf'
+p dnf 5 3
+1 2 3 0 3
+4 0 1 0

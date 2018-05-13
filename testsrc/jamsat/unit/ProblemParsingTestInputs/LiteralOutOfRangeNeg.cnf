@@ -1,0 +1,4 @@
+c Literals smaller than -2^32 are not allowed
+p cnf 5 3
+1 -1222333444555 3 0 3
+4 0 1 0

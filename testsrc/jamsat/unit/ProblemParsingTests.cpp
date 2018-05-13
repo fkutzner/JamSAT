@@ -71,24 +71,63 @@ TEST(UnitFrontendParsing, ParsingTestIsLinkedToMockIPASIR) {
 
 TEST(UnitFrontendParsing, FileContainingBadLiteralIsRejected) {
     TestIpasirRAII mockSolver;
+    ASSERT_TRUE(fileExists("BadLiteral.cnf"));
     EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "BadLiteral.cnf"), std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileContainingTooFewClausesIsRejected) {
     TestIpasirRAII mockSolver;
+    ASSERT_TRUE(fileExists("TooFewClauses.cnf"));
     EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "TooFewClauses.cnf"),
                  std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileContainingTooManyClausesIsRejected) {
     TestIpasirRAII mockSolver;
+    ASSERT_TRUE(fileExists("TooManyClauses.cnf"));
     EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "TooManyClauses.cnf"),
                  std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileWithMissingHeaderIsRejected) {
     TestIpasirRAII mockSolver;
+    ASSERT_TRUE(fileExists("MissingHeader.cnf"));
     EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "MissingHeader.cnf"),
+                 std::runtime_error);
+}
+
+TEST(UnitFrontendParsing, FileWithInvalidStringInHeaderIsRejected) {
+    TestIpasirRAII mockSolver;
+    ASSERT_TRUE(fileExists("InvalidStringInHeader.cnf"));
+    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "InvalidStringInHeader.cnf"),
+                 std::runtime_error);
+}
+
+TEST(UnitFrontendParsing, FileWithLiteralOutOfRangeNegIsRejected) {
+    TestIpasirRAII mockSolver;
+    ASSERT_TRUE(fileExists("LiteralOutOfRangeNeg.cnf"));
+    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "LiteralOutOfRangeNeg.cnf"),
+                 std::runtime_error);
+}
+
+TEST(UnitFrontendParsing, FileWithLiteralOutOfRangePosIsRejected) {
+    TestIpasirRAII mockSolver;
+    ASSERT_TRUE(fileExists("LiteralOutOfRangePos.cnf"));
+    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "LiteralOutOfRangePos.cnf"),
+                 std::runtime_error);
+}
+
+TEST(UnitFrontendParsing, FileWithMissingClauseCountIsRejected) {
+    TestIpasirRAII mockSolver;
+    ASSERT_TRUE(fileExists("MissingClauseCountInHeader.cnf"));
+    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "MissingClauseCountInHeader.cnf"),
+                 std::runtime_error);
+}
+
+TEST(UnitFrontendParsing, FileWithMissingCountsInHeaderIsRejected) {
+    ASSERT_TRUE(fileExists("MissingCountsInHeader.cnf"));
+    TestIpasirRAII mockSolver;
+    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "MissingCountsInHeader.cnf"),
                  std::runtime_error);
 }
 
@@ -104,5 +143,28 @@ TEST(UnitFrontendParsing, ValidCompressedFileIsParsedCorrectly) {
     jamsat::readProblem(mockSolver.getSolver(), "CompressedSmallValidProblem.cnf.gz");
     std::vector<int> expected = {1, 2, 3, 0, 3, 4, 0, 1, 0};
     EXPECT_EQ(getIPASIRMockContext(mockSolver.getSolver())->m_literals, expected);
+}
+
+TEST(UnitFrontendParsing, ValidHugeFileIsParsedCorrectly) {
+    TestIpasirRAII mockSolver;
+    jamsat::readProblem(mockSolver.getSolver(), "LargeProblem.cnf.gz");
+
+    // Compare via precomputed hash value:
+    int hash = 0;
+    int clauseCount = 0;
+    for (auto lit : getIPASIRMockContext(mockSolver.getSolver())->m_literals) {
+        if (lit == 0) {
+            ++clauseCount;
+            hash += 27;
+        } else {
+            if (lit < 0) {
+                lit = (-lit) << 12;
+            }
+            hash ^= lit;
+        }
+    }
+    hash ^= clauseCount;
+
+    EXPECT_EQ(hash, 3624315);
 }
 }
