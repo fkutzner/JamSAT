@@ -1,0 +1,5 @@
+c Comments are allowed before the line starting with p
+c This is another comment line
+p cnf 5 3
+1 2 3 0 3
+4 0 1 0

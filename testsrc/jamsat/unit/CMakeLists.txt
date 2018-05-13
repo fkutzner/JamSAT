@@ -32,5 +32,5 @@ set_property(TARGET jamsat_frontend_unit_testsuite
 add_test(
     NAME jamsat_frontend_unit_testsuite
     COMMAND jamsat_frontend_unit_testsuite
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ProblemParsingTestInputs
 )

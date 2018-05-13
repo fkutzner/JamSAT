@@ -26,13 +26,83 @@
 
 #include <gtest/gtest.h>
 
-#include <jamsat/JamSAT.h>
+#include <jamsat/Parser.h>
+#include <jamsat/ipasirmock/IpasirMock.h>
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <string>
+
+// TODO: test the parser more thoroughly, esp. chunking
 
 namespace jamsat {
-TEST(IntegrationParsing, Signature) {
-    std::cout << ipasir_signature() << std::endl;
+
+namespace {
+bool fileExists(std::string const &file) {
+    std::ifstream stream{file};
+    return static_cast<bool>(stream);
+}
+
+class TestIpasirRAII {
+public:
+    TestIpasirRAII() { m_solver = ipasir_init(); }
+
+    ~TestIpasirRAII() { ipasir_release(m_solver); }
+
+    void *getSolver() noexcept { return m_solver; }
+
+private:
+    void *m_solver;
+};
+}
+
+TEST(UnitFrontendParsing, ParsingTestIsExecutedInCorrectDirectory) {
+    ASSERT_TRUE(fileExists("BadLiteral.cnf"))
+        << "Test input data could not be found. Is the test executed "
+        << "in the correct directory, i.e. the JamSAT directory containing "
+        << "BadLiteral.cnf?";
+}
+
+TEST(UnitFrontendParsing, ParsingTestIsLinkedToMockIPASIR) {
+    ASSERT_TRUE(ipasir_signature() == IPASIRTestMockSignature);
+}
+
+TEST(UnitFrontendParsing, FileContainingBadLiteralIsRejected) {
+    TestIpasirRAII mockSolver;
+    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "BadLiteral.cnf"), std::runtime_error);
+}
+
+TEST(UnitFrontendParsing, FileContainingTooFewClausesIsRejected) {
+    TestIpasirRAII mockSolver;
+    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "TooFewClauses.cnf"),
+                 std::runtime_error);
+}
+
+TEST(UnitFrontendParsing, FileContainingTooManyClausesIsRejected) {
+    TestIpasirRAII mockSolver;
+    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "TooManyClauses.cnf"),
+                 std::runtime_error);
+}
+
+TEST(UnitFrontendParsing, FileWithMissingHeaderIsRejected) {
+    TestIpasirRAII mockSolver;
+    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "MissingHeader.cnf"),
+                 std::runtime_error);
+}
+
+TEST(UnitFrontendParsing, ValidFileIsParsedCorrectly) {
+    TestIpasirRAII mockSolver;
+    jamsat::readProblem(mockSolver.getSolver(), "SmallValidProblem.cnf");
+    std::vector<int> expected = {1, 2, 3, 0, 3, 4, 0, 1, 0};
+    EXPECT_EQ(getIPASIRMockContext(mockSolver.getSolver())->m_literals, expected);
+}
+
+TEST(UnitFrontendParsing, ValidCompressedFileIsParsedCorrectly) {
+    TestIpasirRAII mockSolver;
+    jamsat::readProblem(mockSolver.getSolver(), "CompressedSmallValidProblem.cnf.gz");
+    std::vector<int> expected = {1, 2, 3, 0, 3, 4, 0, 1, 0};
+    EXPECT_EQ(getIPASIRMockContext(mockSolver.getSolver())->m_literals, expected);
 }
 }

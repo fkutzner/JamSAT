@@ -25,3 +25,15 @@
 */
 
 #pragma once
+
+#include <vector>
+
+extern const char *IPASIRTestMockSignature;
+
+namespace jamsat {
+struct IpasirMockContext {
+    std::vector<int> m_literals;
+};
+
+auto getIPASIRMockContext(void *solver) noexcept -> IpasirMockContext *;
+}

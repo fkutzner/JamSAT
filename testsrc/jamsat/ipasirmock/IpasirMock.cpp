@@ -28,22 +28,32 @@
 
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
+#include <vector>
+
+const char *IPASIRTestMockSignature = "JamSAT IPASIR test mock";
+
+namespace jamsat {
+auto getIPASIRMockContext(void *solver) noexcept -> IpasirMockContext * {
+    return reinterpret_cast<jamsat::IpasirMockContext *>(solver);
+}
+}
+
 extern "C" {
 const char *ipasir_signature() {
-    return "JamSAT IPASIR test mock";
+    return IPASIRTestMockSignature;
 }
 
 void *ipasir_init() {
-    return nullptr;
+    return reinterpret_cast<void *>(new jamsat::IpasirMockContext{});
 }
 
 void ipasir_release(void *solver) {
-    (void)solver;
+    delete reinterpret_cast<jamsat::IpasirMockContext *>(solver);
 }
 
 void ipasir_add(void *solver, int lit_or_zero) {
-    (void)solver;
-    (void)lit_or_zero;
+    jamsat::IpasirMockContext *context = reinterpret_cast<jamsat::IpasirMockContext *>(solver);
+    context->m_literals.push_back(lit_or_zero);
 }
 
 void ipasir_assume(void *solver, int lit) {
