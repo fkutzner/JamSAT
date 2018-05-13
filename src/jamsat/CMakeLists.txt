@@ -2,7 +2,11 @@ find_package(ZLIB REQUIRED)
 
 # The actual frontend code is in the static library jamsatFrontend => can
 # "mock" the IPASIR/JamSAT implementation for testing
-add_library(jamsatFrontend STATIC JamSAT.h JamSAT.cpp)
+add_library(jamsatFrontend STATIC
+  JamSAT.h
+  JamSAT.cpp
+  Parser.h
+  Parser.cpp)
 jamsat_configure_target(jamsatFrontend)
 
 get_property(jamcore_include_dirs TARGET jamcore PROPERTY INCLUDE_DIRECTORIES)
