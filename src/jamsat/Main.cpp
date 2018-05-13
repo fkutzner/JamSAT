@@ -24,7 +24,7 @@
 
 */
 
-#include "JamSAT.h"
+#include <jamsat/JamSAT.h>
 
 int main(int argc, char **args) {
     return jamsat::jamsatMain(argc, args);

@@ -24,15 +24,72 @@
 
 */
 
+#include <jamsat/Parser.h>
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
+#include <cassert>
 #include <iostream>
-#include <zlib.h>
+#include <stdexcept>
+#include <string>
 
 namespace jamsat {
 
-int jamsatMain(int argc, char **argv) noexcept {
+namespace {
+void printVersion() noexcept {
     std::cout << ipasir_signature() << "\n";
-    return 0;
+}
+
+void printUsage() noexcept {
+    std::cerr << "Usage: jamsat <FILE>\n"
+              << "  Solves the SATISFIABILITY problem instance given in <FILE>.\n"
+              << "  <FILE> is required to be formatted as described in Sec. 2.1 of\n"
+              << "  http://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps\n"
+              << "  If <FILE> is -, the problem is read from the standard input.\n";
+}
+
+void printErrorMessage(std::string const &message) noexcept {
+    std::cerr << "Error: " << message << "\n";
+}
+
+int solve(void *solver) {
+    int result = ipasir_solve(solver);
+    assert(result == 0 || result == 10 || result == 20);
+    if (result == 0) {
+        std::cout << "INDETERMINATE\n";
+    } else if (result == 10) {
+        std::cout << "SATISFIABLE\n";
+    } else if (result == 20) {
+        std::cout << "UNSATISFIABLE\n";
+    }
+    return result;
+}
+
+class IpasirRAII {
+public:
+    IpasirRAII() { m_solver = ipasir_init(); }
+
+    ~IpasirRAII() { ipasir_release(m_solver); }
+
+    void *getSolver() noexcept { return m_solver; }
+
+private:
+    void *m_solver;
+};
+}
+
+int jamsatMain(int argc, char **argv) noexcept {
+    if (argc != 2) {
+        printUsage();
+        return EXIT_FAILURE;
+    }
+
+    try {
+        IpasirRAII wrappedSolver;
+        readProblem(wrappedSolver.getSolver(), argv[argc - 1]);
+        return solve(wrappedSolver.getSolver());
+    } catch (std::exception &e) {
+        printErrorMessage(e.what());
+        return EXIT_FAILURE;
+    }
 }
 }

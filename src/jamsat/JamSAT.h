@@ -26,6 +26,10 @@
 
 #pragma once
 
+/**
+ * \defgroup JamSAT_Frontend
+ */
+
 namespace jamsat {
 int jamsatMain(int argc, char **argv) noexcept;
 }
