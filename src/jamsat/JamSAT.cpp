@@ -26,6 +26,7 @@
 
 #include <jamsat/Options.h>
 #include <jamsat/Parser.h>
+#include <jamsat/Timeout.h>
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
 #include <cassert>
@@ -102,8 +103,9 @@ int jamsatMain(int argc, char **argv) noexcept {
 
     try {
         IpasirRAII wrappedSolver;
-        // TODO: set up timeout
-        // TODO: pass backend options to the solver
+        if (options.m_timeout) {
+            configureTimeout(wrappedSolver.getSolver(), options.m_timeout.get());
+        }
         readProblem(wrappedSolver.getSolver(), options.m_problemFilename);
         return solve(wrappedSolver.getSolver());
     } catch (std::exception &e) {

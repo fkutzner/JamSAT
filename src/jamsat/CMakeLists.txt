@@ -8,7 +8,9 @@ add_library(jamsatFrontend STATIC
   Parser.h
   Parser.cpp
   Options.h
-  Options.cpp)
+  Options.cpp
+  Timeout.h
+  Timeout.cpp)
 jamsat_configure_target(jamsatFrontend)
 
 get_property(jamcore_include_dirs TARGET jamcore PROPERTY INCLUDE_DIRECTORIES)
