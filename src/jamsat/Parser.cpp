@@ -27,8 +27,10 @@
 #include <jamsat/Parser.h>
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
+#include <cctype>
 #include <cerrno>
 #include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
