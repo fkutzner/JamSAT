@@ -47,7 +47,8 @@ install:
   # Build and test JamSAT
   - echo %PLATFORM%
   - echo %BOOST_LIBRARYDIR%
-  - set PATH=%PATH%;%BOOST_LIBRARYDIR%
+  # Guide DLL lookup (boost & zlib):
+  - set PATH=%PATH%;%BOOST_LIBRARYDIR%;%INSTALLATION_DIR%\bin
   - cd %REPO_DIR%\JamSAT
   - git submodule init
   - git submodule update
