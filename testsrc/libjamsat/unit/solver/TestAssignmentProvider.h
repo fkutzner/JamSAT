@@ -66,6 +66,11 @@ public:
     auto getAssignmentReason(CNFVar variable) const noexcept -> Clause const *;
     void setAssignmentReason(CNFVar variable, Clause const *reason) noexcept;
 
+    struct DecisionLevelKey {
+        using Type = DecisionLevel;
+        static size_t getIndex(DecisionLevel variable) { return static_cast<size_t>(variable); }
+    };
+
 private:
     std::unordered_map<CNFVar, TBool> m_assignments;
     std::unordered_map<CNFVar, DecisionLevel> m_decisionLevels;

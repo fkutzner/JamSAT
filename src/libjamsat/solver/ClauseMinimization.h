@@ -31,6 +31,7 @@
 
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/Logger.h>
+#include <libjamsat/utils/OverApproximatingSet.h>
 
 #if defined(JAM_ENABLE_MINIMIZER_LOGGING)
 #define JAM_LOG_MINIMIZER(x, y) JAM_LOG(x, "minmiz", y)
@@ -129,10 +130,10 @@ namespace erl_detail {
 // function, saving allocations which were prone to become a bottleneck.
 class LiteralRedundancyChecker {
 public:
-    template <class ReasonProvider, class DecisionLevelProvider, class StampMapT>
+    template <class ReasonProvider, class DecisionLevelProvider, class StampMapT, class DLSet>
     bool isRedundant(CNFLit literal, const ReasonProvider &reasonProvider,
                      const DecisionLevelProvider &dlProvider, StampMapT &tempStamps,
-                     typename StampMapT::Stamp currentStamp) {
+                     typename StampMapT::Stamp currentStamp, DLSet decisionLevelsInLemma) {
 
         if (dlProvider.getAssignmentDecisionLevel(literal.getVariable()) ==
             dlProvider.getCurrentDecisionLevel()) {
@@ -157,9 +158,20 @@ public:
             JAM_ASSERT(clausePtr != nullptr, "Can't determine redundancy of reasonless literals");
 
 
+            decisionLevelsInLemma.insert(0);
             for (CNFLit lit : *clausePtr) {
                 CNFVar var = lit.getVariable();
                 auto varLevel = dlProvider.getAssignmentDecisionLevel(var);
+
+                if (!decisionLevelsInLemma.mightContain(varLevel)) {
+                    // The reason of lit will contain at least two literals on varLevel.
+                    // Thus, if there is definitely no literal on varLevel in the lemma,
+                    // lit cannot be redundant.
+                    for (auto stampedVar : m_stampCleanup) {
+                        tempStamps.setStamped(stampedVar, currentStamp, false);
+                    }
+                    return false;
+                }
 
                 if (varLevel == 0 || tempStamps.isStamped(var, currentStamp)) {
                     JAM_LOG_MINIMIZER(info, "    Reason lit "
@@ -174,8 +186,7 @@ public:
                     m_work.push_back(var);
                     m_stampCleanup.push_back(var);
                 } else {
-                    JAM_LOG_MINIMIZER(info, "    Reason lit " << lit
-                                                              << " has no reason => not redundant");
+                    JAM_LOG_MINIMIZER(info, "    lit " << lit << " is not redundant");
                     for (auto stampedVar : m_stampCleanup) {
                         tempStamps.setStamped(stampedVar, currentStamp, false);
                     }
@@ -204,20 +215,23 @@ void eraseRedundantLiterals(LiteralContainer &literals, const ReasonProvider &re
     const auto stampContext = tempStamps.createContext();
     const auto stamp = stampContext.getStamp();
 
+    OverApproximatingSet<64, typename DecisionLevelProvider::DecisionLevelKey> decisionLevels;
+
     for (auto literal : literals) {
         tempStamps.setStamped(literal.getVariable(), stamp, true);
+        decisionLevels.insert(dlProvider.getAssignmentDecisionLevel(literal.getVariable()));
     }
 
     erl_detail::LiteralRedundancyChecker redundancyChecker;
 
-    auto isRedundant = [&reasonProvider, &dlProvider, &tempStamps, &stamp,
-                        &redundancyChecker](CNFLit literal) {
+    auto isRedundant = [&reasonProvider, &dlProvider, &tempStamps, &stamp, &redundancyChecker,
+                        decisionLevels](CNFLit literal) {
         auto reason = reasonProvider.getAssignmentReason(literal.getVariable());
         if (reason != nullptr) {
             JAM_LOG_MINIMIZER(info, "Checking if lit " << literal << " with reason " << reason
                                                        << " is redundant.");
             return redundancyChecker.isRedundant(literal, reasonProvider, dlProvider, tempStamps,
-                                                 stamp);
+                                                 stamp, decisionLevels);
         }
         return dlProvider.getAssignmentDecisionLevel(literal.getVariable()) == 0;
     };
