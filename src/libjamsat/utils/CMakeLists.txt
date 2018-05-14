@@ -16,4 +16,5 @@ add_jamsat_core_library(jamsatUtils
   RangeUtils.h
   Logger.h
   Logger.cpp
+  OverApproximatingSet.h
 )

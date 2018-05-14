@@ -11,4 +11,5 @@ add_jamsat_core_unittest_library(utils_unit_tests
   CastsUnitTests.cpp
   PrintersTests.cpp
   RangeUtilsTests.cpp
+  OverApproximatingSetTests.cpp
 )
