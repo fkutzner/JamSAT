@@ -38,7 +38,7 @@ public:
     TimeoutContext(TimeUnit timeout)
       : m_start(std::chrono::system_clock::now()), m_timeout(timeout) {}
 
-    bool isTimeout() {
+    auto isTimeout() -> bool {
         auto now = decltype(m_start)::clock::now();
         auto elapsed = now - m_start;
         return std::chrono::duration_cast<TimeUnit>(elapsed) >= m_timeout;
@@ -52,7 +52,7 @@ private:
 // TODO: add timeoutContext to the IPASIR solver context object
 TimeoutContext timeoutContext{std::chrono::seconds{0}};
 
-int ipasirTimeoutCallback(void *cookie) {
+auto ipasirTimeoutCallback(void *cookie) -> int {
     TimeoutContext *context = reinterpret_cast<TimeoutContext *>(cookie);
     return context->isTimeout() ? 1 : 0;
 }

@@ -39,11 +39,11 @@ auto getIPASIRMockContext(void *solver) noexcept -> IpasirMockContext * {
 }
 
 extern "C" {
-const char *ipasir_signature() {
+auto ipasir_signature() -> const char * {
     return IPASIRTestMockSignature;
 }
 
-void *ipasir_init() {
+auto ipasir_init() -> void * {
     return reinterpret_cast<void *>(new jamsat::IpasirMockContext{});
 }
 
@@ -61,18 +61,18 @@ void ipasir_assume(void *solver, int lit) {
     (void)lit;
 }
 
-int ipasir_solve(void *solver) {
+auto ipasir_solve(void *solver) -> int {
     (void)solver;
     return 0;
 }
 
-int ipasir_val(void *solver, int lit) {
+auto ipasir_val(void *solver, int lit) -> int {
     (void)solver;
     (void)lit;
     return 0;
 }
 
-int ipasir_failed(void *solver, int lit) {
+auto ipasir_failed(void *solver, int lit) -> int {
     (void)solver;
     (void)lit;
     return 0;

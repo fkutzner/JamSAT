@@ -55,7 +55,7 @@ void printErrorMessage(std::string const &message) noexcept {
     std::cerr << "Error: " << message << "\n";
 }
 
-int solve(void *solver) {
+auto solve(void *solver) -> int {
     int result = ipasir_solve(solver);
     assert(result == 0 || result == 10 || result == 20);
     if (result == 0) {
@@ -74,14 +74,14 @@ public:
 
     ~IpasirRAII() { ipasir_release(m_solver); }
 
-    void *getSolver() noexcept { return m_solver; }
+    auto getSolver() noexcept -> void * { return m_solver; }
 
 private:
     void *m_solver;
 };
 }
 
-int jamsatMain(int argc, char **argv) noexcept {
+auto jamsatMain(int argc, char **argv) noexcept -> int {
     JamSATOptions options;
     try {
         options = parseOptions(argc, argv);

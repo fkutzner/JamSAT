@@ -59,7 +59,7 @@ public:
         }
     }
 
-    gzFile getFile() { return m_file; }
+    auto getFile() -> gzFile { return m_file; }
 
 private:
     gzFile m_file;
@@ -84,7 +84,7 @@ struct DIMACSHeader {
  * \throws std::runtime_error       An I/O or parsing error has occured while
  *                                  reading \p file, or EOF has been reached.
  */
-char readCharFromGzFile(gzFile file) {
+auto readCharFromGzFile(gzFile file) -> char {
     char character = 0;
     int charsRead = gzread(file, &character, 1);
     if (charsRead <= 0) {
@@ -126,7 +126,7 @@ void skipLine(gzFile file) {
  * \throws std::runtime_error       An I/O or parsing error has occured while
  *                                  reading \p file, or EOF has been reached.
  */
-std::string readLine(gzFile file) {
+auto readLine(gzFile file) -> std::string {
     std::string result;
     result.reserve(512);
     char character;
@@ -148,7 +148,7 @@ std::string readLine(gzFile file) {
  * \throws std::runtime_error       An I/O or parsing error has occured while
  *                                  reading \p file.
  */
-DIMACSHeader readHeader(gzFile file) {
+auto readHeader(gzFile file) -> DIMACSHeader {
     // Skip comment lines, i.e. those starting with 'c'
     char lineBegin = 'c';
     while ((lineBegin = readCharFromGzFile(file)) == 'c') {
@@ -210,7 +210,7 @@ DIMACSHeader readHeader(gzFile file) {
  * \p file is not a whitespace character, more characters are read from \p file
  * and appended to \p buffer until a whitespace character has been read.
  */
-int readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char> &buffer) {
+auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char> &buffer) -> int {
     if (preferredChunkSize == 0) {
         buffer.push_back(0);
         return 0;

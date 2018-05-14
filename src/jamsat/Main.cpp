@@ -26,6 +26,6 @@
 
 #include <jamsat/JamSAT.h>
 
-int main(int argc, char **args) {
+auto main(int argc, char **args) -> int {
     return jamsat::jamsatMain(argc, args);
 }

@@ -31,5 +31,5 @@
  */
 
 namespace jamsat {
-int jamsatMain(int argc, char **argv) noexcept;
+auto jamsatMain(int argc, char **argv) noexcept -> int;
 }
