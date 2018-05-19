@@ -465,9 +465,11 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             auto amountKnownGood = m_amntBinariesLearnt;
             auto toDeleteBegin =
                 m_clauseDBReductionPolicy.getClausesMarkedForDeletion(amountKnownGood);
+            auto oldLemmasSize = m_learntClauses.size();
             reduceClauseDB(m_clauseDB, m_propagation, m_trail,
                            boost::make_iterator_range(toDeleteBegin, m_learntClauses.end()),
                            m_problemClauses, m_learntClauses);
+            m_statistics.registerLemmaDeletion(oldLemmasSize - m_learntClauses.size());
         }
     }
 

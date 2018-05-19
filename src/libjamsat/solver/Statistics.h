@@ -48,6 +48,7 @@ struct AllEnabledStatisticsConfig {
     using CountDecisions = std::true_type;
     using CountRestarts = std::true_type;
     using MeasureLemmaSize = std::true_type;
+    using CountLemmaDeletions = std::true_type;
 };
 
 /**
@@ -78,6 +79,7 @@ public:
         uint64_t m_decisionCount = 0;
         uint64_t m_restartCount = 0;
         uint64_t m_unitLemmas = 0;
+        uint64_t m_lemmaDeletions = 0;
         SimpleMovingAverage<uint32_t> m_avgLemmaSize{1000};
         double m_avgLBD = 0.0;
         std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_startTime;
@@ -113,6 +115,13 @@ public:
      * \param length    The amount of literals contained in the added lemma
      */
     void registerLemma(uint32_t size) noexcept;
+
+    /**
+     * \brief Notifies the statistics that lemmas have been deleted.
+     *
+     * \param amount    The amount of lemmas having been deleted.
+     */
+    void registerLemmaDeletion(uint32_t amount);
 
     /**
      * \brief Notifies the statistics system that the solver entered its main search
@@ -220,6 +229,13 @@ void Statistics<StatisticsConfig>::registerLemma(uint32_t size) noexcept {
 }
 
 template <typename StatisticsConfig>
+void Statistics<StatisticsConfig>::registerLemmaDeletion(uint32_t amount) {
+    if (StatisticsConfig::CountLemmaDeletions::value == true) {
+        m_currentEra.m_lemmaDeletions += amount;
+    }
+}
+
+template <typename StatisticsConfig>
 void Statistics<StatisticsConfig>::concludeEra() noexcept {
     m_previousEra = m_currentEra;
     m_currentEra = Era{};
@@ -244,7 +260,8 @@ void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream &stre
            << "#D = amount of decision literals picked;\n"
            << "  #R = amount of restarts performed; "
            << "T = time passed since last solve() invocation; "
-           << "L = avg. lemma size\n";
+           << "L = avg. lemma size; "
+           << "#LD = amount of lemmas deleted\n";
 }
 
 
@@ -262,6 +279,10 @@ auto operator<<(std::ostream &stream, const Statistics<StatisticsConfig> &stats)
     if (StatisticsConfig::MeasureLemmaSize::value == true) {
         stream << boost::format("| L: %4.2f ") % currentEra.m_avgLemmaSize.getAverage();
         stream << "| #U: " << currentEra.m_unitLemmas << " ";
+    }
+
+    if (StatisticsConfig::CountLemmaDeletions::value == true) {
+        stream << "| #LD: " << currentEra.m_lemmaDeletions << " ";
     }
 
     if (StatisticsConfig::CountConflicts::value == true) {

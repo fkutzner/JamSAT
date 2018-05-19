@@ -57,6 +57,7 @@ void addEvents(Statistics &underTest) {
     underTest.registerLemma(2);
     underTest.registerLemma(5);
     underTest.registerLemma(11);
+    underTest.registerLemmaDeletion(5);
 }
 }
 
@@ -73,7 +74,8 @@ TEST(UnitSolver, StatisticsCountsAllItemsInAllEnabledMode) {
 namespace {
 template <typename StatisticsConfiguration>
 void test_expectStatsDisabled(bool conflictsDisabled, bool propsDisabled, bool decsDisabled,
-                              bool restartsDisabled, bool lemmaSizeDisabled) {
+                              bool restartsDisabled, bool lemmaSizeDisabled,
+                              bool lemmaDelDisabled) {
     Statistics<StatisticsConfiguration> underTest;
     addEvents(underTest);
 
@@ -83,6 +85,7 @@ void test_expectStatsDisabled(bool conflictsDisabled, bool propsDisabled, bool d
     EXPECT_EQ(underTest.getCurrentEra().m_restartCount, restartsDisabled ? 0ULL : 2ULL);
     EXPECT_EQ(underTest.getCurrentEra().m_avgLemmaSize.getAverage(),
               lemmaSizeDisabled ? 0ULL : 6.0);
+    EXPECT_EQ(underTest.getCurrentEra().m_lemmaDeletions, lemmaDelDisabled ? 0ULL : 5ULL);
 }
 }
 
@@ -93,8 +96,9 @@ TEST(UnitSolver, StatisticsDoesNotCountConflictsWhenDisabled) {
         using CountDecisions = std::true_type;
         using CountRestarts = std::true_type;
         using MeasureLemmaSize = std::true_type;
+        using CountLemmaDeletions = std::true_type;
     };
-    test_expectStatsDisabled<PropDisabledStatisticsConfig>(true, false, false, false, false);
+    test_expectStatsDisabled<PropDisabledStatisticsConfig>(true, false, false, false, false, false);
 }
 
 TEST(UnitSolver, StatisticsDoesNotCountPropagationsWhenDisabled) {
@@ -104,8 +108,9 @@ TEST(UnitSolver, StatisticsDoesNotCountPropagationsWhenDisabled) {
         using CountDecisions = std::true_type;
         using CountRestarts = std::true_type;
         using MeasureLemmaSize = std::true_type;
+        using CountLemmaDeletions = std::true_type;
     };
-    test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, true, false, false, false);
+    test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, true, false, false, false, false);
 }
 
 TEST(UnitSolver, StatisticsDoesNotCountDecisionsWhenDisabled) {
@@ -115,8 +120,9 @@ TEST(UnitSolver, StatisticsDoesNotCountDecisionsWhenDisabled) {
         using CountDecisions = std::false_type;
         using CountRestarts = std::true_type;
         using MeasureLemmaSize = std::true_type;
+        using CountLemmaDeletions = std::true_type;
     };
-    test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, true, false, false);
+    test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, true, false, false, false);
 }
 
 TEST(UnitSolver, StatisticsDoesNotCountRestartsWhenDisabled) {
@@ -126,19 +132,33 @@ TEST(UnitSolver, StatisticsDoesNotCountRestartsWhenDisabled) {
         using CountDecisions = std::true_type;
         using CountRestarts = std::false_type;
         using MeasureLemmaSize = std::true_type;
+        using CountLemmaDeletions = std::true_type;
     };
-    test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, false, true, false);
+    test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, false, true, false, false);
 }
 
-TEST(UnitSolver, StatisticsDoesNotMeasreLemmaSizeWhenDisabled) {
+TEST(UnitSolver, StatisticsDoesNotMeasureLemmaSizeWhenDisabled) {
     struct PropDisabledStatisticsConfig {
         using CountConflicts = std::true_type;
         using CountPropagations = std::true_type;
         using CountDecisions = std::true_type;
         using CountRestarts = std::true_type;
         using MeasureLemmaSize = std::false_type;
+        using CountLemmaDeletions = std::true_type;
     };
-    test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, false, false, true);
+    test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, false, false, true, false);
+}
+
+TEST(UnitSolver, StatisticsDoesNotCountLemmaDeletionsWhenDisabled) {
+    struct PropDisabledStatisticsConfig {
+        using CountConflicts = std::true_type;
+        using CountPropagations = std::true_type;
+        using CountDecisions = std::true_type;
+        using CountRestarts = std::true_type;
+        using MeasureLemmaSize = std::true_type;
+        using CountLemmaDeletions = std::false_type;
+    };
+    test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, false, false, false, true);
 }
 
 TEST(UnitSolver, StatisticsResetsCountersOnEraConclusion) {
@@ -149,6 +169,7 @@ TEST(UnitSolver, StatisticsResetsCountersOnEraConclusion) {
     EXPECT_EQ(underTest.getCurrentEra().m_propagationCount, 0ULL);
     EXPECT_EQ(underTest.getCurrentEra().m_decisionCount, 0ULL);
     EXPECT_EQ(underTest.getCurrentEra().m_restartCount, 0ULL);
+    EXPECT_EQ(underTest.getCurrentEra().m_lemmaDeletions, 0ULL);
 }
 
 TEST(UnitSolver, StatisticsStoresPreviousEra) {
@@ -159,6 +180,7 @@ TEST(UnitSolver, StatisticsStoresPreviousEra) {
     EXPECT_EQ(underTest.getPreviousEra().m_propagationCount, 7ULL);
     EXPECT_EQ(underTest.getPreviousEra().m_decisionCount, 3ULL);
     EXPECT_EQ(underTest.getPreviousEra().m_restartCount, 2ULL);
+    EXPECT_EQ(underTest.getPreviousEra().m_lemmaDeletions, 5ULL);
 }
 
 TEST(UnitSolver, StatisticsPrintsCurrentEra) {
@@ -174,5 +196,6 @@ TEST(UnitSolver, StatisticsPrintsCurrentEra) {
     EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#P: 7 "})));
     EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#D: 3 "})));
     EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#R: 2 "})));
+    EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#LD: 5 "})));
 }
 }
