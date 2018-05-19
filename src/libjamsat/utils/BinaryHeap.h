@@ -275,7 +275,7 @@ void BinaryMaxHeap<K, Comparator, KIndex>::increasingUpdate(K element) noexcept 
         parentIndex = getParent(cursorIdx);
     }
 
-    JAM_ASSERT(cursorIdx >= 0, "Cursor index must be non-negative");
+    JAM_ASSERT(cursorIdx >= 0, "Cursor index out of range");
     m_heap[cursorIdx] = element;
     m_indices[element] = cursorIdx;
 }
@@ -307,7 +307,7 @@ void BinaryMaxHeap<K, Comparator, KIndex>::decreasingUpdate(K element) noexcept 
         }
     }
 
-    JAM_ASSERT(static_cast<size_type>(cursorIdx) < m_size, "Cursor index must be non-negative");
+    JAM_ASSERT(static_cast<size_type>(cursorIdx) < m_size, "Cursor index out of range");
     m_heap[cursorIdx] = element;
     m_indices[element] = cursorIdx;
 }
@@ -348,12 +348,10 @@ template <typename K, typename Comparator, typename KIndex>
 auto BinaryMaxHeap<K, Comparator, KIndex>::test_satisfiesHeapProperty() -> bool {
     bool heapPropertyOK = true;
     for (size_t i = 0; i < m_size; ++i) {
-        if (getLeftChild(i) < m_size && m_lessThan(m_heap[i], m_heap[getLeftChild(i)])) {
-            heapPropertyOK = false;
-        }
-        if (getRightChild(i) < m_size && m_lessThan(m_heap[i], m_heap[getRightChild(i)])) {
-            heapPropertyOK = false;
-        }
+        heapPropertyOK = heapPropertyOK && !(getLeftChild(i) < m_size &&
+                                             m_lessThan(m_heap[i], m_heap[getLeftChild(i)]));
+        heapPropertyOK = heapPropertyOK && !(getLeftChild(i) < m_size &&
+                                             m_lessThan(m_heap[i], m_heap[getLeftChild(i)]));
     }
     return heapPropertyOK;
 }

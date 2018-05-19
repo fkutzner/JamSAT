@@ -81,6 +81,15 @@ TEST(UnitUtils, SingleElementMaxHeapContainsExactlyOneElement) {
     }
 }
 
+TEST(UnitUtils, MaxHeapDoubleInsertionsDoNotDuplicateElements) {
+    BinaryMaxHeap<int, TestIntComparator, IntIndex> underTest{10};
+    underTest.insert(5);
+    underTest.insert(5);
+    EXPECT_EQ(underTest.size(), 1ULL);
+    EXPECT_EQ(underTest.removeMax(), 5);
+    EXPECT_TRUE(underTest.empty());
+}
+
 TEST(UnitUtils, SingleElementMaxHeapIsEmptyAfterRemoval) {
     BinaryMaxHeap<int, TestIntComparator, IntIndex> underTest{10};
     underTest.insert(5);
