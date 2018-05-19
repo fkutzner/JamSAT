@@ -79,6 +79,7 @@ public:
         uint64_t m_decisionCount = 0;
         uint64_t m_restartCount = 0;
         uint64_t m_unitLemmas = 0;
+        uint64_t m_binaryLemmas = 0;
         uint64_t m_lemmaDeletions = 0;
         SimpleMovingAverage<uint32_t> m_avgLemmaSize{1000};
         double m_avgLBD = 0.0;
@@ -224,6 +225,8 @@ void Statistics<StatisticsConfig>::registerLemma(uint32_t size) noexcept {
         m_currentEra.m_avgLemmaSize.add(size);
         if (size == 1) {
             ++m_currentEra.m_unitLemmas;
+        } else if (size == 2) {
+            ++m_currentEra.m_binaryLemmas;
         }
     }
 }
@@ -260,7 +263,9 @@ void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream &stre
            << "#D = amount of decision literals picked;\n"
            << "  #R = amount of restarts performed; "
            << "T = time passed since last solve() invocation; "
-           << "L = avg. lemma size; "
+           << "L = avg. lemma size;\n"
+           << "  #U = amount of unit lemmas added; "
+           << "#B = amount of binary lemmas added; "
            << "#LD = amount of lemmas deleted\n";
 }
 
@@ -279,6 +284,7 @@ auto operator<<(std::ostream &stream, const Statistics<StatisticsConfig> &stats)
     if (StatisticsConfig::MeasureLemmaSize::value == true) {
         stream << boost::format("| L: %4.2f ") % currentEra.m_avgLemmaSize.getAverage();
         stream << "| #U: " << currentEra.m_unitLemmas << " ";
+        stream << "| #B: " << currentEra.m_binaryLemmas << " ";
     }
 
     if (StatisticsConfig::CountLemmaDeletions::value == true) {

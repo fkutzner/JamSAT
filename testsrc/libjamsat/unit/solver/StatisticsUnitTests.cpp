@@ -192,10 +192,15 @@ TEST(UnitSolver, StatisticsPrintsCurrentEra) {
     collector << underTest;
     std::string result = collector.str();
 
+    std::cout << result << std::endl;
+
     EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#C: 1 "})));
     EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#P: 7 "})));
     EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#D: 3 "})));
     EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#R: 2 "})));
     EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#LD: 5 "})));
+    EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"L: 6.00 "})));
+    EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#B: 1 "})));
+    EXPECT_TRUE(static_cast<bool>(std::regex_search(result, std::regex{"#U: 0 "})));
 }
 }
