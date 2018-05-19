@@ -30,6 +30,7 @@
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
 #include <cassert>
+#include <cstdio>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -99,6 +100,11 @@ auto jamsatMain(int argc, char **argv) noexcept -> int {
     if (options.m_printHelp) {
         printUsage();
         return EXIT_SUCCESS;
+    }
+
+    if (options.m_waitForUserInput) {
+        std::cout << "Press any key to start the solver.\n";
+        std::getc(stdin);
     }
 
     try {

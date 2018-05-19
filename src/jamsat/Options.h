@@ -39,6 +39,7 @@ struct JamSATOptions {
     std::string m_problemFilename;
     bool m_printVersion = false;
     bool m_printHelp = false;
+    bool m_waitForUserInput = false;
     boost::optional<std::chrono::seconds> m_timeout;
     std::vector<std::string> m_backendOptions;
 };

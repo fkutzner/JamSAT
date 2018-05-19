@@ -41,6 +41,8 @@ auto parseOptions(int argc, char **argv) -> JamSATOptions {
             result.m_printVersion = true;
         } else if (argument == "--help") {
             result.m_printHelp = true;
+        } else if (argument == "--wait") {
+            result.m_waitForUserInput = true;
         } else if (argument.compare(0, timeoutArgPrefix.size(), timeoutArgPrefix) == 0) {
             std::string timeoutValue{argument.begin() + timeoutArgPrefix.size(), argument.end()};
             try {
