@@ -96,7 +96,7 @@ TEST(UnitUtils, BinaryMaxHeapHasHeapPropertyAfterInsertion) {
     for (auto i : testSeq) {
         underTest.insert(i);
     }
-    EXPECT_TRUE(underTest.assertHeapProperty());
+    EXPECT_TRUE(underTest.test_satisfiesHeapProperty());
     EXPECT_EQ(underTest.size(), testSeq.size());
 }
 
@@ -120,7 +120,7 @@ TEST(UnitUtils, BinaryMaxHeapHasDescendingRemovalSequence) {
     for (size_t i = 0; i < testSeq.size(); ++i) {
         auto removed = underTest.removeMax();
         EXPECT_EQ(testSeq[i], removed) << "Differing elements at removal step " << i;
-        EXPECT_TRUE(underTest.assertHeapProperty())
+        EXPECT_TRUE(underTest.test_satisfiesHeapProperty())
             << "Heap property violated at removal step " << i;
     }
 
