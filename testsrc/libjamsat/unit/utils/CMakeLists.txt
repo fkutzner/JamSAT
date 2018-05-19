@@ -1,4 +1,5 @@
 add_jamsat_core_unittest_library(utils_unit_tests
+  BinaryHeapTests.cpp
   BoundedMapTests.cpp
   BoundedStackTests.cpp
   FaultInjectorTests.cpp

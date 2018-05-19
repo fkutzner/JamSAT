@@ -1,5 +1,6 @@
 add_jamsat_core_library(jamsatUtils
   Assert.h
+  BinaryHeap.h
   Truth.h
   Truth.cpp
   BoundedMap.h
