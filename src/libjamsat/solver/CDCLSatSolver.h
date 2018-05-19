@@ -502,10 +502,11 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     // the lemma buffer gets cleared before being used in computeConflictClause
     m_conflictAnalyzer.computeConflictClause(conflicting, m_lemmaBuffer);
 
-    JAM_LOG_SOLVER(info, "Learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
+    JAM_LOG_SOLVER(info, "Learnt clause: (" << toString(m_lemmaBuffer.begin(), m_lemmaBuffer.end())
+                                            << ")");
     optimizeLearntClause(m_lemmaBuffer);
-    JAM_LOG_SOLVER(info,
-                   "Optimized learnt clause: (" << toString(learnt.begin(), learnt.end()) << ")");
+    JAM_LOG_SOLVER(info, "Optimized learnt clause: ("
+                             << toString(m_lemmaBuffer.begin(), m_lemmaBuffer.end()) << ")");
 
     JAM_ASSERT(m_lemmaBuffer.size() > 0,
                "The empty clause is not expected to be directly derivable");

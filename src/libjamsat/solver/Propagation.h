@@ -422,7 +422,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateBinaries(CNFLit toPr
             ++amountOfNewFacts;
             ClauseT &reason = currentWatcher.getClause();
             JAM_LOG_PROPAGATION(info,
-                                "  Forced assignment: " << secondLit << " Reason: " << reason);
+                                "  Forced assignment: " << secondLit << " Reason: " << &reason);
             m_assignmentProvider.addAssignment(secondLit, reason);
 
             ++watcherListTraversal;

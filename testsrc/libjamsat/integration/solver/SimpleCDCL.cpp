@@ -199,6 +199,21 @@ TBool SimpleCDCL::isProblemSatisfiable() {
                 std::vector<CNFLit> learntClause;
                 m_conflictAnalyzer.computeConflictClause(*conflictingClause, learntClause);
 
+                // Put a literal with second-highest decision level next to the asserting literal
+                // (will backtrack there later)
+                auto backtrackLevel =
+                    m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable());
+                auto litWithMaxDecisionLevel = learntClause.begin() + 1;
+                for (auto lit = learntClause.begin() + 1; lit != learntClause.end(); ++lit) {
+                    auto currentBacktrackLevel = std::max(
+                        backtrackLevel, m_trail.getAssignmentDecisionLevel(lit->getVariable()));
+                    if (currentBacktrackLevel > backtrackLevel) {
+                        litWithMaxDecisionLevel = lit;
+                        backtrackLevel = currentBacktrackLevel;
+                    }
+                }
+                std::swap(*litWithMaxDecisionLevel, learntClause[1]);
+
                 // Learning clauses until the solver learns a contradiction on the unit clause
                 // level (or finds a satisfying variable assignment)
                 if (learntClause.size() == 1 ||
