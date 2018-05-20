@@ -31,40 +31,40 @@
 
 #include <cassert>
 #include <cstdio>
-#include <iostream>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 
 namespace jamsat {
 
 namespace {
-void printVersion() noexcept {
-    std::cout << ipasir_signature() << "\n";
+void printVersion(std::ostream &stream) noexcept {
+    stream << ipasir_signature() << "\n";
 }
 
-void printUsage() noexcept {
-    std::cerr << "Usage: jamsat [OPTION]... <FILE>\n"
-              << "  Solves the SATISFIABILITY problem instance given in <FILE>.\n"
-              << "  <FILE> is required to be formatted as described in Sec. 2.1 of\n"
-              << "  http://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps\n"
-              << "  If <FILE> is -, the problem is read from the standard input.\n"
-              << "\n";
-    printOptions(std::cerr, 2);
+void printUsage(std::ostream &stream) noexcept {
+    stream << "Usage: jamsat [OPTION]... <FILE>\n"
+           << "  Solves the SATISFIABILITY problem instance given in <FILE>.\n"
+           << "  <FILE> is required to be formatted as described in Sec. 2.1 of\n"
+           << "  http://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps\n"
+           << "  If <FILE> is -, the problem is read from the standard input.\n"
+           << "\n";
+    printOptions(stream, 2);
 }
 
-void printErrorMessage(std::string const &message) noexcept {
-    std::cerr << "Error: " << message << "\n";
+void printErrorMessage(std::string const &message, std::ostream &errStream) noexcept {
+    errStream << "Error: " << message << "\n";
 }
 
-auto solve(void *solver) -> int {
+auto solve(void *solver, std::ostream &outStream) noexcept -> int {
     int result = ipasir_solve(solver);
     assert(result == 0 || result == 10 || result == 20);
     if (result == 0) {
-        std::cout << "INDETERMINATE\n";
+        outStream << "INDETERMINATE\n";
     } else if (result == 10) {
-        std::cout << "SATISFIABLE\n";
+        outStream << "SATISFIABLE\n";
     } else if (result == 20) {
-        std::cout << "UNSATISFIABLE\n";
+        outStream << "UNSATISFIABLE\n";
     }
     return result;
 }
@@ -82,28 +82,29 @@ private:
 };
 }
 
-auto jamsatMain(int argc, char **argv) noexcept -> int {
+auto jamsatMain(int argc, char **argv, std::ostream &outStream, std::ostream &errStream) noexcept
+    -> int {
     JamSATOptions options;
     try {
         options = parseOptions(argc, argv);
     } catch (std::invalid_argument &e) {
-        std::cerr << "Error: " << e.what() << "\n";
-        printUsage();
+        errStream << "Error: " << e.what() << "\n";
+        printUsage(errStream);
         return EXIT_FAILURE;
     }
 
     if (options.m_printVersion) {
-        printVersion();
+        printVersion(outStream);
         return EXIT_SUCCESS;
     }
 
     if (options.m_printHelp) {
-        printUsage();
+        printUsage(outStream);
         return EXIT_SUCCESS;
     }
 
     if (options.m_waitForUserInput) {
-        std::cout << "Press any key to start the solver.\n";
+        outStream << "Press any key to start the solver.\n";
         std::getc(stdin);
     }
 
@@ -112,10 +113,10 @@ auto jamsatMain(int argc, char **argv) noexcept -> int {
         if (options.m_timeout) {
             configureTimeout(wrappedSolver.getSolver(), options.m_timeout.get());
         }
-        readProblem(wrappedSolver.getSolver(), options.m_problemFilename);
-        return solve(wrappedSolver.getSolver());
+        readProblem(wrappedSolver.getSolver(), options.m_problemFilename, outStream);
+        return solve(wrappedSolver.getSolver(), outStream);
     } catch (std::exception &e) {
-        printErrorMessage(e.what());
+        printErrorMessage(e.what(), errStream);
         return EXIT_FAILURE;
     }
 }

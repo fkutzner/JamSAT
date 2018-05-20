@@ -39,9 +39,11 @@ namespace jamsat {
  * \param[in] location              The location of the problem instance file.
  *                                  If \p location equals "-", the problem instance
  *                                  is read from the standard input.
+ * \param[in] msgStream             The stream to which logging messages shall be
+ *                                  printed.
  *
  * \throws std::runtime_error       An I/O or parsing error has occured while
  *                                  reading \p file.
  */
-void readProblem(void *solver, std::string const &location);
+void readProblem(void *solver, std::string const &location, std::ostream &msgStream);
 }

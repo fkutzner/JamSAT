@@ -37,9 +37,8 @@
 #include <string>
 #include <vector>
 
+#include <ostream>
 #include <zlib.h>
-
-#include <iostream>
 
 namespace jamsat {
 namespace {
@@ -334,11 +333,11 @@ void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
 }
 }
 
-void readProblem(void *solver, std::string const &location) {
+void readProblem(void *solver, std::string const &location, std::ostream &msgStream) {
     GZFileResource fileRAII{location.c_str()};
     gzFile file = fileRAII.getFile();
     DIMACSHeader problemHeader = readHeader(file);
-    std::cout << "Reading a problem with " << problemHeader.m_numClauses << " clauses and "
+    msgStream << "Reading a problem with " << problemHeader.m_numClauses << " clauses and "
               << problemHeader.m_numVariables << " variables\n";
     readClauses(solver, file, problemHeader);
 }
