@@ -35,11 +35,19 @@
 namespace jamsat {
 
 /**
- * \brief Max-heap
+ * \brief A max-heap implementation geared towards objects that are cheap to
+ * copy.
+ *
+ * This max-heap implementation facilitates exception-safe usage by performing
+ * allocations only during construction and a special resize method. In this
+ * implementation, speed is favoured over low memory consumption, allowing e.g.
+ * the implementation of `contains()` with a single memory access.
  *
  * \ingroup JamSAT_Utils
  *
  * \tparam K            The type of the values to be stored in the heap.
+ *                      `K` must satisfy the STL concepts `DefaultConstructible`,
+ *                      `CopyConstructible` and `CopyAssignable`.
  * \tparam Comparator   A type satisfying the STL Compare concept for K.
  *                      `Comparator` must have a constructor accepting the
  *                      maximal element (wrt. `KIndex`) that will be
@@ -51,9 +59,10 @@ namespace jamsat {
  *                      or to any previous invocation of `c.increaseMaxSizeTo()`.
  *                      After `c.increaseMaxSizeTo(z)`, all values no larger
  *                      than `z` (wrt. `KIndex`) must be comparable by `c`.
- * \tparam KIndex       A key descriptor for `K`. TODO: document concept -
- *                      for now, see the key descriptor parameter documentation
- *                      of `StampMap`
+ * \tparam KIndex       A type having the static function `T KIndex::index(const K&)`
+ *                      where T is an unsigned integral type `KIndex::Type` not
+ *                      wider than `std::vector<V>::size_type`. This function is used
+ *                      to obtain indices for objects of type `K`.
  */
 template <typename K, typename Comparator, typename KIndex = typename K::Index>
 class BinaryMaxHeap {
@@ -65,6 +74,9 @@ public:
      *
      * \param maxElement    The maximal element (wrt. KIndex) that will be
      *                      stored in the heap.
+     *
+     * \par Complexity
+     * Worst case: `O(KIndex::getIndex(maxElement))`
      */
     BinaryMaxHeap(K maxElement);
 
@@ -73,6 +85,9 @@ public:
      *
      * \param element   The value to be inserted. `element` must not be larger
      *                  (wrt. KIndex) than the current maximal element.
+     *
+     * \par Complexity
+     * Worst case: `O(log(size()))`
      */
     void insert(K element) noexcept;
 
@@ -82,6 +97,9 @@ public:
      * Precondition: the heap must not be empty.
      *
      * \returns the greatest element contained in the heap.
+     *
+     * \par Complexity
+     * Worst case: `O(log(size()))`
      */
     auto removeMax() noexcept -> K;
 
@@ -91,6 +109,9 @@ public:
      * Precondition: the heap must not be empty.
      *
      * \returns the greatest object contained in the heap.
+     *
+     * \par Complexity
+     * Worst case: `O(1)`
      */
     void clear() noexcept;
 
@@ -98,6 +119,9 @@ public:
      * \brief Returns the amount of elements currently stored in the heap.
      *
      * \returns the amount of elements currently stored in the heap.
+     *
+     * \par Complexity
+     * Worst case: `O(1)`
      */
     auto size() const noexcept -> size_type;
 
@@ -105,6 +129,9 @@ public:
      * \brief Determines whether the heap is empty.
      *
      * \returns `true` iff the heap is empty.
+     *
+     * \par Complexity
+     * Worst case: `O(1)`
      */
     auto empty() const noexcept -> bool;
 
@@ -115,6 +142,9 @@ public:
      *
      * \param element   The affected element. `element` must not be larger
      *                  (wrt. KIndex) than the current maximal element.
+     *
+     * \par Complexity
+     * Worst case: `O(log(size()))`
      */
     void increasingUpdate(K element) noexcept;
 
@@ -125,6 +155,9 @@ public:
      *
      * \param element   The affected element. `element` must not be larger
      *                  (wrt. KIndex) than the current maximal element.
+     *
+     * \par Complexity
+     * Worst case: `O(log(size()))`
      */
     void decreasingUpdate(K element) noexcept;
 
@@ -136,6 +169,9 @@ public:
      *                  (wrt. KIndex) than the current maximal element.
      *
      * \returns true iff the heap contains `element`.
+     *
+     * \par Complexity
+     * Worst case: `O(1)`
      */
     auto contains(K element) const noexcept -> bool;
 
@@ -143,6 +179,9 @@ public:
      * \brief Returns the comparator object.
      *
      * \returns the heap's comparator object.
+     *
+     * \par Complexity
+     * Worst case: `O(1)`
      */
     auto getComparator() noexcept -> Comparator &;
 
@@ -150,6 +189,9 @@ public:
      * \brief Returns the comparator object.
      *
      * \returns the heap's comparator object.
+     *
+     * \par Complexity
+     * Worst case: `O(1)`
      */
     auto getComparator() const noexcept -> Comparator const &;
 
@@ -162,6 +204,9 @@ public:
      *
      * This method invokes `increaseMaxSizeTo(newMaxElement)` on the heap's
      * comparator.
+     *
+     * \par Complexity
+     * Worst case: `O(KIndex::getIndex(newMaxElement))`
      */
     void increaseMaxSizeTo(K newMaxElement);
 
@@ -171,21 +216,42 @@ public:
      * This method should only be called by tests.
      *
      * \returns true iff the heap is internally consistent.
+     *
+     * \par Complexity
+     * Worst case: `O(size())`
      */
-    auto test_satisfiesHeapProperty() -> bool;
+    auto test_satisfiesHeapProperty() const noexcept -> bool;
 
 private:
     using Storage = std::vector<K>;
     using StorageIdx = typename Storage::size_type;
 
-    auto getParent(StorageIdx index) -> StorageIdx;
-    auto getLeftChild(StorageIdx index) -> StorageIdx;
-    auto getRightChild(StorageIdx index) -> StorageIdx;
+    constexpr auto getParentIdx(StorageIdx index) const noexcept -> StorageIdx;
+    constexpr auto getLeftChildIdx(StorageIdx index) const noexcept -> StorageIdx;
+    constexpr auto getRightChildIdx(StorageIdx index) const noexcept -> StorageIdx;
 
     using Index = int32_t;
+
+    /// Maps stored objects to their rsp. index in m_heap.
+    /// Objects that are not contained in m_heap have the index -1.
     BoundedMap<K, Index, KIndex> m_indices;
+
+    /// An array for which the following invariant holds: for all
+    /// elements `i` in `[0, m_size)`,
+    ///
+    /// - if `getLeftChildIdx(i) < m_size`, then
+    ///   `m_heap[getLeftChildIdx(i)] < m_heap[i]` wrt. `m_lessThan`
+    /// - if `getRightChildIdx(i) < m_size`, then
+    ///   `m_heap[getRightChildIdx(i)] < m_heap[i]` wrt. `m_lessThan`
+    ///
+    /// `m_heap` with a size suitable to store all insertable elements
+    /// including the current maximum element.
     Storage m_heap;
+
+    /// The amount of elements currently residing in the heap.
     size_type m_size;
+
+    /// The comparator used to establish the ordering in `m_heap`.
     Comparator m_lessThan;
 };
 
@@ -216,17 +282,20 @@ auto BinaryMaxHeap<K, Comparator, KIndex>::empty() const noexcept -> bool {
 }
 
 template <typename K, typename Comparator, typename KIndex>
-auto BinaryMaxHeap<K, Comparator, KIndex>::getParent(StorageIdx index) -> StorageIdx {
+constexpr auto BinaryMaxHeap<K, Comparator, KIndex>::getParentIdx(StorageIdx index) const noexcept
+    -> StorageIdx {
     return (index - 1) / 2;
 }
 
 template <typename K, typename Comparator, typename KIndex>
-auto BinaryMaxHeap<K, Comparator, KIndex>::getLeftChild(StorageIdx index) -> StorageIdx {
+constexpr auto BinaryMaxHeap<K, Comparator, KIndex>::getLeftChildIdx(StorageIdx index) const
+    noexcept -> StorageIdx {
     return 2 * index + 1;
 }
 
 template <typename K, typename Comparator, typename KIndex>
-auto BinaryMaxHeap<K, Comparator, KIndex>::getRightChild(StorageIdx index) -> StorageIdx {
+constexpr auto BinaryMaxHeap<K, Comparator, KIndex>::getRightChildIdx(StorageIdx index) const
+    noexcept -> StorageIdx {
     return 2 * index + 2;
 }
 
@@ -260,7 +329,7 @@ void BinaryMaxHeap<K, Comparator, KIndex>::insert(K element) noexcept {
 template <typename K, typename Comparator, typename KIndex>
 void BinaryMaxHeap<K, Comparator, KIndex>::increasingUpdate(K element) noexcept {
     Index cursorIdx = m_indices[element];
-    Index parentIndex = getParent(cursorIdx);
+    Index parentIndex = getParentIdx(cursorIdx);
 
     if (cursorIdx == 0) {
         return;
@@ -272,7 +341,7 @@ void BinaryMaxHeap<K, Comparator, KIndex>::increasingUpdate(K element) noexcept 
         m_heap[cursorIdx] = parent;
         m_indices[parent] = cursorIdx;
         cursorIdx = parentIndex;
-        parentIndex = getParent(cursorIdx);
+        parentIndex = getParentIdx(cursorIdx);
     }
 
     JAM_ASSERT(cursorIdx >= 0, "Cursor index out of range");
@@ -284,9 +353,9 @@ template <typename K, typename Comparator, typename KIndex>
 void BinaryMaxHeap<K, Comparator, KIndex>::decreasingUpdate(K element) noexcept {
     Index cursorIdx = m_indices[element];
 
-    while (getLeftChild(cursorIdx) < m_size) {
-        Index leftChildIdx = getLeftChild(cursorIdx);
-        Index rightChildIdx = getRightChild(cursorIdx);
+    while (getLeftChildIdx(cursorIdx) < m_size) {
+        Index leftChildIdx = getLeftChildIdx(cursorIdx);
+        Index rightChildIdx = getRightChildIdx(cursorIdx);
         // Invariant: leftChildIdx < rightChildIdx
 
         // If  element is smaller than any of its children, move up
@@ -345,13 +414,13 @@ auto BinaryMaxHeap<K, Comparator, KIndex>::contains(K element) const noexcept ->
 }
 
 template <typename K, typename Comparator, typename KIndex>
-auto BinaryMaxHeap<K, Comparator, KIndex>::test_satisfiesHeapProperty() -> bool {
+auto BinaryMaxHeap<K, Comparator, KIndex>::test_satisfiesHeapProperty() const noexcept -> bool {
     bool heapPropertyOK = true;
     for (size_t i = 0; i < m_size; ++i) {
-        heapPropertyOK = heapPropertyOK && !(getLeftChild(i) < m_size &&
-                                             m_lessThan(m_heap[i], m_heap[getLeftChild(i)]));
-        heapPropertyOK = heapPropertyOK && !(getLeftChild(i) < m_size &&
-                                             m_lessThan(m_heap[i], m_heap[getLeftChild(i)]));
+        heapPropertyOK = heapPropertyOK && !(getLeftChildIdx(i) < m_size &&
+                                             m_lessThan(m_heap[i], m_heap[getLeftChildIdx(i)]));
+        heapPropertyOK = heapPropertyOK && !(getLeftChildIdx(i) < m_size &&
+                                             m_lessThan(m_heap[i], m_heap[getLeftChildIdx(i)]));
     }
     return heapPropertyOK;
 }
