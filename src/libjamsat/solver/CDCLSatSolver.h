@@ -164,7 +164,7 @@ public:
      *         the CNF problem instance is satsifiable rsp. unsatisfiable with
      *         respect to the setting of \p assumptions .
      */
-    SolvingResult solve(const std::vector<CNFLit> &assumptions) noexcept;
+    SolvingResult solve(const std::vector<CNFLit> &assumptions);
 
     /**
      * \brief Asynchronously instructs the solver to stop solving.
@@ -584,7 +584,7 @@ void CDCLSatSolver<ST>::backtrackAll() {
 
 template <typename ST>
 typename CDCLSatSolver<ST>::SolvingResult
-CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) noexcept {
+CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) {
     m_statistics.printStatisticsDescription(std::cout);
     m_statistics.registerSolvingStart();
     OnExitScope updateStatsOnExit{[this]() {
