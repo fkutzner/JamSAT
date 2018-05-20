@@ -21,12 +21,12 @@ not being a descendant of [Minisat](http://minisat.se),
 this solver is heavily influenced by Minisat,
 [Glucose](http://www.labri.fr/perso/lsimon/glucose/) and
 the [Candy Kingdom](https://github.com/Udopia/candy-kingdom).
-Hence, the marmalade-themed name.
+Hence the marmalade-themed name.
 
 JamSAT is a relatively young SAT solver as well as a side
 project, so some important
-features are not implemented yet. See the section about
-its [implementation status](#implementation-status).
+features are not implemented yet. The [implementation status](#implementation-status)
+section contains a summary of its capabilities.
 
 
 ## Supported Platforms and Ecosystems
@@ -51,7 +51,7 @@ use JamSAT in client applications.
 ## Building JamSAT
 
 The following prerequisites must be present on your system:
-* CMake (at leat version 3.2.2)
+* CMake (at least version 3.2.2)
 * a C++ compiler with C++14 support
 * [Boost](https://www.boost.org) (at least version 1.57)
 * [zlib](https://github.com/madler/zlib)
@@ -75,7 +75,7 @@ cmake --build . --target install
 
 _Note for Windows builds_: You'll need to pass the path
 to Boost and the zlib installation to the first `cmake`
-invocation as well. See the [AppVeyor configuration](.appveyor.yml)
+invocation as well. See the [AppVeyor configuration](appveyor.yml)
 for a build recipe.
 
 ### Building with tests
@@ -102,7 +102,7 @@ will be placed in the directory
 `artifacts/bin/barecdclsolver_fuzzer-fuzzer-findings`.
 
 See the [Travis CI build script](etc/TravisBuild.sh) or
-[AppVeyor configuration](.appveyor.yml) for a more detailed
+[AppVeyor configuration](appveyor.yml) for a more detailed
 description of building with testing enabled.
 
 ### Build Options
@@ -133,7 +133,7 @@ The JamSAT build produces three artifacts:
 ### Capabilities
 
 | Capability              | Status    |
-| ----------------------- | --------- |
+| ----------------------- | :-------: |
 | Incremental SAT solving | Supported |
 | Preprocessing           | TODO      |
 | Inprocessing            | TODO      |
@@ -144,7 +144,7 @@ The JamSAT build produces three artifacts:
 ### IPASIR Implementation Status
 
 | Function | Status |
-| -------- | ------ |
+| -------- | :----: |
 | ipasir_signature | Supported |
 | ipasir_init | Supported |
 | ipasir_release | Supported |
