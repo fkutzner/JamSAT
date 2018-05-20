@@ -48,6 +48,8 @@ option(JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB "Enables symbol hiding for the 
 
 option(JAMSAT_DISABLE_FRONTEND "Disables building the standalone JamSAT executable." OFF)
 
+option(JAMSAT_ENABLE_TESTING "Enable building the JamSAT test suite." OFF)
+
 ### Load CMake code
 
 include(etc/cmake/Platform.cmake) # Defines COMPILING_WITH_* and PLATFORM_SUPPORTS_* variables
@@ -222,9 +224,10 @@ add_subdirectory(src)
 
 ### Enable testing
 
-enable_testing()
-add_subdirectory(testsrc)
-
+if(JAMSAT_ENABLE_TESTING)
+  enable_testing()
+  add_subdirectory(testsrc)
+endif()
 
 ### Auxiliary targets
 
