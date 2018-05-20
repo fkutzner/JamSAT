@@ -47,7 +47,7 @@ inline void setLoggingStartEpoch(uint64_t epoch) {
 #define JAM_LOG(level, category, message)                                                          \
     do {                                                                                           \
         if (::jamsat::detail_logger::currentEpoch >= ::jamsat::detail_logger::startLoggingEpoch) { \
-            BOOST_LOG_TRIVIAL(level) << "[" << category << "]" << message;                         \
+            BOOST_LOG_TRIVIAL(level) << "[" << category << "] " << message;                        \
         }                                                                                          \
     } while (0)
 
