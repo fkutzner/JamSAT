@@ -86,6 +86,8 @@ public:
      * \param element   The value to be inserted. `element` must not be larger
      *                  (wrt. KIndex) than the current maximal element.
      *
+     * If `element` is already contained in the heap, no insertion is performed.
+     *
      * \par Complexity
      * Worst case: `O(log(size()))`
      */

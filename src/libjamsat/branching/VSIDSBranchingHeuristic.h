@@ -43,9 +43,9 @@ namespace detail {
 
 class CNFVarActivityOrder {
 public:
-    explicit CNFVarActivityOrder(CNFVar maxVar) : m_activity(maxVar){};
+    explicit CNFVarActivityOrder(CNFVar maxVar) : m_activity(maxVar) {}
 
-    bool operator()(CNFVar lhs, CNFVar rhs) const noexcept {
+    auto operator()(CNFVar lhs, CNFVar rhs) const noexcept -> bool {
         JAM_ASSERT(lhs.getRawValue() < static_checked_cast<CNFVar::RawVariable>(m_activity.size()),
                    "Index out of bounds");
         JAM_ASSERT(rhs.getRawValue() < static_checked_cast<CNFVar::RawVariable>(m_activity.size()),
@@ -54,7 +54,7 @@ public:
         return m_activity[lhs] < m_activity[rhs];
     }
 
-    BoundedMap<CNFVar, double> &getActivityMap() noexcept { return m_activity; }
+    auto getActivityMap() noexcept -> BoundedMap<CNFVar, double> & { return m_activity; }
 
     void increaseMaxSizeTo(CNFVar newMaxElement) { m_activity.increaseSizeTo(newMaxElement); }
 
@@ -89,7 +89,7 @@ public:
      * \param assignmentProvider  A reference to an object using which the current
      * variable assignment can be obtained.
      */
-    VSIDSBranchingHeuristic(CNFVar maxVar, const AssignmentProvider &assignmentProvider);
+    VSIDSBranchingHeuristic(CNFVar maxVar, AssignmentProvider const &assignmentProvider);
 
     /**
      * \brief Informs the branching heuristic that the given variable was
@@ -112,7 +112,7 @@ public:
      * assign \p v to the value corresponding to \p s as a branching decision.
      * Otherwise, CNFLit::getUndefinedLiteral() is returned.
      */
-    CNFLit pickBranchLiteral() noexcept;
+    auto pickBranchLiteral() noexcept -> CNFLit;
 
     /**
      * \brief Resets the record of branching decisions.
@@ -160,7 +160,7 @@ public:
      *
      * \returns The specified activity delta.
      */
-    double getActivityBumpDelta() const noexcept;
+    auto getActivityBumpDelta() const noexcept -> double;
 
     /**
      * \brief Increases the maximum variable known to occur in the SAT problem to be solved.
@@ -171,12 +171,7 @@ public:
     void increaseMaxVarTo(CNFVar newMaxVar);
 
 private:
-    void scaleDownActivities();
-
-    void addToActivityHeap(CNFVar var);
-    bool isInActivityHeap(CNFVar var) const noexcept;
-    CNFVar popFromActivityHeap();
-
+    void scaleDownActivities() noexcept;
 
     using VariableHeap = BinaryMaxHeap<CNFVar, detail::CNFVarActivityOrder>;
     VariableHeap m_variableOrder;
@@ -192,40 +187,24 @@ private:
 
 template <class AssignmentProvider>
 VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
-    CNFVar maxVar, const AssignmentProvider &assignmentProvider)
+    CNFVar maxVar, AssignmentProvider const &assignmentProvider)
   : BranchingHeuristicBase(maxVar)
   , m_variableOrder(maxVar)
   , m_assignmentProvider(assignmentProvider)
-  , m_activityBumpDelta(1.0f)
-  , m_decayRate(0.8f)
-  , m_maxDecayRate(0.95f)
+  , m_activityBumpDelta(1.0)
+  , m_decayRate(0.8)
+  , m_maxDecayRate(0.95)
   , m_numberOfConflicts(0) {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
     reset();
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::addToActivityHeap(CNFVar var) {
-    JAM_ASSERT(!isInActivityHeap(var), "Argument var already present in the activity heap");
-    m_variableOrder.insert(var);
-}
-
-template <class AssignmentProvider>
-bool VSIDSBranchingHeuristic<AssignmentProvider>::isInActivityHeap(CNFVar var) const noexcept {
-    return m_variableOrder.contains(var);
-}
-
-template <class AssignmentProvider>
-CNFVar VSIDSBranchingHeuristic<AssignmentProvider>::popFromActivityHeap() {
-    JAM_ASSERT(!m_variableOrder.empty(), "Can't pop from an empty heap");
-    return m_variableOrder.removeMax();
-}
-
-template <class AssignmentProvider>
-CNFLit VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept {
+auto VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept -> CNFLit {
     CNFVar branchingVar = CNFVar::getUndefinedVariable();
     while (!m_variableOrder.empty()) {
-        branchingVar = popFromActivityHeap();
+        JAM_ASSERT(!m_variableOrder.empty(), "Out of variables to pick for branching");
+        branchingVar = m_variableOrder.removeMax();
         if (!isDeterminate(m_assignmentProvider.getAssignment(branchingVar)) &&
             isEligibleForDecisions(branchingVar)) {
             CNFSign sign = static_cast<CNFSign>(
@@ -247,13 +226,13 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(CNFVar variable
         scaleDownActivities();
     }
 
-    if (isInActivityHeap(variable)) {
+    if (m_variableOrder.contains(variable)) {
         m_variableOrder.increasingUpdate(variable);
     }
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() {
+void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() noexcept {
     auto &activityMap = m_variableOrder.getComparator().getActivityMap();
     for (size_t i = 0; i < activityMap.size(); ++i) {
         auto rawVariable = static_checked_cast<CNFVar::RawVariable>(i);
@@ -269,17 +248,13 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept {
     auto &activityMap = m_variableOrder.getComparator().getActivityMap();
     CNFVar max = CNFVar{static_checked_cast<CNFVar::RawVariable>(activityMap.size())};
     for (CNFVar i = CNFVar{0}; i < max; i = nextCNFVar(i)) {
-        if (!isInActivityHeap(i)) {
-            addToActivityHeap(i);
-        }
+        m_variableOrder.insert(i);
     }
 }
 
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset(CNFVar variable) noexcept {
-    if (!isInActivityHeap(variable)) {
-        addToActivityHeap(variable);
-    }
+    m_variableOrder.insert(variable);
 }
 
 template <class AssignmentProvider>
@@ -288,7 +263,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::setActivityBumpDelta(double de
 }
 
 template <class AssignmentProvider>
-double VSIDSBranchingHeuristic<AssignmentProvider>::getActivityBumpDelta() const noexcept {
+auto VSIDSBranchingHeuristic<AssignmentProvider>::getActivityBumpDelta() const noexcept -> double {
     return m_activityBumpDelta;
 }
 
@@ -320,7 +295,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::increaseMaxVarTo(CNFVar newMax
 
     for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
         activityMap[i] = 0.0f;
-        addToActivityHeap(i);
+        m_variableOrder.insert(i);
     }
 }
 }
