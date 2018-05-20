@@ -23,10 +23,13 @@ this solver is heavily influenced by Minisat,
 the [Candy Kingdom](https://github.com/Udopia/candy-kingdom).
 Hence the marmalade-themed name.
 
-JamSAT is a relatively young SAT solver as well as a side
-project, so some important
-features are not implemented yet. The [implementation status](#implementation-status)
+Being a relatively young SAT solver as well as a side
+project, JamSAT is yet missing some important
+features. The [implementation status](#implementation-status)
 section contains a summary of its capabilities.
+
+JamSAT is free software distributed under the [MIT license](LICENSE)
+(X11 variant).
 
 
 ## Supported Platforms and Ecosystems
@@ -45,7 +48,9 @@ A compiler supporting C++14 is required to build JamSAT.
 JamSAT integrates nicely with [CMake](http://cmake.org) projects.
 The repository
 contains an [example](examples/ipasirclient) showing how to
-use JamSAT in client applications.
+use JamSAT in client applications. Support for
+[pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/)
+is planned, but not yet implemented.
 
 
 ## Building JamSAT
