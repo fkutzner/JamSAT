@@ -1,6 +1,6 @@
-|        Linux        |       Windows       |       Coverage       |     Metrics      |
-|:-------------------:|:-------------------:|:--------------------:|:----------------:|
-| [![travisCI][1]][2] | [![appveyor][3]][4] | [![coveralls][5]][6] | [![tokei][7]][8] |
+|        Linux        |       Windows       |      Test Coverage       |     SonarSource        |       Size        |
+|:-------------------:|:-------------------:|:------------------------:|:----------------------:|:-----------------:|
+| [![travisCI][1]][2] | [![appveyor][3]][4] | [![coveralls][5]][6]     | [![sonarsource][7]][8] | [![tokei][9]][10] |
 
 [1]: https://travis-ci.org/fkutzner/JamSAT.svg?branch=master
 [2]: https://travis-ci.org/fkutzner/JamSAT
@@ -8,8 +8,10 @@
 [4]: https://ci.appveyor.com/project/fkutzner/jamsat/branch/master
 [5]: https://coveralls.io/repos/github/fkutzner/JamSAT/badge.svg?branch=master
 [6]: https://coveralls.io/github/fkutzner/JamSAT?branch=master
-[7]: https://tokei.rs/b1/github/fkutzner/JamSAT?category=code
-[8]: https://github.com/Aaronepower/tokei#badges
+[7]: https://sonarcloud.io/api/project_badges/measure?project=jamsat&metric=alert_status
+[8]: https://sonarcloud.io/dashboard?id=jamsat
+[9]: https://tokei.rs/b1/github/fkutzner/JamSAT?category=code
+[10]: https://github.com/Aaronepower/tokei#badges
 
 # JamSAT
 
