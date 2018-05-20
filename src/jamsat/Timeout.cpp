@@ -35,10 +35,10 @@ class TimeoutContext {
 public:
     using TimeUnit = std::chrono::seconds;
 
-    TimeoutContext(TimeUnit timeout)
+    explicit TimeoutContext(TimeUnit timeout) noexcept
       : m_start(std::chrono::system_clock::now()), m_timeout(timeout) {}
 
-    auto isTimeout() -> bool {
+    auto isTimeout() const noexcept -> bool {
         auto now = decltype(m_start)::clock::now();
         auto elapsed = now - m_start;
         return std::chrono::duration_cast<TimeUnit>(elapsed) >= m_timeout;

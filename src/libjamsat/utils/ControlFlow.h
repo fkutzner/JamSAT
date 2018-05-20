@@ -89,5 +89,7 @@ private:
  *
  * \ingroup JamSAT_Utils
  */
-inline void noOp() noexcept {}
+inline void noOp() noexcept {
+    // deliberately does nothing
+}
 }

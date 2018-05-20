@@ -45,7 +45,7 @@ namespace jamsat {
 namespace {
 class GZFileResource {
 public:
-    GZFileResource(char const *location) {
+    explicit GZFileResource(char const *location) {
         m_file = (std::string{location} == "-") ? gzdopen(0, "rb") : gzopen(location, "rb");
         if (m_file == nullptr) {
             std::perror(location);
@@ -59,7 +59,7 @@ public:
         }
     }
 
-    auto getFile() -> gzFile { return m_file; }
+    auto getFile() noexcept -> gzFile { return m_file; }
 
 private:
     gzFile m_file;
@@ -111,8 +111,8 @@ auto readCharFromGzFile(gzFile file) -> char {
  *                                  a newline symbol has been read.
  */
 void skipLine(gzFile file) {
-    while (readCharFromGzFile(file) != '\n') {
-    }
+    while (readCharFromGzFile(file) != '\n')
+        ;
 }
 
 /**
