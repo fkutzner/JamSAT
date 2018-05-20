@@ -13,6 +13,8 @@
 
 # JamSAT
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9e68cb1a29c94839a5456c6d75d6b6b0)](https://app.codacy.com/app/fkutzner/JamSAT?utm_source=github.com&utm_medium=referral&utm_content=fkutzner/JamSAT&utm_campaign=badger)
+
 JamSAT is a fast, clean incremental
 [SAT](https://en.wikipedia.org/wiki/Boolean_satisfiability_problem)
 solver implementing the
