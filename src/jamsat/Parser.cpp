@@ -41,6 +41,11 @@
 #include <zlib.h>
 
 namespace jamsat {
+
+CNFParserError::CNFParserError(std::string const &what) : std::runtime_error(what) {}
+
+CNFParserError::~CNFParserError() {}
+
 namespace {
 class GZFileResource {
 public:
@@ -48,7 +53,7 @@ public:
         m_file = (std::string{location} == "-") ? gzdopen(0, "rb") : gzopen(location, "rb");
         if (m_file == nullptr) {
             std::perror(location);
-            throw std::runtime_error{"Could not open input file."};
+            throw CNFParserError{"Could not open input file."};
         }
     }
 
@@ -80,7 +85,7 @@ struct DIMACSHeader {
  *
  * \param[in] file                  The file from which the character shall be read.
  *
- * \throws std::runtime_error       An I/O or parsing error has occured while
+ * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file, or EOF has been reached.
  */
 auto readCharFromGzFile(gzFile file) -> char {
@@ -88,11 +93,11 @@ auto readCharFromGzFile(gzFile file) -> char {
     int charsRead = gzread(file, &character, 1);
     if (charsRead <= 0) {
         if (gzeof(file)) {
-            throw std::runtime_error{"Syntax error: unexpected end of input file"};
+            throw CNFParserError{"Syntax error: unexpected end of input file"};
         } else {
             int errnum = 0;
             char const *message = gzerror(file, &errnum);
-            throw std::runtime_error{message};
+            throw CNFParserError{message};
         }
     }
     return character;
@@ -105,7 +110,7 @@ auto readCharFromGzFile(gzFile file) -> char {
  *
  * \param[in] file                  The file from which the line shall be read.
  *
- * \throws std::runtime_error       An I/O or parsing error has occured while
+ * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file, or EOF has been reached before
  *                                  a newline symbol has been read.
  */
@@ -122,7 +127,7 @@ void skipLine(gzFile file) {
  * \param[in] file                  The file from which the line shall be read.
  * \returns                         The line read from \p file.
  *
- * \throws std::runtime_error       An I/O or parsing error has occured while
+ * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file, or EOF has been reached.
  */
 auto readLine(gzFile file) -> std::string {
@@ -144,7 +149,7 @@ auto readLine(gzFile file) -> std::string {
  *                                  The file is advanced just beyond the header line.
  * \return problemHeader            The problem file's DIMACS header.
  *
- * \throws std::runtime_error       An I/O or parsing error has occured while
+ * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file.
  */
 auto readHeader(gzFile file) -> DIMACSHeader {
@@ -157,7 +162,7 @@ auto readHeader(gzFile file) -> DIMACSHeader {
     // The comment block should be immediately followed by the
     // problem description line, starting with 'p'
     if (lineBegin != 'p') {
-        throw std::runtime_error{"Syntax error: missing problem description line"};
+        throw CNFParserError{"Syntax error: missing problem description line"};
     }
 
     // Expected: p cnf <NumVars> <NumClauses>
@@ -167,19 +172,19 @@ auto readHeader(gzFile file) -> DIMACSHeader {
     std::string cnfToken;
     headerStream >> cnfToken;
     if (headerStream.fail() || cnfToken != "cnf") {
-        throw std::runtime_error{"Syntax error: malformed problem description line"};
+        throw CNFParserError{"Syntax error: malformed problem description line"};
     }
 
     uint32_t numVariables = 0;
     headerStream >> numVariables;
     if (headerStream.fail()) {
-        throw std::runtime_error{"Syntax error: malformed problem description line"};
+        throw CNFParserError{"Syntax error: malformed problem description line"};
     }
 
     uint32_t numClauses = 0;
     headerStream >> numClauses;
     if (headerStream.fail()) {
-        throw std::runtime_error{"Syntax error: malformed problem description line"};
+        throw CNFParserError{"Syntax error: malformed problem description line"};
     }
 
     return DIMACSHeader{numVariables, numClauses};
@@ -195,7 +200,7 @@ auto readHeader(gzFile file) -> DIMACSHeader {
  * \param[in] buffer                The target buffer.
  * \return                          The amount of bytes read.
  *
- * \throws std::runtime_error       An I/O error has occured while reading \p file.
+ * \throws CNFParserError           An I/O error has occured while reading \p file.
  *
  * readChunk reads \p preferredChunkSize characters from \p file into \p buffer
  * (with the first character written to the first position of \p buffer) and
@@ -230,7 +235,7 @@ auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char> &
     if (bytesRead <= 0) {
         int errnum = 0;
         char const *message = gzerror(file, &errnum);
-        throw std::runtime_error{message};
+        throw CNFParserError{message};
     }
 
     if (std::isspace(buffer.back()) == 0) {
@@ -248,7 +253,7 @@ auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char> &
                 } else {
                     int errnum = 0;
                     char const *message = gzerror(file, &errnum);
-                    throw std::runtime_error{message};
+                    throw CNFParserError{message};
                 }
             }
 
@@ -273,7 +278,7 @@ auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char> &
  *                                  string-representation of integers.
  * \param[in] problemHeader         The problem file's DIMACS header.
  *
- * \throws std::runtime_error       An I/O or parsing error has occured while
+ * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file.
  */
 void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
@@ -292,14 +297,14 @@ void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
 
             if (errno == ERANGE && (literal == std::numeric_limits<long>::min() ||
                                     literal == std::numeric_limits<long>::max())) {
-                throw std::runtime_error{"Literal out of range"};
+                throw CNFParserError{"Literal out of range"};
             }
 
             // Don't check for ERANGE error, instead directly check if
             // the literal fits in the range of int:
             if (literal < std::numeric_limits<int>::min() ||
                 literal > std::numeric_limits<int>::max()) {
-                throw std::runtime_error{"Literal out of range"};
+                throw CNFParserError{"Literal out of range"};
             }
 
             if (cursor == endCursor) {
@@ -307,8 +312,8 @@ void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
                 // is blank or contains something that cannot be parsed as a long.
                 for (auto c = cursor; cursor < end; ++cursor) {
                     if (std::isspace(*c) == 0) {
-                        throw std::runtime_error{"Syntax error: invalid character with code " +
-                                                 std::to_string(*c)};
+                        throw CNFParserError{"Syntax error: invalid character with code " +
+                                             std::to_string(*c)};
                     }
                 }
 
@@ -327,8 +332,8 @@ void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
 
     if (effectiveClauses != problemHeader.m_numClauses) {
         std::string moreFewer = (effectiveClauses < problemHeader.m_numClauses) ? "fewer" : "more";
-        throw std::runtime_error{"Error: input file contains " + moreFewer +
-                                 " clauses than specified in the DIMACS header"};
+        throw CNFParserError{"Error: input file contains " + moreFewer +
+                             " clauses than specified in the DIMACS header"};
     }
 }
 }

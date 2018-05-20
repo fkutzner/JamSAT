@@ -26,9 +26,16 @@
 
 #pragma once
 
+#include <stdexcept>
 #include <string>
 
 namespace jamsat {
+class CNFParserError : public std::runtime_error {
+public:
+    explicit CNFParserError(std::string const &what);
+    virtual ~CNFParserError();
+};
+
 /**
  * \brief Reads a CNF problem instance from the given (possibly gz-compressed)
  * file and adds it to an IPASIR solver.
@@ -42,7 +49,7 @@ namespace jamsat {
  * \param[in] msgStream             The stream to which logging messages shall be
  *                                  printed.
  *
- * \throws std::runtime_error       An I/O or parsing error has occured while
+ * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file.
  */
 void readProblem(void *solver, std::string const &location, std::ostream &msgStream);
