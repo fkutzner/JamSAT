@@ -310,7 +310,7 @@ void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
             if (cursor == endCursor) {
                 // No conversion could be perfomed. Possible reasons: the string
                 // is blank or contains something that cannot be parsed as a long.
-                for (auto c = cursor; cursor < end; ++cursor) {
+                for (char *c = cursor; cursor < end; ++cursor) {
                     if (std::isspace(*c) == 0) {
                         throw CNFParserError{"Syntax error: invalid character with code " +
                                              std::to_string(*c)};

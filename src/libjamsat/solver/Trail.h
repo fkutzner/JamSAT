@@ -406,12 +406,10 @@ auto Trail<ClauseT>::getPhase(CNFVar variable) const noexcept -> TBool {
 template <typename ClauseT>
 void Trail<ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
 #if defined(JAM_ASSERT_ENABLED)
-    {
-        auto oldMaxVarRaw = m_assignments.size() - 1;
-        JAM_ASSERT(newMaxVar.getRawValue() >= oldMaxVarRaw,
-                   "Argument newMaxVar must not be smaller than the previous maximum variable");
-        JAM_ASSERT(isRegular(newMaxVar), "The new maximum variable must be a regular variable.");
-    }
+    auto oldMaxVarRaw = m_assignments.size() - 1;
+    JAM_ASSERT(newMaxVar.getRawValue() >= oldMaxVarRaw,
+               "Argument newMaxVar must not be smaller than the previous maximum variable");
+    JAM_ASSERT(isRegular(newMaxVar), "The new maximum variable must be a regular variable.");
 #endif
 
     auto amountNewVariables = newMaxVar.getRawValue() + 1 - m_assignments.size();
