@@ -25,7 +25,7 @@
 cmake_minimum_required(VERSION 3.2.2)
 cmake_policy(VERSION 3.2.2)
 
-project(JamSAT VERSION 0.1.0)
+project(JamSAT VERSION 0.2.0)
 
 ### Options
 
