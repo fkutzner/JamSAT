@@ -31,7 +31,7 @@
 #include <toolbox/testutils/RangeUtils.h>
 
 namespace jamsat {
-using TrivialClause = TestAssignmentProvider::Clause;
+using TrivialClause = jamsat::TestAssignmentProvider::Clause;
 
 TEST(UnitSolver, propagateWithoutClausesIsNoop) {
     TestAssignmentProvider assignments;
@@ -512,6 +512,112 @@ TEST(UnitSolver, binaryClausesCanBeQueriedInPropagation) {
     auto binariesWithPLit4 = binaryMap[lit4];
     ASSERT_EQ(binariesWithPLit4.size(), 1ULL);
     EXPECT_EQ(*(binariesWithPLit4.begin()), ~lit2);
+}
+
+namespace {
+void test_shortenedClausesArePropagatedCorrectly(bool withChangeInWatchedLits,
+                                                 bool shortenedBeforeFirstPropagation) {
+    CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    CNFLit lit4{CNFVar{4}, CNFSign::NEGATIVE};
+    CNFLit lit5{CNFVar{5}, CNFSign::NEGATIVE};
+
+    TrivialClause c1{lit1, lit2, lit3, lit4};
+    TrivialClause c2{lit1, lit2, lit4, lit5};
+
+    TestAssignmentProvider assignments;
+    CNFVar maxVar{5};
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+
+    underTest.registerClause(c1);
+    underTest.registerClause(c2);
+
+    if (shortenedBeforeFirstPropagation) {
+        underTest.notifyClauseModificationAhead(c1);
+        c1.resize(3);
+        if (withChangeInWatchedLits) {
+            std::swap(c1[1], c1[2]);
+        }
+    }
+
+    assignments.addAssignment(~lit1);
+    auto conflict = underTest.propagateUntilFixpoint(~lit1);
+    ASSERT_EQ(conflict, nullptr);
+
+    if (!shortenedBeforeFirstPropagation) {
+        underTest.notifyClauseModificationAhead(c1);
+        c1.resize(3);
+        if (withChangeInWatchedLits) {
+            std::swap(c1[1], c1[2]);
+        }
+    }
+
+    assignments.addAssignment(~lit2);
+    conflict = underTest.propagateUntilFixpoint(~lit2);
+    ASSERT_EQ(conflict, nullptr);
+
+    // The shortened clause now forces the assignment of lit3:
+    EXPECT_EQ(assignments.getAssignment(lit3), TBools::TRUE);
+
+    // Check that c2 remains unchanged:
+    assignments.addAssignment(~lit4);
+    conflict = underTest.propagateUntilFixpoint(~lit4);
+    ASSERT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit5), TBools::TRUE);
+}
+}
+
+TEST(UnitSolver,
+     shortenedClausesArePropagatedCorrectly_noChangeInWatchedLits_shortenedAfterRegistration) {
+    test_shortenedClausesArePropagatedCorrectly(false, true);
+}
+
+TEST(UnitSolver,
+     shortenedClausesArePropagatedCorrectly_noChangeInWatchedLits_shortenedAfterPropagation) {
+    test_shortenedClausesArePropagatedCorrectly(false, false);
+}
+
+TEST(UnitSolver,
+     shortenedClausesArePropagatedCorrectly_withChangeInWatchedLits_shortenedAfterRegistration) {
+    test_shortenedClausesArePropagatedCorrectly(true, true);
+}
+
+TEST(UnitSolver,
+     shortenedClausesArePropagatedCorrectly_withChangeInWatchedLits_shortenedAfterPropagation) {
+    test_shortenedClausesArePropagatedCorrectly(true, true);
+}
+
+TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary) {
+    CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    CNFLit lit4{CNFVar{4}, CNFSign::NEGATIVE};
+    CNFLit lit5{CNFVar{5}, CNFSign::NEGATIVE};
+
+    TrivialClause c1{lit1, lit2, lit3, lit4};
+    TrivialClause c2{lit1, ~lit2, lit4, lit5};
+
+    TestAssignmentProvider assignments;
+    CNFVar maxVar{5};
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+
+    underTest.registerClause(c1);
+    underTest.registerClause(c2);
+
+    underTest.notifyClauseModificationAhead(c1);
+    c1.resize(2);
+
+    assignments.addAssignment(~lit1);
+    auto conflict = underTest.propagateUntilFixpoint(~lit1);
+    ASSERT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit2), TBools::TRUE);
+
+    // Check that c2 remains unchanged:
+    assignments.addAssignment(~lit4);
+    conflict = underTest.propagateUntilFixpoint(~lit4);
+    ASSERT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit5), TBools::TRUE);
 }
 
 // TODO: test watcher restoration

@@ -254,9 +254,28 @@ public:
      */
     uint64_t getCurrentAmountOfUnpropagatedAssignments() const noexcept;
 
+    /**
+     * \brief Notifies the propagation system that a clause will have been
+     * modified before the next propagation.
+     *
+     * For a clause `C`, this method needs to be called when the set of literals
+     * contained in `C` will change before the next propagation.
+     *
+     * This method must also be called if `C` is about to be deleted and shall
+     * not be taken into account during the next propagation.
+     *
+     * @param clause  A clause that is currently registered with the propagation
+     *                system and contains at least three literals. If the set of
+     *                literals contained in `clause` will be different than
+     *                at the last propagation rsp. registration of `clause`, this
+     *                method must be called before the modification takes place.
+     */
+    void notifyClauseModificationAhead(ClauseT const &clause) noexcept;
+
 private:
     ClauseT *propagateBinaries(CNFLit toPropagate, size_t &amountOfNewFacts);
     ClauseT *registerClause(ClauseT &clause, bool autoPropagate);
+    void cleanupWatchers(CNFLit lit);
 
     AssignmentProvider &m_assignmentProvider;
     detail_propagation::Watchers<ClauseT> m_binaryWatchers;
@@ -281,6 +300,16 @@ private:
      * m_watchers.getWatchers(C[1]) each contain a watcher pointing to C.
      */
     detail_propagation::Watchers<ClauseT> m_watchers;
+
+    /**
+     * \internal
+     *
+     * A flag-map for CNFLit marking literals for which the corresponding
+     * watch-lists must be updated, i.e remove clauses scheduled for
+     * deletion, rewrite watchers out of sync with their clause (i.e. first
+     * or second literal has been changed)
+     */
+    BoundedMap<CNFLit, char> m_watcherUpdateRequired;
 };
 
 /********** Implementation ****************************** */
@@ -291,7 +320,8 @@ Propagation<AssignmentProvider, ClauseT>::Propagation(CNFVar maxVar,
   : m_assignmentProvider(assignmentProvider)
   , m_binaryWatchers(maxVar)
   , m_unpropagatedStats(0ULL)
-  , m_watchers(maxVar) {
+  , m_watchers(maxVar)
+  , m_watcherUpdateRequired(getMaxLit(maxVar)) {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
 
@@ -433,6 +463,11 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
     JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
     amountOfNewFacts = 0;
 
+    // TODO: check if the literal is dirty, and clean up the watchers
+    if (m_watcherUpdateRequired[~toPropagate] != 0) {
+        cleanupWatchers(~toPropagate);
+    }
+
     if (ClauseT *conflict = propagateBinaries(toPropagate, amountOfNewFacts)) {
         return conflict;
     }
@@ -537,6 +572,7 @@ void Propagation<AssignmentProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     m_watchers.increaseMaxVarTo(newMaxVar);
     m_binaryWatchers.increaseMaxVarTo(newMaxVar);
+    m_watcherUpdateRequired.increaseSizeTo(getMaxLit(newMaxVar));
 }
 
 template <class AssignmentProvider, class ClauseT>
@@ -589,5 +625,47 @@ template <class AssignmentProvider, class ClauseT>
 auto Propagation<AssignmentProvider, ClauseT>::getCurrentAmountOfUnpropagatedAssignments() const
     noexcept -> uint64_t {
     return m_unpropagatedStats;
+}
+
+template <class AssignmentProvider, class ClauseT>
+void Propagation<AssignmentProvider, ClauseT>::notifyClauseModificationAhead(
+    ClauseT const &clause) noexcept {
+    JAM_ASSERT(clause.size() >= 3, "Can't modify clauses with size <= 2");
+    m_watcherUpdateRequired[clause[0]] = 1;
+    m_watcherUpdateRequired[clause[1]] = 1;
+}
+
+template <class AssignmentProvider, class ClauseT>
+void Propagation<AssignmentProvider, ClauseT>::cleanupWatchers(CNFLit lit) {
+    // This is not implemented as a detail of the watcher data structure
+    // since watchers may be moved from the "regular" watchers to the binary
+    // ones.
+    // Since notifyClauseModificationAhead() may not be called for binary
+    // clauses, it is sufficient to traverse the non-binary watchers.
+
+    auto watcherListTraversal = m_watchers.getWatchers(lit);
+    while (!watcherListTraversal.hasFinishedTraversal()) {
+        WatcherType currentWatcher = *watcherListTraversal;
+        ClauseT &clause = currentWatcher.getClause();
+
+        // TODO: clause deletion
+
+        JAM_ASSERT(clause.size() >= 2,
+                   "Clauses shrinked to size 1 must be removed from propagation");
+        if (clause.size() == 2) {
+            // The clause has become a binary clause ~> move to binary watchers
+            m_binaryWatchers.addWatcher(lit, currentWatcher);
+            watcherListTraversal.removeCurrent();
+        } else if (clause[currentWatcher.getIndex()] != lit) {
+            // The clause has been modified externally and this watcher watches
+            // the wrong literal ~> move the watcher
+            m_watchers.addWatcher(clause[currentWatcher.getIndex()], currentWatcher);
+            watcherListTraversal.removeCurrent();
+        } else {
+            ++watcherListTraversal;
+        }
+    }
+    watcherListTraversal.finishedTraversal();
+    m_watcherUpdateRequired[lit] = 0;
 }
 }
