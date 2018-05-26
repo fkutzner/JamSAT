@@ -37,11 +37,34 @@
 #include <vector>
 
 namespace jamsat {
+
+class TestAssignmentProviderClause : public std::vector<CNFLit> {
+public:
+    enum class Flag : uint32_t { SCHEDULED_FOR_DELETION = 1 };
+
+    TestAssignmentProviderClause() : std::vector<CNFLit>{}, m_flags(0) {}
+    TestAssignmentProviderClause(std::initializer_list<CNFLit> lits)
+      : std::vector<CNFLit>{lits}, m_flags(0) {}
+
+    void setFlag(Flag flag) noexcept { m_flags |= static_cast<std::underlying_type_t<Flag>>(flag); }
+
+    void clearFlag(Flag flag) noexcept {
+        m_flags &= ~(static_cast<std::underlying_type_t<Flag>>(flag));
+    }
+
+    bool getFlag(Flag flag) const noexcept {
+        return (m_flags & static_cast<std::underlying_type_t<Flag>>(flag)) != 0;
+    }
+
+private:
+    uint32_t m_flags;
+};
+
 class TestAssignmentProvider {
 public:
     using DecisionLevel = size_t;
     using size_type = BoundedStack<CNFLit>::size_type;
-    using Clause = std::vector<CNFLit>;
+    using Clause = TestAssignmentProviderClause;
 
     TestAssignmentProvider();
 

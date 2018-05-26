@@ -648,11 +648,11 @@ void Propagation<AssignmentProvider, ClauseT>::cleanupWatchers(CNFLit lit) {
         WatcherType currentWatcher = *watcherListTraversal;
         ClauseT &clause = currentWatcher.getClause();
 
-        // TODO: clause deletion
-
         JAM_ASSERT(clause.size() >= 2,
                    "Clauses shrinked to size 1 must be removed from propagation");
-        if (clause.size() == 2) {
+        if (clause.getFlag(ClauseT::Flag::SCHEDULED_FOR_DELETION) == true) {
+            watcherListTraversal.removeCurrent();
+        } else if (clause.size() == 2) {
             // The clause has become a binary clause ~> move to binary watchers
             m_binaryWatchers.addWatcher(lit, currentWatcher);
             watcherListTraversal.removeCurrent();

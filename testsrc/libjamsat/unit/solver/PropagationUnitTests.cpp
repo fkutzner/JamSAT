@@ -620,5 +620,43 @@ TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary) {
     EXPECT_EQ(assignments.getAssignment(lit5), TBools::TRUE);
 }
 
+TEST(UnitSolver, deletedClausesAreRemovedFromPropagationAfterAnnounce) {
+    CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    CNFLit lit4{CNFVar{4}, CNFSign::NEGATIVE};
+    CNFLit lit5{CNFVar{5}, CNFSign::NEGATIVE};
+
+    TrivialClause c1{lit1, lit2, lit3};
+    TrivialClause c2{lit1, lit2, lit4, lit5};
+
+    TestAssignmentProvider assignments;
+    CNFVar maxVar{5};
+    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+
+    underTest.registerClause(c1);
+    underTest.registerClause(c2);
+
+    underTest.notifyClauseModificationAhead(c1);
+    c1.setFlag(TrivialClause::Flag::SCHEDULED_FOR_DELETION);
+
+    assignments.addAssignment(~lit1);
+    auto conflict = underTest.propagateUntilFixpoint(~lit1);
+    ASSERT_EQ(conflict, nullptr);
+
+    assignments.addAssignment(~lit2);
+    conflict = underTest.propagateUntilFixpoint(~lit2);
+    ASSERT_EQ(conflict, nullptr);
+
+    // c1 should be removed from propagation now:
+    EXPECT_EQ(assignments.getAssignment(lit3), TBools::INDETERMINATE);
+
+    // Check that c2 remains unchanged:
+    assignments.addAssignment(~lit4);
+    conflict = underTest.propagateUntilFixpoint(~lit4);
+    ASSERT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit5), TBools::TRUE);
+}
+
 // TODO: test watcher restoration
 }
