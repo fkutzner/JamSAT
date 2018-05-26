@@ -26,7 +26,6 @@
 
 #include <gtest/gtest.h>
 
-#include <libjamsat/solver/ClauseMarkers.h>
 #include <libjamsat/solver/Watcher.h>
 #include <toolbox/testutils/RangeUtils.h>
 
@@ -266,96 +265,6 @@ TEST(UnitSolver, watchersMaxVarCanBeIncreased) {
     EXPECT_EQ(&((*postAddWatchersFor20).getClause()), &testClause);
     ++postAddWatchersFor20;
     EXPECT_TRUE(postAddWatchersFor20.hasFinishedTraversal());
-}
-
-TEST(UnitSolver, watchersAreNotModifiedWhenEraseIsCalledButNoClauseMarkedToBeDeleted) {
-    CNFLit firstWatchedLiteral{CNFVar{0}, CNFSign::POSITIVE};
-    CNFLit secondWatchedLiteral{CNFVar{1}, CNFSign::POSITIVE};
-    CNFLit thirdLiteral{CNFVar{2}, CNFSign::POSITIVE};
-    TrivialClause testClause{firstWatchedLiteral, secondWatchedLiteral, thirdLiteral};
-
-    TestWatcher watcher1{testClause, secondWatchedLiteral};
-    TestWatcher watcher2{testClause, firstWatchedLiteral};
-
-    TestWatchers underTest{CNFVar{2}};
-    underTest.addWatcher(firstWatchedLiteral, watcher1);
-    underTest.addWatcher(secondWatchedLiteral, watcher2);
-
-    underTest.eraseWatchersToBeDeleted();
-
-    auto traversal1 = underTest.getWatchers(firstWatchedLiteral);
-    EXPECT_EQ(&(traversal1->getClause()), &testClause);
-    ++traversal1;
-    EXPECT_TRUE(traversal1.hasFinishedTraversal());
-
-    auto traversal2 = underTest.getWatchers(secondWatchedLiteral);
-    EXPECT_EQ(&(traversal2->getClause()), &testClause);
-    ++traversal2;
-    EXPECT_TRUE(traversal2.hasFinishedTraversal());
-
-    auto traversal3 = underTest.getWatchers(thirdLiteral);
-    EXPECT_TRUE(traversal3.hasFinishedTraversal());
-}
-
-namespace {
-void addClausesToWatchers(TestWatchers &target, const std::vector<TrivialClause *> clauses) {
-    for (auto clause : clauses) {
-        JAM_ASSERT(clause->size() >= 2, "Can only add clauses with size > 2");
-        TestWatcher w1{*clause, clause->at(1)};
-        TestWatcher w2{*clause, clause->at(0)};
-        target.addWatcher(clause->at(0), w1);
-        target.addWatcher(clause->at(1), w2);
-    }
-}
-}
-
-TEST(UnitSolver, watchersMarkedToBeDeletedAreRemovedByErase) {
-    TrivialClause c1{CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                     CNFLit{CNFVar{2}, CNFSign::POSITIVE}};
-
-    TrivialClause c2{CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
-
-    TestWatchers underTest{CNFVar{5}};
-    addClausesToWatchers(underTest, {&c1, &c2});
-
-    markToBeDeleted(c1);
-    underTest.eraseWatchersToBeDeleted();
-
-    auto traversal1 = underTest.getWatchers(CNFLit{CNFVar{0}, CNFSign::POSITIVE});
-    while (!traversal1.hasFinishedTraversal()) {
-        ASSERT_NE(&(traversal1->getClause()), &c1);
-        ++traversal1;
-    }
-
-    auto traversal2 = underTest.getWatchers(CNFLit{CNFVar{1}, CNFSign::POSITIVE});
-    while (!traversal2.hasFinishedTraversal()) {
-        ASSERT_NE(&(traversal2->getClause()), &c1);
-        ++traversal2;
-    }
-}
-
-TEST(UnitSolver, watchersAreClearedByEraseWhenAllClausesMarkedToBeDeleted) {
-    TrivialClause c1{CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                     CNFLit{CNFVar{2}, CNFSign::POSITIVE}};
-
-    TrivialClause c2{CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
-
-    TestWatchers underTest{CNFVar{5}};
-    addClausesToWatchers(underTest, {&c1, &c2});
-
-    markToBeDeleted(c1);
-    markToBeDeleted(c2);
-    underTest.eraseWatchersToBeDeleted();
-
-    for (CNFVar i = CNFVar{0}; i <= CNFVar{5}; i = nextCNFVar(i)) {
-        CNFLit lit = CNFLit{i, CNFSign::POSITIVE};
-        auto traversal1 = underTest.getWatchers(lit);
-        ASSERT_TRUE(traversal1.hasFinishedTraversal()) << "Watchers for " << lit << " not empty";
-        auto traversal2 = underTest.getWatchers(~lit);
-        ASSERT_TRUE(traversal2.hasFinishedTraversal()) << "Watchers for " << lit << " not empty";
-    }
 }
 
 TEST(UnitSolver, completeWatchersTraversalEmptyWhenNoWatchersExist) {

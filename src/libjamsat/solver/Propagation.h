@@ -131,14 +131,6 @@ public:
     void clear() noexcept;
 
     /**
-     * \brief Removes clauses marked as "to be deleted" from the propagation system.
-     *
-     * Clauses are considered marked "to be deleted" iff they have been passed to
-     * markToBeDeleted().
-     */
-    void eraseClausesToBeDeleted();
-
-    /**
      * \brief Propagates the given fact wrt. the clauses registered in the
      * propagation object, further propagating forced assignments until the
      * variable assignment  reaches a fixpoint.
@@ -538,11 +530,6 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
 template <class AssignmentProvider, class ClauseT>
 void Propagation<AssignmentProvider, ClauseT>::clear() noexcept {
     m_watchers.clear();
-}
-
-template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::eraseClausesToBeDeleted() {
-    m_watchers.eraseWatchersToBeDeleted();
 }
 
 template <class AssignmentProvider, class ClauseT>
