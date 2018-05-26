@@ -35,7 +35,7 @@ auto parseOptions(int argc, char **argv) -> JamSATOptions {
     JamSATOptions result;
 
     std::string timeoutArgPrefix = "--timeout=";
-    for (int i = 1; i < argc - 1; ++i) {
+    for (int i = 1; i < argc; ++i) {
         std::string argument{argv[i]};
         if (argument == "--version") {
             result.m_printVersion = true;
@@ -50,7 +50,7 @@ auto parseOptions(int argc, char **argv) -> JamSATOptions {
             } catch (std::exception &) {
                 throw std::invalid_argument{"Error: invalid timeout value"};
             }
-        } else {
+        } else if (argument.compare(0, 2, "--") == 0) {
             // Not a frontend option ~> pass it to the backend
             result.m_backendOptions.push_back(argument);
         }
