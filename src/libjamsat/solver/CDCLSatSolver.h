@@ -197,10 +197,10 @@ private:
         typename ST::Trail::DecisionLevel backtrackLevel;
     };
 
-    ConflictHandlingResult deriveClause(typename ST::Clause &conflicting,
-                                        typename ST::Clause **learntOut);
+    ConflictHandlingResult deriveLemma(typename ST::Clause &conflicting,
+                                       typename ST::Clause **newLemmaOut);
 
-    void optimizeLearntClause(std::vector<CNFLit> &learntClause);
+    void optimizeLemma(std::vector<CNFLit> &lemma);
 
     void prepareBacktrack(typename ST::Trail::DecisionLevel level);
     void backtrackToLevel(typename ST::Trail::DecisionLevel level);
@@ -221,7 +221,7 @@ private:
     std::vector<CNFLit> m_unitClauses;
     std::vector<typename ST::Clause *> m_problemClauses;
     typename std::vector<typename ST::Clause *>::size_type m_newProblemClausesBeginIdx;
-    std::vector<typename ST::Clause *> m_learntClauses;
+    std::vector<typename ST::Clause *> m_lemmas;
     uint64_t m_amntBinariesLearnt;
 
     typename ST::ClauseDBReductionPolicy m_clauseDBReductionPolicy;
@@ -248,9 +248,9 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_unitClauses()
   , m_problemClauses()
   , m_newProblemClausesBeginIdx(0)
-  , m_learntClauses()
+  , m_lemmas()
   , m_amntBinariesLearnt(0)
-  , m_clauseDBReductionPolicy(1300, m_learntClauses)
+  , m_clauseDBReductionPolicy(1300, m_lemmas)
   , m_stamps(getMaxLit(CNFVar{0}).getRawValue())
   , m_statistics()
   , m_detectedUNSAT(false) {
@@ -408,8 +408,8 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             m_statistics.registerConflict();
             JAM_LOG_SOLVER(info, "Last propagation resulted in a conflict");
             m_branchingHeuristic.beginHandlingConflict();
-            typename ST::Clause *learntClause;
-            auto conflictHandlingResult = deriveClause(*conflictingClause, &learntClause);
+            typename ST::Clause *newLemma;
+            auto conflictHandlingResult = deriveLemma(*conflictingClause, &newLemma);
             m_branchingHeuristic.endHandlingConflict();
 
             JAM_LOG_SOLVER(info, "Backtracking to decision level "
@@ -424,19 +424,19 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
                 return TBools::INDETERMINATE;
             }
 
-            LBD learntClauseLBD = (*learntClause).template getLBD<LBD>();
-            m_restartPolicy.registerConflict({learntClauseLBD});
+            LBD newLemmaLBD = (*newLemma).template getLBD<LBD>();
+            m_restartPolicy.registerConflict({newLemmaLBD});
 
             backtrackToLevel(conflictHandlingResult.backtrackLevel);
 
             auto amntConflAssignments = m_trail.getNumberOfAssignments();
-            conflictingClause = m_propagation.registerClause(*learntClause);
+            conflictingClause = m_propagation.registerClause(*newLemma);
             m_statistics.registerPropagations(
                 m_trail.getNumberOfAssignments() -
                 m_propagation.getCurrentAmountOfUnpropagatedAssignments() -
 
                 amntConflAssignments);
-            m_statistics.registerLemma(learntClause->size());
+            m_statistics.registerLemma(newLemma->size());
 
             if (conflictHandlingResult.backtrackLevel == 1 && conflictingClause != nullptr) {
                 // Propagating the unit clauses and the assumptions now forces an assignment
@@ -465,11 +465,11 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             auto amountKnownGood = m_amntBinariesLearnt;
             auto toDeleteBegin =
                 m_clauseDBReductionPolicy.getClausesMarkedForDeletion(amountKnownGood);
-            auto oldLemmasSize = m_learntClauses.size();
+            auto oldLemmasSize = m_lemmas.size();
             reduceClauseDB(m_clauseDB, m_propagation, m_trail,
-                           boost::make_iterator_range(toDeleteBegin, m_learntClauses.end()),
-                           m_problemClauses, m_learntClauses);
-            m_statistics.registerLemmaDeletion(oldLemmasSize - m_learntClauses.size());
+                           boost::make_iterator_range(toDeleteBegin, m_lemmas.end()),
+                           m_problemClauses, m_lemmas);
+            m_statistics.registerLemmaDeletion(oldLemmasSize - m_lemmas.size());
         }
     }
 
@@ -477,24 +477,25 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::optimizeLearntClause(std::vector<CNFLit> &learntClause) {
-    eraseRedundantLiterals(learntClause, m_propagation, m_trail, m_stamps);
+void CDCLSatSolver<ST>::optimizeLemma(std::vector<CNFLit> &lemma) {
+    eraseRedundantLiterals(lemma, m_propagation, m_trail, m_stamps);
     JAM_LOG_SOLVER(info, "  After redundant literal removal: ("
-                             << toString(learntClause.begin(), learntClause.end()) << ")");
-    if (learntClause.size() < 30 /* TODO: make constant configurable */) {
-        LBD lbd = getLBD(learntClause, m_trail, m_stamps);
+                             << toString(lemma.begin(), lemma.end()) << ")");
+    if (lemma.size() < 30 /* TODO: make constant configurable */) {
+        LBD lbd = getLBD(lemma, m_trail, m_stamps);
         if (lbd <= 6 /* TODO: make constant configurable */) {
             auto binariesMap = m_propagation.getBinariesMap();
-            resolveWithBinaries(learntClause, binariesMap, learntClause[0], m_stamps);
+            resolveWithBinaries(lemma, binariesMap, lemma[0], m_stamps);
             JAM_LOG_SOLVER(info, "  After resolution with binary clauses: ("
-                                     << toString(learntClause.begin(), learntClause.end()) << ")");
+                                     << toString(lemma.begin(), lemma.end()) << ")");
         }
     }
 }
 
 template <typename ST>
 typename CDCLSatSolver<ST>::ConflictHandlingResult
-CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::Clause **learntOut) {
+CDCLSatSolver<ST>::deriveLemma(typename ST::Clause &conflicting,
+                               typename ST::Clause **newLemmaOut) {
     /* TODO: bad_alloc handling... */
 
     typename ST::Trail::DecisionLevel backtrackLevel = 0;
@@ -502,10 +503,10 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     // the lemma buffer gets cleared before being used in computeConflictClause
     m_conflictAnalyzer.computeConflictClause(conflicting, m_lemmaBuffer);
 
-    JAM_LOG_SOLVER(info, "Learnt clause: (" << toString(m_lemmaBuffer.begin(), m_lemmaBuffer.end())
-                                            << ")");
-    optimizeLearntClause(m_lemmaBuffer);
-    JAM_LOG_SOLVER(info, "Optimized learnt clause: ("
+    JAM_LOG_SOLVER(info,
+                   "New lemma: (" << toString(m_lemmaBuffer.begin(), m_lemmaBuffer.end()) << ")");
+    optimizeLemma(m_lemmaBuffer);
+    JAM_LOG_SOLVER(info, "Optimized new lemma: ("
                              << toString(m_lemmaBuffer.begin(), m_lemmaBuffer.end()) << ")");
 
     JAM_ASSERT(m_lemmaBuffer.size() > 0,
@@ -514,19 +515,19 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
     if (m_lemmaBuffer.size() == 1) {
         m_unitClauses.push_back(m_lemmaBuffer[0]);
     } else if (m_lemmaBuffer.size() > 1) {
-        auto &learntClause = m_clauseDB.allocate(
+        auto &newLemma = m_clauseDB.allocate(
             static_checked_cast<typename ST::Clause::size_type>(m_lemmaBuffer.size()));
-        std::copy(m_lemmaBuffer.begin(), m_lemmaBuffer.end(), learntClause.begin());
-        learntClause.setLBD(getLBD(learntClause, m_trail, m_stamps));
+        std::copy(m_lemmaBuffer.begin(), m_lemmaBuffer.end(), newLemma.begin());
+        newLemma.setLBD(getLBD(newLemma, m_trail, m_stamps));
 
-        *learntOut = &learntClause;
+        *newLemmaOut = &newLemma;
 
         if (m_lemmaBuffer.size() == 2) {
             ++m_amntBinariesLearnt;
             // No need to store pointers to binaries, since they are never relocated by
             // the clause allocator.
         } else {
-            m_learntClauses.push_back(&learntClause);
+            m_lemmas.push_back(&newLemma);
         }
 
         // Place a non-asserting literal with the highest decision level second in
@@ -535,15 +536,15 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
         // This way, the two watched literals are guaranteed to lose their assignments
         // when the solver backtracks from the current decision level.
         // Otherwise, the following might happen: suppose that the third literal L3 of
-        // a learnt 3-literal clause is on decision level D3, and the second literal L2
+        // a 3-literal lemma is on decision level D3, and the second literal L2
         // is on level D2, with D3 > D2. The first literal has been forced to TRUE on
         // level D3+1.
         // When backtracking to D2, the assignment of L2 remains, so the second
         // watcher watches an already-assigned literal. If ~L3 is propagated again
         // now, the propagation system would fail to notice that the clause forces an
         // assignment.
-        auto litWithMaxDecisionLevel = learntClause.begin() + 1;
-        for (auto lit = learntClause.begin() + 1; lit != learntClause.end(); ++lit) {
+        auto litWithMaxDecisionLevel = newLemma.begin() + 1;
+        for (auto lit = newLemma.begin() + 1; lit != newLemma.end(); ++lit) {
             auto currentBacktrackLevel =
                 std::max(backtrackLevel, m_trail.getAssignmentDecisionLevel(lit->getVariable()));
             if (currentBacktrackLevel > backtrackLevel) {
@@ -551,7 +552,7 @@ CDCLSatSolver<ST>::deriveClause(typename ST::Clause &conflicting, typename ST::C
                 backtrackLevel = currentBacktrackLevel;
             }
         }
-        std::swap(*litWithMaxDecisionLevel, learntClause[1]);
+        std::swap(*litWithMaxDecisionLevel, newLemma[1]);
     }
 
     return ConflictHandlingResult{m_lemmaBuffer.size() == 1, backtrackLevel};
