@@ -43,7 +43,12 @@ namespace jamsat {
  *
  * \ingroup JamSAT_Utils
  *
- * \tparam Container                TODO: document this template parameter
+ * \tparam Container                A type partially satisfying the STL `Container` concept:
+ *                                  For objects `c` of type `Container`, the expressions
+ *                                  `c.begin()` and `c.end()` must be valid, with the same
+ *                                  semantics as defined by the STL `Container` concept.
+ *                                  `Container::value_type` must be the type of the objects
+ *                                  contained in instances of `Container`.
  * \tparam ContainerDeletedQuery    A type satisfying the STL UnaryPredicate concept for
  *                                  `Container const*` arguments, with instances of
  *                                  `ContainerDeletedQuery`indicating whether the container

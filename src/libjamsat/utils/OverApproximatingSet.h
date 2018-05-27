@@ -31,6 +31,8 @@
 namespace jamsat {
 
 /**
+ * \class OverApproximatingSet
+ *
  * \brief An over-approximating set
  *
  * A space-efficient set data structure allowing false positives in queries.
@@ -68,6 +70,16 @@ public:
      */
     auto mightContain(typename Key::Type toLookup) const noexcept -> bool;
 
+    /**
+     * \brief Checks whether the set might be a superset of this set.
+     *
+     * \param set           An arbitrary over-approximating set
+     * \return              `false` iff the approximation allows the conclusion
+     *                      that this set is definitely not a subset of `set`;
+     *                      `true` otherwise.
+     */
+    auto mightBeSubsetOf(OverApproximatingSet<Size, Key> const &set) const noexcept -> bool;
+
 private:
     std::bitset<Size> m_approximatedSet;
 };
@@ -84,5 +96,11 @@ template <size_t Size, typename Key>
 auto OverApproximatingSet<Size, Key>::mightContain(Type toLookup) const noexcept -> bool {
     auto index = Key::getIndex(toLookup);
     return (m_approximatedSet[index % Size] == 1);
+}
+
+template <size_t Size, typename Key>
+auto OverApproximatingSet<Size, Key>::mightBeSubsetOf(
+    OverApproximatingSet<Size, Key> const &set) const noexcept -> bool {
+    return (m_approximatedSet | set.m_approximatedSet) == set.m_approximatedSet;
 }
 }

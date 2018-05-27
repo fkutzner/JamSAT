@@ -55,5 +55,27 @@ TEST(UnitUtils, OverApproximatingSetDefinitelyContainsValueAfterInsert) {
     EXPECT_TRUE(underTest.mightContain(1048577UL));
 }
 
-// TODO: more tests?
+TEST(UnitUtils, OverApproximatingSetRecognizesRealSubset) {
+    OverApproximatingSet<64, TestUIntKey> subset;
+    subset.insert(1UL);
+    subset.insert(128UL);
+    subset.insert(255UL);
+
+    OverApproximatingSet<64, TestUIntKey> superset{subset};
+    superset.insert(3UL);
+
+    EXPECT_TRUE(subset.mightBeSubsetOf(superset));
+}
+
+TEST(UnitUtils, OverApproximatingSetRecognizesDefinitelyNotSubset) {
+    OverApproximatingSet<64, TestUIntKey> setA;
+    setA.insert(1UL);
+    setA.insert(128UL);
+    setA.insert(255UL);
+
+    OverApproximatingSet<64, TestUIntKey> setB{setA};
+    setB.insert(3UL); // gets mapped to a bit that is not set in setA
+
+    EXPECT_FALSE(setB.mightBeSubsetOf(setA));
+}
 }
