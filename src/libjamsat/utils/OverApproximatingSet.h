@@ -101,6 +101,9 @@ auto OverApproximatingSet<Size, Key>::mightContain(Type toLookup) const noexcept
 template <size_t Size, typename Key>
 auto OverApproximatingSet<Size, Key>::mightBeSubsetOf(
     OverApproximatingSet<Size, Key> const &set) const noexcept -> bool {
-    return (m_approximatedSet | set.m_approximatedSet) == set.m_approximatedSet;
+    // Need to check if m_approximatedSet -> set.m_approximatedSet)
+    // Applying deMorgan's law to enable better code generation by the
+    // compiler:
+    return (m_approximatedSet & ~set.m_approximatedSet).none();
 }
 }
