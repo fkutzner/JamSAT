@@ -408,7 +408,7 @@ void test_clearClausesInPropagation() {
     underTest.propagateUntilFixpoint(~lit5);
     ASSERT_EQ(underTest.getAssignmentReason(lit6.getVariable()), &clause3);
 
-    underTest.clear();
+    underTest.clearNonBinaries();
 
     EXPECT_EQ(underTest.getAssignmentReason(lit6.getVariable()), &clause3);
 
@@ -454,7 +454,7 @@ void substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode mod
 
     // Simulate backtracking. Later, it is checked that lit1 has no forced assignment.
     assignments.popLiteral();
-    underTest.clear();
+    underTest.clearNonBinaries();
     underTest.registerEquivalentSubstitutingClause(clause2);
 
     if (mode == SubstitutionClauseReinsertionTestMode::TEST_NO_PROPAGATION) {

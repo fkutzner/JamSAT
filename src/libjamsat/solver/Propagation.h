@@ -126,9 +126,10 @@ public:
     void registerEquivalentSubstitutingClause(ClauseT &clause);
 
     /**
-     * \brief Unregisters all clauses from the propagation system.
+     * \brief Unregisters all clauses with size greater than 2 from the propagation
+     * system.
      */
-    void clear() noexcept;
+    void clearNonBinaries() noexcept;
 
     /**
      * \brief Propagates the given fact wrt. the clauses registered in the
@@ -563,7 +564,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
 }
 
 template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::clear() noexcept {
+void Propagation<AssignmentProvider, ClauseT>::clearNonBinaries() noexcept {
     m_watchers.clear();
 }
 
