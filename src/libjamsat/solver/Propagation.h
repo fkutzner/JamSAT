@@ -464,7 +464,6 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
     JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
     amountOfNewFacts = 0;
 
-    // TODO: check if the literal is dirty, and clean up the watchers
     if (m_watcherUpdateRequired[~toPropagate] != 0) {
         cleanupWatchers(~toPropagate);
     }
