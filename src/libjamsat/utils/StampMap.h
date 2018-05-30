@@ -42,9 +42,9 @@ namespace jamsat {
  * Implementation details common to all StampMap specializations/instantiations
  * are defined in this class.
  *
- * \tparam T    An integral type used as the internal key type, e.g. uint32_t.
+ * \tparam T    An integral type used as the internal index type, e.g. uint32_t.
  * Stamped elements are mapped to elements of type T, which in turn is used as
- * an internal key to the stamping data storage. Using narrower types T leads to
+ * an internal index to the stamping data storage. Using narrower types T leads to
  * improved cache efficiency, but also requires the internal stamping data
  * storage to be cleaned completely more frequently.
  */
@@ -111,23 +111,24 @@ public:
     StampingContext createContext() noexcept;
 
     /**
-     * \brief Increases the maximum internal key which can be stored in the stamp map.
+     * \brief Increases the maximum internal index which can be stored in the stamp map.
      *
-     * \param maxKey    The new maximum internal key as described above. Must at least be as large
-     *                  as the current maximum internal key.
+     * \param maxIdx    The new maximum internal index as described above. Must at least be as large
+     *                  as the current maximum internal index.
      */
-    void increaseSizeTo(size_type maxKey);
+    void increaseSizeTo(size_type maxIdx);
 
 protected:
     /**
      * \brief Constructs a StampMapBase instance.
      *
-     * \param maxKey    The maximum internal key which can be stored in the stamp
+     * \param maxIdx    The maximum internal index which can be stored in the stamp
      * map.
      */
-    explicit StampMapBase(size_type maxKey);
+    explicit StampMapBase(size_type maxIdx);
 
     void clear() noexcept;
+
     std::vector<T> m_stamps;
     T m_currentStamp;
     bool m_contextActive;
@@ -149,10 +150,10 @@ public:
     /**
      * \brief Constructs a StampMap<T> instance.
      *
-     * \param maxKey    The maximum internal key which can be stored in the stamp
+     * \param maxIdx    The maximum internal index which can be stored in the stamp
      * map.
      */
-    explicit StampMap<T>(typename StampMapBase<T>::size_type maxKey) : StampMapBase<T>(maxKey) {}
+    explicit StampMap<T>(typename StampMapBase<T>::size_type maxIdx) : StampMapBase<T>(maxIdx) {}
 
 protected:
     // TODO: refactor the inheritance hierarchy to remove these method declarations
@@ -165,26 +166,22 @@ protected:
  *
  * \class jamsat::StampMap<T, K...>
  *
- * \brief A map for associating flags with keys ("stamping"), with an efficient
- * stamp clearing mechanism.
+ * \brief A map for flagging values ("stamping"), with an efficient flag
+ * clearing mechanism.
  *
- * StampMap allows using multiple kinds of keys with the same StampMap instance.
- * For each key type X, the user needs to provide a template argument K with
- * K::Type = X and the method \p{ N K::getIndex(const K&) } associating elements
- * of type K with a nonnegative  key of integral type N. The user needs to
- * provide the maximum internal key value M when constructing a StampMap. A
- * StampMap instance requires a constant O(M) bytes of memory.
+ * StampMap allows type-safe stamping of objects of different type.
  *
- * Usage example: Mark keys in an algorithm with O(1) operations using a
+ * Usage example: Mark object in an algorithm with O(1) operations using a
  * StampMap, clearing the markers after the algorithm executed efficiently,
  * allowing the StampMap to be reused later.
  *
- * \tparam T    An integral type used as the internal key type, e.g. uint32_t.
+ * \tparam T    An integral type used as the internal index type, e.g. uint32_t.
  * Stamped elements are mapped to elements of type T, which in turn is used as
- * an internal key to the stamping data storage. Using narrower types T leads to
+ * an internal index to the stamping data storage. Using narrower types T leads to
  * improved cache efficiency, but also requires the internal stamping data
  * storage to be cleaned completely more frequently.
- * \tparam K    A key descriptor described as above.
+ * \tparam K    A type satisfying the concept `Index`
+ * \tparam Ks   A sequence of types satisfying the concept `Index`
  */
 template <typename T, typename K, typename... Ks>
 class StampMap<T, K, Ks...> : public StampMap<T, Ks...> {
@@ -192,37 +189,37 @@ public:
     /**
      * \brief Constructs a StampMap<T, K, Ks...> instance.
      *
-     * \param maxKey    The maximum internal key which can be stored in the stamp
-     * map.
+     * \param maxIdx    The maximum internal index which can be stored in the
+     *                  stamp map.
      */
-    explicit StampMap<T, K, Ks...>(typename StampMapBase<T>::size_type maxKey)
-      : StampMap<T, Ks...>(maxKey) {}
+    explicit StampMap<T, K, Ks...>(typename StampMapBase<T>::size_type maxIdx)
+      : StampMap<T, Ks...>(maxIdx) {}
 
     /**
-     * \brief Stamps or unstamps a given key.
+     * \brief Stamps or unstamps a given object.
      *
-     * \param key       The key to be marked as stamped/not-stamped. \p
-     * K::getIndex(key) must not be greater than the maximum index \p maxKey
+     * \param obj       The object to be marked as stamped/not-stamped. \p
+     * K::getIndex(obj) must not be greater than the maximum index \p maxIdx
      * passed to the constructor of the stamp map.
      * \param stamp     The current stamp (obtained from a StampingContext
      * instance).
-     * \param stamped   true iff the key should be marked as stamped.
+     * \param stamped   true iff \p obj should be marked as stamped.
      */
-    void setStamped(const typename K::Type &key, typename StampMapBase<T>::Stamp stamp,
+    void setStamped(const typename K::Type &obj, typename StampMapBase<T>::Stamp stamp,
                     bool stamped) noexcept;
 
     using StampMap<T, Ks...>::setStamped;
 
     /**
-     * \brief Determines if the given key is stamped.
+     * \brief Determines if the given object is stamped.
      *
-     * \param index     A key. \p K::getIndex(key) must not be greater than the
-     * maximum index \p maxKey passed to the constructor of the stamp map.
+     * \param obj       An object. \p K::getIndex(obj) must not be greater than the
+     * maximum index \p maxIdx passed to the constructor of the stamp map.
      * \param stamp     The current stamp (obtained from a StampingContext
      * instance).
-     * \returns         true iff the given key is marked as stamped.
+     * \returns         true iff \p index is marked as stamped.
      */
-    bool isStamped(const typename K::Type &key, const typename StampMapBase<T>::Stamp stamp) const
+    bool isStamped(const typename K::Type &obj, const typename StampMapBase<T>::Stamp stamp) const
         noexcept;
 
     using StampMap<T, Ks...>::isStamped;
@@ -231,8 +228,8 @@ public:
 /********** Implementation ****************************** */
 
 template <typename T>
-StampMapBase<T>::StampMapBase(typename StampMapBase<T>::size_type maxKey)
-  : m_stamps(maxKey + 1), m_currentStamp(T{} + 1), m_contextActive(false) {}
+StampMapBase<T>::StampMapBase(typename StampMapBase<T>::size_type maxIdx)
+  : m_stamps(maxIdx + 1), m_currentStamp(T{} + 1), m_contextActive(false) {}
 
 template <typename T>
 typename StampMapBase<T>::StampingContext StampMapBase<T>::createContext() noexcept {
@@ -242,9 +239,9 @@ typename StampMapBase<T>::StampingContext StampMapBase<T>::createContext() noexc
 }
 
 template <typename T>
-void StampMapBase<T>::increaseSizeTo(typename StampMapBase<T>::size_type maxKey) {
-    JAM_ASSERT((maxKey + 1) >= m_stamps.size(), "The size of StampMaps can only be increased");
-    m_stamps.resize(maxKey + 1, std::numeric_limits<T>::min());
+void StampMapBase<T>::increaseSizeTo(typename StampMapBase<T>::size_type maxIdx) {
+    JAM_ASSERT((maxIdx + 1) >= m_stamps.size(), "The size of StampMaps can only be increased");
+    m_stamps.resize(maxIdx + 1, std::numeric_limits<T>::min());
 }
 
 template <typename T>
@@ -261,21 +258,21 @@ void StampMapBase<T>::clear() noexcept {
 }
 
 template <typename T, typename K, typename... Ks>
-void StampMap<T, K, Ks...>::setStamped(const typename K::Type &key,
+void StampMap<T, K, Ks...>::setStamped(const typename K::Type &obj,
                                        typename StampMapBase<T>::Stamp stamp,
                                        bool stamped) noexcept {
     JAM_ASSERT(stamp.value == StampMapBase<T>::m_currentStamp, "Invalid stamp");
-    auto index = K::getIndex(key);
+    auto index = K::getIndex(obj);
     JAM_ASSERT(index < StampMapBase<T>::m_stamps.size(), "Index out of bounds");
     auto minStamp = std::numeric_limits<T>::min();
     StampMapBase<T>::m_stamps[index] = stamped ? stamp.value : minStamp;
 }
 
 template <typename T, typename K, typename... Ks>
-bool StampMap<T, K, Ks...>::isStamped(const typename K::Type &key,
+bool StampMap<T, K, Ks...>::isStamped(const typename K::Type &obj,
                                       const typename StampMapBase<T>::Stamp stamp) const noexcept {
     JAM_ASSERT(stamp.value == StampMapBase<T>::m_currentStamp, "Invalid stamp");
-    auto index = K::getIndex(key);
+    auto index = K::getIndex(obj);
     JAM_ASSERT(index < StampMapBase<T>::m_stamps.size(), "Index out of bounds");
     return StampMapBase<T>::m_stamps[index] == stamp.value;
 }

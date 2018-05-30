@@ -38,10 +38,7 @@ namespace jamsat {
  * A space-efficient set data structure allowing false positives in queries.
  *
  * \tparam Size     The size of the set, in bits.
- * \tparam Key      The key type of the values to be stored. The values to be
- *                  stored in the set must be of type `Key::Type`. `Key::getIndex(x)`
- *                  must be a valid expression with return type `size_t` for all
- *                  `x` of type `Key::Type`.
+ * \tparam Key      A type that is a model of the concept `Index`.
  */
 template <size_t Size, typename Key>
 class OverApproximatingSet {

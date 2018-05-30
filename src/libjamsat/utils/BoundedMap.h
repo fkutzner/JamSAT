@@ -40,9 +40,7 @@ namespace jamsat {
  *
  * \tparam K        The key type.
  * \tparam V        The value type.
- * \tparam KIndex   A type having the static function T KIndex::index(const K&)
- * where T is an integral type not bigger than std::vector<V>::size_type. This
- * function is used to obtain indices for keys.
+ * \tparam KIndex   A type that is a model of the concept `Index` with indexed type `K`.
  * \tparam Allocator  The allocator used by the backing vector.
  */
 template <typename K, typename V, typename KIndex = typename K::Index,

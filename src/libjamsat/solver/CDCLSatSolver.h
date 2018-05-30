@@ -226,7 +226,7 @@ private:
 
     typename ST::ClauseDBReductionPolicy m_clauseDBReductionPolicy;
 
-    StampMap<uint16_t, CNFVarKey, CNFLitKey, typename ST::Trail::DecisionLevelKey> m_stamps;
+    StampMap<uint16_t, CNFVar::Index, CNFLit::Index, typename ST::Trail::DecisionLevelKey> m_stamps;
     Statistics<> m_statistics;
 
     bool m_detectedUNSAT;

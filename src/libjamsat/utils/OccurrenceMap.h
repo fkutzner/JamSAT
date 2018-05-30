@@ -53,7 +53,8 @@ namespace jamsat {
  *                                  `Container const*` arguments, with instances of
  *                                  `ContainerDeletedQuery`indicating whether the container
  *                                  has been marked for deletion.
- * \tparam ContainerValueIndex      A `BoundedMap` index type for `Container::value_type`.
+ * \tparam ContainerValueIndex      A type that is a model of the concept `Index` with indexed
+ *                                  type `Container::value_type`.
  */
 template <typename Container, typename ContainerDeletedQuery,
           typename ContainerValueIndex = typename Container::value_type::Index>

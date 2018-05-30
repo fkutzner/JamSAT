@@ -113,20 +113,22 @@ public:
     /**
      * \ingroup JamSAT_CNFProblem
      *
-     * \class jamsat::CNFVar::CNFVarIndex
+     * \brief Index type for CNFVar
      *
-     * \brief Indexer class for CNFVar objects, e.g. for use with ArrayBackedMap.
+     * This type is a model of the concept `Index`.
      */
     class Index {
     public:
+        using Type = CNFVar;
+
         /**
          * \brief Gets an index value for the given variable.
          *
          * \param variable    A variable.
-         * \returns           The variable's raw value, to be used for indexing.
+         * \returns           The index for \p variable
          */
-        static constexpr CNFVar::RawVariable getIndex(CNFVar variable) {
-            return variable.getRawValue();
+        static constexpr std::size_t getIndex(CNFVar variable) {
+            return static_cast<std::size_t>(variable.getRawValue());
         }
     };
 
@@ -205,20 +207,22 @@ public:
     /**
      * \ingroup JamSAT_CNFProblem
      *
-     * \class jamsat::CNFLit::CNFLitIndex
+     * \brief Index type for CNFLit
      *
-     * \brief Indexer class for CNFLit objects, e.g. for use with ArrayBackedMap.
+     * This type is a model of the concept `Index`.
      */
     class Index {
     public:
+        using Type = CNFLit;
+
         /**
          * \brief Gets an index value for the given literal.
          *
          * \param literal    A literal.
-         * \returns           The literal's raw value, to be used for indexing.
+         * \returns          The index for \p literal.
          */
-        static constexpr CNFLit::RawLiteral getIndex(CNFLit literal) {
-            return literal.getRawValue();
+        static constexpr std::size_t getIndex(CNFLit literal) {
+            return static_cast<std::size_t>(literal.getRawValue());
         }
     };
 
@@ -404,28 +408,6 @@ constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
  * \return      The literal L with variable \p var such that L > ~L
  */
 constexpr CNFLit getMaxLit(CNFVar var) noexcept;
-
-/**
- * \brief StampMap key for CNFVar
- *
- * \ingroup JamSAT_CNFProblem
- */
-struct CNFVarKey {
-    using Type = CNFVar;
-
-    static size_t getIndex(CNFVar variable) { return static_cast<size_t>(variable.getRawValue()); }
-};
-
-/**
- * \brief StampMap key for CNFLit
- *
- * \ingroup JamSAT_CNFProblem
- */
-struct CNFLitKey {
-    using Type = CNFLit;
-
-    static size_t getIndex(CNFLit literal) { return static_cast<size_t>(literal.getRawValue()); }
-};
 
 /********** Implementation ****************************** */
 

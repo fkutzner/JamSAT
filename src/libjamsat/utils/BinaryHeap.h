@@ -59,10 +59,8 @@ namespace jamsat {
  *                      or to any previous invocation of `c.increaseMaxSizeTo()`.
  *                      After `c.increaseMaxSizeTo(z)`, all values no larger
  *                      than `z` (wrt. `KIndex`) must be comparable by `c`.
- * \tparam KIndex       A type having the static function `T KIndex::index(const K&)`
- *                      where T is an unsigned integral type `KIndex::Type` not
- *                      wider than `std::vector<V>::size_type`. This function is used
- *                      to obtain indices for objects of type `K`.
+ * \tparam KIndex       A type that is a model of the concept `Index` with indexed
+ *                      type `K`.
  */
 template <typename K, typename Comparator, typename KIndex = typename K::Index>
 class BinaryMaxHeap {

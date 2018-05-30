@@ -42,7 +42,7 @@ using TrivialClause = TestAssignmentProvider::Clause;
 TEST(UnitSolver, AssignmentAnalysisProducesUnitaryResultForReasonlessConflict) {
     TestAssignmentProvider decisionLevelProvider;
     TestReasonProvider<TrivialClause> reasonProvider;
-    StampMap<int, CNFVarKey> tempStamps{CNFVar{1024}.getRawValue()};
+    StampMap<int, CNFVar::Index> tempStamps{CNFVar{1024}.getRawValue()};
     CNFLit lit{CNFVar{3}, CNFSign::POSITIVE};
     decisionLevelProvider.setCurrentDecisionLevel(0);
     decisionLevelProvider.addAssignment(lit);
@@ -55,7 +55,7 @@ TEST(UnitSolver, AssignmentAnalysisProducesUnitaryResultForReasonlessConflict) {
 TEST(UnitSolver, AssignmentAnalysisProducesFailingAssumptionsForReasonfulConflict) {
     TestAssignmentProvider decisionLevelProvider;
     TestReasonProvider<TrivialClause> reasonProvider;
-    StampMap<int, CNFVarKey> tempStamps{CNFVar{1024}.getRawValue()};
+    StampMap<int, CNFVar::Index> tempStamps{CNFVar{1024}.getRawValue()};
 
     CNFLit lit1{CNFVar{3}, CNFSign::POSITIVE}, lit2{CNFVar{6}, CNFSign::POSITIVE},
         lit3{CNFVar{8}, CNFSign::NEGATIVE}, lit4{CNFVar{16}, CNFSign::NEGATIVE},
