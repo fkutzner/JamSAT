@@ -43,4 +43,5 @@ add_jamsat_core_library(jamsatUtils
   Logger.cpp
   OverApproximatingSet.h
   OccurrenceMap.h
+  Concepts.h
 )
