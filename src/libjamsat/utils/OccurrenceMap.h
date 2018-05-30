@@ -60,7 +60,7 @@ template <typename Container, typename ContainerDeletedQuery,
           typename ContainerValueIndex = typename Container::value_type::Index>
 class OccurrenceMap {
 public:
-    using ContainerRange = boost::iterator_range<typename std::vector<Container *const>::iterator>;
+    using ContainerRange = boost::iterator_range<typename std::vector<Container *>::const_iterator>;
 
     /**
      * \brief Constructs an OccurrenceMap
