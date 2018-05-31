@@ -70,9 +70,9 @@
  *    <td> Index </td>
  *    <td> `X::getIndex(a)` </td>
  *    <td> </td>
- *    <td> Returns a unique index value for `a`. If `X::Type` is a model of `Comparable`, then for any
- *         two objects `a,b` of type `X::Type`, the following must hold: `a < b => X::getIndex(a) < X::getIndex(b)`.</td>
- *    <td> </td>
+ *    <td> Returns a unique index value for `a`. If `X::Type` is a model of `Comparable`, then for
+ * any two objects `a,b` of type `X::Type`, the following must hold: `a < b => X::getIndex(a) <
+ * X::getIndex(b)`.</td> <td> </td>
  *  </tr>
  * </table>
  * \}
