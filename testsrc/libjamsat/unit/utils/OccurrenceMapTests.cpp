@@ -66,6 +66,21 @@ TEST(UnitUtils, emptyOccurrenceMapContainsNoEntries) {
     }
 }
 
+namespace {
+template <typename OccurrenceMapT, typename OccAnalog>
+void expectAnalogousToOccurrenceMap(OccAnalog const &expected, OccurrenceMapT &underTest,
+                                    uint32_t maxValue) {
+    for (uint32_t i = 0; i <= maxValue; ++i) {
+        ASSERT_EQ(underTest[i].size(), expected[i].size())
+            << "Expected elements mismatch at index " << i;
+        auto occurrences = underTest[i];
+        EXPECT_TRUE(
+            std::is_permutation(occurrences.begin(), occurrences.end(), expected[i].begin()))
+            << "Expected elements mismatch at index " << i;
+    }
+}
+}
+
 TEST(UnitUtils, elementsAreRetrievableFromOccurrenceMap) {
     jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{31};
     TestUIntVec testData1{9, 10, 15};
@@ -83,14 +98,7 @@ TEST(UnitUtils, elementsAreRetrievableFromOccurrenceMap) {
     underTest.insert(testData1);
     underTest.insert(testData2);
 
-    for (uint32_t i = 0; i < 32; ++i) {
-        ASSERT_EQ(underTest[i].size(), expected[i].size())
-            << "Expected elements mismatch at index " << i;
-        auto occurrences = underTest[i];
-        EXPECT_TRUE(
-            std::is_permutation(occurrences.begin(), occurrences.end(), expected[i].begin()))
-            << "Expected elements mismatch at index " << i;
-    }
+    expectAnalogousToOccurrenceMap(expected, underTest, 31);
 }
 
 TEST(UnitUtils, deletedElementsAreRemovedFromOccurrenceMap) {
@@ -114,13 +122,64 @@ TEST(UnitUtils, deletedElementsAreRemovedFromOccurrenceMap) {
     testData1.setDeleted();
     underTest.remove(testData1);
 
+    expectAnalogousToOccurrenceMap(expected, underTest, 31);
+}
+
+TEST(UnitUtils, OccurrenceMapIsEmptyAfterInsertionOfEmptySequence) {
+    jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{31};
+    std::vector<TestUIntVec *> containers;
+    underTest.insert(containers.begin(), containers.end());
     for (uint32_t i = 0; i < 32; ++i) {
-        ASSERT_EQ(underTest[i].size(), expected[i].size())
-            << "Expected elements mismatch at index " << i;
-        auto occurrences = underTest[i];
-        EXPECT_TRUE(
-            std::is_permutation(occurrences.begin(), occurrences.end(), expected[i].begin()))
-            << "Expected elements mismatch at index " << i;
+        EXPECT_EQ(underTest[i].size(), 0ULL) << "No container expected for index " << i;
     }
+}
+
+TEST(UnitUtils, OccurenceMapIsEmptyAfterConstructionWithEmptySequence) {
+    std::vector<TestUIntVec *> containers;
+    jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{
+        31, containers.begin(), containers.end()};
+    for (uint32_t i = 0; i < 32; ++i) {
+        EXPECT_EQ(underTest[i].size(), 0ULL) << "No container expected for index " << i;
+    }
+}
+
+TEST(UnitUtils, OccurrenceMapContainsExpectedContainersAfterRangeInsert) {
+    TestUIntVec testData1{9, 10, 15};
+    TestUIntVec testData2{22, 10, 13};
+
+    std::vector<std::vector<TestUIntVec *>> expected;
+    expected.resize(32);
+    expected[9].push_back(&testData1);
+    expected[10].push_back(&testData1);
+    expected[10].push_back(&testData2);
+    expected[13].push_back(&testData2);
+    expected[15].push_back(&testData1);
+    expected[22].push_back(&testData2);
+
+    std::vector<TestUIntVec *> testDataVec{&testData1, &testData2};
+
+    jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{31};
+    underTest.insert(testDataVec.begin(), testDataVec.end());
+    expectAnalogousToOccurrenceMap(expected, underTest, 31);
+}
+
+TEST(UnitUtils, OccurrenceMapContainsExpectedContainersAfterRangeConstruction) {
+    TestUIntVec testData1{9, 10, 15};
+    TestUIntVec testData2{22, 10, 13};
+
+    std::vector<std::vector<TestUIntVec *>> expected;
+    expected.resize(32);
+    expected[9].push_back(&testData1);
+    expected[10].push_back(&testData1);
+    expected[10].push_back(&testData2);
+    expected[13].push_back(&testData2);
+    expected[15].push_back(&testData1);
+    expected[22].push_back(&testData2);
+
+    std::vector<TestUIntVec *> testDataVec{&testData1, &testData2};
+
+    jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{
+        31, testDataVec.begin(), testDataVec.end()};
+    expectAnalogousToOccurrenceMap(expected, underTest, 31);
 }
 }

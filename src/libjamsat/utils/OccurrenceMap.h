@@ -43,12 +43,12 @@ namespace jamsat {
  *
  * \ingroup JamSAT_Utils
  *
- * \tparam Container                A type partially satisfying the STL `Container` concept:
- *                                  For objects `c` of type `Container`, the expressions
+ * \tparam ContainerT               A type partially satisfying the STL `Container` concept:
+ *                                  For objects `c` of type `ContainerT`, the expressions
  *                                  `c.begin()` and `c.end()` must be valid, with the same
  *                                  semantics as defined by the STL `Container` concept.
  *                                  `Container::value_type` must be the type of the objects
- *                                  contained in instances of `Container`.
+ *                                  contained in instances of `ContainerT`.
  * \tparam ContainerDeletedQuery    A type satisfying the STL UnaryPredicate concept for
  *                                  `Container const*` arguments, with instances of
  *                                  `ContainerDeletedQuery`indicating whether the container
@@ -56,10 +56,11 @@ namespace jamsat {
  * \tparam ContainerValueIndex      A type that is a model of the concept `Index` with indexed
  *                                  type `Container::value_type`.
  */
-template <typename Container, typename ContainerDeletedQuery,
-          typename ContainerValueIndex = typename Container::value_type::Index>
+template <typename ContainerT, typename ContainerDeletedQuery,
+          typename ContainerValueIndex = typename ContainerT::value_type::Index>
 class OccurrenceMap {
 public:
+    using Container = ContainerT;
     using ContainerRange = boost::iterator_range<typename std::vector<Container *>::const_iterator>;
 
     /**
@@ -69,6 +70,21 @@ public:
      *                      added to the OccurrenceMap.
      */
     OccurrenceMap(typename Container::value_type maxElement);
+
+    /**
+     * \brief Constructs an OccurrenceMap, inserting a range of elements
+     *
+     * \tparam ContainerPtrIt   A type being a model of `Iterator`. The value type of
+     *                          `ContainerPtrIt` must be convertible to `Container *const`.
+     *
+     * \param maxElement    The maximum element that may occur in the containers
+     *                      added to the OccurrenceMap.
+     * \param begin         The begin of the range of pointers to containers to be added.
+     * \param end           The end of the range of pointers to containers to be added.
+     */
+    template <typename ContainerPtrIt>
+    OccurrenceMap(typename Container::value_type maxElement, ContainerPtrIt begin,
+                  ContainerPtrIt end);
 
     /**
      * \brief Increases the maximum element that may occur in the containers added
@@ -85,6 +101,17 @@ public:
      * \param container     The container to be added.
      */
     void insert(Container &container);
+
+    /**
+     * \brief Adds containers to the occurrence map.
+     *
+     * \tparam ContainerPtrIt   A type being a model of `Iterator`. The value type of
+     *                          `ContainerPtrIt` must be convertible to `Container *const`.
+     * \param begin     The begin of the range of pointers to containers to be added.
+     * \param end       The end of the range of pointers to containers to be added.
+     */
+    template <typename ContainerPtrIt>
+    void insert(ContainerPtrIt begin, ContainerPtrIt end);
 
     /**
      * \brief Returns a range of pointers to the containers in which \p index occurs.
@@ -129,22 +156,41 @@ private:
 
 /********** Implementation ****************************** */
 
-template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
-OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::OccurrenceMap(
+template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
+OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::OccurrenceMap(
     typename Container::value_type maxElement)
   : m_occurrences(maxElement), m_deletedQuery() {}
 
-template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
-void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::increaseMaxElementTo(
+
+template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
+template <typename ContainerPtrIt>
+OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::OccurrenceMap(
+    typename Container::value_type maxElement, ContainerPtrIt begin, ContainerPtrIt end)
+  : m_occurrences(maxElement), m_deletedQuery() {
+    insert(begin, end);
+}
+
+template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
+void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::increaseMaxElementTo(
     typename Container::value_type maxElement) {
     m_occurrences.increaseSizeTo(maxElement);
 }
 
-template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
-void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::insert(
+template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
+void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::insert(
     Container &container) {
     for (auto &element : container) {
         m_occurrences[element].m_occList.push_back(&container);
+    }
+}
+
+template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
+template <typename ContainerPtrIt>
+void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::insert(
+    ContainerPtrIt begin, ContainerPtrIt end) {
+    while (begin != end) {
+        insert(**begin);
+        ++begin;
     }
 }
 
