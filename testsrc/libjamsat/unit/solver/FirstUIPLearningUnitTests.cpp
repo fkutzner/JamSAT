@@ -31,8 +31,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "TestAssignmentProvider.h"
-#include "TestReasonProvider.h"
+#include <toolbox/testutils/TestAssignmentProvider.h>
+#include <toolbox/testutils/TestReasonProvider.h>
 
 #define JAM_ENABLE_TEST_FAULTS
 

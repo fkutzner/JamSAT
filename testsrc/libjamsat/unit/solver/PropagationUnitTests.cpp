@@ -26,9 +26,9 @@
 
 #include <gtest/gtest.h>
 
-#include "TestAssignmentProvider.h"
 #include <libjamsat/solver/Propagation.h>
 #include <toolbox/testutils/RangeUtils.h>
+#include <toolbox/testutils/TestAssignmentProvider.h>
 
 namespace jamsat {
 using TrivialClause = jamsat::TestAssignmentProvider::Clause;

@@ -26,8 +26,8 @@
 
 #include <gtest/gtest.h>
 
-#include "TestAssignmentProvider.h"
-#include "TestReasonProvider.h"
+#include <toolbox/testutils/TestAssignmentProvider.h>
+#include <toolbox/testutils/TestReasonProvider.h>
 
 #include <libjamsat/solver/AssignmentAnalysis.h>
 #include <libjamsat/utils/Printers.h>

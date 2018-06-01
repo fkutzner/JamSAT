@@ -27,12 +27,9 @@ add_jamsat_core_unittest_library(solver_unit_tests
   PropagationUnitTests.cpp
   WatcherUnitTests.cpp
   FirstUIPLearningUnitTests.cpp
-  TestAssignmentProvider.cpp
-  TestAssignmentProvider.h
   LiteralBlockDistanceUnitTests.cpp
   ClauseMinimizationUnitTests.cpp
   RestartPoliciesTests.cpp
-  TestReasonProvider.h
   ClauseDBReductionPoliciesUnitTests.cpp
   AssignmentAnalysisUnitTests.cpp
   StatisticsUnitTests.cpp

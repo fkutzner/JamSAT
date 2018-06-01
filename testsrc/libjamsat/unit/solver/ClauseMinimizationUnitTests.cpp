@@ -36,8 +36,8 @@
 #include <libjamsat/solver/ClauseMinimization.h>
 #include <libjamsat/utils/StampMap.h>
 
-#include "TestAssignmentProvider.h"
-#include "TestReasonProvider.h"
+#include <toolbox/testutils/TestAssignmentProvider.h>
+#include <toolbox/testutils/TestReasonProvider.h>
 
 namespace jamsat {
 using TrivialClause = TestAssignmentProvider::Clause;

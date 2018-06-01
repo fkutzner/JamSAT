@@ -32,7 +32,7 @@
 #include <libjamsat/solver/LiteralBlockDistance.h>
 #include <libjamsat/utils/StampMap.h>
 
-#include "TestAssignmentProvider.h"
+#include <toolbox/testutils/TestAssignmentProvider.h>
 
 namespace jamsat {
 struct DecisionLevelKey {

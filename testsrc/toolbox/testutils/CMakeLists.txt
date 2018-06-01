@@ -28,6 +28,9 @@ add_library(jamsatTestUtils STATIC
   RangeUtils.h
   Minisat.cpp
   Minisat.h
+  TestReasonProvider.h
+  TestAssignmentProvider.cpp
+  TestAssignmentProvider.h
 )
 jamsat_configure_target(jamsatTestUtils)
 
