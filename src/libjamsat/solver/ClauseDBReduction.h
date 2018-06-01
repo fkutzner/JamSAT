@@ -37,11 +37,16 @@
 namespace jamsat {
 
 // TODO: document reduceClauseDB
-template <typename ClauseTy, typename ClauseDBTy, typename PropagationTy, typename TrailTy,
-          typename ClauseRangeTy>
+template <typename ClauseDBTy, typename PropagationTy, typename TrailTy, typename ClauseRangeTy>
 void reduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, TrailTy &trail,
-                    ClauseRangeTy toDeleteRange, std::vector<ClauseTy *> &problemClauses,
-                    std::vector<ClauseTy *> &learntClauses) {
+                    ClauseRangeTy toDeleteRange,
+                    std::vector<typename ClauseDBTy::Clause *> &problemClauses,
+                    std::vector<typename ClauseDBTy::Clause *> &learntClauses) {
+    using Clause = typename ClauseDBTy::Clause;
+    static_assert(std::is_same<typename ClauseDBTy::Clause, typename PropagationTy::Clause>::value,
+                  "ClauseDBTy and PropagationTy must have the same Clause type");
+    static_assert(std::is_same<typename ClauseDBTy::Clause, typename TrailTy::Clause>::value,
+                  "ClauseDBTy and TrailTy must have the same Clause type");
 
     if (toDeleteRange.begin() == toDeleteRange.end()) {
         return;
@@ -49,22 +54,22 @@ void reduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, TrailTy &t
 
     for (auto toDelete : toDeleteRange) {
         if (!propagation.isAssignmentReason(*toDelete, trail)) {
-            toDelete->setFlag(ClauseTy::Flag::SCHEDULED_FOR_DELETION);
+            toDelete->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
         }
     }
 
     auto clausesInPropOrder = propagation.getClausesInPropagationOrder();
 
-    std::vector<ClauseTy *> clausesAfterRelocation;
+    std::vector<Clause *> clausesAfterRelocation;
     clauseDB.retain(boost::adaptors::filter(clausesInPropOrder,
-                                            [](ClauseTy const *clause) {
+                                            [](Clause const *clause) {
                                                 return !clause->getFlag(
-                                                    ClauseTy::Flag::SCHEDULED_FOR_DELETION);
+                                                    Clause::Flag::SCHEDULED_FOR_DELETION);
                                             }),
-                    [&propagation, &trail](ClauseTy const &clause) {
+                    [&propagation, &trail](Clause const &clause) {
                         return propagation.isAssignmentReason(clause, trail);
                     },
-                    [&propagation](ClauseTy const &reason, ClauseTy const &relocatedTo) {
+                    [&propagation](Clause const &reason, Clause const &relocatedTo) {
                         propagation.updateAssignmentReason(reason, relocatedTo);
                     },
                     boost::optional<decltype(std::back_inserter(clausesAfterRelocation))>{
@@ -75,7 +80,7 @@ void reduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, TrailTy &t
     learntClauses.clear();
     propagation.clearNonBinaries();
     for (auto clausePtr : clausesAfterRelocation) {
-        clausePtr->clearFlag(ClauseTy::Flag::SCHEDULED_FOR_DELETION);
+        clausePtr->clearFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
         if (clausePtr->template getLBD<LBD>() != 0) {
             learntClauses.push_back(clausePtr);
         } else {

@@ -153,6 +153,9 @@ public:
     using ReasonClausePredicateFunc = std::function<bool(const ClauseT &) noexcept>;
     using RelocateReasonClauseFunc = std::function<void(const ClauseT &, const ClauseT &) noexcept>;
 
+    /// The clause type.
+    using Clause = ClauseT;
+
     using size_type = uintptr_t;
 
     /**

@@ -66,6 +66,7 @@ class FirstUIPLearning {
                   "DLProvider and ReasonProvider must have the same Clause type");
 
 public:
+    /// The clause type. This type equals the reason provider's clause type.
     using Clause = typename ReasonProvider::Clause;
 
     /**
