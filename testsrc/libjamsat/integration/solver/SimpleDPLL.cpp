@@ -156,7 +156,7 @@ private:
     }
 
     Trail<Clause> m_trail;
-    Propagation<Trail<Clause>, Clause> m_propagation;
+    Propagation<Trail<Clause>> m_propagation;
     std::vector<std::unique_ptr<Clause>> m_clauses;
     CNFVar m_maxVar;
 };

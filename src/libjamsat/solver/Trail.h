@@ -81,6 +81,8 @@ public:
     using DecisionLevel = uint32_t;
     using const_iterator = BoundedStack<CNFLit>::const_iterator;
 
+    using Clause = ClauseT;
+
     /**
      * \brief StampMap key for Trail::DecisionLevel
      */

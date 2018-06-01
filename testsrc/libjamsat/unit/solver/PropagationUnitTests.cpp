@@ -36,7 +36,7 @@ using TrivialClause = jamsat::TestAssignmentProvider::Clause;
 TEST(UnitSolver, propagateWithoutClausesIsNoop) {
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
 
     size_t amntNewFacts = 0xFFFF;
     CNFLit propagatedLit = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
@@ -50,7 +50,7 @@ TEST(UnitSolver, propagateWithoutClausesIsNoop) {
 TEST(UnitSolver, propagateToFixpointWithoutClausesIsNoop) {
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
 
     CNFLit propagatedLit = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
     auto conflictingClause = underTest.propagateUntilFixpoint(propagatedLit);
@@ -66,7 +66,7 @@ TEST(UnitSolver, falsingSingleLiteralInBinaryClauseCausesPropagation) {
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(binaryClause);
 
     assignments.addAssignment(~lit2);
@@ -85,7 +85,7 @@ TEST(UnitSolver, reasonsAreRecordedDuringPropagation) {
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(binaryClause);
 
     assignments.addAssignment(~lit2);
@@ -104,7 +104,7 @@ TEST(UnitSolver, propagateWithSingleTrueClauseCausesNoPropagation) {
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(binaryClause);
 
     assignments.addAssignment(lit1);
@@ -126,7 +126,7 @@ TEST(UnitSolver, propagateWithTernaryClause) {
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(ternaryClause);
 
     size_t newFacts = 0xFFFF;
@@ -149,7 +149,7 @@ TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(ternaryClause);
     underTest.registerClause(ternaryClause2);
 
@@ -184,7 +184,7 @@ TEST(UnitSolver, registerClauseWithUnassignedLiteralsCausesNoPropagation) {
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(ternaryClause);
 
     EXPECT_EQ(assignments.getAssignment(CNFVar{1}), TBools::INDETERMINATE);
@@ -203,7 +203,7 @@ TEST(UnitSolver, registerClauseWithAssignedLiteralsCausesPropagation) {
     assignments.addAssignment(~lit3);
 
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(ternaryClause);
 
     EXPECT_EQ(assignments.getAssignment(lit1), TBools::TRUE);
@@ -226,7 +226,7 @@ TEST(UnitSolver, propagateUntilFixpointPropagatesTransitively) {
     TestAssignmentProvider assignments;
 
     CNFVar maxVar{5};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(firstForcingClause);
     underTest.registerClause(midForcingClause1);
     underTest.registerClause(midForcingClause2);
@@ -250,7 +250,7 @@ TEST(UnitSolver, propagateUntilFixpointReportsImmediateConflicts) {
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(binaryClause);
 
     assignments.addAssignment(~lit1);
@@ -275,7 +275,7 @@ TEST(UnitSolver, propagateUntilFixpointReportsEnsuingConflicts) {
     TestAssignmentProvider assignments;
 
     CNFVar maxVar{5};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(firstForcingClause);
     underTest.registerClause(midForcingClause1);
     underTest.registerClause(midForcingClause2);
@@ -295,7 +295,7 @@ TEST(UnitSolver, propagateAfterIncreasingMaximumVariable) {
     TestAssignmentProvider assignments;
     TrivialClause forcingClause{CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
                                 CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(CNFVar{5}, assignments);
+    Propagation<TestAssignmentProvider> underTest(CNFVar{5}, assignments);
     underTest.increaseMaxVarTo(CNFVar{10});
     underTest.registerClause(forcingClause);
     assignments.addAssignment(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
@@ -305,7 +305,7 @@ TEST(UnitSolver, propagateAfterIncreasingMaximumVariable) {
 
 TEST(UnitSolver, propagationClauseRangeEmptyWhenNoClausesAdded) {
     TestAssignmentProvider assignments;
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(CNFVar{5}, assignments);
+    Propagation<TestAssignmentProvider> underTest(CNFVar{5}, assignments);
     auto clauses = underTest.getClausesInPropagationOrder();
     EXPECT_TRUE(clauses.begin() == clauses.end());
 }
@@ -319,7 +319,7 @@ TEST(UnitSolver, propagationClauseRangeHasCorrectOrder) {
                      CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
 
     TestAssignmentProvider assignments;
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(CNFVar{15}, assignments);
+    Propagation<TestAssignmentProvider> underTest(CNFVar{15}, assignments);
     underTest.registerClause(c1);
     underTest.registerClause(c2);
     underTest.registerClause(c3);
@@ -345,7 +345,7 @@ TEST(UnitSolver, propagationDetectsAssignmentReasonClause) {
     assignments.setAssignmentDecisionLevel(CNFVar{3}, 0);
 
     CNFVar maxVar{4};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(clause1);
     underTest.registerClause(clause2);
 
@@ -369,7 +369,7 @@ TEST(UnitSolver, replacementOfReasonClauseInPropagationSucceeds) {
     TestAssignmentProvider assignments;
 
     CNFVar maxVar{5};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(clause1);
 
     assignments.addAssignment(~lit2);
@@ -384,7 +384,7 @@ TEST(UnitSolver, replacementOfReasonClauseInPropagationSucceeds) {
 
 namespace {
 void test_clearClausesInPropagation() {
-    using PropagationTy = Propagation<TestAssignmentProvider, TrivialClause>;
+    using PropagationTy = Propagation<TestAssignmentProvider>;
 
     CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
     CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
@@ -431,7 +431,7 @@ namespace {
 enum class SubstitutionClauseReinsertionTestMode { TEST_NO_PROPAGATION, TEST_PRESENCE };
 
 void substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode mode) {
-    using PropagationTy = Propagation<TestAssignmentProvider, TrivialClause>;
+    using PropagationTy = Propagation<TestAssignmentProvider>;
 
     CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
     CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
@@ -491,7 +491,7 @@ TEST(UnitSolver, binaryClausesCanBeQueriedInPropagation) {
     TestAssignmentProvider assignments;
 
     CNFVar maxVar{5};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
     underTest.registerClause(c1);
     underTest.registerClause(c2);
     underTest.registerClause(c3);
@@ -528,7 +528,7 @@ void test_shortenedClausesArePropagatedCorrectly(bool withChangeInWatchedLits,
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{5};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
 
     underTest.registerClause(c1);
     underTest.registerClause(c2);
@@ -600,7 +600,7 @@ TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary) {
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{5};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
 
     underTest.registerClause(c1);
     underTest.registerClause(c2);
@@ -632,7 +632,7 @@ TEST(UnitSolver, deletedClausesAreRemovedFromPropagationAfterAnnounce) {
 
     TestAssignmentProvider assignments;
     CNFVar maxVar{5};
-    Propagation<TestAssignmentProvider, TrivialClause> underTest(maxVar, assignments);
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
 
     underTest.registerClause(c1);
     underTest.registerClause(c2);

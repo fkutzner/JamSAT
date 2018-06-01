@@ -55,23 +55,28 @@ namespace jamsat {
  * Usage example: Use Propagation with a Trail implementation as an assignment
  * provider to compute all forced assignments after a CDCL branching decision.
  *
- * \tparam AssignmentProvider   A type satisfying the \ref AssignmentProvider concept.
- * \tparam ClauseT              A type satisfying the \ref SimpleClause concept.
+ * \tparam AssignmentProviderT   A type that is a model of the \ref AssignmentProvider concept.
  *
  * \concept{ReasonProvider}
  */
-template <class AssignmentProvider, class ClauseT>
+template <class AssignmentProviderT>
 class Propagation {
+public:
+    /// The clause type. This type equals the assignment provider's clause type.
+    using Clause = typename AssignmentProviderT::Clause;
+
+    /// The AssignmentProvider type.
+    using AssignmentProvider = AssignmentProviderT;
+
 private:
-    using WatcherType = detail_propagation::Watcher<ClauseT>;
-    using WatchersType = detail_propagation::Watchers<ClauseT>;
+    using WatcherType = detail_propagation::Watcher<Clause>;
+    using WatchersType = detail_propagation::Watchers<Clause>;
     using WatchersRangeType = typename WatchersType::AllWatchersRange;
     using ClauseRangeType = decltype(boost::adaptors::transform(
         std::declval<WatchersRangeType>(),
-        std::declval<std::function<const ClauseT *(const WatcherType &)>>()));
+        std::declval<std::function<const Clause *(const WatcherType &)>>()));
 
 public:
-    using ClauseType = ClauseT;
     using ClauseRange = ClauseRangeType;
     using BinariesMap = typename WatchersType::BlockerMapT;
 
@@ -83,7 +88,7 @@ public:
      * \param assignmentProvider  The assignment provider configured such that
      * assignments up to and including maxVar can be kept track of.
      */
-    Propagation(CNFVar maxVar, AssignmentProvider &assignmentProvider);
+    Propagation(CNFVar maxVar, AssignmentProviderT &assignmentProvider);
 
     /**
      * \brief Registers a clause in the propagation system.
@@ -102,7 +107,7 @@ public:
      * \returns         A conflicting clause if adding \clause caused a
      * propagation and a conflict occured; nullptr otherwise.
      */
-    ClauseT *registerClause(ClauseT &clause);
+    auto registerClause(Clause &clause) -> Clause *;
 
 
     /**
@@ -123,7 +128,7 @@ public:
      *
      * \param clause    The clause to be inserted.
      */
-    void registerEquivalentSubstitutingClause(ClauseT &clause);
+    void registerEquivalentSubstitutingClause(Clause &clause);
 
     /**
      * \brief Unregisters all clauses with size greater than 2 from the propagation
@@ -143,7 +148,7 @@ public:
      *
      * \param toPropagate       The fact to propagate, encoded as a literal.
      */
-    ClauseT *propagateUntilFixpoint(CNFLit toPropagate);
+    auto propagateUntilFixpoint(CNFLit toPropagate) -> Clause *;
 
     /**
      * \brief Propagates the given fact wrt. the clauses registered in the
@@ -161,7 +166,7 @@ public:
      * being falsified; otherwise, the pointer to a clause falsified under the
      * current assignment is returned.
      */
-    ClauseT *propagate(CNFLit toPropagate, size_t &amountOfNewFacts);
+    auto propagate(CNFLit toPropagate, size_t &amountOfNewFacts) -> Clause *;
 
     /**
      * \brief Determines whether the given variable as a forced assignment.
@@ -170,7 +175,7 @@ public:
      * passed to the constructor. \p variable must be a variable with a
      * determinate truth value.
      */
-    bool hasForcedAssignment(CNFVar variable) const noexcept;
+    auto hasForcedAssignment(CNFVar variable) const noexcept -> bool;
 
     /**
      * \brief Gets the pointer to the clause which forced the assignment of the
@@ -183,7 +188,7 @@ public:
      * If the assignment was not forced due to propagation, \p nullptr is returned
      * instead.
      */
-    const ClauseT *getAssignmentReason(CNFVar variable) const noexcept;
+    auto getAssignmentReason(CNFVar variable) const noexcept -> const Clause *;
 
     /**
      * \brief Increases the maximum variable which may occur during propagation.
@@ -202,7 +207,7 @@ public:
      *
      * \returns A range of clause pointers as described above.
      */
-    ClauseRange getClausesInPropagationOrder() const noexcept;
+    auto getClausesInPropagationOrder() const noexcept -> ClauseRange;
 
     /**
      * \brief Returns a map representing the binary clauses registered with the
@@ -213,7 +218,7 @@ public:
      * range containing exactly the literals L' such binary clause (L L') or
      * (L' L) has been registered with the propagation system.
      */
-    BinariesMap getBinariesMap() const noexcept;
+    auto getBinariesMap() const noexcept -> BinariesMap;
 
 
     /**
@@ -228,8 +233,8 @@ public:
      * \tparam DecisionLevelProvider    A type satisfying the DecisionLevelProvider concept.
      */
     template <typename DecisionLevelProvider>
-    bool isAssignmentReason(const ClauseT &clause, const DecisionLevelProvider &dlProvider) const
-        noexcept;
+    auto isAssignmentReason(const Clause &clause, const DecisionLevelProvider &dlProvider) const
+        noexcept -> bool;
 
     /**
      * \brief Updates the location of an assignment reason clause.
@@ -242,7 +247,7 @@ public:
      * \param oldClause     An assignment reason clause.
      * \param newClause     The replacement for \p oldClause, with oldClause == newClause.
      */
-    void updateAssignmentReason(const ClauseT &oldClause, const ClauseT &newClause) noexcept;
+    void updateAssignmentReason(const Clause &oldClause, const Clause &newClause) noexcept;
 
     /**
      * \brief Returns the amount of assignments which have been placed on
@@ -253,7 +258,7 @@ public:
      * the trail during the last propagation to fixpoint, but have not been
      * propagated.
      */
-    uint64_t getCurrentAmountOfUnpropagatedAssignments() const noexcept;
+    auto getCurrentAmountOfUnpropagatedAssignments() const noexcept -> uint64_t;
 
     /**
      * \brief Notifies the propagation system that a clause will have been
@@ -271,15 +276,15 @@ public:
      *                at the last propagation rsp. registration of `clause`, this
      *                method must be called before the modification takes place.
      */
-    void notifyClauseModificationAhead(ClauseT const &clause) noexcept;
+    void notifyClauseModificationAhead(Clause const &clause) noexcept;
 
 private:
-    ClauseT *propagateBinaries(CNFLit toPropagate, size_t &amountOfNewFacts);
-    ClauseT *registerClause(ClauseT &clause, bool autoPropagate);
+    Clause *propagateBinaries(CNFLit toPropagate, size_t &amountOfNewFacts);
+    Clause *registerClause(Clause &clause, bool autoPropagate);
     void cleanupWatchers(CNFLit lit);
 
-    AssignmentProvider &m_assignmentProvider;
-    detail_propagation::Watchers<ClauseT> m_binaryWatchers;
+    AssignmentProviderT &m_assignmentProvider;
+    detail_propagation::Watchers<Clause> m_binaryWatchers;
 
     /**
      * \internal
@@ -300,7 +305,7 @@ private:
      *  - the lists \p m_watchers.getWatchers(C[0]) and \p
      * m_watchers.getWatchers(C[1]) each contain a watcher pointing to C.
      */
-    detail_propagation::Watchers<ClauseT> m_watchers;
+    detail_propagation::Watchers<Clause> m_watchers;
 
     /**
      * \internal
@@ -315,9 +320,8 @@ private:
 
 /********** Implementation ****************************** */
 
-template <class AssignmentProvider, class ClauseT>
-Propagation<AssignmentProvider, ClauseT>::Propagation(CNFVar maxVar,
-                                                      AssignmentProvider &assignmentProvider)
+template <class AssignmentProvider>
+Propagation<AssignmentProvider>::Propagation(CNFVar maxVar, AssignmentProvider &assignmentProvider)
   : m_assignmentProvider(assignmentProvider)
   , m_binaryWatchers(maxVar)
   , m_unpropagatedStats(0ULL)
@@ -326,15 +330,15 @@ Propagation<AssignmentProvider, ClauseT>::Propagation(CNFVar maxVar,
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
 
-template <class AssignmentProvider, class ClauseT>
-ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause,
-                                                                  bool autoPropagate) {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::registerClause(Clause &clause, bool autoPropagate)
+    -> Clause * {
     JAM_ASSERT(clause.size() >= 2ull, "Illegally small clause argument");
     JAM_LOG_PROPAGATION(info, "Registering clause " << &clause << " ("
                                                     << toString(clause.begin(), clause.end())
                                                     << ") for propagation.");
-    detail_propagation::Watcher<ClauseT> watcher1{clause, clause[0], 1};
-    detail_propagation::Watcher<ClauseT> watcher2{clause, clause[1], 0};
+    detail_propagation::Watcher<Clause> watcher1{clause, clause[0], 1};
+    detail_propagation::Watcher<Clause> watcher2{clause, clause[1], 0};
 
     auto &targetWatchList = (clause.size() <= 2 ? m_binaryWatchers : m_watchers);
     targetWatchList.addWatcher(clause[0], watcher2);
@@ -363,32 +367,31 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &claus
     return nullptr;
 }
 
-template <class AssignmentProvider, class ClauseT>
-ClauseT *Propagation<AssignmentProvider, ClauseT>::registerClause(ClauseT &clause) {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::registerClause(Clause &clause) -> Clause * {
     // Register with auto-propagation enabled:
     return registerClause(clause, true);
 }
 
-template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::registerEquivalentSubstitutingClause(
-    ClauseT &clause) {
+template <class AssignmentProvider>
+void Propagation<AssignmentProvider>::registerEquivalentSubstitutingClause(Clause &clause) {
     // Register with auto-propagation disabled
     registerClause(clause, false);
 }
 
-template <class AssignmentProvider, class ClauseT>
-const ClauseT *Propagation<AssignmentProvider, ClauseT>::getAssignmentReason(CNFVar variable) const
-    noexcept {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::getAssignmentReason(CNFVar variable) const noexcept
+    -> const Clause * {
     return m_assignmentProvider.getAssignmentReason(variable);
 }
 
-template <class AssignmentProvider, class ClauseT>
-bool Propagation<AssignmentProvider, ClauseT>::hasForcedAssignment(CNFVar variable) const noexcept {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const noexcept -> bool {
     return m_assignmentProvider.getAssignmentReason(variable) != nullptr;
 }
 
-template <class AssignmentProvider, class ClauseT>
-ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(CNFLit toPropagate) {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate) -> Clause * {
     JAM_LOG_PROPAGATION(info, "Propagating assignment until fixpoint: " << toPropagate);
     auto trailEndIndex = m_assignmentProvider.getNumberOfAssignments();
 
@@ -398,7 +401,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(CNFLit
 
     m_unpropagatedStats = 0ULL;
     size_t amountOfNewFacts = 0;
-    ClauseT *conflictingClause = propagate(toPropagate, amountOfNewFacts);
+    Clause *conflictingClause = propagate(toPropagate, amountOfNewFacts);
     if (conflictingClause) {
         m_unpropagatedStats = amountOfNewFacts;
         return conflictingClause;
@@ -427,9 +430,9 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateUntilFixpoint(CNFLit
     return nullptr;
 }
 
-template <class AssignmentProvider, class ClauseT>
-ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateBinaries(CNFLit toPropagate,
-                                                                     size_t &amountOfNewFacts) {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::propagateBinaries(CNFLit toPropagate,
+                                                        size_t &amountOfNewFacts) -> Clause * {
     CNFLit negatedToPropagate = ~toPropagate;
     auto watcherListTraversal = m_binaryWatchers.getWatchers(negatedToPropagate);
     while (!watcherListTraversal.hasFinishedTraversal()) {
@@ -443,7 +446,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateBinaries(CNFLit toPr
         } else if (!isDeterminate(assignment)) {
             // propagation case:
             ++amountOfNewFacts;
-            ClauseT &reason = currentWatcher.getClause();
+            Clause &reason = currentWatcher.getClause();
             JAM_LOG_PROPAGATION(info,
                                 "  Forced assignment: " << secondLit << " Reason: " << &reason);
             m_assignmentProvider.addAssignment(secondLit, reason);
@@ -458,9 +461,9 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagateBinaries(CNFLit toPr
     return nullptr;
 }
 
-template <class AssignmentProvider, class ClauseT>
-ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
-                                                             size_t &amountOfNewFacts) {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t &amountOfNewFacts)
+    -> Clause * {
     JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
     amountOfNewFacts = 0;
 
@@ -468,7 +471,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
         cleanupWatchers(~toPropagate);
     }
 
-    if (ClauseT *conflict = propagateBinaries(toPropagate, amountOfNewFacts)) {
+    if (Clause *conflict = propagateBinaries(toPropagate, amountOfNewFacts)) {
         return conflict;
     }
 
@@ -504,7 +507,7 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
         // literal pointing either to clause[0] or clause[1], but not to the literal
         // which is their index in m_watchers.
 
-        for (typename ClauseT::size_type i = 2; i < clause.size(); ++i) {
+        for (typename Clause::size_type i = 2; i < clause.size(); ++i) {
             CNFLit currentLiteral = clause[i];
             if (!isFalse(m_assignmentProvider.getAssignment(currentLiteral))) {
                 // The FALSE literal is moved into the unwatched of the clause here,
@@ -562,33 +565,32 @@ ClauseT *Propagation<AssignmentProvider, ClauseT>::propagate(CNFLit toPropagate,
     return nullptr;
 }
 
-template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::clearNonBinaries() noexcept {
+template <class AssignmentProvider>
+void Propagation<AssignmentProvider>::clearNonBinaries() noexcept {
     m_watchers.clear();
 }
 
-template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
+template <class AssignmentProvider>
+void Propagation<AssignmentProvider>::increaseMaxVarTo(CNFVar newMaxVar) {
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     m_watchers.increaseMaxVarTo(newMaxVar);
     m_binaryWatchers.increaseMaxVarTo(newMaxVar);
     m_watcherUpdateRequired.increaseSizeTo(getMaxLit(newMaxVar));
 }
 
-template <class AssignmentProvider, class ClauseT>
-typename Propagation<AssignmentProvider, ClauseT>::ClauseRange
-Propagation<AssignmentProvider, ClauseT>::getClausesInPropagationOrder() const noexcept {
-    std::function<const ClauseT *(const WatcherType &)> trans = [](const WatcherType &w) {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::getClausesInPropagationOrder() const noexcept -> ClauseRange {
+    std::function<const Clause *(const WatcherType &)> trans = [](const WatcherType &w) {
         return &w.getClause();
     };
 
     return boost::adaptors::transform(m_watchers.getWatchersInTraversalOrder(), trans);
 }
 
-template <class AssignmentProvider, class ClauseT>
+template <class AssignmentProvider>
 template <typename DecisionLevelProvider>
-bool Propagation<AssignmentProvider, ClauseT>::isAssignmentReason(
-    const ClauseT &clause, const DecisionLevelProvider &dlProvider) const noexcept {
+auto Propagation<AssignmentProvider>::isAssignmentReason(
+    const Clause &clause, const DecisionLevelProvider &dlProvider) const noexcept -> bool {
     JAM_ASSERT(clause.size() >= 2, "Argument clause must at have a size of 2");
     for (auto var : {clause[0].getVariable(), clause[1].getVariable()}) {
         if (m_assignmentProvider.getAssignmentReason(var) != &clause) {
@@ -604,9 +606,9 @@ bool Propagation<AssignmentProvider, ClauseT>::isAssignmentReason(
     return false;
 }
 
-template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::updateAssignmentReason(
-    const ClauseT &oldClause, const ClauseT &newClause) noexcept {
+template <class AssignmentProvider>
+void Propagation<AssignmentProvider>::updateAssignmentReason(const Clause &oldClause,
+                                                             const Clause &newClause) noexcept {
     // JAM_EXPENSIVE_ASSERT(oldClause == newClause, "Arguments oldClause and newClause must be
     // equal");
     for (auto var : {newClause[0].getVariable(), newClause[1].getVariable()}) {
@@ -616,27 +618,26 @@ void Propagation<AssignmentProvider, ClauseT>::updateAssignmentReason(
     }
 }
 
-template <class AssignmentProvider, class ClauseT>
-auto Propagation<AssignmentProvider, ClauseT>::getBinariesMap() const noexcept -> BinariesMap {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::getBinariesMap() const noexcept -> BinariesMap {
     return m_binaryWatchers.getBlockerMap();
 }
 
-template <class AssignmentProvider, class ClauseT>
-auto Propagation<AssignmentProvider, ClauseT>::getCurrentAmountOfUnpropagatedAssignments() const
-    noexcept -> uint64_t {
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::getCurrentAmountOfUnpropagatedAssignments() const noexcept
+    -> uint64_t {
     return m_unpropagatedStats;
 }
 
-template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::notifyClauseModificationAhead(
-    ClauseT const &clause) noexcept {
+template <class AssignmentProvider>
+void Propagation<AssignmentProvider>::notifyClauseModificationAhead(Clause const &clause) noexcept {
     JAM_ASSERT(clause.size() >= 3, "Can't modify clauses with size <= 2");
     m_watcherUpdateRequired[clause[0]] = 1;
     m_watcherUpdateRequired[clause[1]] = 1;
 }
 
-template <class AssignmentProvider, class ClauseT>
-void Propagation<AssignmentProvider, ClauseT>::cleanupWatchers(CNFLit lit) {
+template <class AssignmentProvider>
+void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
     // This is not implemented as a detail of the watcher data structure
     // since watchers may be moved from the "regular" watchers to the binary
     // ones.
@@ -646,11 +647,11 @@ void Propagation<AssignmentProvider, ClauseT>::cleanupWatchers(CNFLit lit) {
     auto watcherListTraversal = m_watchers.getWatchers(lit);
     while (!watcherListTraversal.hasFinishedTraversal()) {
         WatcherType currentWatcher = *watcherListTraversal;
-        ClauseT &clause = currentWatcher.getClause();
+        Clause &clause = currentWatcher.getClause();
 
         JAM_ASSERT(clause.size() >= 2,
                    "Clauses shrinked to size 1 must be removed from propagation");
-        if (clause.getFlag(ClauseT::Flag::SCHEDULED_FOR_DELETION) == true) {
+        if (clause.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION) == true) {
             watcherListTraversal.removeCurrent();
         } else if (clause.size() == 2) {
             // The clause has become a binary clause ~> move to binary watchers
