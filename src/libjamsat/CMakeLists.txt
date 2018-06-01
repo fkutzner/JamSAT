@@ -57,6 +57,7 @@ add_subdirectory(solver)
 add_subdirectory(branching)
 add_subdirectory(proof)
 add_subdirectory(api)
+add_subdirectory(simplification)
 
 set(jamcore-objects
   $<TARGET_OBJECTS:jamsatCnfProblem>
@@ -66,6 +67,7 @@ set(jamcore-objects
   $<TARGET_OBJECTS:jamsatBranching>
   $<TARGET_OBJECTS:jamsatProof>
   $<TARGET_OBJECTS:jamsatApiIPASIR>
+  $<TARGET_OBJECTS:jamsatSimplification>
 )
 
 set(jamcore-dso-objects
@@ -76,6 +78,7 @@ set(jamcore-dso-objects
   $<TARGET_OBJECTS:jamsatBranching-dso>
   $<TARGET_OBJECTS:jamsatProof-dso>
   $<TARGET_OBJECTS:jamsatApiIPASIR-dso>
+  $<TARGET_OBJECTS:jamsatSimplification-dso>
 )
 
 
