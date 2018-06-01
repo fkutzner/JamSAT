@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <functional>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
@@ -56,13 +57,17 @@ namespace jamsat {
  * DLProvider and Propagation as a ReasonProvider to compute conflict clauses
  * after a conflict occurred.
  *
- * \tparam DLProvider           A type satisfying the \ref DecisionLevelProvider concept.
- * \tparam ReasonProvider       A type satisfying the \ref ReasonProvider concept.
- * \tparam ClauseT              A type satisfying the \ref SimpleClause concept.
+ * \tparam DLProvider           A type that is a model of the \ref DecisionLevelProvider concept.
+ * \tparam ReasonProvider       A type that is a model of the \ref ReasonProvider concept.
  */
-template <class DLProvider, class ReasonProvider, class ClauseT>
+template <class DLProvider, class ReasonProvider>
 class FirstUIPLearning {
+    static_assert(std::is_same<typename DLProvider::Clause, typename ReasonProvider::Clause>::value,
+                  "DLProvider and ReasonProvider must have the same Clause type");
+
 public:
+    using Clause = typename ReasonProvider::Clause;
+
     /**
      * \brief Constructs a new FirstUIPLearning instance.
      *
@@ -75,7 +80,7 @@ public:
      * as long as the constructed object.
      */
     FirstUIPLearning(CNFVar maxVar, const DLProvider &dlProvider,
-                     const ReasonProvider &reasonProvider);
+                     ReasonProvider const &reasonProvider);
 
     /**
      * \brief Given a conflicting clause, computes a conflict clause.
@@ -86,7 +91,7 @@ public:
      * of the conflicting clause with reason clauses. The asserting literal is placed
      * first in the result.
      */
-    void computeConflictClause(ClauseT &conflictingClause, std::vector<CNFLit> &result) const;
+    void computeConflictClause(Clause &conflictingClause, std::vector<CNFLit> &result) const;
 
 
     /**
@@ -139,7 +144,8 @@ private:
      * \returns The amount of literals on the current decision level found in
      * \p conflictingClause.
      */
-    int initializeResult(const ClauseT &conflictingClause, std::vector<CNFLit> &result) const;
+    auto initializeResult(Clause const &conflictingClause, std::vector<CNFLit> &result) const
+        -> int;
 
     /**
      * \brief Completes result to be ( \p result joined with \p work ) resolved
@@ -162,7 +168,8 @@ private:
      *
      * \returns The amount of literals added to \p work
      */
-    int addResolvent(const ClauseT &reason, CNFLit resolveAtLit, std::vector<CNFLit> &result) const;
+    auto addResolvent(Clause const &reason, CNFLit resolveAtLit, std::vector<CNFLit> &result) const
+        -> int;
 
     /**
      * \brief Iteratively resolves \p result with reason clauses of literals
@@ -180,7 +187,7 @@ private:
      *
      * \param lits    A vector of literals.
      */
-    void clearStamps(const std::vector<CNFLit> &lits) const noexcept;
+    void clearStamps(std::vector<CNFLit> const &lits) const noexcept;
 
     const DLProvider &m_dlProvider;
     const ReasonProvider &m_reasonProvider;
@@ -200,15 +207,16 @@ private:
 
 /********** Implementation ****************************** */
 
-template <class DLProvider, class ReasonProvider, class ClauseT>
-FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::FirstUIPLearning(
-    CNFVar maxVar, const DLProvider &dlProvider, const ReasonProvider &reasonProvider)
+template <class DLProvider, class ReasonProvider>
+FirstUIPLearning<DLProvider, ReasonProvider>::FirstUIPLearning(CNFVar maxVar,
+                                                               const DLProvider &dlProvider,
+                                                               const ReasonProvider &reasonProvider)
   : m_dlProvider(dlProvider), m_reasonProvider(reasonProvider), m_maxVar(maxVar), m_stamps(maxVar) {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
 
-template <class DLProvider, class ReasonProvider, class ClauseT>
-void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
+template <class DLProvider, class ReasonProvider>
+void FirstUIPLearning<DLProvider, ReasonProvider>::increaseMaxVarTo(CNFVar newMaxVar) {
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     CNFVar firstNewVar = CNFVar{static_cast<CNFVar::RawVariable>(m_stamps.size())};
     m_stamps.increaseSizeTo(newMaxVar);
@@ -230,9 +238,9 @@ inline bool isAllZero(const BoundedMap<CNFVar, char> &stamps, CNFVar maxVar) noe
 }
 #endif
 
-template <class DLProvider, class ReasonProvider, class ClauseT>
-int FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::initializeResult(
-    const ClauseT &conflictingClause, std::vector<CNFLit> &result) const {
+template <class DLProvider, class ReasonProvider>
+auto FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
+    Clause const &conflictingClause, std::vector<CNFLit> &result) const -> int {
 
     result.push_back(CNFLit::getUndefinedLiteral());
 
@@ -262,9 +270,11 @@ int FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::initializeResult(
     return unresolvedCount;
 }
 
-template <class DLProvider, class ReasonProvider, class ClauseT>
-int FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::addResolvent(
-    const ClauseT &reason, CNFLit resolveAtLit, std::vector<CNFLit> &result) const {
+template <class DLProvider, class ReasonProvider>
+auto FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(Clause const &reason,
+                                                                CNFLit resolveAtLit,
+                                                                std::vector<CNFLit> &result) const
+    -> int {
     int unresolvedCount = 0;
 
     // Stamp literals on the current decision level and mark them as resolution
@@ -308,9 +318,9 @@ int FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::addResolvent(
     return unresolvedCount;
 }
 
-template <class DLProvider, class ReasonProvider, class ClauseT>
-void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
-    std::vector<CNFLit> &result, int unresolvedCount) const {
+template <class DLProvider, class ReasonProvider>
+void FirstUIPLearning<DLProvider, ReasonProvider>::resolveUntilUIP(std::vector<CNFLit> &result,
+                                                                   int unresolvedCount) const {
 
     // unresolvedCount counts how many literals L are left to resolve on the
     // current decision level. Until unresolvedCount is 1, the algorithm
@@ -376,9 +386,9 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::resolveUntilUIP(
                "Implementation error: didn't find exactly one asserting literal");
 }
 
-template <class DLProvider, class ReasonProvider, class ClauseT>
-void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::clearStamps(
-    const std::vector<CNFLit> &lits) const noexcept {
+template <class DLProvider, class ReasonProvider>
+void FirstUIPLearning<DLProvider, ReasonProvider>::clearStamps(
+    std::vector<CNFLit> const &lits) const noexcept {
     for (CNFLit w : lits) {
         m_stamps[w.getVariable()] = 0;
         if (m_onSeenVariableCallback) {
@@ -387,9 +397,9 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::clearStamps(
     }
 }
 
-template <class DLProvider, class ReasonProvider, class ClauseT>
-void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::computeConflictClause(
-    ClauseT &conflictingClause, std::vector<CNFLit> &result) const {
+template <class DLProvider, class ReasonProvider>
+void FirstUIPLearning<DLProvider, ReasonProvider>::computeConflictClause(
+    Clause &conflictingClause, std::vector<CNFLit> &result) const {
     // This implementation closely follows Donald Knuth's prosaic description
     // of first-UIP clause learning. See TAOCP, chapter 7.2.2.2.
     JAM_LOG_CA(info, "Beginning conflict analysis.");
@@ -421,15 +431,15 @@ void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::computeConflictClaus
     }
 }
 
-template <class DLProvider, class ReasonProvider, class ClauseT>
-void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::setOnSeenVariableCallback(
+template <class DLProvider, class ReasonProvider>
+void FirstUIPLearning<DLProvider, ReasonProvider>::setOnSeenVariableCallback(
     std::function<void(CNFVar)> callback) noexcept {
     m_onSeenVariableCallback = callback;
 }
 
-template <class DLProvider, class ReasonProvider, class ClauseT>
-void FirstUIPLearning<DLProvider, ReasonProvider, ClauseT>::test_assertClassInvariantsSatisfied()
-    const noexcept {
+template <class DLProvider, class ReasonProvider>
+void FirstUIPLearning<DLProvider, ReasonProvider>::test_assertClassInvariantsSatisfied() const
+    noexcept {
     JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
 }
 }

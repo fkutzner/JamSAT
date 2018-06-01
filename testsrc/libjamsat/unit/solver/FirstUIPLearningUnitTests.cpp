@@ -76,8 +76,8 @@ bool equalLits(const std::vector<CNFLit> &lhs, const std::vector<CNFLit> &rhs) {
 TEST(UnitSolver, classInvariantsSatisfiedAfterFirstUIPLearningConstruction) {
     TestAssignmentProvider assignments;
     DummyReasonProvider reasons;
-    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
-        CNFVar{10}, assignments, reasons);
+    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider> underTest(CNFVar{10}, assignments,
+                                                                            reasons);
     underTest.test_assertClassInvariantsSatisfied();
 }
 
@@ -109,8 +109,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
     assignments.setCurrentDecisionLevel(4);
 
     CNFVar maxVar{9};
-    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
-        maxVar, assignments, reasons);
+    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider> underTest(maxVar, assignments,
+                                                                            reasons);
     std::vector<CNFLit> result;
     underTest.computeConflictClause(conflictingClause, result);
     auto expectedClause = std::vector<CNFLit>{
@@ -154,8 +154,8 @@ TEST(UnitSolver, firstUIPLearningCallsSeenVariableCallback) {
     assignments.setCurrentDecisionLevel(4);
 
     CNFVar maxVar{9};
-    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
-        maxVar, assignments, reasons);
+    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider> underTest(maxVar, assignments,
+                                                                            reasons);
     std::vector<CNFVar> seenVars;
     underTest.setOnSeenVariableCallback(
         [&seenVars](CNFVar seenVar) { seenVars.push_back(seenVar); });
@@ -206,8 +206,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
     assignments.setCurrentDecisionLevel(2);
 
     CNFVar maxVar{7};
-    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
-        maxVar, assignments, reasons);
+    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider> underTest(maxVar, assignments,
+                                                                            reasons);
     std::vector<CNFLit> result;
     underTest.computeConflictClause(conflictingClause, result);
     auto expectedClause = std::vector<CNFLit>{~filler[1], ~filler[2], ~filler[3], ~assertingLit};
@@ -250,8 +250,8 @@ void test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(bool simulateOOM) {
     assignments.setCurrentDecisionLevel(1);
 
     CNFVar maxVar{2};
-    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
-        maxVar, assignments, reasons);
+    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider> underTest(maxVar, assignments,
+                                                                            reasons);
 
     std::vector<CNFLit> result;
     if (!simulateOOM) {
@@ -344,8 +344,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
     assignments.setCurrentDecisionLevel(3);
 
     CNFVar maxVar{16};
-    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider, TrivialClause> underTest(
-        maxVar, assignments, reasons);
+    FirstUIPLearning<TestAssignmentProvider, DummyReasonProvider> underTest(maxVar, assignments,
+                                                                            reasons);
 
     std::vector<CNFLit> conflictClause;
     underTest.computeConflictClause(waerden6, conflictClause);

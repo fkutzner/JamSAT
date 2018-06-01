@@ -35,6 +35,8 @@ namespace jamsat {
 template <class ClauseT>
 class TestReasonProvider {
 public:
+    using Clause = ClauseT;
+
     void setAssignmentReason(CNFVar variable, ClauseT &reason) noexcept {
         m_reasons[variable] = &reason;
     }

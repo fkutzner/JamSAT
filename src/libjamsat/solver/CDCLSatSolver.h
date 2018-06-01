@@ -76,9 +76,8 @@ struct CDCLSatSolverDefaultTypes {
     using ClauseDB = jamsat::HeapletClauseDB<CDCLSatSolverDefaultTypes::Clause>;
     using Trail = jamsat::Trail<CDCLSatSolverDefaultTypes::Clause>;
     using Propagation = jamsat::Propagation<Trail>;
-    using ConflictAnalyzer = FirstUIPLearning<CDCLSatSolverDefaultTypes::Trail, Propagation,
-                                              CDCLSatSolverDefaultTypes::Clause>;
-    using BranchingHeuristic = VSIDSBranchingHeuristic<CDCLSatSolverDefaultTypes::Trail>;
+    using ConflictAnalyzer = FirstUIPLearning<Trail, Propagation>;
+    using BranchingHeuristic = VSIDSBranchingHeuristic<Trail>;
     using RestartPolicy = GlucoseRestartPolicy;
     using ClauseDBReductionPolicy =
         GlucoseClauseDBReductionPolicy<jamsat::Clause, std::vector<jamsat::Clause *>, LBD>;

@@ -68,7 +68,7 @@ public:
 private:
     using TrailType = Trail<Clause>;
     using PropagationType = Propagation<TrailType>;
-    using ConflictAnalysisType = FirstUIPLearning<TrailType, PropagationType, Clause>;
+    using ConflictAnalysisType = FirstUIPLearning<TrailType, PropagationType>;
     using ClauseDBType = HeapClauseDB<Clause>;
     using BranchingHeuristicType = VSIDSBranchingHeuristic<TrailType>;
 
