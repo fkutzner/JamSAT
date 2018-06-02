@@ -28,6 +28,7 @@
 
 #include <boost/range.hpp>
 #include <boost/range/adaptors.hpp>
+#include <boost/range/join.hpp>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/solver/Watcher.h>
@@ -72,9 +73,13 @@ private:
     using WatcherType = detail_propagation::Watcher<Clause>;
     using WatchersType = detail_propagation::Watchers<Clause>;
     using WatchersRangeType = typename WatchersType::AllWatchersRange;
-    using ClauseRangeType = decltype(boost::adaptors::transform(
+
+    using PartialClauseRangeType = decltype(boost::adaptors::transform(
         std::declval<WatchersRangeType>(),
         std::declval<std::function<const Clause *(const WatcherType &)>>()));
+
+    using ClauseRangeType = decltype(boost::range::join(std::declval<PartialClauseRangeType>(),
+                                                        std::declval<PartialClauseRangeType>()));
 
 public:
     using ClauseRange = ClauseRangeType;
@@ -131,10 +136,9 @@ public:
     void registerEquivalentSubstitutingClause(Clause &clause);
 
     /**
-     * \brief Unregisters all clauses with size greater than 2 from the propagation
-     * system.
+     * \brief Unregisters all clauses from the propagation system.
      */
-    void clearNonBinaries() noexcept;
+    void clear() noexcept;
 
     /**
      * \brief Propagates the given fact wrt. the clauses registered in the
@@ -566,8 +570,9 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t &amou
 }
 
 template <class AssignmentProvider>
-void Propagation<AssignmentProvider>::clearNonBinaries() noexcept {
+void Propagation<AssignmentProvider>::clear() noexcept {
     m_watchers.clear();
+    m_binaryWatchers.clear();
 }
 
 template <class AssignmentProvider>
@@ -584,7 +589,12 @@ auto Propagation<AssignmentProvider>::getClausesInPropagationOrder() const noexc
         return &w.getClause();
     };
 
-    return boost::adaptors::transform(m_watchers.getWatchersInTraversalOrder(), trans);
+    const auto regularClauses =
+        boost::adaptors::transform(m_watchers.getWatchersInTraversalOrder(), trans);
+    const auto binaryClauses =
+        boost::adaptors::transform(m_binaryWatchers.getWatchersInTraversalOrder(), trans);
+
+    return boost::range::join(regularClauses, binaryClauses);
 }
 
 template <class AssignmentProvider>

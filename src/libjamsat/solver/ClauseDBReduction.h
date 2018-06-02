@@ -78,7 +78,7 @@ void reduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, TrailTy &t
     // Re-register relocated clauses:
     problemClauses.clear();
     learntClauses.clear();
-    propagation.clearNonBinaries();
+    propagation.clear();
     for (auto clausePtr : clausesAfterRelocation) {
         clausePtr->clearFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
         if (clausePtr->template getLBD<LBD>() != 0) {

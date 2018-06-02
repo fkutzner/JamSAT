@@ -175,11 +175,10 @@ TEST(UnitClauseDB, HeapletClauseDBIsEmptyAfterCreation) {
     HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     // Assert that space is allocated lazily:
     EXPECT_EQ(underTest.test_getAvailableSpaceInActiveHeaplets(), 0ull);
-    EXPECT_EQ(underTest.test_getAvailableSpaceInBinaryHeaplets(), 0ull);
     EXPECT_EQ(underTest.test_getAvailableSpaceInFreeHeaplets(), 0ull);
 }
 
-TEST(UnitClauseDB, HeapletClauseDBFreeSpaceDecreasedNonBinaryClauseCreation) {
+TEST(UnitClauseDB, HeapletClauseDBFreeSpaceDecreasedAtClauseCreation) {
     HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     HeapletClauseDB<Clause>::size_type maxFree = 512ull;
 
@@ -203,30 +202,6 @@ TEST(UnitClauseDB, HeapletClauseDBFreeSpaceDecreasedNonBinaryClauseCreation) {
                                                        Clause::getAllocationSize(clauseSize2)));
 }
 
-TEST(UnitClauseDB, HeapletClauseDBFreeSpaceDecreasedBinaryClauseCreation) {
-    HeapletClauseDB<Clause> underTest{512ull, 2048ull};
-    HeapletClauseDB<Clause>::size_type maxFree = 512ull;
-
-    const Clause::size_type clauseSize = 2;
-    auto &clause = underTest.allocate(clauseSize);
-    (void)clause;
-    maxFree -= Clause::getAllocationSize(clauseSize);
-
-    EXPECT_GT(underTest.test_getAvailableSpaceInBinaryHeaplets(), 0ull);
-    EXPECT_LE(underTest.test_getAvailableSpaceInBinaryHeaplets(), maxFree);
-    EXPECT_TRUE(underTest.test_isRegionInBinaryHeaplet(reinterpret_cast<void *>(&clause),
-                                                       Clause::getAllocationSize(clauseSize)));
-
-    const Clause::size_type clauseSize2 = 2;
-    auto &clause2 = underTest.allocate(clauseSize2);
-    (void)clause2;
-    maxFree -= Clause::getAllocationSize(clauseSize2);
-    EXPECT_GT(underTest.test_getAvailableSpaceInBinaryHeaplets(), 0ull);
-    EXPECT_LE(underTest.test_getAvailableSpaceInBinaryHeaplets(), maxFree);
-    EXPECT_TRUE(underTest.test_isRegionInBinaryHeaplet(reinterpret_cast<void *>(&clause2),
-                                                       Clause::getAllocationSize(clauseSize2)));
-}
-
 TEST(UnitClauseDB, HeapletClauseDBAllocatesClausesOfCorrectSize) {
     HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     const Clause::size_type clauseSize = 5;
@@ -246,8 +221,8 @@ TEST(UnitClauseDB, HeapletClauseDBUsesFreshHeapletWhenFirstIsFull) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenOutOfMemory) {
-    HeapletClauseDB<Clause> underTest{512ull, 1536ull};
-    // Should be able to allocate no more than 1024 byte in non-binary clauses
+    HeapletClauseDB<Clause> underTest{512ull, 1024ull};
+    // Should be able to allocate no more than 1024 byte
     // Allocating at least 384 bytes at a time:
     underTest.allocate(96);
     underTest.allocate(96);
@@ -288,7 +263,7 @@ TEST(UnitClauseDB, HeapletClauseDBIsEmptyAfterRetainingNoClauses) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBCanAllocateAfterRetainingNoClauses) {
-    HeapletClauseDB<Clause> underTest{512ull, 2048ull};
+    HeapletClauseDB<Clause> underTest{512ull, 1536ull};
     underTest.allocate(80);
     underTest.allocate(80);
     std::vector<Clause *> empty;
@@ -301,9 +276,9 @@ TEST(UnitClauseDB, HeapletClauseDBCanAllocateAfterRetainingNoClauses) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenRetainIsOutOfMemory) {
-    HeapletClauseDB<Clause> underTest{512ull, 1024ull};
+    HeapletClauseDB<Clause> underTest{512ull, 512ull};
     // This clause DB has no heaplets that might be used for retain()
-    auto &clause = underTest.allocate(3);
+    auto &clause = underTest.allocate(2);
     std::vector<Clause *> empty;
     ASSERT_THROW(underTest.retain(empty, createNoReasonClausePred(), {},
                                   boost::optional<std::vector<Clause *>::iterator>{}),

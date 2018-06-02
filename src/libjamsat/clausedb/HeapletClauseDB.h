@@ -206,8 +206,7 @@ public:
      *
      * \param clausePointers    An object which is iterable over clause pointers. For each
      *                          clause pointer `p` iterated by \p clausePointers, the following
-     *                          must hold: the clause to which `p` points must contain more
-     *                          than 2 literals, `p` must be valid and must have been allocated
+     *                          must hold: `p` must be valid and must have been allocated
      *                          by the same allocator objet where `retain` is called.
      *                          \p clausePointers must not contain any pointer to empty clauses.
      *                          \p clausePointers may contain duplicates; if a clause pointer has
@@ -238,12 +237,10 @@ public:
     bool test_isRegionInHeapletList(const std::vector<clausedb_detail::Heaplet> &heaplets,
                                     const void *ptr, size_type length) const noexcept;
     bool test_isRegionInActiveHeaplet(const void *ptr, size_type length) const noexcept;
-    bool test_isRegionInBinaryHeaplet(const void *ptr, size_type length) const noexcept;
     size_type
     test_getAvailableSpaceInHeapletList(const std::vector<clausedb_detail::Heaplet> &heaplets) const
         noexcept;
     size_type test_getAvailableSpaceInActiveHeaplets() const noexcept;
-    size_type test_getAvailableSpaceInBinaryHeaplets() const noexcept;
     size_type test_getAvailableSpaceInFreeHeaplets() const noexcept;
 #endif
 
@@ -256,7 +253,6 @@ private:
     size_type m_memoryLimit;
 
     HeapletList m_activeHeaplets;
-    HeapletList m_binaryHeaplets;
     HeapletList m_freeHeapletPool;
 };
 
@@ -364,21 +360,18 @@ HeapletClauseDB<ClauseT>::HeapletClauseDB(size_type heapletSize, size_type memor
   : m_heapletSize(clausedb_detail::getEffectiveHeapletSize(heapletSize))
   , m_memoryLimit(memoryLimit)
   , m_activeHeaplets()
-  , m_binaryHeaplets()
   , m_freeHeapletPool() {
 
     size_type numHeaplets = memoryLimit / m_heapletSize;
 
-    JAM_ASSERT(numHeaplets >= 2, "Insufficient memoryLimit");
-    for (size_type i = 0; i < (numHeaplets - 2); ++i) {
+    JAM_ASSERT(numHeaplets >= 1, "Insufficient memoryLimit");
+    for (size_type i = 0; i < (numHeaplets - 1); ++i) {
         m_freeHeapletPool.emplace_back(m_heapletSize);
     }
     m_activeHeaplets.emplace_back(m_heapletSize);
-    m_binaryHeaplets.emplace_back(m_heapletSize);
 
     // needed for exception safety:
     m_activeHeaplets.reserve(numHeaplets);
-    m_binaryHeaplets.reserve(numHeaplets);
     m_freeHeapletPool.reserve(numHeaplets);
 }
 
@@ -414,8 +407,7 @@ ClauseT &HeapletClauseDB<ClauseT>::allocateIn(typename ClauseT::size_type size,
 template <typename ClauseT>
 ClauseT &HeapletClauseDB<ClauseT>::allocate(typename ClauseT::size_type size) {
     JAM_ASSERT(size >= 2ull, "Can't allocate clauses of size 0 or 1");
-    auto &pool = (size == 2) ? m_binaryHeaplets : m_activeHeaplets;
-    return allocateIn(size, pool, m_freeHeapletPool);
+    return allocateIn(size, m_activeHeaplets, m_freeHeapletPool);
 }
 
 template <typename ClauseT>
@@ -444,14 +436,12 @@ void HeapletClauseDB<ClauseT>::retain(ClauseTIterable const &clausePointers,
         if (size <= 1ULL) {
             // if size == 0, the clause has already been relocated.
             // size == 1 is precluded: unary clauses are not stored in this clause DB.
+            // If a clause has been shrinked to size 1, assume that its forced assignment
+            // has been registered independently and drop the clause:
             continue;
         }
 
-        // Special case for size-2 clauses: if they are retained, they were non-binary
-        // at the time they were allocated, and were shrunken later. Move these clauses
-        // to the binary heaplet pool:
-        auto &targetPool = (size == 2ULL) ? m_binaryHeaplets : newActiveHeaplets;
-        auto &replacement = allocateIn(size, targetPool, m_freeHeapletPool);
+        auto &replacement = allocateIn(size, newActiveHeaplets, m_freeHeapletPool);
         replacement = *oldClause;
 
         if (isReasonClauseFn(*oldClause)) {
@@ -499,12 +489,6 @@ bool HeapletClauseDB<ClauseT>::test_isRegionInActiveHeaplet(const void *ptr, siz
 }
 
 template <typename ClauseT>
-bool HeapletClauseDB<ClauseT>::test_isRegionInBinaryHeaplet(const void *ptr, size_type length) const
-    noexcept {
-    return test_isRegionInHeapletList(m_binaryHeaplets, ptr, length);
-}
-
-template <typename ClauseT>
 typename HeapletClauseDB<ClauseT>::size_type
 HeapletClauseDB<ClauseT>::test_getAvailableSpaceInHeapletList(
     const std::vector<clausedb_detail::Heaplet> &heaplets) const noexcept {
@@ -521,12 +505,6 @@ template <typename ClauseT>
 typename HeapletClauseDB<ClauseT>::size_type
 HeapletClauseDB<ClauseT>::test_getAvailableSpaceInActiveHeaplets() const noexcept {
     return test_getAvailableSpaceInHeapletList(m_activeHeaplets);
-}
-
-template <typename ClauseT>
-typename HeapletClauseDB<ClauseT>::size_type
-HeapletClauseDB<ClauseT>::test_getAvailableSpaceInBinaryHeaplets() const noexcept {
-    return test_getAvailableSpaceInHeapletList(m_binaryHeaplets);
 }
 
 template <typename ClauseT>

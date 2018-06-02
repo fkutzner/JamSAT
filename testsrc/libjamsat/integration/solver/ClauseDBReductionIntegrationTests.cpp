@@ -137,7 +137,7 @@ void checkedReduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, Tra
     }
 }
 
-// Inserts \p nClauses random clauses of lengths in [3...20] into ClauseDB
+// Inserts \p nClauses random clauses of lengths in [2...20] into ClauseDB
 // and returns a vector containing pointers to the inserted clauses.
 auto makeClauses(HeapletClauseDB<Clause> &clauseDB, Propagation<Trail<Clause>> &trail, int nClauses,
                  CNFVar maxVar, bool isLearnt) -> std::vector<Clause *> {
@@ -148,7 +148,7 @@ auto makeClauses(HeapletClauseDB<Clause> &clauseDB, Propagation<Trail<Clause>> &
     std::uniform_int_distribution<CNFVar::RawVariable> randomVarDistribution{0,
                                                                              maxVar.getRawValue()};
     std::uniform_int_distribution<int> randomSignDistribution{0, 1};
-    std::uniform_int_distribution<unsigned int> clauseLengthDistribution{3, 20};
+    std::uniform_int_distribution<unsigned int> clauseLengthDistribution{2, 20};
     std::uniform_int_distribution<LBD> lbdDistribution{1, 20};
 
     std::set<CNFVar::RawVariable> usedVariables;

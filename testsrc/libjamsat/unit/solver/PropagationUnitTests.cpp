@@ -310,7 +310,7 @@ TEST(UnitSolver, propagationClauseRangeEmptyWhenNoClausesAdded) {
     EXPECT_TRUE(clauses.begin() == clauses.end());
 }
 
-TEST(UnitSolver, propagationClauseRangeHasCorrectOrder) {
+TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForNonBinaryClauses) {
     TrivialClause c1{CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::POSITIVE},
                      CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
     TrivialClause c2{CNFLit{CNFVar{0}, CNFSign::NEGATIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
@@ -329,6 +329,32 @@ TEST(UnitSolver, propagationClauseRangeHasCorrectOrder) {
     // it depends on implementation details of the Watcher implementation.
     expectRangeElementsSequencedEqual(clauses,
                                       std::vector<TrivialClause *>{&c2, &c3, &c1, &c2, &c1, &c3});
+}
+
+TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForMixedNonBinaryAndBinaryClauses) {
+    TrivialClause c1{CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::POSITIVE},
+                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+    TrivialClause c2{CNFLit{CNFVar{0}, CNFSign::NEGATIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
+                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+    TrivialClause c3{CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{11}, CNFSign::NEGATIVE},
+                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+
+    TrivialClause c4{CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
+    TrivialClause c5{CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+
+    TestAssignmentProvider assignments;
+    Propagation<TestAssignmentProvider> underTest(CNFVar{15}, assignments);
+    underTest.registerClause(c1);
+    underTest.registerClause(c2);
+    underTest.registerClause(c3);
+    underTest.registerClause(c4);
+    underTest.registerClause(c5);
+
+    auto clauses = underTest.getClausesInPropagationOrder();
+    // Note: the concrete ordering of clauses is a "hidden" implementation detail because
+    // it depends on implementation details of the Watcher implementation.
+    expectRangeElementsSequencedEqual(
+        clauses, std::vector<TrivialClause *>{&c2, &c3, &c1, &c2, &c1, &c3, &c4, &c5, &c5, &c4});
 }
 
 TEST(UnitSolver, propagationDetectsAssignmentReasonClause) {
@@ -408,7 +434,7 @@ void test_clearClausesInPropagation() {
     underTest.propagateUntilFixpoint(~lit5);
     ASSERT_EQ(underTest.getAssignmentReason(lit6.getVariable()), &clause3);
 
-    underTest.clearNonBinaries();
+    underTest.clear();
 
     EXPECT_EQ(underTest.getAssignmentReason(lit6.getVariable()), &clause3);
 
@@ -454,7 +480,7 @@ void substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode mod
 
     // Simulate backtracking. Later, it is checked that lit1 has no forced assignment.
     assignments.popLiteral();
-    underTest.clearNonBinaries();
+    underTest.clear();
     underTest.registerEquivalentSubstitutingClause(clause2);
 
     if (mode == SubstitutionClauseReinsertionTestMode::TEST_NO_PROPAGATION) {
