@@ -46,6 +46,7 @@ add_subdirectory(solver)
 add_subdirectory(branching)
 add_subdirectory(utils)
 add_subdirectory(proof)
+add_subdirectory(simplification)
 
 
 add_executable(libjamsat_unit_testsuite
@@ -55,6 +56,7 @@ add_executable(libjamsat_unit_testsuite
   $<TARGET_OBJECTS:solver_unit_tests>
   $<TARGET_OBJECTS:utils_unit_tests>
   $<TARGET_OBJECTS:proof_unit_tests>
+  $<TARGET_OBJECTS:simplification_unit_tests>
 )
 jamsat_configure_target(libjamsat_unit_testsuite)
 
