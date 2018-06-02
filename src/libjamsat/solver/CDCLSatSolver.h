@@ -46,6 +46,7 @@
 #include <libjamsat/clausedb/HeapletClauseDB.h>
 #include <libjamsat/proof/Model.h>
 #include <libjamsat/simplification/ClauseMinimization.h>
+#include <libjamsat/simplification/UnaryOptimizations.h>
 #include <libjamsat/solver/AssignmentAnalysis.h>
 #include <libjamsat/solver/ClauseDBReduction.h>
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
@@ -58,6 +59,7 @@
 #include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/Logger.h>
+#include <libjamsat/utils/OccurrenceMap.h>
 #include <libjamsat/utils/RangeUtils.h>
 #include <libjamsat/utils/StampMap.h>
 
@@ -183,7 +185,7 @@ private:
 
     UnitClausePropagationResult propagateOnSystemLevels(std::vector<CNFLit> const &toPropagate,
                                                         std::vector<CNFLit> *failedAssumptions);
-    UnitClausePropagationResult propagateUnitClauses(std::vector<CNFLit> const &units);
+    UnitClausePropagationResult propagateUnitClauses(std::vector<CNFLit> &units);
     UnitClausePropagationResult propagateAssumptions(std::vector<CNFLit> const &assumptions,
                                                      std::vector<CNFLit> &failedAssumptions);
 
@@ -358,8 +360,16 @@ CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const &toPropagat
 
 template <typename ST>
 typename CDCLSatSolver<ST>::UnitClausePropagationResult
-CDCLSatSolver<ST>::propagateUnitClauses(const std::vector<CNFLit> &units) {
-    return propagateOnSystemLevels(units, nullptr);
+CDCLSatSolver<ST>::propagateUnitClauses(std::vector<CNFLit> &units) {
+    auto amntUnits = units.size();
+    auto result = propagateOnSystemLevels(units, nullptr);
+    if (result != UnitClausePropagationResult::CONFLICTING &&
+        m_trail.getNumberOfAssignments() != amntUnits) {
+        units.clear();
+        auto newUnits = m_trail.getAssignments(0);
+        std::copy(newUnits.begin(), newUnits.end(), std::back_inserter(units));
+    }
+    return result;
 }
 
 template <typename ST>
@@ -375,6 +385,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
     m_statistics.registerRestart();
     JAM_LOG_SOLVER(info, "Restarting the solver, backtracking to decision level 0.");
     backtrackAll();
+
     if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT) {
         return TBools::FALSE;
     }
