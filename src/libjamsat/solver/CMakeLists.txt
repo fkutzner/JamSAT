@@ -30,7 +30,6 @@ add_jamsat_core_library(jamsatSolver
   AssignmentAnalysis.h
   FirstUIPLearning.h
   LiteralBlockDistance.h
-  ClauseMinimization.h
   RestartPolicies.h
   RestartPolicies.cpp
   ClauseDBReduction.h

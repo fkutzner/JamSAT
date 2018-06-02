@@ -28,7 +28,6 @@ add_jamsat_core_unittest_library(solver_unit_tests
   WatcherUnitTests.cpp
   FirstUIPLearningUnitTests.cpp
   LiteralBlockDistanceUnitTests.cpp
-  ClauseMinimizationUnitTests.cpp
   RestartPoliciesTests.cpp
   ClauseDBReductionPoliciesUnitTests.cpp
   AssignmentAnalysisUnitTests.cpp

@@ -24,4 +24,5 @@
 
 add_jamsat_core_unittest_library(simplification_unit_tests
   UnaryOptimizationsTests.cpp
+  ClauseMinimizationUnitTests.cpp
 )

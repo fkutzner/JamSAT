@@ -45,10 +45,10 @@
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/clausedb/HeapletClauseDB.h>
 #include <libjamsat/proof/Model.h>
+#include <libjamsat/simplification/ClauseMinimization.h>
 #include <libjamsat/solver/AssignmentAnalysis.h>
 #include <libjamsat/solver/ClauseDBReduction.h>
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
-#include <libjamsat/solver/ClauseMinimization.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/LiteralBlockDistance.h>
 #include <libjamsat/solver/Propagation.h>

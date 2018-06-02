@@ -25,4 +25,5 @@
 add_jamsat_core_library(jamsatSimplification
   Dummy.cpp
   UnaryOptimizations.h
+  ClauseMinimization.h
 )

@@ -31,7 +31,7 @@
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
-#include <libjamsat/solver/ClauseMinimization.h>
+#include <libjamsat/simplification/ClauseMinimization.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/LiteralBlockDistance.h>
 #include <libjamsat/solver/Propagation.h>

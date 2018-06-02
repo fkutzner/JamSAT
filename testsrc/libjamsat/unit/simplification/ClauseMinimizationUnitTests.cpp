@@ -33,7 +33,7 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/solver/ClauseMinimization.h>
+#include <libjamsat/simplification/ClauseMinimization.h>
 #include <libjamsat/utils/StampMap.h>
 
 #include <toolbox/testutils/TestAssignmentProvider.h>
