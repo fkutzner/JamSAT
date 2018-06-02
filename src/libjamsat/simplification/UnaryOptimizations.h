@@ -40,10 +40,13 @@ namespace jamsat {
  * \brief Schedules all clauses subsumed by a unary clause for deletion.
  *
  * \tparam OccurrenceMap    A specialization of OccurrenceMap with
- * OccurrenceMap::Container::value_type being equal to CNFlit. \tparam ModFn            A type that
- * is a model of the Callable concept, with `x(y)` being a valid expression for objects `x` of type
- * `ModFn` and `y` of type `OccurrenceMap::Container*`. \tparam CNFLitRange      A type that is a
- * model of Boost's Single Pass Range.
+ *                          OccurrenceMap::Container::value_type being equal to CNFlit.
+ *
+ * \tparam ModFn            A type that is a model of the Callable concept, with `x(y)` being
+ *                          a valid expression for objects `x` of type `ModFn` and `y` of type
+ *                          `OccurrenceMap::Container*`.
+ *
+ * \tparam CNFLitRange      A type that is a model of Boost's Single Pass Range.
  *
  * \param occMap              The occurrence map containing the set of clauses to be optimized.
  * \param notifyDeletionAhead The object receiving (via invocation) pointers to clauses that are
@@ -72,10 +75,13 @@ void scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
  * \brief For each unary clause (a), removes ~a from all clauses.
  *
  * \tparam OccurrenceMap    A specialization of OccurrenceMap with
- * OccurrenceMap::Container::value_type being equal to CNFlit. \tparam ModFn            A type that
- * is a model of the Callable concept, with `x(y)` being a valid expression for objects `x` of type
- * `ModFn` and `y` of type `OccurrenceMap::Container*`. \tparam CNFLitRange      A type that is a
- * model of Boost's Single Pass Range.
+ *                          OccurrenceMap::Container::value_type being equal to CNFlit.
+ *
+ * \tparam ModFn            A type that is a model of the Callable concept, with `x(y)` being
+ *                          a valid expression for objects `x` of type `ModFn` and `y` of type
+ *                          `OccurrenceMap::Container*`.
+ *
+ * \tparam CNFLitRange      A type that is a model of Boost's Single Pass Range.
  *
  * \param occMap                  The occurrence map containing the set of clauses to be optimized.
  * \param notifyModificationAhead The object receiving (via invocation) pointers to clauses that are
