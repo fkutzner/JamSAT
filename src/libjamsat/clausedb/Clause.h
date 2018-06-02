@@ -50,6 +50,7 @@ private:
     using flag_type = uint16_t;
 
 public:
+    using value_type = CNFLit;
     using size_type = uint32_t;
     using iterator = CNFLit *;
     using const_iterator = const CNFLit *;
@@ -133,6 +134,28 @@ public:
      * be dereferenced.
      */
     const_iterator end() const noexcept;
+
+    /**
+     * \brief Erases a literal from the clause.
+     *
+     * \param pos   The position of the literal to be erased.
+     *
+     * \return The iterator following the last removed element. If the last element
+     *         has been erased, end() is returned.
+     */
+    iterator erase(const_iterator pos) noexcept;
+
+    /**
+     * \brief Erases literals from the clause.
+     *
+     * \param begin The position of the first to be erased.
+     * \param end   The position of the first literal after \p begin not to be erased,
+     *              or `end()` if no such position exists.
+     *
+     * \return The iterator following the last removed element. If the last element
+     *         has been erased, end() is returned.
+     */
+    iterator erase(const_iterator begin, const_iterator end) noexcept;
 
     /**
      * \brief Assignment operator
@@ -278,6 +301,35 @@ inline Clause::const_iterator Clause::begin() const noexcept {
 
 inline Clause::const_iterator Clause::end() const noexcept {
     return &m_anchor + m_size;
+}
+
+inline Clause::iterator Clause::erase(const_iterator pos) noexcept {
+    iterator replacement = begin() + (m_size - 1);
+    iterator writablePos = begin() + (pos - begin());
+
+    *writablePos = *replacement;
+    --m_size;
+    return writablePos;
+}
+
+inline Clause::iterator Clause::erase(const_iterator begin, const_iterator end) noexcept {
+    iterator writableBegin = this->begin() + (begin - this->begin());
+    iterator result = writableBegin;
+
+    auto eraseDist = std::distance(begin, end);
+    iterator replacement = this->begin() + (m_size - eraseDist);
+    if (writableBegin + eraseDist > replacement) {
+        replacement = writableBegin + eraseDist;
+    }
+
+    while (replacement != this->end()) {
+        *writableBegin = *replacement;
+        ++writableBegin;
+        ++replacement;
+    }
+
+    m_size -= eraseDist;
+    return result;
 }
 
 inline Clause &Clause::operator=(const Clause &other) noexcept {

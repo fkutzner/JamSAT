@@ -271,4 +271,105 @@ TEST(UnitClauseDB, clearClauseFlag) {
     underTest->clearFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
     EXPECT_FALSE(underTest->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
 }
+
+TEST(UnitClauseDB, eraseSingleLiteralFromUnaryClauseYieldsEmptyClause) {
+    auto underTest = createHeapClause(1);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    auto pos = underTest->begin();
+    auto resultIter = underTest->erase(pos);
+    EXPECT_EQ(underTest->size(), 0ULL);
+    EXPECT_EQ(resultIter, underTest->end());
+}
+
+TEST(UnitClauseDB, eraseSingleLiteralFromUnaryClauseYieldsUnaryClause) {
+    auto underTest = createHeapClause(2);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
+    auto pos = underTest->begin();
+    auto resultIter = underTest->erase(pos);
+    ASSERT_EQ(underTest->size(), 1ULL);
+    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{4}, CNFSign::POSITIVE}));
+    EXPECT_EQ(resultIter, underTest->begin());
+}
+
+TEST(UnitClauseDB, eraseSingleLiteralFromTernaryClauseYieldsBinaryClause) {
+    auto underTest = createHeapClause(3);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
+    (*underTest)[2] = CNFLit{CNFVar{5}, CNFSign::POSITIVE};
+    auto pos = underTest->begin() + 1;
+    auto resultIter = underTest->erase(pos);
+    ASSERT_EQ(underTest->size(), 2ULL);
+    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{3}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[1], (CNFLit{CNFVar{5}, CNFSign::POSITIVE}));
+    EXPECT_EQ(resultIter, underTest->begin() + 1);
+}
+
+TEST(UnitClauseDB, multiEraseSingleLiteralFromUnaryClauseYieldsEmptyClause) {
+    auto underTest = createHeapClause(1);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    auto pos = underTest->begin();
+    auto resultIter = underTest->erase(pos, pos + 1);
+    EXPECT_EQ(underTest->size(), 0ULL);
+    EXPECT_EQ(resultIter, underTest->end());
+}
+
+TEST(UnitClauseDB, eraseAllLiteralsFromBinaryClauseYieldsEmptyClause) {
+    auto underTest = createHeapClause(2);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
+    auto resultIter = underTest->erase(underTest->begin(), underTest->end());
+    EXPECT_EQ(underTest->size(), 0ULL);
+    EXPECT_EQ(resultIter, underTest->end());
+}
+
+TEST(UnitClauseDB, eraseTwoLiteralsFromTernaryClauseYieldsUnaryClause) {
+    auto underTest = createHeapClause(3);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
+    (*underTest)[2] = CNFLit{CNFVar{5}, CNFSign::POSITIVE};
+    auto resultIter = underTest->erase(underTest->begin(), underTest->begin() + 2);
+    ASSERT_EQ(underTest->size(), 1ULL);
+    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{5}, CNFSign::POSITIVE}));
+    EXPECT_EQ(resultIter, underTest->begin());
+}
+
+TEST(UnitClauseDB, eraseTwoLiteralsFromEndOf4LitClauseYieldsBinaryClause) {
+    auto underTest = createHeapClause(4);
+    for (unsigned int i = 0; i < 4; ++i) {
+        (*underTest)[i] = CNFLit{CNFVar{i}, CNFSign::POSITIVE};
+    }
+
+    auto resultIter = underTest->erase(underTest->begin() + 2, underTest->end());
+    ASSERT_EQ(underTest->size(), 2ULL);
+    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{0}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[1], (CNFLit{CNFVar{1}, CNFSign::POSITIVE}));
+    EXPECT_EQ(resultIter, underTest->end());
+}
+
+TEST(UnitClauseDB, eraseTwoLiteralsFromMidOf4LitClauseYieldsBinaryClause) {
+    auto underTest = createHeapClause(4);
+    for (unsigned int i = 0; i < 4; ++i) {
+        (*underTest)[i] = CNFLit{CNFVar{i}, CNFSign::POSITIVE};
+    }
+
+    auto resultIter = underTest->erase(underTest->begin() + 1, underTest->begin() + 3);
+    ASSERT_EQ(underTest->size(), 2ULL);
+    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{0}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[1], (CNFLit{CNFVar{3}, CNFSign::POSITIVE}));
+    EXPECT_EQ(resultIter, underTest->begin() + 1);
+}
+
+TEST(UnitClauseDB, eraseTwoLiteralsFromBeginOf4LitClauseYieldsBinaryClause) {
+    auto underTest = createHeapClause(4);
+    for (unsigned int i = 0; i < 4; ++i) {
+        (*underTest)[i] = CNFLit{CNFVar{i}, CNFSign::POSITIVE};
+    }
+
+    auto resultIter = underTest->erase(underTest->begin(), underTest->begin() + 2);
+    ASSERT_EQ(underTest->size(), 2ULL);
+    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{2}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[1], (CNFLit{CNFVar{3}, CNFSign::POSITIVE}));
+    EXPECT_EQ(resultIter, underTest->begin());
+}
 }
