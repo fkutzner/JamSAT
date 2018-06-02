@@ -441,15 +441,17 @@ void HeapletClauseDB<ClauseT>::retain(ClauseTIterable const &clausePointers,
 
         auto size = oldClause->size();
 
-        if (size <= 2ull) {
+        if (size <= 1ULL) {
             // if size == 0, the clause has already been relocated.
             // size == 1 is precluded: unary clauses are not stored in this clause DB.
-            // Don't deal with clauses of size 2: they are never deleted and never need
-            //   to be relocated, since they are stored in a separate part of memory.
             continue;
         }
 
-        auto &replacement = allocateIn(size, newActiveHeaplets, m_freeHeapletPool);
+        // Special case for size-2 clauses: if they are retained, they were non-binary
+        // at the time they were allocated, and were shrunken later. Move these clauses
+        // to the binary heaplet pool:
+        auto &targetPool = (size == 2ULL) ? m_binaryHeaplets : newActiveHeaplets;
+        auto &replacement = allocateIn(size, targetPool, m_freeHeapletPool);
         replacement = *oldClause;
 
         if (isReasonClauseFn(*oldClause)) {
