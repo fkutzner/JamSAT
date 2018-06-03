@@ -446,6 +446,8 @@ auto Propagation<AssignmentProvider>::propagateBinaries(CNFLit toPropagate,
 
         if (isFalse(assignment)) {
             // conflict case:
+            JAM_LOG_PROPAGATION(info, "  Current assignment is conflicting at clause "
+                                          << &currentWatcher.getClause() << ".");
             return &currentWatcher.getClause();
         } else if (!isDeterminate(assignment)) {
             // propagation case:
@@ -668,11 +670,13 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
 
         if (clause.size() == 2) {
             // The clause has become a binary clause ~> move to binary watchers
+            currentWatcher.setOtherWatchedLiteral(clause[1 - currentWatcher.getIndex()]);
             m_binaryWatchers.addWatcher(lit, currentWatcher);
             watcherListTraversal.removeCurrent();
         } else if (clause[currentWatcher.getIndex()] != lit) {
             // The clause has been modified externally and this watcher watches
             // the wrong literal ~> move the watcher
+            currentWatcher.setOtherWatchedLiteral(clause[1 - currentWatcher.getIndex()]);
             m_watchers.addWatcher(clause[currentWatcher.getIndex()], currentWatcher);
             watcherListTraversal.removeCurrent();
         } else {
