@@ -53,6 +53,11 @@ public:
     void insert(typename Key::Type toInsert) noexcept;
 
     /**
+     * \brief Removes all elements from the set.
+     */
+    void clear() noexcept;
+
+    /**
      * \brief Checks whether a given value might be contained in the set.
      *
      * \param toLookup      The value to be looked up.
@@ -87,6 +92,11 @@ template <size_t Size, typename Key>
 void OverApproximatingSet<Size, Key>::insert(Type toInsert) noexcept {
     auto index = Key::getIndex(toInsert);
     m_approximatedSet[index % Size] = 1;
+}
+
+template <size_t Size, typename Key>
+void OverApproximatingSet<Size, Key>::clear() noexcept {
+    m_approximatedSet.reset();
 }
 
 template <size_t Size, typename Key>

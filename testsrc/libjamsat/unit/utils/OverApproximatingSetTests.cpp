@@ -78,4 +78,15 @@ TEST(UnitUtils, OverApproximatingSetRecognizesDefinitelyNotSubset) {
 
     EXPECT_FALSE(setB.mightBeSubsetOf(setA));
 }
+
+TEST(UnitUtils, OverApproximatingSetIsEmptyAfterClear) {
+    OverApproximatingSet<64, TestUIntKey> underTest;
+    for (unsigned int i = 0; i < 64; ++i) {
+        underTest.insert(i);
+    }
+    underTest.clear();
+    for (unsigned int i = 0; i < 64; ++i) {
+        EXPECT_FALSE(underTest.mightContain(i)) << "Set not empty; contains " << i;
+    }
+}
 }
