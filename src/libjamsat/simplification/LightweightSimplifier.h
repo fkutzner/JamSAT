@@ -91,25 +91,30 @@ private:
 
     PropagationT &m_propagation;
     CNFVar m_maxVar;
+    size_t m_lastSeenAmntUnaries;
 };
 
 template <typename PropagationT>
 LightweightSimplifier<PropagationT>::LightweightSimplifier(CNFVar maxVar,
                                                            PropagationT &propagation) noexcept
-  : m_propagation{propagation}, m_maxVar{maxVar} {}
+  : m_propagation{propagation}, m_maxVar{maxVar}, m_lastSeenAmntUnaries{0} {}
 
 template <typename PropagationT>
 void LightweightSimplifier<PropagationT>::simplify(
     std::vector<CNFLit> const &unaryClauses,
     std::vector<Clause *> const &possiblyIrredundantClauses,
     std::vector<Clause *> const &redundantClauses) {
-    OccurrenceMap<Clause, ClauseDeletedQuery> occurrenceMap{getMaxLit(m_maxVar)};
-    occurrenceMap.insert(possiblyIrredundantClauses.begin(), possiblyIrredundantClauses.end());
-    occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
 
-    auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
-    scheduleClausesSubsumedByUnariesForDeletion(occurrenceMap, delMarker, unaryClauses);
-    strengthenClausesWithUnaries(occurrenceMap, delMarker, unaryClauses);
+    if (unaryClauses.size() > m_lastSeenAmntUnaries) {
+        OccurrenceMap<Clause, ClauseDeletedQuery> occurrenceMap{getMaxLit(m_maxVar)};
+        occurrenceMap.insert(possiblyIrredundantClauses.begin(), possiblyIrredundantClauses.end());
+        occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
+
+        auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
+        scheduleClausesSubsumedByUnariesForDeletion(occurrenceMap, delMarker, unaryClauses);
+        strengthenClausesWithUnaries(occurrenceMap, delMarker, unaryClauses);
+        m_lastSeenAmntUnaries = unaryClauses.size();
+    }
 }
 
 template <typename PropagationT>
