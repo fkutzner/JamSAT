@@ -24,6 +24,8 @@
 
 */
 
+#pragma once
+
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>

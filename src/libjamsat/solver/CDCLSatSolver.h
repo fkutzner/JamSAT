@@ -46,6 +46,7 @@
 #include <libjamsat/clausedb/HeapletClauseDB.h>
 #include <libjamsat/proof/Model.h>
 #include <libjamsat/simplification/ClauseMinimization.h>
+#include <libjamsat/simplification/LightweightSimplifier.h>
 #include <libjamsat/simplification/UnaryOptimizations.h>
 #include <libjamsat/solver/AssignmentAnalysis.h>
 #include <libjamsat/solver/ClauseDBReduction.h>
@@ -83,6 +84,7 @@ struct CDCLSatSolverDefaultTypes {
     using RestartPolicy = GlucoseRestartPolicy;
     using ClauseDBReductionPolicy =
         GlucoseClauseDBReductionPolicy<jamsat::Clause, std::vector<jamsat::Clause *>, LBD>;
+    using LightweightSimplifier = LightweightSimplifier<Propagation>;
 };
 
 /**
@@ -212,6 +214,7 @@ private:
     typename ST::ConflictAnalyzer m_conflictAnalyzer;
     typename ST::ClauseDB m_clauseDB;
     typename ST::RestartPolicy m_restartPolicy;
+    typename ST::LightweightSimplifier m_simplifier;
 
     std::atomic<bool> m_stopRequested;
     CNFVar m_maxVar;
@@ -230,6 +233,8 @@ private:
     Statistics<> m_statistics;
 
     bool m_detectedUNSAT;
+
+    uint64_t m_conflictsUntilSimplification;
 };
 
 /********** Implementation ****************************** */
@@ -242,6 +247,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_conflictAnalyzer(CNFVar{0}, m_trail, m_propagation)
   , m_clauseDB(config.clauseMemoryLimit / 128, config.clauseMemoryLimit)
   , m_restartPolicy(typename ST::RestartPolicy::Options{})
+  , m_simplifier(CNFVar{0}, m_propagation)
   , m_stopRequested(false)
   , m_maxVar(0)
   , m_lemmaBuffer()
@@ -253,7 +259,8 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_clauseDBReductionPolicy(1300, m_lemmas)
   , m_stamps(getMaxLit(CNFVar{0}).getRawValue())
   , m_statistics()
-  , m_detectedUNSAT(false) {
+  , m_detectedUNSAT(false)
+  , m_conflictsUntilSimplification(0) {
     m_conflictAnalyzer.setOnSeenVariableCallback(
         [this](CNFVar var) { m_branchingHeuristic.seenInConflict(var); });
 }
@@ -391,6 +398,12 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         return TBools::FALSE;
     }
     m_trail.newDecisionLevel();
+
+    if (m_statistics.getCurrentEra().m_conflictCount >= m_conflictsUntilSimplification) {
+        m_simplifier.simplify(m_unitClauses, m_problemClauses, m_lemmas);
+        m_conflictsUntilSimplification += 20000;
+    }
+
     if (propagateAssumptions(assumptions, failedAssumptions) !=
         UnitClausePropagationResult::CONSISTENT) {
         // TODO: do final conflict analysis here
@@ -614,6 +627,7 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) {
     m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
     m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
     m_stamps.increaseSizeTo(getMaxLit(m_maxVar).getRawValue());
+    m_simplifier.increaseMaxVarTo(m_maxVar);
 
     for (auto newClausesIt = m_problemClauses.begin() + m_newProblemClausesBeginIdx;
          newClausesIt != m_problemClauses.end(); ++newClausesIt) {

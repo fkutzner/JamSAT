@@ -42,10 +42,12 @@ endfunction()
 
 add_subdirectory(solver)
 add_subdirectory(api)
+add_subdirectory(simplification)
 
 add_executable(libjamsat_integration_testsuite
   $<TARGET_OBJECTS:solver_integration_tests>
   $<TARGET_OBJECTS:api_ipasir_integration_tests>
+  $<TARGET_OBJECTS:simplification_integration_tests>
 
   # From toolbox/cnfgenerators:
   $<TARGET_OBJECTS:cnfgenerators>

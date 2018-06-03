@@ -641,7 +641,7 @@ auto Propagation<AssignmentProvider>::getCurrentAmountOfUnpropagatedAssignments(
 
 template <class AssignmentProvider>
 void Propagation<AssignmentProvider>::notifyClauseModificationAhead(Clause const &clause) noexcept {
-    JAM_ASSERT(clause.size() >= 3, "Can't modify clauses with size <= 2");
+    JAM_ASSERT(clause.size() >= 2, "Can't modify clauses with size <= 1");
     m_watcherUpdateRequired[clause[0]] = 1;
     m_watcherUpdateRequired[clause[1]] = 1;
 }
@@ -659,11 +659,14 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
         WatcherType currentWatcher = *watcherListTraversal;
         Clause &clause = currentWatcher.getClause();
 
-        JAM_ASSERT(clause.size() >= 2,
-                   "Clauses shrinked to size 1 must be removed from propagation");
         if (clause.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION) == true) {
             watcherListTraversal.removeCurrent();
-        } else if (clause.size() == 2) {
+            continue;
+        }
+        JAM_ASSERT(clause.size() >= 2,
+                   "Clauses shrinked to size 1 must be removed from propagation");
+
+        if (clause.size() == 2) {
             // The clause has become a binary clause ~> move to binary watchers
             m_binaryWatchers.addWatcher(lit, currentWatcher);
             watcherListTraversal.removeCurrent();
@@ -677,6 +680,21 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
         }
     }
     watcherListTraversal.finishedTraversal();
+
+    auto binaryWatcherListTraversal = m_binaryWatchers.getWatchers(lit);
+    while (!binaryWatcherListTraversal.hasFinishedTraversal()) {
+        WatcherType currentWatcher = *binaryWatcherListTraversal;
+        Clause &clause = currentWatcher.getClause();
+
+        JAM_ASSERT(clause.size() >= 2,
+                   "Clauses shrinked to size 1 must be removed from propagation");
+        if (clause.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION) == true) {
+            binaryWatcherListTraversal.removeCurrent();
+        } else {
+            ++binaryWatcherListTraversal;
+        }
+    }
+    binaryWatcherListTraversal.finishedTraversal();
     m_watcherUpdateRequired[lit] = 0;
 }
 }
