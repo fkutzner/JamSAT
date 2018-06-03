@@ -92,12 +92,16 @@ private:
     PropagationT &m_propagation;
     CNFVar m_maxVar;
     size_t m_lastSeenAmntUnaries;
+    OccurrenceMap<Clause, ClauseDeletedQuery> m_occurrenceMap;
 };
 
 template <typename PropagationT>
 LightweightSimplifier<PropagationT>::LightweightSimplifier(CNFVar maxVar,
                                                            PropagationT &propagation) noexcept
-  : m_propagation{propagation}, m_maxVar{maxVar}, m_lastSeenAmntUnaries{0} {}
+  : m_propagation{propagation}
+  , m_maxVar{maxVar}
+  , m_lastSeenAmntUnaries{0}
+  , m_occurrenceMap{getMaxLit(m_maxVar)} {}
 
 template <typename PropagationT>
 auto LightweightSimplifier<PropagationT>::simplify(
@@ -108,14 +112,15 @@ auto LightweightSimplifier<PropagationT>::simplify(
     SimplificationStats result;
 
     if (unaryClauses.size() > m_lastSeenAmntUnaries) {
-        OccurrenceMap<Clause, ClauseDeletedQuery> occurrenceMap{getMaxLit(m_maxVar)};
-        occurrenceMap.insert(possiblyIrredundantClauses.begin(), possiblyIrredundantClauses.end());
-        occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
+        m_occurrenceMap.clear();
+        m_occurrenceMap.insert(possiblyIrredundantClauses.begin(),
+                               possiblyIrredundantClauses.end());
+        m_occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
 
         auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
         result +=
-            scheduleClausesSubsumedByUnariesForDeletion(occurrenceMap, delMarker, unaryClauses);
-        result += strengthenClausesWithUnaries(occurrenceMap, delMarker, unaryClauses);
+            scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, unaryClauses);
+        result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, unaryClauses);
         m_lastSeenAmntUnaries = unaryClauses.size();
     }
 
@@ -128,5 +133,6 @@ void LightweightSimplifier<PropagationT>::increaseMaxVarTo(CNFVar newMaxVar) {
     JAM_ASSERT(newMaxVar >= m_maxVar,
                "Argument newMaxVar must not be smaller than the current maximum variable");
     m_maxVar = newMaxVar;
+    m_occurrenceMap.increaseMaxElementTo(getMaxLit(newMaxVar));
 }
 }
