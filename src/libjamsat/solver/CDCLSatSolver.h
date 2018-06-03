@@ -373,8 +373,12 @@ CDCLSatSolver<ST>::propagateUnitClauses(std::vector<CNFLit> &units) {
     auto result = propagateOnSystemLevels(units, nullptr);
     if (result != UnitClausePropagationResult::CONFLICTING &&
         m_trail.getNumberOfAssignments() != amntUnits) {
+        auto oldAmntUnits = units.size();
         units.clear();
         auto newUnits = m_trail.getAssignments(0);
+        for (size_t i = 0; i < (newUnits.size() - oldAmntUnits); ++i) {
+            m_statistics.registerLemma(1);
+        }
         std::copy(newUnits.begin(), newUnits.end(), std::back_inserter(units));
     }
     return result;
