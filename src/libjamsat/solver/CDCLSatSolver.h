@@ -84,7 +84,7 @@ struct CDCLSatSolverDefaultTypes {
     using RestartPolicy = GlucoseRestartPolicy;
     using ClauseDBReductionPolicy =
         GlucoseClauseDBReductionPolicy<jamsat::Clause, std::vector<jamsat::Clause *>, LBD>;
-    using LightweightSimplifier = LightweightSimplifier<Propagation>;
+    using LightweightSimplifier = jamsat::LightweightSimplifier<Propagation>;
 };
 
 /**
