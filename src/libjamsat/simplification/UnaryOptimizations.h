@@ -39,7 +39,26 @@ namespace jamsat {
  */
 
 /**
+ * \brief Simplification statistics
+ *
+ * \ingroup JamSAT_Simplification
+ */
+struct SimplificationStats {
+    uint32_t amntClausesRemovedBySubsumption = 0;
+    uint32_t amntClausesStrengthened = 0;
+    uint32_t amntLiteralsRemovedByStrengthening = 0;
+};
+
+auto operator+(SimplificationStats const &lhs, SimplificationStats const &rhs) noexcept
+    -> SimplificationStats;
+auto operator+=(SimplificationStats &lhs, SimplificationStats const &rhs) noexcept
+    -> SimplificationStats &;
+
+
+/**
  * \brief Schedules all clauses subsumed by a unary clause for deletion.
+ *
+ * \ingroup JamSAT_Simplification
  *
  * \tparam OccurrenceMap    A specialization of OccurrenceMap with
  *                          OccurrenceMap::Container::value_type being equal to CNFlit.
@@ -58,10 +77,12 @@ namespace jamsat {
  * Before a clause `c` is deleted, `occMap(&c)` is called.
  */
 template <typename OccurrenceMap, typename ModFn, typename CNFLitRange>
-void scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
+auto scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
                                                  ModFn const &notifyDeletionAhead,
-                                                 CNFLitRange const &unaries) {
+                                                 CNFLitRange const &unaries)
+    -> SimplificationStats {
     using Clause = typename OccurrenceMap::Container;
+    SimplificationStats result;
 
     for (auto unaryLit : unaries) {
         for (Clause *clause : occMap[unaryLit]) {
@@ -69,12 +90,17 @@ void scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
             notifyDeletionAhead(clause);
             clause->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
             occMap.remove(*clause);
+            ++result.amntClausesRemovedBySubsumption;
         }
     }
+
+    return result;
 }
 
 /**
  * \brief For each unary clause (a), removes ~a from all clauses.
+ *
+ * \ingroup JamSAT_Simplification
  *
  * \tparam OccurrenceMap    A specialization of OccurrenceMap with
  *                          OccurrenceMap::Container::value_type being equal to CNFlit.
@@ -95,15 +121,40 @@ void scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
  *  - No clause contained in \p occMap is subsumed by a unary clause.
  */
 template <typename OccurrenceMap, typename ModFn, typename CNFLitRange>
-void strengthenClausesWithUnaries(OccurrenceMap &occMap, ModFn const &notifyModificationAhead,
-                                  CNFLitRange const &unaries) {
+auto strengthenClausesWithUnaries(OccurrenceMap &occMap, ModFn const &notifyModificationAhead,
+                                  CNFLitRange const &unaries) -> SimplificationStats {
     using Clause = typename OccurrenceMap::Container;
+    SimplificationStats result;
 
     for (auto unaryLit : unaries) {
         for (Clause *clause : occMap[~unaryLit]) {
             notifyModificationAhead(clause);
+            auto currentSize = clause->size();
             boost::remove_erase(*clause, ~unaryLit);
+            auto newSize = clause->size();
+
+            ++result.amntClausesStrengthened;
+            result.amntLiteralsRemovedByStrengthening += (currentSize - newSize);
         }
     }
+
+    return result;
+}
+
+inline auto operator+(SimplificationStats const &lhs, SimplificationStats const &rhs) noexcept
+    -> SimplificationStats {
+    SimplificationStats result;
+    result.amntClausesRemovedBySubsumption =
+        lhs.amntClausesRemovedBySubsumption + rhs.amntClausesRemovedBySubsumption;
+    result.amntClausesStrengthened = lhs.amntClausesStrengthened + rhs.amntClausesStrengthened;
+    result.amntLiteralsRemovedByStrengthening =
+        lhs.amntLiteralsRemovedByStrengthening + rhs.amntLiteralsRemovedByStrengthening;
+    return result;
+}
+
+inline auto operator+=(SimplificationStats &lhs, SimplificationStats const &rhs) noexcept
+    -> SimplificationStats & {
+    lhs = lhs + rhs;
+    return lhs;
 }
 }

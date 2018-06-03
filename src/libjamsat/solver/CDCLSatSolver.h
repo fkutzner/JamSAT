@@ -400,8 +400,11 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
     m_trail.newDecisionLevel();
 
     if (m_statistics.getCurrentEra().m_conflictCount >= m_conflictsUntilSimplification) {
-        m_simplifier.simplify(m_unitClauses, m_problemClauses, m_lemmas);
-        m_conflictsUntilSimplification += 20000;
+        JAM_LOG_SOLVER(info, "Performing simplification.");
+        auto simpResult = m_simplifier.simplify(m_unitClauses, m_problemClauses, m_lemmas);
+        m_statistics.registerSimplification(simpResult);
+        m_conflictsUntilSimplification += 50000;
+        return TBools::INDETERMINATE;
     }
 
     if (propagateAssumptions(assumptions, failedAssumptions) !=

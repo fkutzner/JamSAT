@@ -33,6 +33,7 @@
 
 #include <boost/format.hpp>
 
+#include <libjamsat/simplification/UnaryOptimizations.h>
 #include <libjamsat/utils/SimpleMovingAverage.h>
 
 namespace jamsat {
@@ -49,6 +50,7 @@ struct AllEnabledStatisticsConfig {
     using CountRestarts = std::true_type;
     using MeasureLemmaSize = std::true_type;
     using CountLemmaDeletions = std::true_type;
+    using CountSimplificationStats = std::true_type;
 };
 
 /**
@@ -85,6 +87,7 @@ public:
         double m_avgLBD = 0.0;
         std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_startTime;
         std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_stopTime;
+        SimplificationStats m_simplificationStats;
     };
 
     /**
@@ -123,6 +126,13 @@ public:
      * \param amount    The amount of lemmas having been deleted.
      */
     void registerLemmaDeletion(uint32_t amount);
+
+    /**
+     * \brief Notifies the statistics that simplification has been performed
+     *
+     * \param stats     Statistics about the performed simplifications
+     */
+    void registerSimplification(SimplificationStats &stats) noexcept;
 
     /**
      * \brief Notifies the statistics system that the solver entered its main search
@@ -238,6 +248,14 @@ void Statistics<StatisticsConfig>::registerLemmaDeletion(uint32_t amount) {
     }
 }
 
+
+template <typename StatisticsConfig>
+void Statistics<StatisticsConfig>::registerSimplification(SimplificationStats &stats) noexcept {
+    if (StatisticsConfig::CountSimplificationStats::value == true) {
+        m_currentEra.m_simplificationStats += stats;
+    }
+}
+
 template <typename StatisticsConfig>
 void Statistics<StatisticsConfig>::concludeEra() noexcept {
     m_previousEra = m_currentEra;
@@ -266,7 +284,10 @@ void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream &stre
            << "L = avg. lemma size;\n"
            << "  #U = amount of unit lemmas added; "
            << "#B = amount of binary lemmas added; "
-           << "#LD = amount of lemmas deleted\n";
+           << "#LD = amount of lemmas deleted\n"
+           << "  #S = (amnt of clauses deleted, amnt of clauses strengthened, amnt of literals "
+              "removed by strenghtening)"
+           << "\n";
 }
 
 
@@ -305,6 +326,12 @@ auto operator<<(std::ostream &stream, const Statistics<StatisticsConfig> &stats)
 
     if (StatisticsConfig::CountRestarts::value == true) {
         stream << "| #R: " << currentEra.m_restartCount << " ";
+    }
+
+    if (StatisticsConfig::CountSimplificationStats::value == true) {
+        stream << "| #S: " << currentEra.m_simplificationStats.amntClausesRemovedBySubsumption
+               << "," << currentEra.m_simplificationStats.amntClausesStrengthened << ","
+               << currentEra.m_simplificationStats.amntLiteralsRemovedByStrengthening << " ";
     }
 
     if (millisElapsed > 0) {

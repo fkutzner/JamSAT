@@ -64,9 +64,9 @@ public:
      *                                      not redundant.
      * \param redundantClauses              The current set of clauses that are redundant.
      */
-    void simplify(std::vector<CNFLit> const &unaryClauses,
+    auto simplify(std::vector<CNFLit> const &unaryClauses,
                   std::vector<Clause *> const &possiblyIrredundantClauses,
-                  std::vector<Clause *> const &redundantClauses);
+                  std::vector<Clause *> const &redundantClauses) -> SimplificationStats;
 
     /**
      * \brief Increases the maximum variable which may occur in the problem instance..
@@ -100,10 +100,12 @@ LightweightSimplifier<PropagationT>::LightweightSimplifier(CNFVar maxVar,
   : m_propagation{propagation}, m_maxVar{maxVar}, m_lastSeenAmntUnaries{0} {}
 
 template <typename PropagationT>
-void LightweightSimplifier<PropagationT>::simplify(
+auto LightweightSimplifier<PropagationT>::simplify(
     std::vector<CNFLit> const &unaryClauses,
     std::vector<Clause *> const &possiblyIrredundantClauses,
-    std::vector<Clause *> const &redundantClauses) {
+    std::vector<Clause *> const &redundantClauses) -> SimplificationStats {
+
+    SimplificationStats result;
 
     if (unaryClauses.size() > m_lastSeenAmntUnaries) {
         OccurrenceMap<Clause, ClauseDeletedQuery> occurrenceMap{getMaxLit(m_maxVar)};
@@ -111,10 +113,13 @@ void LightweightSimplifier<PropagationT>::simplify(
         occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
 
         auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
-        scheduleClausesSubsumedByUnariesForDeletion(occurrenceMap, delMarker, unaryClauses);
-        strengthenClausesWithUnaries(occurrenceMap, delMarker, unaryClauses);
+        result +=
+            scheduleClausesSubsumedByUnariesForDeletion(occurrenceMap, delMarker, unaryClauses);
+        result += strengthenClausesWithUnaries(occurrenceMap, delMarker, unaryClauses);
         m_lastSeenAmntUnaries = unaryClauses.size();
     }
+
+    return result;
 }
 
 template <typename PropagationT>

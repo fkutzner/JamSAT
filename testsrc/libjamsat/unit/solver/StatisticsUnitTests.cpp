@@ -26,6 +26,7 @@
 
 #include <gtest/gtest.h>
 
+#include <libjamsat/simplification/UnaryOptimizations.h>
 #include <libjamsat/solver/Statistics.h>
 
 #include <regex>
@@ -58,6 +59,12 @@ void addEvents(Statistics &underTest) {
     underTest.registerLemma(5);
     underTest.registerLemma(11);
     underTest.registerLemmaDeletion(5);
+
+    SimplificationStats simpStats;
+    simpStats.amntClausesRemovedBySubsumption = 1ULL;
+    simpStats.amntClausesStrengthened = 2ULL;
+    simpStats.amntLiteralsRemovedByStrengthening = 3ULL;
+    underTest.registerSimplification(simpStats);
 }
 }
 
@@ -97,6 +104,7 @@ TEST(UnitSolver, StatisticsDoesNotCountConflictsWhenDisabled) {
         using CountRestarts = std::true_type;
         using MeasureLemmaSize = std::true_type;
         using CountLemmaDeletions = std::true_type;
+        using CountSimplificationStats = std::true_type;
     };
     test_expectStatsDisabled<PropDisabledStatisticsConfig>(true, false, false, false, false, false);
 }
@@ -109,6 +117,7 @@ TEST(UnitSolver, StatisticsDoesNotCountPropagationsWhenDisabled) {
         using CountRestarts = std::true_type;
         using MeasureLemmaSize = std::true_type;
         using CountLemmaDeletions = std::true_type;
+        using CountSimplificationStats = std::true_type;
     };
     test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, true, false, false, false, false);
 }
@@ -121,6 +130,7 @@ TEST(UnitSolver, StatisticsDoesNotCountDecisionsWhenDisabled) {
         using CountRestarts = std::true_type;
         using MeasureLemmaSize = std::true_type;
         using CountLemmaDeletions = std::true_type;
+        using CountSimplificationStats = std::true_type;
     };
     test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, true, false, false, false);
 }
@@ -133,6 +143,7 @@ TEST(UnitSolver, StatisticsDoesNotCountRestartsWhenDisabled) {
         using CountRestarts = std::false_type;
         using MeasureLemmaSize = std::true_type;
         using CountLemmaDeletions = std::true_type;
+        using CountSimplificationStats = std::true_type;
     };
     test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, false, true, false, false);
 }
@@ -145,6 +156,7 @@ TEST(UnitSolver, StatisticsDoesNotMeasureLemmaSizeWhenDisabled) {
         using CountRestarts = std::true_type;
         using MeasureLemmaSize = std::false_type;
         using CountLemmaDeletions = std::true_type;
+        using CountSimplificationStats = std::true_type;
     };
     test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, false, false, true, false);
 }
@@ -157,6 +169,7 @@ TEST(UnitSolver, StatisticsDoesNotCountLemmaDeletionsWhenDisabled) {
         using CountRestarts = std::true_type;
         using MeasureLemmaSize = std::true_type;
         using CountLemmaDeletions = std::false_type;
+        using CountSimplificationStats = std::true_type;
     };
     test_expectStatsDisabled<PropDisabledStatisticsConfig>(false, false, false, false, false, true);
 }
@@ -170,6 +183,12 @@ TEST(UnitSolver, StatisticsResetsCountersOnEraConclusion) {
     EXPECT_EQ(underTest.getCurrentEra().m_decisionCount, 0ULL);
     EXPECT_EQ(underTest.getCurrentEra().m_restartCount, 0ULL);
     EXPECT_EQ(underTest.getCurrentEra().m_lemmaDeletions, 0ULL);
+
+    EXPECT_EQ(underTest.getCurrentEra().m_simplificationStats.amntClausesRemovedBySubsumption,
+              0ULL);
+    EXPECT_EQ(underTest.getCurrentEra().m_simplificationStats.amntClausesStrengthened, 0ULL);
+    EXPECT_EQ(underTest.getCurrentEra().m_simplificationStats.amntLiteralsRemovedByStrengthening,
+              0ULL);
 }
 
 TEST(UnitSolver, StatisticsStoresPreviousEra) {
@@ -181,6 +200,11 @@ TEST(UnitSolver, StatisticsStoresPreviousEra) {
     EXPECT_EQ(underTest.getPreviousEra().m_decisionCount, 3ULL);
     EXPECT_EQ(underTest.getPreviousEra().m_restartCount, 2ULL);
     EXPECT_EQ(underTest.getPreviousEra().m_lemmaDeletions, 5ULL);
+    EXPECT_EQ(underTest.getPreviousEra().m_simplificationStats.amntClausesRemovedBySubsumption,
+              1ULL);
+    EXPECT_EQ(underTest.getPreviousEra().m_simplificationStats.amntClausesStrengthened, 2ULL);
+    EXPECT_EQ(underTest.getPreviousEra().m_simplificationStats.amntLiteralsRemovedByStrengthening,
+              3ULL);
 }
 
 TEST(UnitSolver, StatisticsPrintsCurrentEra) {
