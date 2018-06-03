@@ -136,6 +136,11 @@ public:
      */
     void remove(Container const &container) noexcept;
 
+    /**
+     * \brief Removes all elements from the occurrence map.
+     */
+    void clear() noexcept;
+
     OccurrenceMap(OccurrenceMap const &rhs) = delete;
     auto operator=(OccurrenceMap const &rhs) -> OccurrenceMap & = delete;
 
@@ -213,5 +218,12 @@ operator[](typename Container::value_type value) noexcept -> ContainerRange {
         m_occurrences[value].m_requiresUpdate = false;
     }
     return boost::make_iterator_range(occList.cbegin(), occList.cend());
+}
+
+template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
+void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::clear() noexcept {
+    for (auto &x : m_occurrences.values()) {
+        x.m_occList.clear();
+    }
 }
 }

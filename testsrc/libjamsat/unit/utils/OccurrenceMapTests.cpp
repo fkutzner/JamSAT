@@ -182,4 +182,21 @@ TEST(UnitUtils, OccurrenceMapContainsExpectedContainersAfterRangeConstruction) {
         31, testDataVec.begin(), testDataVec.end()};
     expectAnalogousToOccurrenceMap(expected, underTest, 31);
 }
+
+TEST(UnitUtils, OccurrenceMapContainsNoElementsAfterClear) {
+    jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{31};
+    TestUIntVec testData1{9, 10, 15};
+    TestUIntVec testData2{22, 10, 13};
+    TestUIntVec testData3{22, 10};
+
+    underTest.insert(testData1);
+    underTest.insert(testData2);
+    underTest.insert(testData3);
+
+    std::vector<std::vector<TestUIntVec *>> expected;
+    expected.resize(32);
+
+    underTest.clear();
+    expectAnalogousToOccurrenceMap(expected, underTest, 31);
+}
 }
