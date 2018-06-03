@@ -28,6 +28,8 @@
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 
+#include <iostream>
+
 namespace jamsat {
 
 TEST(UnitClauseDB, allocateClauseOnHeap) {
@@ -44,7 +46,8 @@ TEST(UnitClauseDB, nonemptyHeapClausesHaveSufficientMemory) {
     auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
 
     auto computedSize = Clause::getAllocationSize(11);
-    EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
+    EXPECT_GE(computedSize, addrJustBeyondClause - addrBeginClause);
+    EXPECT_LE(computedSize, addrJustBeyondClause - addrBeginClause + alignof(Clause) / 2);
 }
 
 TEST(UnitClauseDB, singleLitHeapClausesHaveSufficientMemory) {
@@ -53,9 +56,9 @@ TEST(UnitClauseDB, singleLitHeapClausesHaveSufficientMemory) {
 
     auto addrJustBeyondClause = reinterpret_cast<uintptr_t>(allocatedClause->end());
     auto addrBeginClause = reinterpret_cast<uintptr_t>(allocatedClause.get());
-
     auto computedSize = Clause::getAllocationSize(1);
-    EXPECT_EQ(computedSize, addrJustBeyondClause - addrBeginClause);
+    EXPECT_GE(computedSize, addrJustBeyondClause - addrBeginClause);
+    EXPECT_LE(computedSize, addrJustBeyondClause - addrBeginClause + alignof(Clause) / 2);
 }
 
 TEST(UnitClauseDB, emptyHeapClausesHaveSufficientMemory) {
@@ -67,7 +70,8 @@ TEST(UnitClauseDB, emptyHeapClausesHaveSufficientMemory) {
 
     // The struct is trailed by a CNFLit whose memory does not get accessed in
     // size-0 clauses.
-    EXPECT_LE(sizeof(Clause), addrJustBeyondClause - addrBeginClause + sizeof(CNFLit));
+    EXPECT_LE(sizeof(Clause),
+              addrJustBeyondClause - addrBeginClause + sizeof(CNFLit) + alignof(Clause) / 2);
 }
 
 TEST(UnitClauseDB, freshHeapClauseContainsUndefinedLiterals) {
@@ -371,5 +375,43 @@ TEST(UnitClauseDB, eraseTwoLiteralsFromBeginOf4LitClauseYieldsBinaryClause) {
     EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{2}, CNFSign::POSITIVE}));
     EXPECT_EQ((*underTest)[1], (CNFLit{CNFVar{3}, CNFSign::POSITIVE}));
     EXPECT_EQ(resultIter, underTest->begin());
+}
+
+TEST(UnitClauseDB, mightContainIsOverapproximationInClause) {
+    auto underTest = createHeapClause(3);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{27}, CNFSign::POSITIVE};
+    (*underTest)[2] = CNFLit{CNFVar{23}, CNFSign::NEGATIVE};
+    underTest->clauseUpdated();
+
+    EXPECT_TRUE(underTest->mightContain(CNFLit{CNFVar{3}, CNFSign::POSITIVE}));
+    EXPECT_TRUE(underTest->mightContain(CNFLit{CNFVar{27}, CNFSign::POSITIVE}));
+    EXPECT_TRUE(underTest->mightContain(CNFLit{CNFVar{23}, CNFSign::NEGATIVE}));
+    EXPECT_FALSE(underTest->mightContain(CNFLit{CNFVar{0}, CNFSign::NEGATIVE}));
+    EXPECT_FALSE(underTest->mightContain(CNFLit{CNFVar{13}, CNFSign::NEGATIVE}));
+}
+
+TEST(UnitClauseDB, mightBeSubsetOfIsOverapproximationInClause) {
+    auto underTest = createHeapClause(3);
+    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[1] = CNFLit{CNFVar{27}, CNFSign::POSITIVE};
+    (*underTest)[2] = CNFLit{CNFVar{23}, CNFSign::NEGATIVE};
+    underTest->clauseUpdated();
+
+    auto superset = createHeapClause(5);
+    (*superset)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*superset)[1] = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
+    (*superset)[2] = CNFLit{CNFVar{27}, CNFSign::POSITIVE};
+    (*superset)[3] = CNFLit{CNFVar{23}, CNFSign::NEGATIVE};
+    (*superset)[4] = CNFLit{CNFVar{1000}, CNFSign::NEGATIVE};
+    superset->clauseUpdated();
+    EXPECT_TRUE(underTest->mightBeSubsetOf(*superset));
+
+    auto notSuperset = createHeapClause(5);
+    (*notSuperset)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*notSuperset)[1] = CNFLit{CNFVar{1024}, CNFSign::POSITIVE};
+    (*notSuperset)[2] = CNFLit{CNFVar{23}, CNFSign::NEGATIVE};
+    notSuperset->clauseUpdated();
+    EXPECT_FALSE(underTest->mightBeSubsetOf(*notSuperset));
 }
 }

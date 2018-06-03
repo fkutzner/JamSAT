@@ -287,6 +287,7 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
         auto &internalClause = m_clauseDB.allocate(
             static_checked_cast<typename ST::Clause::size_type>(compressedClause.size()));
         std::copy(compressedClause.begin(), compressedClause.end(), internalClause.begin());
+        internalClause.clauseUpdated();
         m_problemClauses.push_back(&internalClause);
     }
 }
@@ -527,6 +528,7 @@ CDCLSatSolver<ST>::deriveLemma(typename ST::Clause &conflicting,
         auto &newLemma = m_clauseDB.allocate(
             static_checked_cast<typename ST::Clause::size_type>(m_lemmaBuffer.size()));
         std::copy(m_lemmaBuffer.begin(), m_lemmaBuffer.end(), newLemma.begin());
+        newLemma.clauseUpdated();
         newLemma.setLBD(getLBD(newLemma, m_trail, m_stamps));
 
         *newLemmaOut = &newLemma;

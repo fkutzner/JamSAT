@@ -31,6 +31,7 @@
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Casts.h>
+#include <libjamsat/utils/OverApproximatingSet.h>
 
 namespace jamsat {
 /**
@@ -211,6 +212,31 @@ public:
      */
     bool getFlag(Flag flag) const noexcept;
 
+    /**
+     * \brief Fast over-approximating check if the clause contains a given literal.
+     *
+     * \param lit   An arbitrary literal.
+     *
+     * \return      If `false` is returned, the clause definitely does not contain `lit`.
+     *              If `true` is returned, the clause might contain `lit`.
+     */
+    bool mightContain(CNFLit lit) const noexcept;
+
+    /**
+     * \brief Fast over-approximating check if the clause is a subset of another clause.
+     *
+     * \param other   An arbitrary clause.
+     *
+     * \return        If `false` is returned, the clause is definitely not a subset of `other`.
+     *                If `true` is returned, the clause might be a subset of `other`.
+     */
+    bool mightBeSubsetOf(Clause const &other) const noexcept;
+
+    /**
+     * \brief Notifies the clause that its contents have been updated.
+     */
+    void clauseUpdated() noexcept;
+
     friend std::unique_ptr<Clause> createHeapClause(size_type size);
 
     bool operator==(Clause const &rhs) const noexcept;
@@ -230,6 +256,7 @@ private:
     size_type m_size;
     lbd_type m_lbd;
     flag_type m_flags;
+    OverApproximatingSet<64, CNFLit::Index> m_approximatedClause;
     CNFLit m_anchor;
 };
 
@@ -349,7 +376,12 @@ inline Clause &Clause::operator=(const Clause &other) noexcept {
 
 inline size_t Clause::getAllocationSize(Clause::size_type clauseSize) {
     JAM_ASSERT(clauseSize > 0, "clauseSize must be nonzero");
-    return sizeof(Clause) + (clauseSize - 1) * sizeof(CNFLit);
+    size_t size = sizeof(Clause) + (clauseSize - 1) * sizeof(CNFLit);
+    size_t overlapToAligned = size % alignof(Clause);
+    if (overlapToAligned != 0) {
+        size += alignof(Clause) - overlapToAligned;
+    }
+    return size;
 }
 
 inline Clause *Clause::constructIn(void *target, size_type size) {
@@ -381,5 +413,20 @@ inline void Clause::clearFlag(Flag flag) noexcept {
 
 inline bool Clause::getFlag(Flag flag) const noexcept {
     return (m_flags & static_cast<std::underlying_type_t<Flag>>(flag)) != 0;
+}
+
+inline bool Clause::mightContain(CNFLit lit) const noexcept {
+    return m_approximatedClause.mightContain(lit);
+}
+
+inline bool Clause::mightBeSubsetOf(Clause const &other) const noexcept {
+    return m_approximatedClause.mightBeSubsetOf(other.m_approximatedClause);
+}
+
+inline void Clause::clauseUpdated() noexcept {
+    m_approximatedClause.clear();
+    for (auto lit : *this) {
+        m_approximatedClause.insert(lit);
+    }
 }
 }
