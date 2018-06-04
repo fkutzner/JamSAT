@@ -27,10 +27,18 @@
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/utils/Logger.h>
+#include <libjamsat/utils/Printers.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <type_traits>
 #include <vector>
+
+#if defined(JAM_ENABLE_INFLIGHTSIMP_LOGGING)
+#define JAM_LOG_UNARYSIMP(x, y) JAM_LOG(x, "unsimp", y)
+#else
+#define JAM_LOG_UNARYSIMP(x, y)
+#endif
 
 namespace jamsat {
 
@@ -91,6 +99,9 @@ auto scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
             clause->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
             occMap.remove(*clause);
             ++result.amntClausesRemovedBySubsumption;
+            JAM_LOG_UNARYSIMP(info, "Deleting clause "
+                                        << &clause
+                                        << " (redundancy detected subsumption with unary)");
         }
     }
 
@@ -135,6 +146,8 @@ auto strengthenClausesWithUnaries(OccurrenceMap &occMap, ModFn const &notifyModi
 
             ++result.amntClausesStrengthened;
             result.amntLiteralsRemovedByStrengthening += (currentSize - newSize);
+            JAM_LOG_UNARYSIMP(info, "Strenghtened " << std::addressof(*clause) << " to "
+                                                    << toString(clause->begin(), clause->end()));
         }
     }
 
