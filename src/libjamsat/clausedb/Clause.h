@@ -57,7 +57,7 @@ public:
     using const_iterator = const CNFLit *;
     using lbd_type = uint16_t;
 
-    enum class Flag : flag_type { SCHEDULED_FOR_DELETION = 1 };
+    enum class Flag : flag_type { SCHEDULED_FOR_DELETION = 1, REDUNDANT = 2 };
 
     /**
      * \brief Returns a reference to a literal within the clause.

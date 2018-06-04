@@ -455,6 +455,9 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             }
 
             LBD newLemmaLBD = (*newLemma).template getLBD<LBD>();
+            if (newLemma->size() > 2ULL) {
+                newLemma->setFlag(Clause::Flag::REDUNDANT);
+            }
             m_restartPolicy.registerConflict({newLemmaLBD});
 
             backtrackToLevel(conflictHandlingResult.backtrackLevel);

@@ -40,7 +40,7 @@ namespace jamsat {
 
 class TestAssignmentProviderClause : public std::vector<CNFLit> {
 public:
-    enum class Flag : uint32_t { SCHEDULED_FOR_DELETION = 1 };
+    enum class Flag : uint32_t { SCHEDULED_FOR_DELETION = 1, REDUNDANT = 2 };
 
     TestAssignmentProviderClause() : std::vector<CNFLit>{}, m_flags(0) {}
     TestAssignmentProviderClause(std::initializer_list<CNFLit> lits)
