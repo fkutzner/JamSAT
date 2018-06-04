@@ -140,6 +140,8 @@ public:
      */
     void clear() noexcept;
 
+    enum PropagationMode : uint8_t { EXCLUDE_REDUNDANT_CLAUSES, INCLUDE_REDUNDANT_CLAUSES };
+
     /**
      * \brief Propagates the given fact wrt. the clauses registered in the
      * propagation object, further propagating forced assignments until the
@@ -151,8 +153,12 @@ public:
      * the current assignment is returned.
      *
      * \param toPropagate       The fact to propagate, encoded as a literal.
+     * \param propagationMode   Iff `INCLUDE_REDUNDANT_CLAUSES`, clauses having
+     *                          the REDUNDANT set are propagated.
      */
-    auto propagateUntilFixpoint(CNFLit toPropagate) -> Clause *;
+    auto propagateUntilFixpoint(CNFLit toPropagate,
+                                PropagationMode mode = PropagationMode::INCLUDE_REDUNDANT_CLAUSES)
+        -> Clause *;
 
     /**
      * \brief Propagates the given fact wrt. the clauses registered in the
@@ -169,7 +175,11 @@ public:
      * \returns \p nullptr if the fact has been propagated without any clause
      * being falsified; otherwise, the pointer to a clause falsified under the
      * current assignment is returned.
+     *
+     * \tparam propagateRedundantClauses    Iff true, clauses with the REDUNDANT
+     *                                      flag are propagated.
      */
+    template <bool propagateRedundantClauses = true>
     auto propagate(CNFLit toPropagate, size_t &amountOfNewFacts) -> Clause *;
 
     /**
@@ -341,8 +351,9 @@ auto Propagation<AssignmentProvider>::registerClause(Clause &clause, bool autoPr
     JAM_LOG_PROPAGATION(info, "Registering clause " << &clause << " ("
                                                     << toString(clause.begin(), clause.end())
                                                     << ") for propagation.");
-    detail_propagation::Watcher<Clause> watcher1{clause, clause[0], 1};
-    detail_propagation::Watcher<Clause> watcher2{clause, clause[1], 0};
+    bool isRedundant = clause.getFlag(Clause::Flag::REDUNDANT);
+    detail_propagation::Watcher<Clause> watcher1{clause, clause[0], 1, isRedundant};
+    detail_propagation::Watcher<Clause> watcher2{clause, clause[1], 0, isRedundant};
 
     auto &targetWatchList = (clause.size() <= 2 ? m_binaryWatchers : m_watchers);
     targetWatchList.addWatcher(clause[0], watcher2);
@@ -395,7 +406,8 @@ auto Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const
 }
 
 template <class AssignmentProvider>
-auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate) -> Clause * {
+auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate,
+                                                             PropagationMode mode) -> Clause * {
     JAM_LOG_PROPAGATION(info, "Propagating assignment until fixpoint: " << toPropagate);
     auto trailEndIndex = m_assignmentProvider.getNumberOfAssignments();
 
@@ -405,7 +417,12 @@ auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate)
 
     m_unpropagatedStats = 0ULL;
     size_t amountOfNewFacts = 0;
-    Clause *conflictingClause = propagate(toPropagate, amountOfNewFacts);
+    Clause *conflictingClause = nullptr;
+    if (mode == PropagationMode::INCLUDE_REDUNDANT_CLAUSES) {
+        conflictingClause = propagate<true>(toPropagate, amountOfNewFacts);
+    } else {
+        conflictingClause = propagate<false>(toPropagate, amountOfNewFacts);
+    }
     if (conflictingClause) {
         m_unpropagatedStats = amountOfNewFacts;
         return conflictingClause;
@@ -420,7 +437,11 @@ auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate)
         JAM_LOG_PROPAGATION(info, "  Propagating until fixpoint: " << amountOfNewFacts
                                                                    << " assignments pending");
         size_t localNewFacts = 0;
-        conflictingClause = propagate(*pqBegin, localNewFacts);
+        if (mode == PropagationMode::INCLUDE_REDUNDANT_CLAUSES) {
+            conflictingClause = propagate<true>(*pqBegin, localNewFacts);
+        } else {
+            conflictingClause = propagate<false>(*pqBegin, localNewFacts);
+        }
         pqEnd += localNewFacts;
         if (conflictingClause) {
             m_unpropagatedStats = (propagationQueue.end() - propagationQueue.begin()) - 1;
@@ -468,6 +489,7 @@ auto Propagation<AssignmentProvider>::propagateBinaries(CNFLit toPropagate,
 }
 
 template <class AssignmentProvider>
+template <bool propagateRedundantClauses>
 auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t &amountOfNewFacts)
     -> Clause * {
     JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
@@ -488,6 +510,12 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t &amou
     auto watcherListTraversal = m_watchers.getWatchers(negatedToPropagate);
     while (!watcherListTraversal.hasFinishedTraversal()) {
         auto currentWatcher = *watcherListTraversal;
+
+        if (!propagateRedundantClauses && currentWatcher.isClauseRedundant()) {
+            ++watcherListTraversal;
+            continue;
+        }
+
         CNFLit otherWatchedLit = currentWatcher.getOtherWatchedLiteral();
         TBool assignment = m_assignmentProvider.getAssignment(otherWatchedLit);
 
@@ -671,12 +699,23 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
         if (clause.size() == 2) {
             // The clause has become a binary clause ~> move to binary watchers
             currentWatcher.setOtherWatchedLiteral(clause[1 - currentWatcher.getIndex()]);
+
+            // When a clause becomes binary, it may also lose its redundancy status.
+            // However, the redundancy is not relevant for binary clauses wrt. propagation,
+            // so just clear the flag:
+            currentWatcher.setClauseRedundant(false);
+
             m_binaryWatchers.addWatcher(clause[currentWatcher.getIndex()], currentWatcher);
             watcherListTraversal.removeCurrent();
         } else if (clause[currentWatcher.getIndex()] != lit) {
             // The clause has been modified externally and this watcher watches
             // the wrong literal ~> move the watcher
             currentWatcher.setOtherWatchedLiteral(clause[1 - currentWatcher.getIndex()]);
+
+            // Optimizations (e.g. subsumption) may promote redundant clauses to
+            // non-redundant clauses, so update the redundancy flag:
+            currentWatcher.setClauseRedundant(clause.getFlag(Clause::Flag::REDUNDANT));
+
             m_watchers.addWatcher(clause[currentWatcher.getIndex()], currentWatcher);
             watcherListTraversal.removeCurrent();
         } else {

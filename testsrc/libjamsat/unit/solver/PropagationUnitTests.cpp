@@ -746,5 +746,50 @@ TEST(UnitSolver, deletedNonbinaryClausesAreRemovedFromPropagationAfterAnnounce) 
     EXPECT_EQ(assignments.getAssignment(lit5), TBools::TRUE);
 }
 
+TEST(UnitSolver, redundantClausesAreNotPropagatedInExcludeRedundantMode) {
+    CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    CNFLit lit4{CNFVar{4}, CNFSign::NEGATIVE};
+    CNFLit lit5{CNFVar{5}, CNFSign::NEGATIVE};
+    CNFLit lit6{CNFVar{6}, CNFSign::NEGATIVE};
+
+    TrivialClause c1{lit1, lit2};
+    TrivialClause c2{lit1, lit3, lit4};
+    TrivialClause c3{lit1, lit5, lit6};
+
+    c1.setFlag(TrivialClause::Flag::REDUNDANT);
+    c2.setFlag(TrivialClause::Flag::REDUNDANT);
+
+    TestAssignmentProvider assignments;
+    Propagation<TestAssignmentProvider> underTest(CNFVar{6}, assignments);
+
+    underTest.registerClause(c1);
+    underTest.registerClause(c2);
+    underTest.registerClause(c3);
+
+
+    // Check that binaries are propagated no matter what their redundancy status is:
+    assignments.addAssignment(~lit1);
+    auto conflict = underTest.propagateUntilFixpoint(
+        ~lit1, Propagation<TestAssignmentProvider>::PropagationMode::EXCLUDE_REDUNDANT_CLAUSES);
+    ASSERT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit2), TBools::TRUE);
+
+    // Check that redundant non-binary clauses are not propagated:
+    assignments.addAssignment(~lit3);
+    conflict = underTest.propagateUntilFixpoint(
+        ~lit3, Propagation<TestAssignmentProvider>::PropagationMode::EXCLUDE_REDUNDANT_CLAUSES);
+    ASSERT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit4), TBools::INDETERMINATE);
+
+    // Check that the third (non-redundant) clause is not ignored:
+    assignments.addAssignment(~lit5);
+    conflict = underTest.propagateUntilFixpoint(
+        ~lit5, Propagation<TestAssignmentProvider>::PropagationMode::EXCLUDE_REDUNDANT_CLAUSES);
+    ASSERT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit6), TBools::TRUE);
+}
+
 // TODO: test watcher restoration
 }

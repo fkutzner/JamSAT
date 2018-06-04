@@ -46,8 +46,10 @@ namespace detail_propagation {
 template <class ClauseT>
 class Watcher {
 public:
-    Watcher(ClauseT &watchedClause, CNFLit otherWatchedLiteral, unsigned int index = 0) noexcept
-      : m_clause(&watchedClause, index), m_otherWatchedLiteral(otherWatchedLiteral) {}
+    Watcher(ClauseT &watchedClause, CNFLit otherWatchedLiteral, unsigned int index = 0,
+            bool isRedundant = false) noexcept
+      : m_clause(&watchedClause, index | (isRedundant ? 2ULL : 0ULL))
+      , m_otherWatchedLiteral(otherWatchedLiteral) {}
 
     ClauseT &getClause() noexcept { return *m_clause; }
 
@@ -57,7 +59,7 @@ public:
 
     unsigned int getIndex() const noexcept {
         // Only using 1 bit of state so far, so no masking is required yet
-        return m_clause.get_state();
+        return m_clause.get_state() & 1ULL;
     }
 
     void setOtherWatchedLiteral(CNFLit literal) noexcept { m_otherWatchedLiteral = literal; }
@@ -70,12 +72,22 @@ public:
         return m_clause != rhs.m_clause || m_otherWatchedLiteral != rhs.m_otherWatchedLiteral;
     }
 
+    void setClauseRedundant(bool redundancy) noexcept {
+        if (redundancy) {
+            m_clause.set_state(m_clause.get_state() | 2ULL);
+        } else {
+            m_clause.set_state(m_clause.get_state() & 1ULL);
+        }
+    }
+
+    bool isClauseRedundant() const noexcept { return (m_clause.get_state() & 2ULL) != 0; }
+
 private:
     // m_clause is a state pointer with at least one bit of state.
     // Its least significant state bit contains the watcher's index
     // (i.e. the index of the literal it is supposed to watch within
     // the rsp. clause).
-    putl::state_ptr<ClauseT, uint32_t, 1> m_clause;
+    putl::state_ptr<ClauseT, uint32_t, 2> m_clause;
     CNFLit m_otherWatchedLiteral;
 };
 
