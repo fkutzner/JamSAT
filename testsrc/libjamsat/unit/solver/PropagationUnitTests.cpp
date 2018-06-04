@@ -646,7 +646,69 @@ TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary) {
     EXPECT_EQ(assignments.getAssignment(lit5), TBools::TRUE);
 }
 
-TEST(UnitSolver, deletedClausesAreRemovedFromPropagationAfterAnnounce) {
+TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary_watchersUpdatedCorrectly) {
+    // Regression test: Check that the "binarized" clause is
+    // inserted into the correct watcher list
+
+    CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
+    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
+    TrivialClause c1{lit1, lit2, lit3};
+
+    TestAssignmentProvider assignments;
+    CNFVar maxVar{5};
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+
+    underTest.registerClause(c1);
+
+    underTest.notifyClauseModificationAhead(c1);
+    c1[1] = c1[2];
+    c1.resize(2);
+
+    // lit2 has been removed from the clause, check that its assignment
+    // does not cause propagations:
+    assignments.addAssignment(~lit2);
+    auto conflict = underTest.propagateUntilFixpoint(~lit2);
+    EXPECT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit1), TBools::INDETERMINATE);
+
+    // Check that the clause forces assignments as expected:
+    assignments.addAssignment(~lit1);
+    conflict = underTest.propagateUntilFixpoint(~lit1);
+    EXPECT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit3), TBools::TRUE);
+
+    assignments.popLiteral();
+    assignments.popLiteral();
+
+    assignments.addAssignment(~lit3);
+    conflict = underTest.propagateUntilFixpoint(~lit3);
+    EXPECT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit1), TBools::TRUE);
+}
+
+TEST(UnitSolver, deletedBinariesAreRemovedFromPropagationAfterAnnounce) {
+    CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
+    CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
+    TrivialClause c1{lit1, lit2};
+
+    TestAssignmentProvider assignments;
+    CNFVar maxVar{5};
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+
+    underTest.registerClause(c1);
+
+    underTest.notifyClauseModificationAhead(c1);
+    c1.resize(1ULL);
+    c1.setFlag(TrivialClause::Flag::SCHEDULED_FOR_DELETION);
+
+    assignments.addAssignment(~lit2);
+    auto conflict = underTest.propagateUntilFixpoint(~lit2);
+    EXPECT_EQ(conflict, nullptr);
+    EXPECT_EQ(assignments.getAssignment(lit1), TBools::INDETERMINATE);
+}
+
+TEST(UnitSolver, deletedNonbinaryClausesAreRemovedFromPropagationAfterAnnounce) {
     CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
     CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
     CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};

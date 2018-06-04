@@ -671,7 +671,7 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
         if (clause.size() == 2) {
             // The clause has become a binary clause ~> move to binary watchers
             currentWatcher.setOtherWatchedLiteral(clause[1 - currentWatcher.getIndex()]);
-            m_binaryWatchers.addWatcher(lit, currentWatcher);
+            m_binaryWatchers.addWatcher(clause[currentWatcher.getIndex()], currentWatcher);
             watcherListTraversal.removeCurrent();
         } else if (clause[currentWatcher.getIndex()] != lit) {
             // The clause has been modified externally and this watcher watches
@@ -690,11 +690,11 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
         WatcherType currentWatcher = *binaryWatcherListTraversal;
         Clause &clause = currentWatcher.getClause();
 
-        JAM_ASSERT(clause.size() >= 2,
-                   "Clauses shrinked to size 1 must be removed from propagation");
         if (clause.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION) == true) {
             binaryWatcherListTraversal.removeCurrent();
         } else {
+            JAM_ASSERT(clause.size() >= 2,
+                       "Clauses shrinked to size 1 must be removed from propagation");
             ++binaryWatcherListTraversal;
         }
     }
