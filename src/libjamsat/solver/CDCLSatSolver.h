@@ -84,7 +84,7 @@ struct CDCLSatSolverDefaultTypes {
     using RestartPolicy = GlucoseRestartPolicy;
     using ClauseDBReductionPolicy =
         GlucoseClauseDBReductionPolicy<jamsat::Clause, std::vector<jamsat::Clause *>, LBD>;
-    using LightweightSimplifier = jamsat::LightweightSimplifier<Propagation>;
+    using LightweightSimplifier = jamsat::LightweightSimplifier<Propagation, Trail>;
 };
 
 /**
@@ -247,7 +247,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_conflictAnalyzer(CNFVar{0}, m_trail, m_propagation)
   , m_clauseDB(config.clauseMemoryLimit / 128, config.clauseMemoryLimit)
   , m_restartPolicy(typename ST::RestartPolicy::Options{})
-  , m_simplifier(CNFVar{0}, m_propagation)
+  , m_simplifier(CNFVar{0}, m_propagation, m_trail)
   , m_stopRequested(false)
   , m_maxVar(0)
   , m_lemmaBuffer()
@@ -401,13 +401,15 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
     if (propagateUnitClauses(m_unitClauses) != UnitClausePropagationResult::CONSISTENT) {
         return TBools::FALSE;
     }
+
     m_trail.newDecisionLevel();
 
     if (m_statistics.getCurrentEra().m_conflictCount >= m_conflictsUntilSimplification) {
         JAM_LOG_SOLVER(info, "Performing simplification.");
-        auto simpResult = m_simplifier.simplify(m_unitClauses, m_problemClauses, m_lemmas);
+        auto simpResult =
+            m_simplifier.simplify(m_unitClauses, m_problemClauses, m_lemmas, m_stamps);
         m_statistics.registerSimplification(simpResult);
-        m_conflictsUntilSimplification += 50000;
+        m_conflictsUntilSimplification += 40000;
         return TBools::INDETERMINATE;
     }
 
@@ -558,8 +560,7 @@ CDCLSatSolver<ST>::deriveLemma(typename ST::Clause &conflicting,
 
         if (m_lemmaBuffer.size() == 2) {
             ++m_amntBinariesLearnt;
-            // No need to store pointers to binaries, since they are never relocated by
-            // the clause allocator.
+            m_problemClauses.push_back(&newLemma);
         } else {
             m_lemmas.push_back(&newLemma);
         }

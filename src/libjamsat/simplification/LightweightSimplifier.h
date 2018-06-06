@@ -24,9 +24,13 @@
 
 */
 
+#pragma once
+
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/simplification/SSRWithHyperBinaryResolution.h>
 #include <libjamsat/simplification/UnaryOptimizations.h>
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/OccurrenceMap.h>
 
 namespace jamsat {
@@ -37,21 +41,29 @@ namespace jamsat {
  *
  * Intended usage: simplify a problem during search
  *
- * \tparam PropagationT     A type that is a model of the Propagation concept
+ * \tparam PropagationT         A type that is a model of the Propagation concept
+ * \tparam AssignmentProviderT  TODO
  */
-template <typename PropagationT>
+template <typename PropagationT, typename AssignmentProviderT>
 class LightweightSimplifier {
 public:
+    static_assert(
+        std::is_same<typename PropagationT::Clause, typename AssignmentProviderT::Clause>::value,
+        "PropagationT and AssignmentProviderT must have the same Clause type");
+
     using Propagation = PropagationT;
+    using AssignmentProvider = AssignmentProviderT;
     using Clause = typename Propagation::Clause;
 
     /**
      * \brief Constructs a LightweightSimplifier
      *
-     * \param maxVar        The maximum variable occurring in the problem instance
-     * \param propagation   A propagator where the problem's clauses are registered
+     * \param maxVar             The maximum variable occurring in the problem instance
+     * \param propagation        A propagator where the problem's clauses are registered
+     * \param assignmentProvider TODO
      */
-    LightweightSimplifier(CNFVar maxVar, PropagationT &propagation) noexcept;
+    LightweightSimplifier(CNFVar maxVar, PropagationT &propagation,
+                          AssignmentProviderT &assignmentProvider) noexcept;
 
     /**
      * \brief Performs lightweight simplification
@@ -63,10 +75,13 @@ public:
      * \param possiblyIrredundantClauses    The current set of clauses that are possibly
      *                                      not redundant.
      * \param redundantClauses              The current set of clauses that are redundant.
+     * \param tempStamps                    TODO
      */
+    template <typename StampMapT>
     auto simplify(std::vector<CNFLit> const &unaryClauses,
                   std::vector<Clause *> const &possiblyIrredundantClauses,
-                  std::vector<Clause *> const &redundantClauses) -> SimplificationStats;
+                  std::vector<Clause *> const &redundantClauses, StampMapT &tempStamps)
+        -> SimplificationStats;
 
     /**
      * \brief Increases the maximum variable which may occur in the problem instance..
@@ -90,28 +105,34 @@ private:
     };
 
     PropagationT &m_propagation;
+    AssignmentProviderT &m_assignmentProvider;
+
     CNFVar m_maxVar;
     size_t m_lastSeenAmntUnaries;
     OccurrenceMap<Clause, ClauseDeletedQuery> m_occurrenceMap;
 };
 
-template <typename PropagationT>
-LightweightSimplifier<PropagationT>::LightweightSimplifier(CNFVar maxVar,
-                                                           PropagationT &propagation) noexcept
+template <typename PropagationT, typename AssignmentProviderT>
+LightweightSimplifier<PropagationT, AssignmentProviderT>::LightweightSimplifier(
+    CNFVar maxVar, PropagationT &propagation, AssignmentProviderT &assignmentProvider) noexcept
   : m_propagation{propagation}
+  , m_assignmentProvider{assignmentProvider}
   , m_maxVar{maxVar}
   , m_lastSeenAmntUnaries{0}
   , m_occurrenceMap{getMaxLit(m_maxVar)} {}
 
-template <typename PropagationT>
-auto LightweightSimplifier<PropagationT>::simplify(
+template <typename PropagationT, typename AssignmentProviderT>
+template <typename StampMapT>
+auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
     std::vector<CNFLit> const &unaryClauses,
     std::vector<Clause *> const &possiblyIrredundantClauses,
-    std::vector<Clause *> const &redundantClauses) -> SimplificationStats {
+    std::vector<Clause *> const &redundantClauses, StampMapT &tempStamps) -> SimplificationStats {
 
     SimplificationStats result;
+    auto currentDecisionLevel = m_assignmentProvider.getCurrentDecisionLevel();
 
     if (unaryClauses.size() > m_lastSeenAmntUnaries) {
+
         m_occurrenceMap.clear();
         m_occurrenceMap.insert(possiblyIrredundantClauses.begin(),
                                possiblyIrredundantClauses.end());
@@ -121,14 +142,27 @@ auto LightweightSimplifier<PropagationT>::simplify(
         result +=
             scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, unaryClauses);
         result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, unaryClauses);
+
+        for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
+            result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
+                                                   m_assignmentProvider, tempStamps,
+                                                   CNFLit{i, CNFSign::NEGATIVE});
+            result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
+                                                   m_assignmentProvider, tempStamps,
+                                                   CNFLit{i, CNFSign::POSITIVE});
+        }
+
+
         m_lastSeenAmntUnaries = unaryClauses.size();
     }
 
+    JAM_ASSERT(m_assignmentProvider.getCurrentDecisionLevel() == currentDecisionLevel,
+               "Illegal decision level modification");
     return result;
 }
 
-template <typename PropagationT>
-void LightweightSimplifier<PropagationT>::increaseMaxVarTo(CNFVar newMaxVar) {
+template <typename PropagationT, typename AssignmentProviderT>
+void LightweightSimplifier<PropagationT, AssignmentProviderT>::increaseMaxVarTo(CNFVar newMaxVar) {
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     JAM_ASSERT(newMaxVar >= m_maxVar,
                "Argument newMaxVar must not be smaller than the current maximum variable");

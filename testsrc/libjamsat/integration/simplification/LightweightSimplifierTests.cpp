@@ -30,6 +30,7 @@
 #include <libjamsat/simplification/LightweightSimplifier.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
+#include <libjamsat/utils/StampMap.h>
 
 #include <algorithm>
 #include <vector>
@@ -39,7 +40,7 @@
 namespace jamsat {
 using TrailT = Trail<Clause>;
 using PropagationT = Propagation<TrailT>;
-using LightweightSimplifierT = LightweightSimplifier<PropagationT>;
+using LightweightSimplifierT = LightweightSimplifier<PropagationT, TrailT>;
 
 class IntegrationLightweightSimplifier : public ::testing::Test {
 protected:
@@ -47,10 +48,12 @@ protected:
       : ::testing::Test()
       , m_trail(CNFVar{1024})
       , m_propagation(CNFVar{1024}, m_trail)
-      , underTest(CNFVar{1024}, m_propagation) {}
+      , m_stamps(getMaxLit(CNFVar{1024}).getRawValue())
+      , underTest(CNFVar{1024}, m_propagation, m_trail) {}
 
     TrailT m_trail;
     PropagationT m_propagation;
+    StampMap<uint16_t, CNFLit::Index> m_stamps;
     LightweightSimplifierT underTest;
 };
 
@@ -59,7 +62,7 @@ TEST_F(IntegrationLightweightSimplifier, doesNotCreateNewClausesOnEmptyProblem) 
     std::vector<Clause *> possiblyIrredundantClauses;
     std::vector<Clause *> redundantClauses;
 
-    underTest.simplify(unaryClauses, possiblyIrredundantClauses, redundantClauses);
+    underTest.simplify(unaryClauses, possiblyIrredundantClauses, redundantClauses, m_stamps);
 
     EXPECT_TRUE(unaryClauses.empty());
     EXPECT_TRUE(possiblyIrredundantClauses.empty());
@@ -96,7 +99,7 @@ TEST_F(IntegrationLightweightSimplifier, minimizesUsingUnaries) {
     std::vector<Clause *> possiblyIrrClauses{clause1.get(), clause3.get()};
     std::vector<Clause *> redundantClauses{clause2.get()};
 
-    underTest.simplify(unaries, possiblyIrrClauses, redundantClauses);
+    underTest.simplify(unaries, possiblyIrrClauses, redundantClauses, m_stamps);
 
     EXPECT_TRUE(clause1->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
     EXPECT_FALSE(clause2->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));

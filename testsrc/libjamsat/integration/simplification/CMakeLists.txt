@@ -24,4 +24,5 @@
 
 add_jamsat_core_integrationtest_library(simplification_integration_tests
   LightweightSimplifierTests.cpp
+  SSRWithHyperBinaryResolutionTests.cpp
 )
