@@ -122,7 +122,8 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
     }
 
     for (auto clause : occMap[resolveAt]) {
-        if (clause->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION)) {
+        if (clause->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION) ||
+            propagation.isAssignmentReason(*clause, assignments)) {
             continue;
         }
 
