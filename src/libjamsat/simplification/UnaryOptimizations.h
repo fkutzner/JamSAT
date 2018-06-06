@@ -100,8 +100,8 @@ auto scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
             occMap.remove(*clause);
             ++result.amntClausesRemovedBySubsumption;
             JAM_LOG_UNARYSIMP(info, "Deleting clause "
-                                        << &clause
-                                        << " (redundancy detected subsumption with unary)");
+                                        << std::addressof(*clause)
+                                        << " (redundancy detected, subsumption with unary)");
         }
     }
 
