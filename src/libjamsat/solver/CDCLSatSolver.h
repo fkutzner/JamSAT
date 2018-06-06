@@ -638,6 +638,10 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) {
         return createSolvingResult(TBools::FALSE, {});
     }
 
+    // Elements in m_unitClauses must be distinct, but clients might add
+    // redundant unaries
+    m_unitClauses = withoutRedundancies(m_unitClauses.begin(), m_unitClauses.end());
+
     m_trail.increaseMaxVarTo(m_maxVar);
     m_propagation.increaseMaxVarTo(m_maxVar);
     m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
