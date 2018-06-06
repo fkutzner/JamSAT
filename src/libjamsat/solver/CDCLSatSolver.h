@@ -272,23 +272,28 @@ void CDCLSatSolver<ST>::stop() noexcept {
 
 template <typename ST>
 void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
+    if (clause.empty()) {
+        m_detectedUNSAT = true;
+        return;
+    }
+
     std::vector<CNFLit> compressedClause = withoutRedundancies(clause.begin(), clause.end());
     JAM_LOG_SOLVER(info, "Adding clause (" << toString(clause.begin(), clause.end()) << ")");
+
+    // The solver requires that no clauses exist containing l as well as ~l.
+    // Check if the clause can be ignored. withoutRedundancies returns a sorted
+    // clause:
+    for (auto claIt = compressedClause.begin() + 1; claIt != compressedClause.end(); ++claIt) {
+        if (*(claIt - 1) == ~(*claIt)) {
+            return;
+        }
+    }
 
     for (auto lit : compressedClause) {
         m_maxVar = std::max(m_maxVar, lit.getVariable());
     }
 
-    if (compressedClause.size() == 2 && compressedClause[0] == ~compressedClause[1]) {
-        // The clause is satisfied under any complete assignment and can be ignored.
-        // This check is not a performance optimization: some subsystems expect that no
-        // clause (l -l) exist for any literal l.
-        return;
-    }
-
-    if (compressedClause.empty()) {
-        m_detectedUNSAT = true;
-    } else if (compressedClause.size() == 1) {
+    if (compressedClause.size() == 1) {
         m_unitClauses.push_back(compressedClause[0]);
     } else {
         auto &internalClause = m_clauseDB.allocate(
