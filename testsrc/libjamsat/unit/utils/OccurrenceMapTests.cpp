@@ -199,4 +199,14 @@ TEST(UnitUtils, OccurrenceMapContainsNoElementsAfterClear) {
     underTest.clear();
     expectAnalogousToOccurrenceMap(expected, underTest, 31);
 }
+
+TEST(UnitUtils, OccurrenceMapDoesNotAddDeletedElements) {
+    jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{31};
+    TestUIntVec testData1{9, 10, 15};
+    testData1.setDeleted();
+    underTest.insert(testData1);
+    std::vector<std::vector<TestUIntVec *>> expected;
+    expected.resize(32);
+    expectAnalogousToOccurrenceMap(expected, underTest, 31);
+}
 }

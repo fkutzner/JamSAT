@@ -184,6 +184,9 @@ void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::incr
 template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
 void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::insert(
     Container &container) {
+    if (m_deletedQuery(&container)) {
+        return;
+    }
     for (auto &element : container) {
         m_occurrences[element].m_occList.push_back(&container);
     }
