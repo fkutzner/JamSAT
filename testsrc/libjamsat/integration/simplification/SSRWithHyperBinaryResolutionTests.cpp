@@ -70,6 +70,7 @@ protected:
             (*result)[i] = *litIter;
             ++litIter;
         }
+        result->clauseUpdated();
         m_occurrenceMap.insert(*result);
         m_propagation.registerClause(*result);
         return result;
@@ -169,5 +170,29 @@ TEST_F(IntegrationSSRWithHyperBinaryResolution, NoClausesModifiedForFailedLitera
     expectUnmodified(*bin1);
     expectUnmodified(*bin2);
     expectUnmodified(*bin3);
+}
+
+TEST_F(IntegrationSSRWithHyperBinaryResolution, NoClausesModifiedForUnitLiterals) {
+    auto bin1 = createClause({~1_Lit, 2_Lit});
+    auto bin2 = createClause({~1_Lit, 2_Lit, 3_Lit});
+
+    m_trail.addAssignment(1_Lit);
+    performSSRWithHBR(1_Lit);
+    expectUnmodified(*bin1);
+    expectUnmodified(*bin2);
+}
+
+TEST_F(IntegrationSSRWithHyperBinaryResolution, OnlyClausesContainingResolveAtAreStrengthened) {
+    auto clause1 = createClause({1_Lit, 2_Lit});
+    auto clause2 = createClause({1_Lit, ~2_Lit, 3_Lit, 4_Lit});
+    auto clause3 = createClause({~2_Lit, ~1_Lit});
+
+    performSSRWithHBR(1_Lit);
+    performSSRWithHBR(~2_Lit);
+
+    expectUnmodified(*clause1);
+    expectModifiedButNotDeleted(*clause2);
+    expectClauseEqual(*clause2, {1_Lit, 3_Lit, 4_Lit});
+    expectUnmodified(*clause3);
 }
 }
