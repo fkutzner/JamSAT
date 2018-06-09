@@ -46,7 +46,7 @@ void clauseDBTest_dbIsEmptyAfterInitialization() {
 template <class ClauseDB>
 void clauseDBTest_createSingletonClause() {
     ClauseDB underTest;
-    const std::vector<CNFLit> input{CNFLit{CNFVar{1}, CNFSign::POSITIVE}};
+    const std::vector<CNFLit> input{1_Lit};
     auto &result = underTest.insertClause(input);
 
     EXPECT_EQ(underTest.size(), 1ull);
@@ -57,9 +57,7 @@ void clauseDBTest_createSingletonClause() {
 template <class ClauseDB>
 void clauseDBTest_createTernaryClause() {
     ClauseDB underTest;
-    const std::vector<CNFLit> input{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                                    CNFLit{CNFVar{10}, CNFSign::POSITIVE},
-                                    CNFLit{CNFVar{100}, CNFSign::POSITIVE}};
+    const std::vector<CNFLit> input{1_Lit, 10_Lit, 100_Lit};
     auto &result = underTest.insertClause(input);
 
     EXPECT_EQ(underTest.size(), 1ull);
@@ -70,7 +68,7 @@ void clauseDBTest_createTernaryClause() {
 template <class ClauseDB>
 void clauseDBTest_createUndestroyableSingletonClause() {
     ClauseDB underTest;
-    const std::vector<CNFLit> input{CNFLit{CNFVar{1}, CNFSign::POSITIVE}};
+    const std::vector<CNFLit> input{1_Lit};
     auto &result = underTest.insertUndestroyableClause(input);
 
     EXPECT_EQ(underTest.size(), 1ull);
@@ -81,9 +79,7 @@ void clauseDBTest_createUndestroyableSingletonClause() {
 template <class ClauseDB>
 void clauseDBTest_createUndestroyableTernaryClause() {
     ClauseDB underTest;
-    const std::vector<CNFLit> input{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                                    CNFLit{CNFVar{10}, CNFSign::POSITIVE},
-                                    CNFLit{CNFVar{100}, CNFSign::POSITIVE}};
+    const std::vector<CNFLit> input{1_Lit, 10_Lit, 100_Lit};
     auto &result = underTest.insertUndestroyableClause(input);
 
     EXPECT_EQ(underTest.size(), 1ull);
@@ -94,7 +90,7 @@ void clauseDBTest_createUndestroyableTernaryClause() {
 template <class ClauseDB>
 void clauseDBTest_destroyedClausesAreMarkedDestroyed() {
     ClauseDB underTest;
-    const std::vector<CNFLit> input{CNFLit{CNFVar{10}, CNFSign::POSITIVE}};
+    const std::vector<CNFLit> input{10_Lit};
     auto &clause = underTest.insertClause(input);
 
     ASSERT_FALSE(underTest.isDestroyed(clause));
@@ -105,9 +101,8 @@ void clauseDBTest_destroyedClausesAreMarkedDestroyed() {
 template <class ClauseDB>
 void clauseDBTest_destroyedClausesVanishInDBPurge() {
     ClauseDB underTest;
-    const std::vector<CNFLit> destroyClause{CNFLit{CNFVar{10}, CNFSign::POSITIVE}};
-    const std::vector<CNFLit> keepClause{CNFLit{CNFVar{11}, CNFSign::POSITIVE},
-                                         CNFLit{CNFVar{12}, CNFSign::POSITIVE}};
+    const std::vector<CNFLit> destroyClause{10_Lit};
+    const std::vector<CNFLit> keepClause{11_Lit, 12_Lit};
 
     auto &insertedDestroyClause = underTest.insertClause(destroyClause);
     auto &insertedKeepClause = underTest.insertClause(keepClause);

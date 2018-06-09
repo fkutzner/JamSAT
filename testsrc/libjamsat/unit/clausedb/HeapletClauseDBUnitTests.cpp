@@ -291,12 +291,8 @@ TEST(UnitClauseDB, HeapletClauseDBContainsCorrectClausesAfterRetain) {
     HeapletClauseDB<Clause> underTest{64ull, 8192ull};
     std::vector<Clause *> clauses{&underTest.allocate(4), &underTest.allocate(3),
                                   &underTest.allocate(10), &underTest.allocate(4)};
-    std::vector<CNFLit> retainedClauseALiterals{CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-                                                CNFLit{CNFVar{2}, CNFSign::NEGATIVE},
-                                                CNFLit{CNFVar{1}, CNFSign::POSITIVE}};
-    std::vector<CNFLit> retainedClauseBLiterals{
-        CNFLit{CNFVar{10}, CNFSign::POSITIVE}, CNFLit{CNFVar{8}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{6}, CNFSign::NEGATIVE}, CNFLit{CNFVar{4}, CNFSign::POSITIVE}};
+    std::vector<CNFLit> retainedClauseALiterals{3_Lit, ~2_Lit, 1_Lit};
+    std::vector<CNFLit> retainedClauseBLiterals{10_Lit, ~8_Lit, ~6_Lit, 4_Lit};
 
     std::vector<Clause *> retained{clauses[1], clauses[3]};
     retained[0]->setLBD<unsigned char>(5);
@@ -365,8 +361,8 @@ TEST(UnitClauseDB, HeapletClauseDBAnnouncesRewriteOfReasonClauses) {
     reasons.push_back(clauses[0]);
     reasons.push_back(clauses[1]);
 
-    (*clauses[0])[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*clauses[1])[0] = CNFLit{CNFVar{5}, CNFSign::POSITIVE};
+    (*clauses[0])[0] = 3_Lit;
+    (*clauses[1])[0] = 5_Lit;
 
     std::vector<Clause *> retained{clauses[0], clauses[1], clauses[3]};
     std::vector<Clause *> relocated;

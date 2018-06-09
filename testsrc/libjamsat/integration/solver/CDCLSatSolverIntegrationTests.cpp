@@ -53,7 +53,7 @@ TEST(SolverIntegration, CDCLSatSolver_problemConsistingOfUnitClauseIsSatisfiable
     testConfig.clauseMemoryLimit = 1048576ULL;
 
     CDCLSatSolver<> underTest{testConfig};
-    underTest.addClause({CNFLit{CNFVar{1}, CNFSign::POSITIVE}});
+    underTest.addClause({1_Lit});
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::TRUE);
 }
 
@@ -62,8 +62,8 @@ TEST(SolverIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsatis
     testConfig.clauseMemoryLimit = 1048576ULL;
 
     CDCLSatSolver<> underTest{testConfig};
-    underTest.addClause({CNFLit{CNFVar{1}, CNFSign::POSITIVE}});
-    underTest.addClause({CNFLit{CNFVar{1}, CNFSign::NEGATIVE}});
+    underTest.addClause({1_Lit});
+    underTest.addClause({~1_Lit});
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::FALSE);
 }
 

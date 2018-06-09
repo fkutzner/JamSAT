@@ -197,9 +197,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_signsAreSelectedByPhase) {
     fakeAssignmentProvider.setPhase(CNFVar{4}, TBools::TRUE);
     fakeAssignmentProvider.setPhase(CNFVar{3}, TBools::FALSE);
 
-    expectLiteralSequence(underTest, {CNFLit{CNFVar{5}, CNFSign::POSITIVE},
-                                      CNFLit{CNFVar{4}, CNFSign::POSITIVE},
-                                      CNFLit{CNFVar{3}, CNFSign::NEGATIVE}});
+    expectLiteralSequence(underTest, {5_Lit, 4_Lit, ~3_Lit});
 }
 
 TEST(UnitBranching, VSIDSBranchingHeuristic_addedVariablesAreUsedForDecisions) {
@@ -237,10 +235,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_addedVariablesAreUsedForDecisions) {
         underTest.seenInConflict(CNFVar{8});
     }
 
-    expectLiteralSequence(
-        underTest, {CNFLit{CNFVar{7}, CNFSign::POSITIVE}, CNFLit{CNFVar{8}, CNFSign::POSITIVE},
-                    CNFLit{CNFVar{2}, CNFSign::NEGATIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                    CNFLit{CNFVar{0}, CNFSign::POSITIVE}});
+    expectLiteralSequence(underTest, {7_Lit, 8_Lit, ~2_Lit, 1_Lit, 0_Lit});
 }
 
 // TODO: unit tests for decay and bumping

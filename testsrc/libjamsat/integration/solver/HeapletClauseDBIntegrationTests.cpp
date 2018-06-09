@@ -45,16 +45,9 @@ Clause *allocateClause(HeapletClauseDB<Clause> &db, const std::vector<CNFLit> &l
 
 TEST(IntegrationSolver, HeapletClauseDB_retainWatchedClauses) {
     HeapletClauseDB<Clause> clauseDB{1048576ull, 10485760ull};
-    std::vector<Clause *> clauses = {
-        allocateClause(clauseDB,
-                       {CNFLit{CNFVar{3}, CNFSign::POSITIVE}, CNFLit{CNFVar{4}, CNFSign::POSITIVE},
-                        CNFLit{CNFVar{5}, CNFSign::POSITIVE}}),
-        allocateClause(clauseDB,
-                       {CNFLit{CNFVar{6}, CNFSign::POSITIVE}, CNFLit{CNFVar{7}, CNFSign::POSITIVE},
-                        CNFLit{CNFVar{8}, CNFSign::POSITIVE}}),
-        allocateClause(clauseDB,
-                       {CNFLit{CNFVar{9}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::POSITIVE},
-                        CNFLit{CNFVar{11}, CNFSign::POSITIVE}})};
+    std::vector<Clause *> clauses = {allocateClause(clauseDB, {3_Lit, 4_Lit, 5_Lit}),
+                                     allocateClause(clauseDB, {6_Lit, 7_Lit, 8_Lit}),
+                                     allocateClause(clauseDB, {9_Lit, 10_Lit, 11_Lit})};
 
     Trail<Clause> trail{CNFVar{100}};
     Propagation<Trail<Clause>> propagation{CNFVar{100}, trail};

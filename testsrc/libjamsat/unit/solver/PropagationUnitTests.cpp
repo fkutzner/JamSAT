@@ -39,7 +39,7 @@ TEST(UnitSolver, propagateWithoutClausesIsNoop) {
     Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
 
     size_t amntNewFacts = 0xFFFF;
-    CNFLit propagatedLit = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    CNFLit propagatedLit = ~2_Lit;
     auto conflictingClause = underTest.propagate(propagatedLit, amntNewFacts);
 
     EXPECT_EQ(amntNewFacts, 0ull);
@@ -52,7 +52,7 @@ TEST(UnitSolver, propagateToFixpointWithoutClausesIsNoop) {
     CNFVar maxVar{4};
     Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
 
-    CNFLit propagatedLit = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    CNFLit propagatedLit = ~2_Lit;
     auto conflictingClause = underTest.propagateUntilFixpoint(propagatedLit);
 
     EXPECT_EQ(conflictingClause, nullptr);
@@ -293,13 +293,12 @@ TEST(UnitSolver, propagateUntilFixpointReportsEnsuingConflicts) {
 
 TEST(UnitSolver, propagateAfterIncreasingMaximumVariable) {
     TestAssignmentProvider assignments;
-    TrivialClause forcingClause{CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
-                                CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    TrivialClause forcingClause{~10_Lit, 6_Lit};
     Propagation<TestAssignmentProvider> underTest(CNFVar{5}, assignments);
     underTest.increaseMaxVarTo(CNFVar{10});
     underTest.registerClause(forcingClause);
-    assignments.addAssignment(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
-    underTest.propagateUntilFixpoint(CNFLit{CNFVar{10}, CNFSign::POSITIVE});
+    assignments.addAssignment(10_Lit);
+    underTest.propagateUntilFixpoint(10_Lit);
     EXPECT_EQ(assignments.getAssignment(CNFVar{6}), TBools::TRUE);
 }
 
@@ -311,12 +310,9 @@ TEST(UnitSolver, propagationClauseRangeEmptyWhenNoClausesAdded) {
 }
 
 TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForNonBinaryClauses) {
-    TrivialClause c1{CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::POSITIVE},
-                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
-    TrivialClause c2{CNFLit{CNFVar{0}, CNFSign::NEGATIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
-                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
-    TrivialClause c3{CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{11}, CNFSign::NEGATIVE},
-                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+    TrivialClause c1{2_Lit, 10_Lit, 5_Lit};
+    TrivialClause c2{~0_Lit, ~10_Lit, 5_Lit};
+    TrivialClause c3{1_Lit, ~11_Lit, 5_Lit};
 
     TestAssignmentProvider assignments;
     Propagation<TestAssignmentProvider> underTest(CNFVar{15}, assignments);
@@ -332,15 +328,12 @@ TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForNonBinaryClauses) {
 }
 
 TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForMixedNonBinaryAndBinaryClauses) {
-    TrivialClause c1{CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::POSITIVE},
-                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
-    TrivialClause c2{CNFLit{CNFVar{0}, CNFSign::NEGATIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
-                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
-    TrivialClause c3{CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{11}, CNFSign::NEGATIVE},
-                     CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+    TrivialClause c1{2_Lit, 10_Lit, 5_Lit};
+    TrivialClause c2{~0_Lit, ~10_Lit, 5_Lit};
+    TrivialClause c3{1_Lit, ~11_Lit, 5_Lit};
 
-    TrivialClause c4{CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
-    TrivialClause c5{CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+    TrivialClause c4{1_Lit, ~11_Lit};
+    TrivialClause c5{2_Lit, ~10_Lit};
 
     TestAssignmentProvider assignments;
     Propagation<TestAssignmentProvider> underTest(CNFVar{15}, assignments);

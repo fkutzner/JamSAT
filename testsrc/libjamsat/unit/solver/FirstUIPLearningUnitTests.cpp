@@ -85,11 +85,8 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
     TestAssignmentProvider assignments;
     DummyReasonProvider reasons;
 
-    TrivialClause dummyReasonClause{CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                                    CNFLit{CNFVar{1}, CNFSign::NEGATIVE}};
-    TrivialClause conflictingClause{
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE}, CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{6}, CNFSign::POSITIVE}, CNFLit{CNFVar{9}, CNFSign::NEGATIVE}};
+    TrivialClause dummyReasonClause{~3_Lit, ~1_Lit};
+    TrivialClause conflictingClause{3_Lit, ~4_Lit, 6_Lit, ~9_Lit};
 
     assignments.addAssignment(~conflictingClause[1]);
     assignments.addAssignment(~conflictingClause[3]);
@@ -118,7 +115,7 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
         CNFLit(CNFVar{9}, CNFSign::NEGATIVE), CNFLit(CNFVar{1}, CNFSign::NEGATIVE)};
 
     // Check that the asserting literal is the first one
-    auto assertingLiteral = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
+    auto assertingLiteral = 6_Lit;
     ASSERT_EQ(result.size(), 4ull);
     EXPECT_EQ(result[0], assertingLiteral);
     EXPECT_TRUE(equalLits(result, expectedClause));
@@ -130,11 +127,8 @@ TEST(UnitSolver, firstUIPLearningCallsSeenVariableCallback) {
     TestAssignmentProvider assignments;
     DummyReasonProvider reasons;
 
-    TrivialClause dummyReasonClause{CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                                    CNFLit{CNFVar{1}, CNFSign::NEGATIVE}};
-    TrivialClause conflictingClause{
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE}, CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{6}, CNFSign::POSITIVE}, CNFLit{CNFVar{9}, CNFSign::NEGATIVE}};
+    TrivialClause dummyReasonClause{~3_Lit, ~1_Lit};
+    TrivialClause conflictingClause{3_Lit, ~4_Lit, 6_Lit, ~9_Lit};
 
     assignments.addAssignment(~conflictingClause[1]);
     assignments.addAssignment(~conflictingClause[3]);
@@ -288,56 +282,44 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
     TestAssignmentProvider assignments;
     DummyReasonProvider reasons;
 
-    TrivialClause waerden1{CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{9}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    TrivialClause waerden1{3_Lit, 9_Lit, 6_Lit};
 
-    TrivialClause waerden2{CNFLit{CNFVar{5}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{4}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    TrivialClause waerden2{5_Lit, 4_Lit, 6_Lit};
 
-    TrivialClause waerden3{CNFLit{CNFVar{8}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{4}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    TrivialClause waerden3{8_Lit, 4_Lit, 6_Lit};
 
-    TrivialClause waerden4{CNFLit{CNFVar{2}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{4}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    TrivialClause waerden4{2_Lit, 4_Lit, 6_Lit};
 
-    TrivialClause waerden5{CNFLit{CNFVar{7}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{3}, CNFSign::NEGATIVE}};
+    TrivialClause waerden5{~7_Lit, ~5_Lit, ~3_Lit};
 
-    TrivialClause waerden6{CNFLit{CNFVar{2}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{8}, CNFSign::NEGATIVE}};
+    TrivialClause waerden6{~2_Lit, ~5_Lit, ~8_Lit};
 
-    assignments.addAssignment(CNFLit{CNFVar{6}, CNFSign::NEGATIVE});
+    assignments.addAssignment(~6_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{6}, 1);
 
-    assignments.addAssignment(CNFLit{CNFVar{9}, CNFSign::NEGATIVE});
+    assignments.addAssignment(~9_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{9}, 2);
 
-    assignments.addAssignment(CNFLit{CNFVar{3}, CNFSign::POSITIVE});
+    assignments.addAssignment(3_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{3}, 2);
     reasons.setAssignmentReason(CNFVar{3}, waerden1);
 
-    assignments.addAssignment(CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+    assignments.addAssignment(~4_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{4}, 3);
 
-    assignments.addAssignment(CNFLit{CNFVar{5}, CNFSign::POSITIVE});
+    assignments.addAssignment(5_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{5}, 3);
     reasons.setAssignmentReason(CNFVar{5}, waerden2);
 
-    assignments.addAssignment(CNFLit{CNFVar{8}, CNFSign::POSITIVE});
+    assignments.addAssignment(8_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{8}, 3);
     reasons.setAssignmentReason(CNFVar{8}, waerden3);
 
-    assignments.addAssignment(CNFLit{CNFVar{2}, CNFSign::POSITIVE});
+    assignments.addAssignment(2_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{2}, 3);
     reasons.setAssignmentReason(CNFVar{2}, waerden4);
 
-    assignments.addAssignment(CNFLit{CNFVar{7}, CNFSign::NEGATIVE});
+    assignments.addAssignment(~7_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{7}, 3);
     reasons.setAssignmentReason(CNFVar{7}, waerden5);
 

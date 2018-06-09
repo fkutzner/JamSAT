@@ -49,8 +49,8 @@ TEST(UnitSolver, watchersStoreClausesAndOtherLit) {
 
 TEST(UnitSolver, watchersWithSameClauseAndOtherLitAreEqual) {
     TrivialClause testClause;
-    TestWatcher underTest1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-    TestWatcher underTest2{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+    TestWatcher underTest1{testClause, ~10_Lit};
+    TestWatcher underTest2{testClause, ~10_Lit};
 
     EXPECT_TRUE(underTest1 == underTest2);
     EXPECT_FALSE(underTest1 != underTest2);
@@ -58,8 +58,8 @@ TEST(UnitSolver, watchersWithSameClauseAndOtherLitAreEqual) {
 
 TEST(UnitSolver, watchersWithSameClauseAndDifferentLitAreInequal) {
     TrivialClause testClause;
-    TestWatcher underTest1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-    TestWatcher underTest2{testClause, CNFLit{CNFVar{11}, CNFSign::POSITIVE}};
+    TestWatcher underTest1{testClause, ~10_Lit};
+    TestWatcher underTest2{testClause, 11_Lit};
 
     EXPECT_TRUE(underTest1 != underTest2);
     EXPECT_FALSE(underTest1 == underTest2);
@@ -68,8 +68,8 @@ TEST(UnitSolver, watchersWithSameClauseAndDifferentLitAreInequal) {
 TEST(UnitSolver, watchersWithDifferentClausesAreInequal) {
     TrivialClause testClause1;
     TrivialClause testClause2;
-    TestWatcher underTest1{testClause1, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-    TestWatcher underTest2{testClause2, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+    TestWatcher underTest1{testClause1, ~10_Lit};
+    TestWatcher underTest2{testClause2, ~10_Lit};
 
     EXPECT_TRUE(underTest1 != underTest2);
     EXPECT_FALSE(underTest1 == underTest2);
@@ -84,7 +84,7 @@ TEST(UnitSolver, traverseEmptyWatcherList) {
 TEST(UnitSolver, dereferenceWatcherTraversal) {
     TrivialClause testClause;
 
-    TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+    TestWatcher watcher1{testClause, ~10_Lit};
     TestWatcherList watchers{watcher1};
 
     TestWatcherTraversal underTest{&watchers};
@@ -96,7 +96,7 @@ TEST(UnitSolver, dereferenceWatcherTraversal) {
 TEST(UnitSolver, traverseWatcherListWithSingleElement) {
     TrivialClause testClause;
 
-    TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+    TestWatcher watcher1{testClause, ~10_Lit};
     TestWatcherList watchers{watcher1};
 
     TestWatcherTraversal underTest{&watchers};
@@ -110,9 +110,9 @@ TEST(UnitSolver, traverseWatcherListWithSingleElement) {
 TEST(UnitSolver, traverseWatcherListWithThreeElements) {
     TrivialClause testClause;
 
-    TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-    TestWatcher watcher2{testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
-    TestWatcher watcher3{testClause, CNFLit{CNFVar{12}, CNFSign::NEGATIVE}};
+    TestWatcher watcher1{testClause, ~10_Lit};
+    TestWatcher watcher2{testClause, ~11_Lit};
+    TestWatcher watcher3{testClause, ~12_Lit};
     TestWatcherList watchers{watcher1, watcher2, watcher3};
 
     TestWatcherTraversal underTest{&watchers};
@@ -134,7 +134,7 @@ TEST(UnitSolver, traverseWatcherListWithThreeElements) {
 TEST(UnitSolver, removeElementInSingleElementWatcherList) {
     TrivialClause testClause;
 
-    TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
+    TestWatcher watcher1{testClause, ~10_Lit};
     TestWatcherList watchers{watcher1};
 
     TestWatcherTraversal underTest{&watchers};
@@ -148,9 +148,9 @@ TEST(UnitSolver, removeElementInSingleElementWatcherList) {
 TEST(UnitSolver, removeSingleElementInWatcherListWithThreeElements) {
     TrivialClause testClause;
 
-    TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-    TestWatcher watcher2{testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
-    TestWatcher watcher3{testClause, CNFLit{CNFVar{12}, CNFSign::NEGATIVE}};
+    TestWatcher watcher1{testClause, ~10_Lit};
+    TestWatcher watcher2{testClause, ~11_Lit};
+    TestWatcher watcher3{testClause, ~12_Lit};
     TestWatcherList watchers{watcher1, watcher2, watcher3};
 
     TestWatcherTraversal underTest{&watchers};
@@ -168,9 +168,9 @@ TEST(UnitSolver, removeSingleElementInWatcherListWithThreeElements) {
 TEST(UnitSolver, removeAllElementsInWatcherListWithThreeElements) {
     TrivialClause testClause;
 
-    TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-    TestWatcher watcher2{testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
-    TestWatcher watcher3{testClause, CNFLit{CNFVar{12}, CNFSign::NEGATIVE}};
+    TestWatcher watcher1{testClause, ~10_Lit};
+    TestWatcher watcher2{testClause, ~11_Lit};
+    TestWatcher watcher3{testClause, ~12_Lit};
     TestWatcherList watchers{watcher1, watcher2, watcher3};
 
     TestWatcherTraversal underTest{&watchers};
@@ -188,8 +188,8 @@ TEST(UnitSolver, removeAllElementsInWatcherListWithThreeElements) {
 TEST(UnitSolver, compareWatcherListTraversals) {
     TrivialClause testClause;
 
-    TestWatcher watcher1{testClause, CNFLit{CNFVar{10}, CNFSign::NEGATIVE}};
-    TestWatcher watcher2{testClause, CNFLit{CNFVar{11}, CNFSign::NEGATIVE}};
+    TestWatcher watcher1{testClause, ~10_Lit};
+    TestWatcher watcher2{testClause, ~11_Lit};
     TestWatcherList watchers{watcher1, watcher2};
 
     TestWatcherTraversal lhs{&watchers};
@@ -251,7 +251,7 @@ TEST(UnitSolver, addedWatcherIsContainedInTraversal) {
 TEST(UnitSolver, watchersMaxVarCanBeIncreased) {
     TestWatchers underTest{CNFVar{10}};
     underTest.increaseMaxVarTo(CNFVar{20});
-    auto watchersFor20 = underTest.getWatchers(CNFLit{CNFVar{20}, CNFSign::POSITIVE});
+    auto watchersFor20 = underTest.getWatchers(20_Lit);
     EXPECT_TRUE(watchersFor20.hasFinishedTraversal());
 
     CNFLit secondWatchedLiteral{CNFVar{9}, CNFSign::POSITIVE};
@@ -260,7 +260,7 @@ TEST(UnitSolver, watchersMaxVarCanBeIncreased) {
     CNFLit watchedLiteral{CNFVar{20}, CNFSign::POSITIVE};
     underTest.addWatcher(watchedLiteral, watcher);
 
-    auto postAddWatchersFor20 = underTest.getWatchers(CNFLit{CNFVar{20}, CNFSign::POSITIVE});
+    auto postAddWatchersFor20 = underTest.getWatchers(20_Lit);
     ASSERT_FALSE(postAddWatchersFor20.hasFinishedTraversal());
     EXPECT_EQ(&((*postAddWatchersFor20).getClause()), &testClause);
     ++postAddWatchersFor20;
@@ -275,10 +275,10 @@ TEST(UnitSolver, completeWatchersTraversalEmptyWhenNoWatchersExist) {
 
 TEST(UnitSolver, watchersAllOccurInCompleteWatchersTraversal) {
     std::vector<TrivialClause> clauses = {
-        {CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE}},
-        {CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{2}, CNFSign::POSITIVE}},
-        {CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{3}, CNFSign::POSITIVE}},
-        {CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE}},
+        {0_Lit, 1_Lit},
+        {0_Lit, 2_Lit},
+        {1_Lit, 3_Lit},
+        {2_Lit, 1_Lit},
     };
 
     std::vector<TestWatcher> watchers;
@@ -313,10 +313,10 @@ TEST(UnitSolver, watchersAllOccurInCompleteWatchersTraversal) {
 
 TEST(UnitSolver, binaryWatchersOccurInBlockerMap) {
     std::vector<TrivialClause> clauses = {
-        {CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE}},
-        {CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{2}, CNFSign::POSITIVE}},
-        {CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{3}, CNFSign::POSITIVE}},
-        {CNFLit{CNFVar{2}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE}},
+        {0_Lit, 1_Lit},
+        {0_Lit, 2_Lit},
+        {1_Lit, 3_Lit},
+        {2_Lit, 1_Lit},
     };
 
     std::vector<TestWatcher> watchers;
@@ -333,29 +333,27 @@ TEST(UnitSolver, binaryWatchersOccurInBlockerMap) {
 
     auto blockerMap = underTest.getBlockerMap();
 
-    auto blockersOfP0 = blockerMap[CNFLit{CNFVar{0}, CNFSign::POSITIVE}];
-    std::vector<CNFLit> expectedBlockersOfP0{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                                             CNFLit{CNFVar{2}, CNFSign::POSITIVE}};
+    auto blockersOfP0 = blockerMap[0_Lit];
+    std::vector<CNFLit> expectedBlockersOfP0{1_Lit, 2_Lit};
     ASSERT_EQ(blockersOfP0.size(), expectedBlockersOfP0.size());
     std::vector<CNFLit> blockersOfP0FwdRange{blockersOfP0.begin(), blockersOfP0.end()};
     EXPECT_TRUE(std::is_permutation(blockersOfP0FwdRange.begin(), blockersOfP0FwdRange.end(),
                                     expectedBlockersOfP0.begin()));
 
-    auto blockersOfP2 = blockerMap[CNFLit{CNFVar{2}, CNFSign::POSITIVE}];
-    std::vector<CNFLit> expectedBlockersOfP2{CNFLit{CNFVar{0}, CNFSign::POSITIVE},
-                                             CNFLit{CNFVar{1}, CNFSign::POSITIVE}};
+    auto blockersOfP2 = blockerMap[2_Lit];
+    std::vector<CNFLit> expectedBlockersOfP2{0_Lit, 1_Lit};
     ASSERT_EQ(blockersOfP2.size(), expectedBlockersOfP2.size());
     std::vector<CNFLit> blockersOfP2FwdRange{blockersOfP2.begin(), blockersOfP2.end()};
     EXPECT_TRUE(std::is_permutation(blockersOfP2FwdRange.begin(), blockersOfP2FwdRange.end(),
                                     expectedBlockersOfP2.begin()));
 
-    auto blockersOfP10 = blockerMap[CNFLit{CNFVar{10}, CNFSign::POSITIVE}];
+    auto blockersOfP10 = blockerMap[10_Lit];
     EXPECT_TRUE(blockersOfP10.empty());
 
 
-    auto blockersOfP3 = blockerMap[CNFLit{CNFVar{3}, CNFSign::POSITIVE}];
+    auto blockersOfP3 = blockerMap[3_Lit];
     ASSERT_EQ(blockersOfP3.size(), 1ULL);
-    EXPECT_EQ(*(blockersOfP3.begin()), (CNFLit{CNFVar{1}, CNFSign::POSITIVE}));
+    EXPECT_EQ(*(blockersOfP3.begin()), (1_Lit));
 }
 }
 }

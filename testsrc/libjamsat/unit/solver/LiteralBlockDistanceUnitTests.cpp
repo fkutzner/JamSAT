@@ -59,7 +59,7 @@ TEST(UnitSolver, getLBD_LBDofUnaryClauseIs1) {
     TestStampMap tempStamps{128};
     TestAssignmentProvider dlProvider;
     dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 10);
-    TestClause unary{CNFLit{CNFVar{1}, CNFSign::NEGATIVE}};
+    TestClause unary{~1_Lit};
 
     LBD result = getLBD(unary, dlProvider, tempStamps);
     EXPECT_EQ(result, 1ull);
@@ -76,9 +76,7 @@ TEST(UnitSolver, getLBD_LBDofMultiLiteralClause) {
     dlProvider.setAssignmentDecisionLevel(CNFVar{10}, 9);
 
     TestClause testData{
-        CNFLit{CNFVar{2}, CNFSign::NEGATIVE}, CNFLit{CNFVar{5}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{7}, CNFSign::NEGATIVE}, CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{10}, CNFSign::NEGATIVE},
+        ~2_Lit, 5_Lit, ~7_Lit, ~1_Lit, 0_Lit, ~10_Lit,
     };
 
     LBD result = getLBD(testData, dlProvider, tempStamps);

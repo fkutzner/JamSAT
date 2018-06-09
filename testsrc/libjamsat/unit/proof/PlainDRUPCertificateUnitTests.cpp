@@ -47,9 +47,9 @@ TEST(UnitProof, PlainDRUPCertificate_singleRUPClauseWrittenToProof) {
     std::stringstream buffer;
     auto underTest = createPlainDRUPCertificate(buffer);
     std::vector<CNFLit> clause{
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{2}, CNFSign::NEGATIVE},
+        0_Lit,
+        ~4_Lit,
+        ~2_Lit,
     };
     underTest->addRUPClause(clause);
 
@@ -62,16 +62,16 @@ TEST(UnitProof, PlainDRUPCertificate_multipleRUPClausesWrittenToProof) {
     std::stringstream buffer;
     auto underTest = createPlainDRUPCertificate(buffer);
     std::vector<CNFLit> clause1{
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{2}, CNFSign::NEGATIVE},
+        0_Lit,
+        ~4_Lit,
+        ~2_Lit,
     };
     underTest->addRUPClause(clause1);
 
     std::vector<CNFLit> clause2{
-        CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{2}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
+        1_Lit,
+        ~2_Lit,
+        ~3_Lit,
     };
     underTest->addRUPClause(clause2);
 
@@ -84,9 +84,9 @@ TEST(UnitProof, PlainDRUPCertificate_deletedClauseWrittenToProof) {
     std::stringstream buffer;
     auto underTest = createPlainDRUPCertificate(buffer);
     std::vector<CNFLit> clause{
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{2}, CNFSign::NEGATIVE},
+        0_Lit,
+        ~4_Lit,
+        ~2_Lit,
     };
     underTest->deleteClause(clause);
 

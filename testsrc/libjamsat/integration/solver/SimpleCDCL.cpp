@@ -303,7 +303,7 @@ TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
     insertXOR({lines[5], lines[6]}, lines[1], testData);
     insertXOR({lines[7], lines[8]}, lines[2], testData);
 
-    CNFClause unit{CNFLit{CNFVar{15}, CNFSign::POSITIVE}};
+    CNFClause unit{15_Lit};
     testData.addClause(std::move(unit));
 
     SimpleCDCL underTest;

@@ -78,17 +78,11 @@ std::unique_ptr<Clause> createClause(std::vector<CNFLit> const &lits) {
 }
 
 TEST_F(IntegrationLightweightSimplifier, minimizesUsingUnaries) {
-    std::vector<CNFLit> rawClause1{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                                   CNFLit{CNFVar{2}, CNFSign::NEGATIVE},
-                                   CNFLit{CNFVar{3}, CNFSign::POSITIVE}};
-    std::vector<CNFLit> rawClause2{CNFLit{CNFVar{5}, CNFSign::POSITIVE},
-                                   CNFLit{CNFVar{2}, CNFSign::POSITIVE},
-                                   CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
-    std::vector<CNFLit> rawClause3{CNFLit{CNFVar{8}, CNFSign::POSITIVE},
-                                   CNFLit{CNFVar{9}, CNFSign::NEGATIVE}};
+    std::vector<CNFLit> rawClause1{1_Lit, ~2_Lit, 3_Lit};
+    std::vector<CNFLit> rawClause2{5_Lit, 2_Lit, 6_Lit};
+    std::vector<CNFLit> rawClause3{8_Lit, ~9_Lit};
 
-    std::vector<CNFLit> unaries{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                                CNFLit{CNFVar{2}, CNFSign::NEGATIVE}};
+    std::vector<CNFLit> unaries{1_Lit, ~2_Lit};
 
     auto clause1 = createClause(rawClause1);
     auto clause2 = createClause(rawClause2);
@@ -112,7 +106,7 @@ TEST_F(IntegrationLightweightSimplifier, minimizesUsingUnaries) {
     EXPECT_TRUE(std::equal(clause3->begin(), clause3->end(), rawClause3.begin()));
 
     // Check that clause2 has been strengthened:
-    boost::remove_erase(rawClause2, CNFLit{CNFVar{2}, CNFSign::POSITIVE});
+    boost::remove_erase(rawClause2, 2_Lit);
     EXPECT_TRUE(std::is_permutation(clause2->begin(), clause2->end(), rawClause2.begin()));
 }
 }

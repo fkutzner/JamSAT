@@ -63,14 +63,12 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancy) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
     TrivialClause reasonFor3{
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+        3_Lit,
+        ~4_Lit,
     };
     reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
 
-    TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
     StampMap<int, CNFVar::Index> tempStamps{1024};
     TestAssignmentProvider dlProvider;
@@ -80,7 +78,7 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancy) {
     dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
 
     TrivialClause expected = testData;
-    boost::remove_erase(expected, CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
+    boost::remove_erase(expected, ~3_Lit);
 
     eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
@@ -91,23 +89,20 @@ TEST(UnitSolver, eraseRedundantLiterals_removesTwoLevelRedundancy) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
     TrivialClause reasonFor3{
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
+        3_Lit,
+        ~4_Lit,
+        ~5_Lit,
     };
     reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
 
     TrivialClause reasonFor5{
-        CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{8}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{9}, CNFSign::NEGATIVE},
+        ~5_Lit,
+        ~8_Lit,
+        ~9_Lit,
     };
     reasonProvider.setAssignmentReason(CNFVar{5}, reasonFor5);
 
-    TrivialClause testData{
-        CNFLit{CNFVar{1}, CNFSign::POSITIVE}, CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{4}, CNFSign::NEGATIVE}, CNFLit{CNFVar{8}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{9}, CNFSign::POSITIVE}};
+    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit, ~8_Lit, 9_Lit};
 
     StampMap<int, CNFVar::Index> tempStamps{1024};
     TestAssignmentProvider dlProvider;
@@ -119,7 +114,7 @@ TEST(UnitSolver, eraseRedundantLiterals_removesTwoLevelRedundancy) {
     }
 
     TrivialClause expected = testData;
-    boost::remove_erase(expected, CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
+    boost::remove_erase(expected, ~3_Lit);
 
     eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
@@ -130,15 +125,13 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancyWithUnit) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
     TrivialClause reasonFor3{
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
+        3_Lit,
+        ~4_Lit,
+        ~5_Lit,
     };
     reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
 
-    TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
     StampMap<int, CNFVar::Index> tempStamps{1024};
     TestAssignmentProvider dlProvider;
@@ -149,7 +142,7 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancyWithUnit) {
     dlProvider.setAssignmentDecisionLevel(CNFVar{5}, 0);
 
     TrivialClause expected = testData;
-    boost::remove_erase(expected, CNFLit{CNFVar{3}, CNFSign::NEGATIVE});
+    boost::remove_erase(expected, ~3_Lit);
 
     eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
@@ -159,9 +152,7 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancyWithUnit) {
 TEST(UnitSolver, eraseRedundantLiterals_removesUnitLiteral) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
     StampMap<int, CNFVar::Index> tempStamps{1024};
     TestAssignmentProvider dlProvider;
@@ -171,7 +162,7 @@ TEST(UnitSolver, eraseRedundantLiterals_removesUnitLiteral) {
     dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 0);
 
     TrivialClause expected = testData;
-    boost::remove_erase(expected, CNFLit{CNFVar{4}, CNFSign::NEGATIVE});
+    boost::remove_erase(expected, ~4_Lit);
 
     eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
@@ -181,14 +172,10 @@ TEST(UnitSolver, eraseRedundantLiterals_removesUnitLiteral) {
 TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveNonredundantLiteral) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause reasonFor3{CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-                             CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
-                             CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+    TrivialClause reasonFor3{3_Lit, ~4_Lit, 5_Lit};
     reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
 
-    TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
     StampMap<int, CNFVar::Index> tempStamps{1024};
     TestAssignmentProvider dlProvider;
@@ -210,13 +197,10 @@ TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveNonredundantLiteral) {
 TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveLiteralsOnCurrentLevel) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause reasonFor1{CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
-                             CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    TrivialClause reasonFor1{~1_Lit, ~4_Lit};
     reasonProvider.setAssignmentReason(CNFVar{1}, reasonFor1);
 
-    TrivialClause testData{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
     StampMap<int, CNFVar::Index> tempStamps{1024};
     TestAssignmentProvider dlProvider;
@@ -234,18 +218,15 @@ TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveLiteralsOnCurrentLevel) {
 TEST(UnitSolver, eraseRedundantLiterals_regression_doesNotMarkNonredundantLitAsRedundant) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause reasonFor3{CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-                             CNFLit{CNFVar{7}, CNFSign::POSITIVE}};
+    TrivialClause reasonFor3{3_Lit, 7_Lit};
     reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
 
-    TrivialClause reasonFor7{CNFLit{CNFVar{7}, CNFSign::NEGATIVE},
-                             CNFLit{CNFVar{1}, CNFSign::POSITIVE}};
+    TrivialClause reasonFor7{~7_Lit, 1_Lit};
     reasonProvider.setAssignmentReason(CNFVar{7}, reasonFor7);
 
     // Variable 1 has no reason clause.
 
-    TrivialClause reasonFor2{CNFLit{CNFVar{7}, CNFSign::POSITIVE},
-                             CNFLit{CNFVar{2}, CNFSign::POSITIVE}};
+    TrivialClause reasonFor2{7_Lit, 2_Lit};
     reasonProvider.setAssignmentReason(CNFVar{2}, reasonFor2);
 
     TestAssignmentProvider dlProvider;
@@ -256,9 +237,7 @@ TEST(UnitSolver, eraseRedundantLiterals_regression_doesNotMarkNonredundantLitAsR
     dlProvider.setAssignmentDecisionLevel(CNFVar{7}, 1);
     dlProvider.setAssignmentDecisionLevel(CNFVar{6}, 2);
 
-    TrivialClause testData{CNFLit{CNFVar{6}, CNFSign::POSITIVE},
-                           CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                           CNFLit{CNFVar{2}, CNFSign::NEGATIVE}};
+    TrivialClause testData{6_Lit, ~3_Lit, ~2_Lit};
 
     StampMap<int, CNFVar::Index> tempStamps{1024};
 
@@ -274,8 +253,7 @@ TEST(UnitSolver, resolveWithBinaries_emptyClauseIsFixpoint) {
     // representing binary clauses as a map from first literals to a list of
     // second literals
     std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
-    binaryClauses[resolveAt] = {CNFLit{CNFVar{9}, CNFSign::POSITIVE},
-                                CNFLit{CNFVar{8}, CNFSign::POSITIVE}};
+    binaryClauses[resolveAt] = {9_Lit, 8_Lit};
 
     TrivialClause empty;
     StampMap<int, CNFLit::Index> tempStamps{1024};
@@ -290,12 +268,9 @@ TEST(UnitSolver, resolveWithBinaries_clauseWithoutResOpportunityIsFixpoint) {
     // representing binary clauses as a map from first literals to a list of
     // second literals
     std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
-    binaryClauses[resolveAt] = {CNFLit{CNFVar{12}, CNFSign::POSITIVE},
-                                CNFLit{CNFVar{13}, CNFSign::POSITIVE}};
+    binaryClauses[resolveAt] = {12_Lit, 13_Lit};
 
-    TrivialClause noResPossible{CNFLit{CNFVar{7}, CNFSign::POSITIVE},
-                                CNFLit{CNFVar{10}, CNFSign::POSITIVE},
-                                CNFLit{CNFVar{11}, CNFSign::POSITIVE}};
+    TrivialClause noResPossible{7_Lit, 10_Lit, 11_Lit};
     StampMap<int, CNFLit::Index> tempStamps{1024};
     TrivialClause expected = noResPossible;
     resolveWithBinaries(noResPossible, binaryClauses, resolveAt, tempStamps);
@@ -309,8 +284,7 @@ TEST(UnitSolver, resolveWithBinaries_noResolutionWhenNoBinaryClauses) {
     // second literals
     std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
 
-    TrivialClause noResPossible{CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-                                CNFLit{CNFVar{2}, CNFSign::POSITIVE}};
+    TrivialClause noResPossible{1_Lit, 2_Lit};
     StampMap<int, CNFLit::Index> tempStamps{1024};
     TrivialClause expected = noResPossible;
     resolveWithBinaries(noResPossible, binaryClauses, resolveAt, tempStamps);
@@ -324,21 +298,18 @@ TEST(UnitSolver, resolveWithBinaries_allResolutionOpportunitiesAreUsed) {
     // second literals
     std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
     binaryClauses[resolveAt] = {
-        CNFLit{CNFVar{12}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{15}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{17}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{30}, CNFSign::POSITIVE},
+        12_Lit,
+        ~15_Lit,
+        ~17_Lit,
+        30_Lit,
     };
 
     TrivialClause testData{
-        CNFLit{CNFVar{12}, CNFSign::NEGATIVE}, CNFLit{CNFVar{15}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{30}, CNFSign::NEGATIVE}, CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{5}, CNFSign::POSITIVE},
+        ~12_Lit, 15_Lit, ~30_Lit, ~3_Lit, 5_Lit,
     };
 
     StampMap<int, CNFLit::Index> tempStamps{1024};
-    TrivialClause expected = {CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                              CNFLit{CNFVar{5}, CNFSign::POSITIVE}};
+    TrivialClause expected = {~3_Lit, 5_Lit};
 
     resolveWithBinaries(testData, binaryClauses, resolveAt, tempStamps);
 

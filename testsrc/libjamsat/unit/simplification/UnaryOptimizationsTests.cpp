@@ -47,11 +47,11 @@ public:
 class UnitUnaryOptimization : public ::testing::Test {
 protected:
     UnitUnaryOptimization() : ::testing::Test() {
-        lit1 = CNFLit{CNFVar{0}, CNFSign::NEGATIVE};
-        lit2 = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
-        lit3 = CNFLit{CNFVar{10}, CNFSign::NEGATIVE};
-        lit4 = CNFLit{CNFVar{22}, CNFSign::POSITIVE};
-        lit5 = CNFLit{CNFVar{32}, CNFSign::POSITIVE};
+        lit1 = ~0_Lit;
+        lit2 = 6_Lit;
+        lit3 = ~10_Lit;
+        lit4 = 22_Lit;
+        lit5 = 32_Lit;
 
         clause1 = TrivialClause{lit1, lit5, lit2};
         clause2 = TrivialClause{lit1, lit4, lit2};

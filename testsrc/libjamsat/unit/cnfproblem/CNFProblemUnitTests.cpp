@@ -78,8 +78,7 @@ TEST(UnitCNFProblem, emptyCNFProblemHasNoClauses) {
 }
 
 TEST(UnitCNFProblem, addedClauseCanBeRetrieved) {
-    std::vector<CNFLit> clause = {CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                                  CNFLit{CNFVar{3}, CNFSign::NEGATIVE}};
+    std::vector<CNFLit> clause = {~3_Lit, ~3_Lit};
 
     CNFProblem underTest;
     underTest.addClause(clause);
@@ -88,11 +87,9 @@ TEST(UnitCNFProblem, addedClauseCanBeRetrieved) {
 }
 
 TEST(UnitCNFProblem, cnfProblemWithTwoClausesReportsSize) {
-    std::vector<CNFLit> clause1 = {CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                                   CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    std::vector<CNFLit> clause1 = {~3_Lit, ~4_Lit};
 
-    std::vector<CNFLit> clause2 = {CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
-                                   CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    std::vector<CNFLit> clause2 = {~5_Lit, 6_Lit};
 
     CNFProblem underTest;
     underTest.addClause(clause1);
@@ -102,11 +99,9 @@ TEST(UnitCNFProblem, cnfProblemWithTwoClausesReportsSize) {
 }
 
 TEST(UnitCNFProblem, cnfProblemOrderIsPreserved) {
-    std::vector<CNFLit> clause1 = {CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                                   CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    std::vector<CNFLit> clause1 = {~3_Lit, ~4_Lit};
 
-    std::vector<CNFLit> clause2 = {CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
-                                   CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    std::vector<CNFLit> clause2 = {~5_Lit, 6_Lit};
 
     CNFProblem underTest;
     underTest.addClause(clause1);
@@ -117,11 +112,9 @@ TEST(UnitCNFProblem, cnfProblemOrderIsPreserved) {
 }
 
 TEST(UnitCNFProblem, cnfProblemReportsMaximumVariable) {
-    std::vector<CNFLit> clause1 = {CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                                   CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    std::vector<CNFLit> clause1 = {~3_Lit, ~4_Lit};
 
-    std::vector<CNFLit> clause2 = {CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
-                                   CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    std::vector<CNFLit> clause2 = {~5_Lit, 6_Lit};
 
     CNFProblem underTest;
     underTest.addClause(clause1);
@@ -145,7 +138,7 @@ TEST(UnitCNFProblem, printEmptyClauseAsDIMACS) {
 
 TEST(UnitCNFProblem, printBinaryClauseAsDIMACS) {
     std::stringstream collector;
-    CNFClause underTest{CNFLit{CNFVar{1}, CNFSign::NEGATIVE}, CNFLit{CNFVar{3}, CNFSign::POSITIVE}};
+    CNFClause underTest{~1_Lit, 3_Lit};
 
     collector << underTest;
 
@@ -173,11 +166,9 @@ TEST(UnitCNFProblem, printEmptyCNFProblemAsDIMACS) {
 }
 
 TEST(UnitCNFProblem, printTwoClauseCNFProblemAsDIMACS) {
-    std::vector<CNFLit> clause1 = {CNFLit{CNFVar{3}, CNFSign::NEGATIVE},
-                                   CNFLit{CNFVar{4}, CNFSign::NEGATIVE}};
+    std::vector<CNFLit> clause1 = {~3_Lit, ~4_Lit};
 
-    std::vector<CNFLit> clause2 = {CNFLit{CNFVar{5}, CNFSign::NEGATIVE},
-                                   CNFLit{CNFVar{6}, CNFSign::POSITIVE}};
+    std::vector<CNFLit> clause2 = {~5_Lit, 6_Lit};
     CNFProblem underTest;
 
     underTest.addClause(clause1);
@@ -247,9 +238,9 @@ TEST(UnitCNFProblem, parseSimpleFormattedCNFClause) {
     ASSERT_EQ(underTest.size(), 3ull);
 
     CNFClause expected = {
-        CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE},
+        ~1_Lit,
+        3_Lit,
+        0_Lit,
     };
 
     EXPECT_EQ(underTest, expected);
@@ -280,9 +271,9 @@ TEST(UnitCNFProblem, parseMultilineCNFClause) {
     ASSERT_EQ(underTest.size(), 3ull);
 
     CNFClause expected = {
-        CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE},
+        ~1_Lit,
+        3_Lit,
+        0_Lit,
     };
 
     EXPECT_EQ(underTest, expected);
@@ -298,9 +289,9 @@ TEST(UnitCNFProblem, parseCommentContainingCNFClause) {
     ASSERT_EQ(underTest.size(), 3ull);
 
     CNFClause expected = {
-        CNFLit{CNFVar{1}, CNFSign::NEGATIVE},
-        CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE},
+        ~1_Lit,
+        3_Lit,
+        0_Lit,
     };
 
     EXPECT_EQ(underTest, expected);
@@ -375,9 +366,7 @@ TEST(UnitCNFProblem, parseSingleClauseDIMACSProblem) {
     ASSERT_EQ(underTest.getSize(), 1ull);
 
     CNFClause expected = {
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE}, CNFLit{CNFVar{1}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{2}, CNFSign::NEGATIVE}, CNFLit{CNFVar{3}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{4}, CNFSign::NEGATIVE},
+        0_Lit, 1_Lit, ~2_Lit, 3_Lit, ~4_Lit,
     };
 
     EXPECT_EQ(underTest.getClauses()[0], expected);
@@ -396,13 +385,13 @@ TEST(UnitCNFProblem, parseMultipleClauseDIMACSProblem) {
     ASSERT_EQ(underTest.getSize(), 2ull);
 
     CNFClause expected1 = {
-        CNFLit{CNFVar{0}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{1}, CNFSign::POSITIVE},
+        0_Lit,
+        1_Lit,
     };
 
     CNFClause expected2 = {
-        CNFLit{CNFVar{4}, CNFSign::POSITIVE},
-        CNFLit{CNFVar{5}, CNFSign::POSITIVE},
+        4_Lit,
+        5_Lit,
     };
 
     EXPECT_EQ(underTest.getClauses()[0], expected1);

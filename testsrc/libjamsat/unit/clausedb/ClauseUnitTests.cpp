@@ -160,9 +160,9 @@ TEST(UnitClauseDB, assignClause) {
 
     source->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
     source->setLBD<int>(10);
-    (*source)[0] = CNFLit{CNFVar{100}, CNFSign::POSITIVE};
-    (*source)[1] = CNFLit{CNFVar{10}, CNFSign::NEGATIVE};
-    (*source)[2] = CNFLit{CNFVar{1000}, CNFSign::POSITIVE};
+    (*source)[0] = 100_Lit;
+    (*source)[1] = ~10_Lit;
+    (*source)[2] = 1000_Lit;
 
     *assignee = *source;
 
@@ -192,8 +192,8 @@ TEST(UnitClauseDB, notTooLargeLBDValueIsStored) {
 
 TEST(UnitClauseDB, clauseIsEqualToSelf) {
     auto underTest = createHeapClause(2);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = ~2_Lit;
     EXPECT_TRUE(*underTest == *underTest);
     EXPECT_FALSE(*underTest != *underTest);
 }
@@ -204,10 +204,10 @@ TEST(UnitClauseDB, clauseIsEqualToEqualClause) {
 
     underTest->setLBD(1);
     otherClause->setLBD(1);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
-    (*otherClause)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*otherClause)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = ~2_Lit;
+    (*otherClause)[0] = 3_Lit;
+    (*otherClause)[1] = ~2_Lit;
 
     EXPECT_TRUE(*underTest == *otherClause);
     EXPECT_FALSE(*underTest != *otherClause);
@@ -219,9 +219,9 @@ TEST(UnitClauseDB, clauseIsNotEqualToClauseOfDifferentSize) {
 
     underTest->setLBD(1);
     otherClause->setLBD(1);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
-    (*otherClause)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = ~2_Lit;
+    (*otherClause)[0] = 3_Lit;
 
     EXPECT_FALSE(*underTest == *otherClause);
     EXPECT_TRUE(*underTest != *otherClause);
@@ -233,10 +233,10 @@ TEST(UnitClauseDB, clauseIsNotEqualToClauseOfDifferentLBD) {
 
     underTest->setLBD(1);
     otherClause->setLBD(3);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
-    (*otherClause)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*otherClause)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = ~2_Lit;
+    (*otherClause)[0] = 3_Lit;
+    (*otherClause)[1] = ~2_Lit;
 
     EXPECT_FALSE(*underTest == *otherClause);
     EXPECT_TRUE(*underTest != *otherClause);
@@ -248,10 +248,10 @@ TEST(UnitClauseDB, clauseIsNotEqualToClauseWithDifferentLiterals) {
 
     underTest->setLBD(1);
     otherClause->setLBD(1);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{2}, CNFSign::NEGATIVE};
-    (*otherClause)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*otherClause)[1] = CNFLit{CNFVar{1}, CNFSign::POSITIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = ~2_Lit;
+    (*otherClause)[0] = 3_Lit;
+    (*otherClause)[1] = 1_Lit;
 
     EXPECT_FALSE(*underTest == *otherClause);
     EXPECT_TRUE(*underTest != *otherClause);
@@ -278,7 +278,7 @@ TEST(UnitClauseDB, clearClauseFlag) {
 
 TEST(UnitClauseDB, eraseSingleLiteralFromUnaryClauseYieldsEmptyClause) {
     auto underTest = createHeapClause(1);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[0] = 3_Lit;
     auto pos = underTest->begin();
     auto resultIter = underTest->erase(pos);
     EXPECT_EQ(underTest->size(), 0ULL);
@@ -287,31 +287,31 @@ TEST(UnitClauseDB, eraseSingleLiteralFromUnaryClauseYieldsEmptyClause) {
 
 TEST(UnitClauseDB, eraseSingleLiteralFromUnaryClauseYieldsUnaryClause) {
     auto underTest = createHeapClause(2);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = 4_Lit;
     auto pos = underTest->begin();
     auto resultIter = underTest->erase(pos);
     ASSERT_EQ(underTest->size(), 1ULL);
-    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{4}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[0], (4_Lit));
     EXPECT_EQ(resultIter, underTest->begin());
 }
 
 TEST(UnitClauseDB, eraseSingleLiteralFromTernaryClauseYieldsBinaryClause) {
     auto underTest = createHeapClause(3);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
-    (*underTest)[2] = CNFLit{CNFVar{5}, CNFSign::POSITIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = 4_Lit;
+    (*underTest)[2] = 5_Lit;
     auto pos = underTest->begin() + 1;
     auto resultIter = underTest->erase(pos);
     ASSERT_EQ(underTest->size(), 2ULL);
-    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{3}, CNFSign::POSITIVE}));
-    EXPECT_EQ((*underTest)[1], (CNFLit{CNFVar{5}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[0], (3_Lit));
+    EXPECT_EQ((*underTest)[1], (5_Lit));
     EXPECT_EQ(resultIter, underTest->begin() + 1);
 }
 
 TEST(UnitClauseDB, multiEraseSingleLiteralFromUnaryClauseYieldsEmptyClause) {
     auto underTest = createHeapClause(1);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
+    (*underTest)[0] = 3_Lit;
     auto pos = underTest->begin();
     auto resultIter = underTest->erase(pos, pos + 1);
     EXPECT_EQ(underTest->size(), 0ULL);
@@ -320,8 +320,8 @@ TEST(UnitClauseDB, multiEraseSingleLiteralFromUnaryClauseYieldsEmptyClause) {
 
 TEST(UnitClauseDB, eraseAllLiteralsFromBinaryClauseYieldsEmptyClause) {
     auto underTest = createHeapClause(2);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = 4_Lit;
     auto resultIter = underTest->erase(underTest->begin(), underTest->end());
     EXPECT_EQ(underTest->size(), 0ULL);
     EXPECT_EQ(resultIter, underTest->end());
@@ -329,12 +329,12 @@ TEST(UnitClauseDB, eraseAllLiteralsFromBinaryClauseYieldsEmptyClause) {
 
 TEST(UnitClauseDB, eraseTwoLiteralsFromTernaryClauseYieldsUnaryClause) {
     auto underTest = createHeapClause(3);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{4}, CNFSign::POSITIVE};
-    (*underTest)[2] = CNFLit{CNFVar{5}, CNFSign::POSITIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = 4_Lit;
+    (*underTest)[2] = 5_Lit;
     auto resultIter = underTest->erase(underTest->begin(), underTest->begin() + 2);
     ASSERT_EQ(underTest->size(), 1ULL);
-    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{5}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[0], (5_Lit));
     EXPECT_EQ(resultIter, underTest->begin());
 }
 
@@ -346,8 +346,8 @@ TEST(UnitClauseDB, eraseTwoLiteralsFromEndOf4LitClauseYieldsBinaryClause) {
 
     auto resultIter = underTest->erase(underTest->begin() + 2, underTest->end());
     ASSERT_EQ(underTest->size(), 2ULL);
-    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{0}, CNFSign::POSITIVE}));
-    EXPECT_EQ((*underTest)[1], (CNFLit{CNFVar{1}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[0], (0_Lit));
+    EXPECT_EQ((*underTest)[1], (1_Lit));
     EXPECT_EQ(resultIter, underTest->end());
 }
 
@@ -359,8 +359,8 @@ TEST(UnitClauseDB, eraseTwoLiteralsFromMidOf4LitClauseYieldsBinaryClause) {
 
     auto resultIter = underTest->erase(underTest->begin() + 1, underTest->begin() + 3);
     ASSERT_EQ(underTest->size(), 2ULL);
-    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{0}, CNFSign::POSITIVE}));
-    EXPECT_EQ((*underTest)[1], (CNFLit{CNFVar{3}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[0], (0_Lit));
+    EXPECT_EQ((*underTest)[1], (3_Lit));
     EXPECT_EQ(resultIter, underTest->begin() + 1);
 }
 
@@ -372,45 +372,45 @@ TEST(UnitClauseDB, eraseTwoLiteralsFromBeginOf4LitClauseYieldsBinaryClause) {
 
     auto resultIter = underTest->erase(underTest->begin(), underTest->begin() + 2);
     ASSERT_EQ(underTest->size(), 2ULL);
-    EXPECT_EQ((*underTest)[0], (CNFLit{CNFVar{2}, CNFSign::POSITIVE}));
-    EXPECT_EQ((*underTest)[1], (CNFLit{CNFVar{3}, CNFSign::POSITIVE}));
+    EXPECT_EQ((*underTest)[0], (2_Lit));
+    EXPECT_EQ((*underTest)[1], (3_Lit));
     EXPECT_EQ(resultIter, underTest->begin());
 }
 
 TEST(UnitClauseDB, mightContainIsOverapproximationInClause) {
     auto underTest = createHeapClause(3);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{27}, CNFSign::POSITIVE};
-    (*underTest)[2] = CNFLit{CNFVar{23}, CNFSign::NEGATIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = 27_Lit;
+    (*underTest)[2] = ~23_Lit;
     underTest->clauseUpdated();
 
-    EXPECT_TRUE(underTest->mightContain(CNFLit{CNFVar{3}, CNFSign::POSITIVE}));
-    EXPECT_TRUE(underTest->mightContain(CNFLit{CNFVar{27}, CNFSign::POSITIVE}));
-    EXPECT_TRUE(underTest->mightContain(CNFLit{CNFVar{23}, CNFSign::NEGATIVE}));
-    EXPECT_FALSE(underTest->mightContain(CNFLit{CNFVar{0}, CNFSign::NEGATIVE}));
-    EXPECT_FALSE(underTest->mightContain(CNFLit{CNFVar{13}, CNFSign::NEGATIVE}));
+    EXPECT_TRUE(underTest->mightContain(3_Lit));
+    EXPECT_TRUE(underTest->mightContain(27_Lit));
+    EXPECT_TRUE(underTest->mightContain(~23_Lit));
+    EXPECT_FALSE(underTest->mightContain(~0_Lit));
+    EXPECT_FALSE(underTest->mightContain(~13_Lit));
 }
 
 TEST(UnitClauseDB, mightBeSubsetOfIsOverapproximationInClause) {
     auto underTest = createHeapClause(3);
-    (*underTest)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*underTest)[1] = CNFLit{CNFVar{27}, CNFSign::POSITIVE};
-    (*underTest)[2] = CNFLit{CNFVar{23}, CNFSign::NEGATIVE};
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = 27_Lit;
+    (*underTest)[2] = ~23_Lit;
     underTest->clauseUpdated();
 
     auto superset = createHeapClause(5);
-    (*superset)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*superset)[1] = CNFLit{CNFVar{6}, CNFSign::POSITIVE};
-    (*superset)[2] = CNFLit{CNFVar{27}, CNFSign::POSITIVE};
-    (*superset)[3] = CNFLit{CNFVar{23}, CNFSign::NEGATIVE};
-    (*superset)[4] = CNFLit{CNFVar{1000}, CNFSign::NEGATIVE};
+    (*superset)[0] = 3_Lit;
+    (*superset)[1] = 6_Lit;
+    (*superset)[2] = 27_Lit;
+    (*superset)[3] = ~23_Lit;
+    (*superset)[4] = ~1000_Lit;
     superset->clauseUpdated();
     EXPECT_TRUE(underTest->mightBeSubsetOf(*superset));
 
     auto notSuperset = createHeapClause(5);
-    (*notSuperset)[0] = CNFLit{CNFVar{3}, CNFSign::POSITIVE};
-    (*notSuperset)[1] = CNFLit{CNFVar{1024}, CNFSign::POSITIVE};
-    (*notSuperset)[2] = CNFLit{CNFVar{23}, CNFSign::NEGATIVE};
+    (*notSuperset)[0] = 3_Lit;
+    (*notSuperset)[1] = 1024_Lit;
+    (*notSuperset)[2] = ~23_Lit;
     notSuperset->clauseUpdated();
     EXPECT_FALSE(underTest->mightBeSubsetOf(*notSuperset));
 }
