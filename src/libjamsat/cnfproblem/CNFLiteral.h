@@ -241,6 +241,8 @@ std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
 /**
  * \brief Gets the next-higher CNF variable.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  * \param var   A CNFVar whose raw value is not greater than CNFVar::getMaxRawValue().
  * \returns The next-higher CNFVar wrt. the raw value of \p var. If no such CNFVar exists,
  *   the undefined variable is returned.
@@ -250,6 +252,8 @@ CNFVar nextCNFVar(CNFVar var) noexcept;
 /**
  * \brief Returns true iff the given variable is regular.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  * A variable is regular if its raw value is not greater than the maximimum raw value for CNFVar
  * objects. "Special" variables such as the undefined variable are not regular.
  */
@@ -258,6 +262,8 @@ constexpr bool isRegular(CNFVar variable) noexcept;
 
 /**
  * \brief Equality operator for CNFVar.
+ *
+ * \ingroup JamSAT_CNFProblem
  *
  * Two variables are considered equal iff their raw values are equal.
  *
@@ -270,6 +276,8 @@ constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept;
 /**
  * \brief Equality operator for CNFVar.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  * Two variables are considered inequal iff their raw values are inequal.
  *
  * \param lhs   The light-hand-side variable.
@@ -280,6 +288,8 @@ constexpr bool operator!=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
 
 /**
  * \brief Less-than operator for CNFVar.
+ *
+ * \ingroup JamSAT_CNFProblem
  *
  * For any two literals \p x and \p y, we have <tt>x < y</tt> iff the raw value
  * of \p x is smaller than the raw value of \p y .
@@ -298,6 +308,8 @@ constexpr bool operator<(const CNFVar &lhs, const CNFVar &rhs) noexcept;
 /**
  * \brief Greater-than operator for CNFVar.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  * For any two CNFVar \p x and \p y, we have <tt>x > y</tt> iff <tt>x != y</tt>
  * and not \p <tt>x < y</tt>.
  *
@@ -310,6 +322,8 @@ constexpr bool operator>(const CNFVar &lhs, const CNFVar &rhs) noexcept;
 /**
  * \brief Smaller-than-or-equal-to operator for CNFVar.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  * \param lhs   The light-hand-side variable.
  * \param rhs   The right-hand-side variable.
  * \returns \p true iff \p lhs smaller than or equal to \p rhs .
@@ -319,6 +333,8 @@ constexpr bool operator<=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
 /**
  * \brief Greater-than-or-equal-to operator for CNFVar.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  * \param lhs   The light-hand-side variable.
  * \param rhs   The right-hand-side variable.
  * \returns \p true iff \p lhs greater than or equal to \p rhs .
@@ -327,6 +343,8 @@ constexpr bool operator>=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
 
 /**
  * \brief Equality operator for CNFLit.
+ *
+ * \ingroup JamSAT_CNFProblem
  *
  * Two literals are considered equal iff they have equal signs and equal
  * variables. The undefined literal is inequal to each other literal.
@@ -340,6 +358,8 @@ constexpr bool operator==(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 /**
  * \brief Inequality operator for CNFLit.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  * Two literals are considered inequal iff they have inequal signs or inequal
  * variables.
  *
@@ -351,6 +371,8 @@ constexpr bool operator!=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 
 /**
  * \brief Less-than operator for CNFLit.
+ *
+ * \ingroup JamSAT_CNFProblem
  *
  * For any two literals \p x and \p y, we have <tt>x < y</tt> iff either of the
  * following is true:
@@ -373,6 +395,8 @@ constexpr bool operator<(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 /**
  * \brief Greater-than operator for CNFLit.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  * For any two literals \p x and \p y, we have <tt>x > y</tt> iff <tt>x !=
  * y</tt> and not \p <tt>x < y</tt>.
  *
@@ -385,6 +409,8 @@ constexpr bool operator>(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 /**
  * \brief Less-than-or-equal-to operator for CNFLit.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  *
  * \param lhs   The light-hand-side literal.
  * \param rhs   The right-hand-side literal.
@@ -395,6 +421,8 @@ constexpr bool operator<=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 /**
  * \brief Greater-than-or-equal-to operator for CNFLit.
  *
+ * \ingroup JamSAT_CNFProblem
+ *
  *
  * \param lhs   The light-hand-side literal.
  * \param rhs   The right-hand-side literal.
@@ -404,10 +432,33 @@ constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
 
 /**
  * \brief Computes the literal L with variable \p var such that L > ~L
+ *
+ * \ingroup JamSAT_CNFProblem
+ *
  * \param var   A CNF variable
  * \return      The literal L with variable \p var such that L > ~L
  */
 constexpr CNFLit getMaxLit(CNFVar var) noexcept;
+
+/**
+ * \brief User-defined literal for variables
+ *
+ * \ingroup JamSAT_CNFProblem
+ *
+ * \param var The variable value.
+ * \return `CNFVar{var}`
+ */
+constexpr CNFVar operator"" _Var(unsigned long long var);
+
+/**
+ * \brief User-defined literal for literals
+ *
+ * \ingroup JamSAT_CNFProblem
+ *
+ * \param var The variable value.
+ * \return `CNFLit{CNFVar{var}, CNFSign::POSITIVE}`
+ */
+constexpr CNFLit operator"" _Lit(unsigned long long var);
 
 /********** Implementation ****************************** */
 
@@ -520,6 +571,14 @@ constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
 
 constexpr CNFLit getMaxLit(CNFVar var) noexcept {
     return CNFLit{var, CNFSign::POSITIVE};
+}
+
+constexpr CNFVar operator"" _Var(unsigned long long var) {
+    return CNFVar{static_cast<CNFVar::RawVariable>(var)};
+}
+
+constexpr CNFLit operator"" _Lit(unsigned long long var) {
+    return CNFLit{CNFVar{static_cast<CNFVar::RawVariable>(var)}, CNFSign::POSITIVE};
 }
 }
 
