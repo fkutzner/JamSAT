@@ -26,11 +26,12 @@
 
 #pragma once
 
-#include <iostream>
 #include <libjamsat/simplification/UnaryOptimizations.h>
 #include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/Printers.h>
 #include <libjamsat/utils/Truth.h>
+
+#include <boost/variant.hpp>
 
 #if defined(JAM_ENABLE_INFLIGHTSIMP_LOGGING)
 #define JAM_LOG_SSRWITHHBR(x, y) JAM_LOG(x, "ssrhbr", y)
@@ -39,6 +40,44 @@
 #endif
 
 namespace jamsat {
+
+/**
+ * \brief An exception indicating that a provided literal is a failed
+ *        literal.
+ *
+ * This exception is thrown by ssrWithHyperBinaryResolution() when the pivot
+ * literal is detected to be a failed literal.
+ *
+ * \ingroup JamSAT_Simplification
+ *
+ * \tparam ClauseType       The type of the conflicting clause
+ */
+template <typename ClauseType>
+class FailedLiteralException {
+public:
+    FailedLiteralException(ClauseType *conflictingClause, size_t decisionLevelToRevisit);
+
+    ~FailedLiteralException();
+
+    /**
+     * \brief Returns the conflicting clause.
+     * \returns The conflicting clause.
+     */
+    ClauseType *getConflictingClause() const noexcept;
+
+    /**
+     * \brief Returns the decision level to revisit after having finished
+     *        exception handling.
+     * \returns The decision level to revisit after having finished
+     *        exception handling.
+     */
+    size_t getDecisionLevelToRevisit() const noexcept;
+
+private:
+    ClauseType *m_conflictingClause;
+    size_t m_decisionLevelToRevisit;
+};
+
 /**
  * \brief Performs self-subsuming resolution and strengthening with hyper-binary
  *        resolution.
@@ -82,6 +121,13 @@ namespace jamsat {
  *                                  of \p resolveAt with \p propagation.
  * \param resolveAt                 The pivot literal.
  *
+ *
+ * \throws FailedLiteralException<Propagation::Clause>   If `~resolveAt` is a failed literal,
+ *                                  a \p FailedLiteralException
+ *                                  is thrown. The \p propagation object is left in the conflicting
+ *                                  state. The conflicting clause can be obtained from the exception
+ *                                  object.
+ *
  * \returns                         A statistics object indicating how many clauses have been
  *                                  scheduled for deletion and how many literals have been
  *                                  removed from clauses via strengthening.
@@ -114,16 +160,16 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
 
     auto backtrackLevel = assignments.getCurrentDecisionLevel();
     assignments.newDecisionLevel();
-    OnExitScope backtrackOnExit{
-        [&assignments, backtrackLevel]() { assignments.revisitDecisionLevel(backtrackLevel); }};
 
     assignments.addAssignment(~resolveAt);
     auto confl = propagation.propagateUntilFixpoint(
         ~resolveAt, Propagation::PropagationMode::EXCLUDE_REDUNDANT_CLAUSES);
     if (confl) {
-        // Found a failed literal! TODO: find the first UIP & learn the failed literal.
-        return result;
+        throw FailedLiteralException<Clause>(confl, backtrackLevel);
     }
+
+    OnExitScope backtrackOnExit{
+        [&assignments, backtrackLevel]() { assignments.revisitDecisionLevel(backtrackLevel); }};
 
     auto stampingContext = tempStamps.createContext();
     auto stamp = stampingContext.getStamp();
@@ -198,4 +244,22 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
     }
     return result;
 }
+
+template <typename ClauseType>
+FailedLiteralException<ClauseType>::FailedLiteralException(ClauseType *conflictingClause,
+                                                           size_t decisionLevelToRevisit)
+  : m_conflictingClause{conflictingClause}, m_decisionLevelToRevisit{decisionLevelToRevisit} {}
+
+template <typename ClauseType>
+FailedLiteralException<ClauseType>::~FailedLiteralException() {}
+
+template <typename ClauseType>
+ClauseType *FailedLiteralException<ClauseType>::getConflictingClause() const noexcept {
+    return m_conflictingClause;
+}
+
+template <typename ClauseType>
+size_t FailedLiteralException<ClauseType>::getDecisionLevelToRevisit() const noexcept {
+    return m_decisionLevelToRevisit;
+};
 }

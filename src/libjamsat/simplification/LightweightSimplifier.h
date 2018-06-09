@@ -144,12 +144,23 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
         result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, unaryClauses);
 
         for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
-            result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
-                                                   m_assignmentProvider, tempStamps,
-                                                   CNFLit{i, CNFSign::NEGATIVE});
-            result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
-                                                   m_assignmentProvider, tempStamps,
-                                                   CNFLit{i, CNFSign::POSITIVE});
+            try {
+                result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
+                                                       m_assignmentProvider, tempStamps,
+                                                       CNFLit{i, CNFSign::NEGATIVE});
+            } catch (FailedLiteralException<Clause> &e) {
+                // TODO: failed literal handling: do first-uip-learning, ...
+                m_assignmentProvider.revisitDecisionLevel(e.getDecisionLevelToRevisit());
+            }
+
+            try {
+                result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
+                                                       m_assignmentProvider, tempStamps,
+                                                       CNFLit{i, CNFSign::POSITIVE});
+            } catch (FailedLiteralException<Clause> &e) {
+                // TODO: failed literal handling
+                m_assignmentProvider.revisitDecisionLevel(e.getDecisionLevelToRevisit());
+            }
         }
 
 

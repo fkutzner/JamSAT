@@ -166,7 +166,8 @@ TEST_F(IntegrationSSRWithHyperBinaryResolution, NoClausesModifiedForFailedLitera
     auto bin2 = createClause({~2_Lit, 3_Lit});
     auto bin3 = createClause({~3_Lit, ~1_Lit});
 
-    performSSRWithHBR(1_Lit);
+    EXPECT_THROW(performSSRWithHBR(~1_Lit), FailedLiteralException<Clause>);
+
     expectUnmodified(*bin1);
     expectUnmodified(*bin2);
     expectUnmodified(*bin3);
