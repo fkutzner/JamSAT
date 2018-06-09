@@ -40,26 +40,51 @@
 
 namespace jamsat {
 /**
- * \brief Performs self-subsuming resolution with hyper-binary resolution
+ * \brief Performs self-subsuming resolution and strengthening with hyper-binary
+ *        resolution.
+ *
+ * Precondition: All assignments forced by unary clauses (wrt. \p propagation)
+ * have been propagated to fixpoint.
+ *
+ * Computes the set `A` of assignments implied by an assignment represented
+ * by `resolveAt` and for each clause containing `resolveAt`, applies the following:
+ *
+ * - (a) if the intersection of `A` and `C` is not empty, `C` is scheduled for deletion
+ *   since it is redundant.
+ * - (b) for each `c in C`: if `~c in A`, `c` is removed from `C`.
+ *
+ * When this function returns, \p assignments contains exactly the assignments it
+ * contians at the corresponding call to this function.
  *
  * \ingroup JamSAT_Simplification
  *
- * \tparam OccurrenceMap
- * \tparam ModFn
- * \tparam Propagation
- * \tparam AssignmentProvider
- * \tparam StampMap
+ * \tparam OccurrenceMap            An OccurrenceMap specialization for `Propagation::Clause`
+ * \tparam ModFn                    A type such that for an object `o` of type `ModFn` and
+ *                                  an object `c` of type `Clause`, `o(&c)` is a valid
+ *                                  expression.
+ * \tparam Propagation              A type that is a model of the Propagation concept, with
+ *                                  `Propagation::Clause` being the same type as
+ *                                  `OccurrenceMap::Container` and `AssignmentProvider::Clause`.
+ * \tparam AssignmentProvider       A type that is a model of the AssignmentProvider concept,
+ *                                  with `AssignmentProvider::Clause` being the same type
+ *                                  as `Propagation::Clause`.
+ * \tparam StampMap                 A StampMap type for CNFLit
  *
- * \param occMap
- * \param notifyModificationAhead
- * \param propagation
- * \param assignments
- * \param tempStamps
- * \param resolveAt
+ * \param occMap                    An OccurrenceMap containing the non-unary problem clauses
+ *                                  to be optimized. Clauses occurring in \p occMap may be
+ *                                  shortened or scheduled for deletion.
+ * \param notifyModificationAhead   A callable object to which a pointer to each clause to be
+ *                                  modified get passed before the modification.
+ * \param propagation               A propagation object.
+ * \param assignments               An assignment provider in sync with \p propagation.
+ * \param tempStamps                A StampMap capable of stamping all CNFLit objects occurring
+ *                                  in any clause contained in \p occMap, and during propagation
+ *                                  of \p resolveAt with \p propagation.
+ * \param resolveAt                 The pivot literal.
  *
- * \returns
- *
- * TODO: documentation
+ * \returns                         A statistics object indicating how many clauses have been
+ *                                  scheduled for deletion and how many literals have been
+ *                                  removed from clauses via strengthening.
  */
 template <typename OccurrenceMap, typename ModFn, typename Propagation, typename AssignmentProvider,
           typename StampMap>
@@ -80,7 +105,6 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
 
     using Clause = typename Propagation::Clause;
 
-
     SimplificationStats result;
 
     if (assignments.getAssignment(resolveAt) != TBools::INDETERMINATE) {
@@ -92,10 +116,6 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
     assignments.newDecisionLevel();
     OnExitScope backtrackOnExit{
         [&assignments, backtrackLevel]() { assignments.revisitDecisionLevel(backtrackLevel); }};
-
-    // propagate ~resolveAt (excluding redundant clauses)
-    // Now: all virtual binaries (resolveAt z) present on level D
-    // Remove all -z from clauses containing resolveAt (using tempStamps)
 
     assignments.addAssignment(~resolveAt);
     auto confl = propagation.propagateUntilFixpoint(
@@ -111,13 +131,13 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
     auto currentDL = assignments.getDecisionLevelAssignments(assignments.getCurrentDecisionLevel());
     auto currentDLEnd = currentDL.end();
 
-    bool stamped = false;
+    bool resolveAtImpliedAnything = false;
     for (auto lit = currentDL.begin() + 1; lit != currentDLEnd; ++lit) {
         tempStamps.setStamped(*lit, stamp, true);
-        stamped = true;
+        resolveAtImpliedAnything = true;
     }
 
-    if (!stamped) {
+    if (!resolveAtImpliedAnything) {
         return result;
     }
 
@@ -127,15 +147,11 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
             continue;
         }
 
-        bool foundPivot = false;
-        for (auto litIt = clause->begin(); litIt != clause->end(); ++litIt) {
-            if (*litIt == resolveAt) {
-                foundPivot = true;
-                break;
-            }
-        }
-
-        if (!foundPivot) {
+        // If resolveAt has been removed from the clause earlier,
+        // optimizing this clause on the ground of resolveAt's presence
+        // would not be sound, so in that case skip the clause:
+        if (!clause->mightContain(resolveAt) ||
+            std::find(clause->begin(), clause->end(), resolveAt) == clause->end()) {
             continue;
         }
 
@@ -143,16 +159,18 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
         bool strengthened = false;
         for (auto litIt = clause->begin(); litIt != clause->end();) {
             if (tempStamps.isStamped(*litIt, stamp)) {
+                // remove by subsumption: the clause contains some literal
+                // b such that (resolveAt b) is a "virtual" binary
                 if (!clauseModified) {
                     notifyModificationAhead(clause);
                 }
-                // remove by subsumption:
                 ++result.amntClausesRemovedBySubsumption;
                 clause->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
                 break;
-                //++litIt;
             } else if (tempStamps.isStamped(~(*litIt), stamp)) {
-                // strengthen
+                // strengthen the clause: the clause contains some
+                // literal b such that (resolveAt ~b) is a "virtual" binary,
+                // therefore b can be removed via resolution:
                 if (!clauseModified) {
                     notifyModificationAhead(clause);
                     clauseModified = true;
@@ -170,10 +188,12 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
                        "Not expecting to find new unaries here :O");
             clause->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
             JAM_LOG_SSRWITHHBR(info, "Deleting clause "
-                                         << &clause << " (redundancy detected by strenghtening)");
+                                         << std::addressof(*clause)
+                                         << " (redundancy detected by strenghtening)");
         } else if (strengthened) {
             JAM_LOG_SSRWITHHBR(info, "Strenghtened " << std::addressof(*clause) << " to "
                                                      << toString(clause->begin(), clause->end()));
+            clause->clauseUpdated();
         }
     }
     return result;
