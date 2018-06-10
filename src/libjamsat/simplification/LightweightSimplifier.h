@@ -84,12 +84,23 @@ public:
      *
      * - removes clauses satisfied because of assignments forced by unary clauses
      * - strengthens clauses using assignments forced by unary clauses
+     * - performs failed literal elimination, restricted in the sense that failed literals
+     *   are detected using only the clauses in \p possiblyIrredundantClauses
+     *
+     * Precondition: all unary clauses have been propagated using the propagation object
+     * and the assignment provider passed to the simplifier
+     *
+     * If a new unary clause is deduced during simplification, it is added to
+     * \p unaryClauses.
      *
      * \param unaryClauses                  The current set of unary clauses.
      * \param possiblyIrredundantClauses    The current set of clauses that are possibly
      *                                      not redundant.
      * \param redundantClauses              The current set of clauses that are redundant.
-     * \param tempStamps                    TODO
+     * \param tempStamps                    A StampMap capable of stamping any CNFLit
+     *                                      object occurring in the clauses passed via
+     *                                      \p unaryClauses, \p possiblyIrredundantClauses
+     *                                      and \p redundantClauses or during propagation.
      */
     template <typename StampMapT>
     auto simplify(std::vector<CNFLit> &unaryClauses,
@@ -168,31 +179,24 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, unaryClauses);
 
     for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
-        CNFLit resolveAt{i, CNFSign::NEGATIVE};
-        try {
+        for (CNFSign sign : {CNFSign::NEGATIVE, CNFSign::POSITIVE}) {
+            CNFLit resolveAt{i, sign};
             try {
                 result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
                                                        m_assignmentProvider, tempStamps, resolveAt);
             } catch (FailedLiteralException<Clause> &e) {
-                result += eliminateFailedLiteral(~resolveAt, e.getConflictingClause(), unaryClauses,
-                                                 e.getDecisionLevelToRevisit());
+                try {
+                    result += eliminateFailedLiteral(~resolveAt, e.getConflictingClause(),
+                                                     unaryClauses, e.getDecisionLevelToRevisit());
+                } catch (DetectedUNSATException &e) {
+                    // The unaries are contradictory now, so simplifying the problem
+                    // further would be redundant
+                    return result;
+                }
                 // The unaries decision level is revisited during failed literal elimination
             }
-
-            try {
-                result +=
-                    ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
-                                                 m_assignmentProvider, tempStamps, ~resolveAt);
-            } catch (FailedLiteralException<Clause> &e) {
-                result += eliminateFailedLiteral(resolveAt, e.getConflictingClause(), unaryClauses,
-                                                 e.getDecisionLevelToRevisit());
-                // The unaries decision level is revisited during failed literal elimination
-            }
-        } catch (DetectedUNSATException &e) {
-            return result;
         }
     }
-
 
     m_lastSeenAmntUnaries = unaryClauses.size();
 
