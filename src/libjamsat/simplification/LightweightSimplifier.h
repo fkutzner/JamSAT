@@ -83,14 +83,21 @@ public:
      *
      * - removes clauses satisfied because of assignments forced by unary clauses
      * - strengthens clauses using assignments forced by unary clauses
+     * - removes and strengthens clauses using hyper-binary resolution
      * - performs failed literal elimination, restricted in the sense that failed literals
-     *   are detected using only the clauses in \p possiblyIrredundantClauses
+     *   are detected using only the clauses in \p possiblyIrredundantClauses (this
+     *   is a by-product of the third item in this list)
      *
      * Precondition: all unary clauses have been propagated using the propagation object
      * and the assignment provider passed to the simplifier
      *
      * If a new unary clause is deduced during simplification, it is added to
+     * \p unaryClauses. If the problem instance is detected to be unsatisfiable
+     * via simplification, the derived contradictory unary clauses are placed in
      * \p unaryClauses.
+     *
+     * No assumptions may be made about the current literals assignments when this
+     * function returns.
      *
      * \param unaryClauses                  The current set of unary clauses.
      * \param possiblyIrredundantClauses    The current set of clauses that are possibly
@@ -100,12 +107,34 @@ public:
      *                                      object occurring in the clauses passed via
      *                                      \p unaryClauses, \p possiblyIrredundantClauses
      *                                      and \p redundantClauses or during propagation.
+     *
+     * \returns Statistics about the applied simplifications.
      */
     template <typename StampMapT>
     auto simplify(std::vector<CNFLit> &unaryClauses,
                   std::vector<Clause *> const &possiblyIrredundantClauses,
                   std::vector<Clause *> const &redundantClauses, StampMapT &tempStamps)
         -> SimplificationStats;
+
+    /**
+     * \brief Performs failed literal elimination
+     *
+     * Precondition: all unary clauses have been propagated using the propagation object
+     * and the assignment provider passed to the simplifier
+     *
+     * If a new unary clause is deduced during this procedure, it is added to
+     * \p unaryClauses. If the problem instance is detected to be unsatisfiable
+     * via simplification, the derived contradictory unary clauses are placed in
+     * \p unaryClauses.
+     *
+     * No assumptions may be made about the current literals assignments when this
+     * function returns.
+     *
+     * \param unaryClauses      The unary clauses currently
+     *
+     * \return Statistics about the applied simplifications.
+     */
+    auto eliminateFailedLiterals(std::vector<CNFLit> &unaryClauses) -> SimplificationStats;
 
     /**
      * \brief Increases the maximum variable which may occur in the problem instance..
@@ -130,10 +159,12 @@ private:
 
     class DetectedUNSATException {};
 
+    enum FLEPostProcessing { NONE, FULL };
+
     auto eliminateFailedLiteral(CNFLit failedLiteral, Clause *conflictingClause,
                                 std::vector<CNFLit> &unaries,
-                                typename AssignmentProviderT::DecisionLevel unaryLevel)
-        -> SimplificationStats;
+                                typename AssignmentProviderT::DecisionLevel unaryLevel,
+                                FLEPostProcessing postProcMode) -> SimplificationStats;
 
     PropagationT &m_propagation;
     AssignmentProviderT &m_assignmentProvider;
@@ -188,7 +219,8 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
             } catch (FailedLiteralException<Clause> &e) {
                 try {
                     result += eliminateFailedLiteral(~resolveAt, e.getConflictingClause(),
-                                                     unaryClauses, e.getDecisionLevelToRevisit());
+                                                     unaryClauses, e.getDecisionLevelToRevisit(),
+                                                     FLEPostProcessing::FULL);
                 } catch (DetectedUNSATException &e) {
                     // The unaries are contradictory now, so simplifying the problem
                     // further would be redundant
@@ -208,6 +240,47 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
 }
 
 template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
+    eliminateFailedLiterals(std::vector<CNFLit> &unaryClauses) -> SimplificationStats {
+    JAM_LOG_LIGHTWEIGHTSIMP(info, "Performing full failed literal elimination");
+
+    SimplificationStats result;
+    auto currentDL = m_assignmentProvider.getCurrentDecisionLevel();
+
+    for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
+        for (CNFSign sign : {CNFSign::NEGATIVE, CNFSign::POSITIVE}) {
+            if (m_assignmentProvider.getAssignment(i) != TBools::INDETERMINATE) {
+                continue;
+            }
+
+            CNFLit candidate{i, sign};
+            m_assignmentProvider.newDecisionLevel();
+            m_assignmentProvider.addAssignment(candidate);
+            auto conflictingClause = m_propagation.propagateUntilFixpoint(candidate);
+            if (!conflictingClause) {
+                m_assignmentProvider.revisitDecisionLevel(currentDL);
+                continue;
+            }
+
+            try {
+                result += eliminateFailedLiteral(candidate, conflictingClause, unaryClauses,
+                                                 currentDL, FLEPostProcessing::NONE);
+                JAM_ASSERT(
+                    m_assignmentProvider.getCurrentDecisionLevel() == currentDL,
+                    "eliminateFailedLiteral() should have returned to currentDL, but didn't");
+            } catch (DetectedUNSATException &e) {
+                // The unaries are contradictory now, so simplifying the problem
+                // further would be redundant
+                return result;
+            }
+        }
+    }
+
+    JAM_LOG_LIGHTWEIGHTSIMP(info, "Finished performing full failed literal elimination");
+    return result;
+}
+
+template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
 void LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::increaseMaxVarTo(
     CNFVar newMaxVar) {
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
@@ -222,8 +295,8 @@ template <typename PropagationT, typename AssignmentProviderT, typename Conflict
 auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
     eliminateFailedLiteral(CNFLit failedLiteral, Clause *conflictingClause,
                            std::vector<CNFLit> &unaries,
-                           typename AssignmentProviderT::DecisionLevel unaryLevel)
-        -> SimplificationStats {
+                           typename AssignmentProviderT::DecisionLevel unaryLevel,
+                           FLEPostProcessing postProcMode) -> SimplificationStats {
     JAM_LOG_LIGHTWEIGHTSIMP(info, "Performing failed literal elimination for failed literal "
                                       << failedLiteral);
     SimplificationStats result;
@@ -282,11 +355,12 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     JAM_LOG_LIGHTWEIGHTSIMP(info, "Detected new unaries "
                                       << toString(newUnariesRange.begin(), newUnariesRange.end()));
 
-    auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
-    result +=
-        scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, newUnariesRange);
-    result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, newUnariesRange);
-
+    if (postProcMode == FLEPostProcessing::FULL) {
+        auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
+        result += scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker,
+                                                              newUnariesRange);
+        result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, newUnariesRange);
+    }
     JAM_LOG_LIGHTWEIGHTSIMP(info, "Finished failed literal elimination for failed literal "
                                       << failedLiteral);
     return result;

@@ -68,6 +68,37 @@ protected:
         return result;
     }
 
+    /// Function type for invocations of failed literal elimination
+    /// Arguments: vector of unaries, vector of pointers to possibly irredundant clauses, vector of
+    ///   pointers to redundant clauses
+    using InvokeFLEFunc = std::function<void(std::vector<CNFLit> &, std::vector<Clause *> &,
+                                             std::vector<Clause *> &)>;
+
+    /// Tests that failed-literal elimination correctly eliminates failed
+    /// literals where the lemma's asserting literal is different from the
+    /// originally detected failed literal.
+    ///
+    /// \param invokeFLE        The failed-literal elimination function
+    /// \param expectUnaryOpt   Iff true, it is expected that strengthening and
+    ///                         subsumption optimizations using unaries is performed.
+    void test_eliminatesFailedLiteralsViaFLE(InvokeFLEFunc invokeFLE, bool expectUnaryOpt);
+
+    /// Tests that failed-literal elimination correctly handles situations where
+    /// both a and -a are failed literals for some variable a, indicating that the
+    /// problem is unsatisfiable
+    ///
+    /// \param invokeFLE    The failed-literal elimination function
+    void test_detectsUnsatViaFailedLiteralElimination(InvokeFLEFunc invokeFLE);
+
+
+    /// Tests that failed-literal elimination correctly handles situations like
+    /// (a -> b), (a -> c), ((b and c) -> d), (d -> e), (d -> -e)
+    /// Here, d is detected as UIP, but setting -d does not force the assignment -a
+    /// in a single propagation step. Check that both -d and -a are learned
+    ///
+    /// \param invokeFLE    The failed-literal elimination function
+    void test_eliminatesFailedLiteralsWithDecoupledUIP(InvokeFLEFunc invokeFLE);
+
     TrailT m_trail;
     PropagationT m_propagation;
     StampMap<uint16_t, CNFLit::Index> m_stamps;
@@ -124,11 +155,15 @@ TEST_F(IntegrationLightweightSimplifier, minimizesUsingUnaries) {
     EXPECT_TRUE(std::is_permutation(clause2->begin(), clause2->end(), rawClause2.begin()));
 }
 
-TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsViaRestrictedFLE) {
-    // Tests that failed-literal elimination correctly eliminates failed
-    // literals where the lemma's asserting literal is different from the
-    // originally detected failed literal (with restricted FLE):
+// Difference between restricted and unrestricted FLE: the former is a
+// by-product of other simplifications running only on clauses not marked
+// as redundant. However, this property of restricted FLE is not important
+// wrt. testing - if restricted FLE would take redundant clauses into
+// account, SSR with hyper-binary resolution would be broken, not the FLE
+// implementation. Thus, both variants can be tested the same way.
 
+void IntegrationLightweightSimplifier::test_eliminatesFailedLiteralsViaFLE(InvokeFLEFunc invokeFLE,
+                                                                           bool expectUnaryOpt) {
     auto clause1 = createAndRegClause({~1_Lit, 2_Lit});
     auto clause2 = createAndRegClause({~2_Lit, 3_Lit});
     auto clause3 = createAndRegClause({~3_Lit, 4_Lit});
@@ -144,31 +179,47 @@ TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsViaRestrictedFL
                                              clause4.get(), clause5.get(), clause6.get(),
                                              clause7.get()};
     std::vector<Clause *> redundantClauses;
-    underTest.simplify(unaries, possiblyIrrClauses, redundantClauses, m_stamps);
+
+    invokeFLE(unaries, possiblyIrrClauses, redundantClauses);
 
     std::vector<CNFLit> expectedUnaries{~3_Lit, ~2_Lit, ~1_Lit, 10_Lit};
-
     ASSERT_EQ(unaries.size(), expectedUnaries.size());
     EXPECT_TRUE(std::is_permutation(unaries.begin(), unaries.end(), expectedUnaries.begin()));
 
-    EXPECT_TRUE(clause1->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
-    EXPECT_TRUE(clause2->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
-    EXPECT_TRUE(clause3->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
-    EXPECT_TRUE(clause4->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
-    EXPECT_FALSE(clause5->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
-    EXPECT_FALSE(clause6->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
-    EXPECT_FALSE(clause7->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+    if (expectUnaryOpt) {
+        EXPECT_TRUE(clause1->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+        EXPECT_TRUE(clause2->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+        EXPECT_TRUE(clause3->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+        EXPECT_TRUE(clause4->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+        EXPECT_FALSE(clause5->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+        EXPECT_FALSE(clause6->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+        EXPECT_FALSE(clause7->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
 
-    expectClauseEqual(*clause5, {~4_Lit, 6_Lit});
-    expectClauseEqual(*clause6, {~5_Lit, ~6_Lit});
-    expectClauseEqual(*clause7, {~8_Lit, 20_Lit});
+        expectClauseEqual(*clause5, {~4_Lit, 6_Lit});
+        expectClauseEqual(*clause6, {~5_Lit, ~6_Lit});
+        expectClauseEqual(*clause7, {~8_Lit, 20_Lit});
+    }
 }
 
-TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaRestrictedFailedLiteralElimination) {
-    // Tests that failed-literal elimination correctly handles situations where
-    // both a and -a are failed literals for some variable a, indicating that the
-    // problem is unsatisfiable (with restricted FLE):
+TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsViaRestrictedFLE) {
+    test_eliminatesFailedLiteralsViaFLE(
+        [this](std::vector<CNFLit> &unaries, std::vector<Clause *> &possiblyIrredundants,
+               std::vector<Clause *> &redundants) {
+            underTest.simplify(unaries, possiblyIrredundants, redundants, m_stamps);
+        },
+        true);
+}
 
+TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsViaUnrestrictedFLE) {
+    test_eliminatesFailedLiteralsViaFLE(
+        [this](std::vector<CNFLit> &unaries, std::vector<Clause *> &, std::vector<Clause *> &) {
+            underTest.eliminateFailedLiterals(unaries);
+        },
+        false);
+}
+
+void IntegrationLightweightSimplifier::test_detectsUnsatViaFailedLiteralElimination(
+    InvokeFLEFunc invokeFLE) {
     auto clause1 = createAndRegClause({~1_Lit, 2_Lit});
     auto clause2 = createAndRegClause({~2_Lit, 3_Lit});
     auto clause3 = createAndRegClause({~3_Lit, 4_Lit});
@@ -177,7 +228,6 @@ TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaRestrictedFailedLiteralE
     auto clause6 = createAndRegClause({~5_Lit, ~6_Lit});
     auto clause7 = createAndRegClause({1_Lit, 2_Lit});
 
-
     // Each assignment of 1_Lit leads to a conflict. The simplifier should
     // append conflicting unaries to the end of the unaries vector:
     std::vector<CNFLit> unaries{10_Lit};
@@ -185,19 +235,29 @@ TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaRestrictedFailedLiteralE
                                              clause4.get(), clause5.get(), clause6.get(),
                                              clause7.get()};
     std::vector<Clause *> redundantClauses;
-    underTest.simplify(unaries, possiblyIrrClauses, redundantClauses, m_stamps);
+    invokeFLE(unaries, possiblyIrrClauses, redundantClauses);
 
     ASSERT_GE(unaries.size(), 2ULL);
     EXPECT_TRUE(unaries.back() == ~unaries[unaries.size() - 2]);
 }
 
-TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsWithDecoupledUIPViaRestrictedFLE) {
-    // Tests that failed-literal elimination correctly handles situations like
-    // (a -> b), (a -> c), ((b and c) -> d), (d -> e), (d -> -e)
-    // Here, d is detected as UIP, but setting -d does not force the assignment -a
-    // in a single propagation step. Check that both -d and -a are learned
-    // (with restricted FLE):
+TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaRestrictedFailedLiteralElimination) {
+    test_detectsUnsatViaFailedLiteralElimination([this](std::vector<CNFLit> &unaries,
+                                                        std::vector<Clause *> &possiblyIrredundants,
+                                                        std::vector<Clause *> &redundants) {
+        underTest.simplify(unaries, possiblyIrredundants, redundants, m_stamps);
+    });
+}
 
+TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaUnrestrictedFailedLiteralElimination) {
+    test_detectsUnsatViaFailedLiteralElimination(
+        [this](std::vector<CNFLit> &unaries, std::vector<Clause *> &, std::vector<Clause *> &) {
+            underTest.eliminateFailedLiterals(unaries);
+        });
+}
+
+void IntegrationLightweightSimplifier::test_eliminatesFailedLiteralsWithDecoupledUIP(
+    InvokeFLEFunc invokeFLE) {
     auto clause1 = createAndRegClause({~1_Lit, 2_Lit});
     auto clause2 = createAndRegClause({~1_Lit, 3_Lit});
     auto clause3 = createAndRegClause({~2_Lit, ~3_Lit, 4_Lit});
@@ -215,10 +275,26 @@ TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsWithDecoupledUI
                                              clause4.get(), clause5.get(), clause6.get(),
                                              clause7.get()};
     std::vector<Clause *> redundantClauses;
-    underTest.simplify(unaries, possiblyIrrClauses, redundantClauses, m_stamps);
+    invokeFLE(unaries, possiblyIrrClauses, redundantClauses);
 
     std::vector<CNFLit> expectedUnaries{10_Lit, ~1_Lit, ~4_Lit};
     ASSERT_EQ(unaries.size(), expectedUnaries.size());
     EXPECT_TRUE(std::is_permutation(unaries.begin(), unaries.end(), expectedUnaries.begin()));
+}
+
+TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsWithDecoupledUIPViaRestrictedFLE) {
+    test_eliminatesFailedLiteralsWithDecoupledUIP(
+        [this](std::vector<CNFLit> &unaries, std::vector<Clause *> &possiblyIrredundants,
+               std::vector<Clause *> &redundants) {
+            underTest.simplify(unaries, possiblyIrredundants, redundants, m_stamps);
+        });
+}
+
+TEST_F(IntegrationLightweightSimplifier,
+       eliminatesFailedLiteralsWithDecoupledUIPViaUnrestrictedFLE) {
+    test_eliminatesFailedLiteralsWithDecoupledUIP(
+        [this](std::vector<CNFLit> &unaries, std::vector<Clause *> &, std::vector<Clause *> &) {
+            underTest.eliminateFailedLiterals(unaries);
+        });
 }
 }

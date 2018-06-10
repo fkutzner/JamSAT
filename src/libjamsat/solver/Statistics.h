@@ -253,6 +253,7 @@ template <typename StatisticsConfig>
 void Statistics<StatisticsConfig>::registerSimplification(SimplificationStats &stats) noexcept {
     if (StatisticsConfig::CountSimplificationStats::value == true) {
         m_currentEra.m_simplificationStats += stats;
+        m_currentEra.m_unitLemmas += stats.amntUnariesLearnt;
     }
 }
 
@@ -331,7 +332,7 @@ auto operator<<(std::ostream &stream, const Statistics<StatisticsConfig> &stats)
     if (StatisticsConfig::CountSimplificationStats::value == true) {
         stream << "| #S: " << currentEra.m_simplificationStats.amntClausesRemovedBySubsumption
                << "," << currentEra.m_simplificationStats.amntClausesStrengthened << ","
-               << currentEra.m_simplificationStats.amntLiteralsRemovedByStrengthening << ", "
+               << currentEra.m_simplificationStats.amntLiteralsRemovedByStrengthening << ","
                << currentEra.m_simplificationStats.amntUnariesLearnt << " ";
     }
 

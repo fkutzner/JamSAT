@@ -236,6 +236,7 @@ private:
     bool m_detectedUNSAT;
 
     uint64_t m_conflictsUntilSimplification;
+    uint64_t m_conflictsUntilFLE;
 };
 
 /********** Implementation ****************************** */
@@ -261,7 +262,8 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_stamps(getMaxLit(CNFVar{0}).getRawValue())
   , m_statistics()
   , m_detectedUNSAT(false)
-  , m_conflictsUntilSimplification(0) {
+  , m_conflictsUntilSimplification(0)
+  , m_conflictsUntilFLE(180000) {
     m_conflictAnalyzer.setOnSeenVariableCallback(
         [this](CNFVar var) { m_branchingHeuristic.seenInConflict(var); });
 }
@@ -409,6 +411,14 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
     }
 
     m_trail.newDecisionLevel();
+
+    if (m_statistics.getCurrentEra().m_conflictCount >= m_conflictsUntilFLE) {
+        JAM_LOG_SOLVER(info, "Performing unrestricted failed literal elimination.");
+        auto simpResult = m_simplifier.eliminateFailedLiterals(m_unitClauses);
+        m_statistics.registerSimplification(simpResult);
+        m_conflictsUntilFLE += 180000;
+        return TBools::INDETERMINATE;
+    }
 
     if (m_statistics.getCurrentEra().m_conflictCount >= m_conflictsUntilSimplification) {
         JAM_LOG_SOLVER(info, "Performing simplification.");
