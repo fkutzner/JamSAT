@@ -179,4 +179,29 @@ TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaFailedLiteralElimination
     ASSERT_GE(unaries.size(), 2ULL);
     EXPECT_TRUE(unaries.back() == ~unaries[unaries.size() - 2]);
 }
+
+TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsWithDecoupledUIP) {
+    auto clause1 = createAndRegClause({~1_Lit, 2_Lit});
+    auto clause2 = createAndRegClause({~1_Lit, 3_Lit});
+    auto clause3 = createAndRegClause({~2_Lit, ~3_Lit, 4_Lit});
+    auto clause4 = createAndRegClause({~4_Lit, 5_Lit});
+    auto clause5 = createAndRegClause({~4_Lit, 6_Lit});
+    auto clause6 = createAndRegClause({~5_Lit, 7_Lit});
+    auto clause7 = createAndRegClause({~6_Lit, ~7_Lit});
+
+    // For FLE with literal 1_Lit, the asserting literal is ~4_Lit,
+    // but in this case ~1_Lit is not directly obtained by propagating
+    // ~4_Lit. (This is due to clause3)
+
+    std::vector<CNFLit> unaries{10_Lit};
+    std::vector<Clause *> possiblyIrrClauses{clause1.get(), clause2.get(), clause3.get(),
+                                             clause4.get(), clause5.get(), clause6.get(),
+                                             clause7.get()};
+    std::vector<Clause *> redundantClauses;
+    underTest.simplify(unaries, possiblyIrrClauses, redundantClauses, m_stamps);
+
+    std::vector<CNFLit> expectedUnaries{10_Lit, ~1_Lit, ~4_Lit};
+    ASSERT_EQ(unaries.size(), expectedUnaries.size());
+    EXPECT_TRUE(std::is_permutation(unaries.begin(), unaries.end(), expectedUnaries.begin()));
+}
 }

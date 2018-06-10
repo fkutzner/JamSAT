@@ -224,18 +224,20 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
 
     // The propagation of the assignment represented by failedLiteral resulted in a conflict.
     // Suppose there are clauses encoding the implications failedLiteral -> x, x -> y,
-    // y -> z, y -> ~z. The solver should not only learn ~failedLiteral, but in this also ~x
-    // - more generally, the negation of the asserting literal obtained by resolution until
-    // the first UIP.
+    // y -> z, y -> ~z. The solver should not only learn ~failedLiteral, but in this case
+    // also ~x - more generally, the negation of the asserting literal obtained by resolution
+    // until the first UIP.
     //
     // Thus:
     std::vector<CNFLit> pseudoLemma;
     m_firstUIPAnalyzer.computeConflictClause(*conflictingClause, pseudoLemma);
+    JAM_LOG_LIGHTWEIGHTSIMP(
+        info, "FLE pseudolemma: " << toString(pseudoLemma.begin(), pseudoLemma.end()));
     CNFLit assertingLit = pseudoLemma[0];
     JAM_LOG_LIGHTWEIGHTSIMP(info, "Negate of asserting literal " << assertingLit
                                                                  << " is also a failed literal.");
 
-    // Now learn ~assertingLit and all its consequences:
+    // Now learn assertingLit and all its consequences:
     m_assignmentProvider.revisitDecisionLevel(unaryLevel);
     auto firstNewUnaryIdx = m_assignmentProvider.getNumberOfAssignments();
     m_assignmentProvider.addAssignment(assertingLit);
@@ -248,9 +250,26 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
         unaries.push_back(~assertingLit);
         throw DetectedUNSATException{};
     }
-    JAM_ASSERT(m_assignmentProvider.getAssignment(~failedLiteral) == TBools::TRUE,
-               "FLE failed: the asserting literal is not implied by the failed one");
 
+    // If propagating assertingLit did not imply an assignment for the failed
+    // literal's variable, propagate ~failedLiteral, too - at this point, it
+    // is known that ~failedLiteral is unary.
+    if (m_assignmentProvider.getAssignment(failedLiteral) == TBools::INDETERMINATE) {
+        JAM_LOG_LIGHTWEIGHTSIMP(info, "Propagating the asserting lit did not imply an assignment "
+                                      "for the failed literal's variable");
+        m_assignmentProvider.addAssignment(~failedLiteral);
+        newConflict = m_propagation.propagateUntilFixpoint(~failedLiteral);
+        if (newConflict) {
+            JAM_LOG_LIGHTWEIGHTSIMP(info, "Both " << failedLiteral << " and " << ~failedLiteral
+                                                  << " are failed literals. Detected UNSAT");
+            unaries.push_back(failedLiteral);
+            unaries.push_back(~failedLiteral);
+            throw DetectedUNSATException{};
+        }
+    }
+
+    // Add the newly found unary to the unaries vector and perform subsumption/strengthening
+    // with the new unaries:
     auto newUnariesRange = m_assignmentProvider.getAssignments(firstNewUnaryIdx);
     std::copy(newUnariesRange.begin(), newUnariesRange.end(), std::back_inserter(unaries));
     result.amntUnariesLearnt += newUnariesRange.size();
@@ -262,6 +281,8 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
         scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, newUnariesRange);
     result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, newUnariesRange);
 
+    JAM_LOG_LIGHTWEIGHTSIMP(info, "Finished failed literal elimination for failed literal "
+                                      << failedLiteral);
     return result;
 }
 }
