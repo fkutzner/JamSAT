@@ -261,5 +261,5 @@ ClauseType *FailedLiteralException<ClauseType>::getConflictingClause() const noe
 template <typename ClauseType>
 size_t FailedLiteralException<ClauseType>::getDecisionLevelToRevisit() const noexcept {
     return m_decisionLevelToRevisit;
-};
+}
 }
