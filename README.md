@@ -35,6 +35,15 @@ section contains a summary of its capabilities.
 JamSAT is free software distributed under the [MIT license](LICENSE)
 (X11 variant).
 
+## Scope
+
+While JamSAT can be used as a generic SAT solver, its focus lies on
+solving problem instances arising from industrial applications such
+as model checking, artificial intelligence, circuit equivalence checking
+and SMT solving. More
+specififically, it is optimized for _agile_ SAT solving: it is designed
+to efficiently solve vast numbers of SAT problem instances that are
+not very hard individually.
 
 ## Supported Platforms and Ecosystems
 
@@ -78,7 +87,7 @@ git submodule update
 cd ..
 mkdir JamSAT-build
 cd JamSAT-build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<I> ../jamsat-build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<I> ../jamsat
 cmake --build . --target install
 ```
 
@@ -139,16 +148,22 @@ The JamSAT build produces three artifacts:
 
 ## Implementation Status
 
-### Capabilities
+| Capability              | Status                  |
+| ----------------------- | :----------------------:|
+| Incremental SAT solving | Supported               |
+| IPASIR interface        | Mostly supported        |
+| Problem simplification  | Partially supported     |
+| UNSAT Certificates      | TODO                    |
 
-| Capability              | Status    |
-| ----------------------- | :-------: |
-| Incremental SAT solving | Supported |
-| Preprocessing           | TODO      |
-| Inprocessing            | TODO      |
-| UNSAT Certificates      | TODO      |
+### Problem Simplification
+JamSAT employs inprocessing techniques to simplify the
+problem-instance during the solving process, leveraging
+lemmas derived from the instance. Currently, JamSAT
+implements the following techniques:
 
-
+* Clause subsumption with hyper-binary resolution
+* Self-subsuming resolution with hyper-binary resolution
+* Failed Literal Elimination
 
 ### IPASIR Implementation Status
 
