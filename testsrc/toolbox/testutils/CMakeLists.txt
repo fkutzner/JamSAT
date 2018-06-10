@@ -31,6 +31,8 @@ add_library(jamsatTestUtils STATIC
   TestReasonProvider.h
   TestAssignmentProvider.cpp
   TestAssignmentProvider.h
+  ClauseUtils.h
+  ClauseUtils.cpp
 )
 jamsat_configure_target(jamsatTestUtils)
 

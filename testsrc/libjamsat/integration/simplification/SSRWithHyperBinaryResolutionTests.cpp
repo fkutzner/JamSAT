@@ -33,6 +33,8 @@
 #include <libjamsat/utils/OccurrenceMap.h>
 #include <libjamsat/utils/StampMap.h>
 
+#include <toolbox/testutils/ClauseUtils.h>
+
 #include <algorithm>
 #include <functional>
 #include <unordered_set>
@@ -63,14 +65,8 @@ protected:
       , m_notifiedModifications() {}
 
 
-    auto createClause(std::initializer_list<CNFLit> literals) -> std::unique_ptr<Clause> {
-        auto result = createHeapClause(literals.size());
-        auto litIter = literals.begin();
-        for (size_t i = 0; i < literals.size(); ++i) {
-            (*result)[i] = *litIter;
-            ++litIter;
-        }
-        result->clauseUpdated();
+    auto createAndRegClause(std::initializer_list<CNFLit> literals) -> std::unique_ptr<Clause> {
+        auto result = createClause(literals);
         m_occurrenceMap.insert(*result);
         m_propagation.registerClause(*result);
         return result;
@@ -96,11 +92,6 @@ protected:
         EXPECT_TRUE(m_notifiedModifications.find(&c) != m_notifiedModifications.end());
     }
 
-    void expectClauseEqual(Clause const &c, std::initializer_list<CNFLit> lits) {
-        ASSERT_EQ(c.size(), lits.size());
-        EXPECT_TRUE(std::is_permutation(c.begin(), c.end(), lits.begin()));
-    }
-
     TrailT m_trail;
     PropagationT m_propagation;
     StampMap<uint16_t, CNFLit::Index> m_stamps;
@@ -111,17 +102,17 @@ protected:
 };
 
 TEST_F(IntegrationSSRWithHyperBinaryResolution, DeletesClausesDirectlySubsumedByBinaries) {
-    auto subsuming = createClause({1_Lit, ~2_Lit});
-    auto subsumed = createClause({5_Lit, 1_Lit, 6_Lit, ~2_Lit});
+    auto subsuming = createAndRegClause({1_Lit, ~2_Lit});
+    auto subsumed = createAndRegClause({5_Lit, 1_Lit, 6_Lit, ~2_Lit});
     performSSRWithHBR(~2_Lit);
     expectDeleted(*subsumed);
     expectUnmodified(*subsuming);
 }
 
 TEST_F(IntegrationSSRWithHyperBinaryResolution, DeletesClausesIndirectlySubsumed) {
-    auto subsuming = createClause({1_Lit, ~10_Lit});
-    auto subsuming2 = createClause({10_Lit, ~2_Lit});
-    auto subsumed = createClause({5_Lit, 1_Lit, 6_Lit, ~2_Lit});
+    auto subsuming = createAndRegClause({1_Lit, ~10_Lit});
+    auto subsuming2 = createAndRegClause({10_Lit, ~2_Lit});
+    auto subsumed = createAndRegClause({5_Lit, 1_Lit, 6_Lit, ~2_Lit});
     performSSRWithHBR(~2_Lit);
     expectDeleted(*subsumed);
     expectUnmodified(*subsuming);
@@ -129,8 +120,8 @@ TEST_F(IntegrationSSRWithHyperBinaryResolution, DeletesClausesIndirectlySubsumed
 }
 
 TEST_F(IntegrationSSRWithHyperBinaryResolution, StrengthensClausesWithBinaries) {
-    auto strengthening = createClause({8_Lit, 9_Lit});
-    auto strengthened = createClause({~8_Lit, 10_Lit, 6_Lit, 9_Lit});
+    auto strengthening = createAndRegClause({8_Lit, 9_Lit});
+    auto strengthened = createAndRegClause({~8_Lit, 10_Lit, 6_Lit, 9_Lit});
     performSSRWithHBR(9_Lit);
     expectUnmodified(*strengthening);
     expectModifiedButNotDeleted(*strengthened);
@@ -138,10 +129,10 @@ TEST_F(IntegrationSSRWithHyperBinaryResolution, StrengthensClausesWithBinaries) 
 }
 
 TEST_F(IntegrationSSRWithHyperBinaryResolution, StrengthensClausesWithIndirectBinaries) {
-    auto strengthening1 = createClause({11_Lit, 9_Lit});
-    auto strengthening2 = createClause({12_Lit, 9_Lit});
-    auto strengthening3 = createClause({~11_Lit, ~12_Lit, ~8_Lit});
-    auto strengthened = createClause({8_Lit, 10_Lit, 6_Lit, 9_Lit});
+    auto strengthening1 = createAndRegClause({11_Lit, 9_Lit});
+    auto strengthening2 = createAndRegClause({12_Lit, 9_Lit});
+    auto strengthening3 = createAndRegClause({~11_Lit, ~12_Lit, ~8_Lit});
+    auto strengthened = createAndRegClause({8_Lit, 10_Lit, 6_Lit, 9_Lit});
     performSSRWithHBR(9_Lit);
 
     expectUnmodified(*strengthening1);
@@ -152,9 +143,9 @@ TEST_F(IntegrationSSRWithHyperBinaryResolution, StrengthensClausesWithIndirectBi
 }
 
 TEST_F(IntegrationSSRWithHyperBinaryResolution, ReasonClausesAreNotModified) {
-    auto bin1 = createClause({1_Lit, 2_Lit});
-    auto bin2 = createClause({1_Lit, 3_Lit});
-    auto reasonFor4 = createClause({1_Lit, ~2_Lit, ~3_Lit, 4_Lit});
+    auto bin1 = createAndRegClause({1_Lit, 2_Lit});
+    auto bin2 = createAndRegClause({1_Lit, 3_Lit});
+    auto reasonFor4 = createAndRegClause({1_Lit, ~2_Lit, ~3_Lit, 4_Lit});
     performSSRWithHBR(1_Lit);
     expectUnmodified(*bin1);
     expectUnmodified(*bin2);
@@ -162,9 +153,9 @@ TEST_F(IntegrationSSRWithHyperBinaryResolution, ReasonClausesAreNotModified) {
 }
 
 TEST_F(IntegrationSSRWithHyperBinaryResolution, NoClausesModifiedForFailedLiterals) {
-    auto bin1 = createClause({~1_Lit, 2_Lit});
-    auto bin2 = createClause({~2_Lit, 3_Lit});
-    auto bin3 = createClause({~3_Lit, ~1_Lit});
+    auto bin1 = createAndRegClause({~1_Lit, 2_Lit});
+    auto bin2 = createAndRegClause({~2_Lit, 3_Lit});
+    auto bin3 = createAndRegClause({~3_Lit, ~1_Lit});
 
     EXPECT_THROW(performSSRWithHBR(~1_Lit), FailedLiteralException<Clause>);
 
@@ -174,8 +165,8 @@ TEST_F(IntegrationSSRWithHyperBinaryResolution, NoClausesModifiedForFailedLitera
 }
 
 TEST_F(IntegrationSSRWithHyperBinaryResolution, NoClausesModifiedForUnitLiterals) {
-    auto bin1 = createClause({~1_Lit, 2_Lit});
-    auto bin2 = createClause({~1_Lit, 2_Lit, 3_Lit});
+    auto bin1 = createAndRegClause({~1_Lit, 2_Lit});
+    auto bin2 = createAndRegClause({~1_Lit, 2_Lit, 3_Lit});
 
     m_trail.addAssignment(1_Lit);
     performSSRWithHBR(1_Lit);
@@ -184,9 +175,9 @@ TEST_F(IntegrationSSRWithHyperBinaryResolution, NoClausesModifiedForUnitLiterals
 }
 
 TEST_F(IntegrationSSRWithHyperBinaryResolution, OnlyClausesContainingResolveAtAreStrengthened) {
-    auto clause1 = createClause({1_Lit, 2_Lit});
-    auto clause2 = createClause({1_Lit, ~2_Lit, 3_Lit, 4_Lit});
-    auto clause3 = createClause({~2_Lit, ~1_Lit});
+    auto clause1 = createAndRegClause({1_Lit, 2_Lit});
+    auto clause2 = createAndRegClause({1_Lit, ~2_Lit, 3_Lit, 4_Lit});
+    auto clause3 = createAndRegClause({~2_Lit, ~1_Lit});
 
     performSSRWithHBR(1_Lit);
     performSSRWithHBR(~2_Lit);
