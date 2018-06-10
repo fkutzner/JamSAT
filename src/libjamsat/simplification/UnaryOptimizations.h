@@ -163,6 +163,7 @@ inline auto operator+(SimplificationStats const &lhs, SimplificationStats const 
     result.amntClausesStrengthened = lhs.amntClausesStrengthened + rhs.amntClausesStrengthened;
     result.amntLiteralsRemovedByStrengthening =
         lhs.amntLiteralsRemovedByStrengthening + rhs.amntLiteralsRemovedByStrengthening;
+    result.amntUnariesLearnt = lhs.amntUnariesLearnt + rhs.amntUnariesLearnt;
     return result;
 }
 

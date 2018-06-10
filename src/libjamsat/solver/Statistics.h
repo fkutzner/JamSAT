@@ -286,8 +286,8 @@ void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream &stre
            << "#B = amount of binary lemmas added; "
            << "#LD = amount of lemmas deleted\n"
            << "  #S = (amnt of clauses deleted, amnt of clauses strengthened, amnt of literals "
-              "removed by strenghtening)"
-           << "\n";
+           << "removed by strenghtening,\n"
+           << "  amnt unaries leart by simplification)\n";
 }
 
 
@@ -331,7 +331,8 @@ auto operator<<(std::ostream &stream, const Statistics<StatisticsConfig> &stats)
     if (StatisticsConfig::CountSimplificationStats::value == true) {
         stream << "| #S: " << currentEra.m_simplificationStats.amntClausesRemovedBySubsumption
                << "," << currentEra.m_simplificationStats.amntClausesStrengthened << ","
-               << currentEra.m_simplificationStats.amntLiteralsRemovedByStrengthening << " ";
+               << currentEra.m_simplificationStats.amntLiteralsRemovedByStrengthening << ", "
+               << currentEra.m_simplificationStats.amntUnariesLearnt << " ";
     }
 
     if (millisElapsed > 0) {

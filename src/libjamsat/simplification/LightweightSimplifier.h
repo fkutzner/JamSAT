@@ -174,8 +174,8 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
                 result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
                                                        m_assignmentProvider, tempStamps, resolveAt);
             } catch (FailedLiteralException<Clause> &e) {
-                eliminateFailedLiteral(~resolveAt, e.getConflictingClause(), unaryClauses,
-                                       e.getDecisionLevelToRevisit());
+                result += eliminateFailedLiteral(~resolveAt, e.getConflictingClause(), unaryClauses,
+                                                 e.getDecisionLevelToRevisit());
                 // The unaries decision level is revisited during failed literal elimination
             }
 
@@ -184,8 +184,8 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
                     ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
                                                  m_assignmentProvider, tempStamps, ~resolveAt);
             } catch (FailedLiteralException<Clause> &e) {
-                eliminateFailedLiteral(resolveAt, e.getConflictingClause(), unaryClauses,
-                                       e.getDecisionLevelToRevisit());
+                result += eliminateFailedLiteral(resolveAt, e.getConflictingClause(), unaryClauses,
+                                                 e.getDecisionLevelToRevisit());
                 // The unaries decision level is revisited during failed literal elimination
             }
         } catch (DetectedUNSATException &e) {
