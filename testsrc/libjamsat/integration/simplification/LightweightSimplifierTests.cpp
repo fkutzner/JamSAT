@@ -75,6 +75,8 @@ protected:
 };
 
 TEST_F(IntegrationLightweightSimplifier, doesNotCreateNewClausesOnEmptyProblem) {
+    // Tests clauses subsumed by unary clauses are scheduled for deletion:
+
     std::vector<CNFLit> unaryClauses;
     std::vector<Clause *> possiblyIrredundantClauses;
     std::vector<Clause *> redundantClauses;
@@ -87,6 +89,9 @@ TEST_F(IntegrationLightweightSimplifier, doesNotCreateNewClausesOnEmptyProblem) 
 }
 
 TEST_F(IntegrationLightweightSimplifier, minimizesUsingUnaries) {
+    // Tests that negates of literals occurring in unary clauses are
+    // removed from all problem clauses:
+
     std::vector<CNFLit> rawClause1{1_Lit, ~2_Lit, 3_Lit};
     std::vector<CNFLit> rawClause2{5_Lit, 2_Lit, 6_Lit};
     std::vector<CNFLit> rawClause3{8_Lit, ~9_Lit};
@@ -119,7 +124,11 @@ TEST_F(IntegrationLightweightSimplifier, minimizesUsingUnaries) {
     EXPECT_TRUE(std::is_permutation(clause2->begin(), clause2->end(), rawClause2.begin()));
 }
 
-TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiterals) {
+TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsViaRestrictedFLE) {
+    // Tests that failed-literal elimination correctly eliminates failed
+    // literals where the lemma's asserting literal is different from the
+    // originally detected failed literal (with restricted FLE):
+
     auto clause1 = createAndRegClause({~1_Lit, 2_Lit});
     auto clause2 = createAndRegClause({~2_Lit, 3_Lit});
     auto clause3 = createAndRegClause({~3_Lit, 4_Lit});
@@ -155,7 +164,11 @@ TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiterals) {
     expectClauseEqual(*clause7, {~8_Lit, 20_Lit});
 }
 
-TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaFailedLiteralElimination) {
+TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaRestrictedFailedLiteralElimination) {
+    // Tests that failed-literal elimination correctly handles situations where
+    // both a and -a are failed literals for some variable a, indicating that the
+    // problem is unsatisfiable (with restricted FLE):
+
     auto clause1 = createAndRegClause({~1_Lit, 2_Lit});
     auto clause2 = createAndRegClause({~2_Lit, 3_Lit});
     auto clause3 = createAndRegClause({~3_Lit, 4_Lit});
@@ -178,7 +191,13 @@ TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaFailedLiteralElimination
     EXPECT_TRUE(unaries.back() == ~unaries[unaries.size() - 2]);
 }
 
-TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsWithDecoupledUIP) {
+TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiteralsWithDecoupledUIPViaRestrictedFLE) {
+    // Tests that failed-literal elimination correctly handles situations like
+    // (a -> b), (a -> c), ((b and c) -> d), (d -> e), (d -> -e)
+    // Here, d is detected as UIP, but setting -d does not force the assignment -a
+    // in a single propagation step. Check that both -d and -a are learned
+    // (with restricted FLE):
+
     auto clause1 = createAndRegClause({~1_Lit, 2_Lit});
     auto clause2 = createAndRegClause({~1_Lit, 3_Lit});
     auto clause3 = createAndRegClause({~2_Lit, ~3_Lit, 4_Lit});
