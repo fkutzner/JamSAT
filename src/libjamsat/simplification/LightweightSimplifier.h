@@ -33,6 +33,12 @@
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/OccurrenceMap.h>
 
+#if defined(JAM_ENABLE_INFLIGHTSIMP_LOGGING)
+#define JAM_LOG_LIGHTWEIGHTSIMP(x, y) JAM_LOG(x, "lwsimp", y)
+#else
+#define JAM_LOG_LIGHTWEIGHTSIMP(x, y)
+#endif
+
 namespace jamsat {
 /**
  * \ingroup JamSAT_Simplification
@@ -43,16 +49,23 @@ namespace jamsat {
  *
  * \tparam PropagationT         A type that is a model of the Propagation concept
  * \tparam AssignmentProviderT  TODO
+ * \tparam ConflictAnalyzerT
  */
-template <typename PropagationT, typename AssignmentProviderT>
+template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
 class LightweightSimplifier {
 public:
     static_assert(
         std::is_same<typename PropagationT::Clause, typename AssignmentProviderT::Clause>::value,
         "PropagationT and AssignmentProviderT must have the same Clause type");
 
+    static_assert(
+        std::is_same<typename PropagationT::Clause, typename ConflictAnalyzerT::Clause>::value,
+        "PropagationT and ConflictAnalyzerT must have the same Clause type");
+
+
     using Propagation = PropagationT;
     using AssignmentProvider = AssignmentProviderT;
+    using ConflictAnalyzer = ConflictAnalyzerT;
     using Clause = typename Propagation::Clause;
 
     /**
@@ -63,7 +76,8 @@ public:
      * \param assignmentProvider TODO
      */
     LightweightSimplifier(CNFVar maxVar, PropagationT &propagation,
-                          AssignmentProviderT &assignmentProvider) noexcept;
+                          AssignmentProviderT &assignmentProvider,
+                          ConflictAnalyzerT &firstUIPAnalyzer) noexcept;
 
     /**
      * \brief Performs lightweight simplification
@@ -78,7 +92,7 @@ public:
      * \param tempStamps                    TODO
      */
     template <typename StampMapT>
-    auto simplify(std::vector<CNFLit> const &unaryClauses,
+    auto simplify(std::vector<CNFLit> &unaryClauses,
                   std::vector<Clause *> const &possiblyIrredundantClauses,
                   std::vector<Clause *> const &redundantClauses, StampMapT &tempStamps)
         -> SimplificationStats;
@@ -104,80 +118,150 @@ private:
         }
     };
 
+    class DetectedUNSATException {};
+
+    auto eliminateFailedLiteral(CNFLit failedLiteral, Clause *conflictingClause,
+                                std::vector<CNFLit> &unaries,
+                                typename AssignmentProviderT::DecisionLevel unaryLevel)
+        -> SimplificationStats;
+
     PropagationT &m_propagation;
     AssignmentProviderT &m_assignmentProvider;
+    ConflictAnalyzerT &m_firstUIPAnalyzer;
 
     CNFVar m_maxVar;
     size_t m_lastSeenAmntUnaries;
     OccurrenceMap<Clause, ClauseDeletedQuery> m_occurrenceMap;
 };
 
-template <typename PropagationT, typename AssignmentProviderT>
-LightweightSimplifier<PropagationT, AssignmentProviderT>::LightweightSimplifier(
-    CNFVar maxVar, PropagationT &propagation, AssignmentProviderT &assignmentProvider) noexcept
+template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::LightweightSimplifier(
+    CNFVar maxVar, PropagationT &propagation, AssignmentProviderT &assignmentProvider,
+    ConflictAnalyzerT &firstUIPAnalyzer) noexcept
   : m_propagation{propagation}
   , m_assignmentProvider{assignmentProvider}
+  , m_firstUIPAnalyzer(firstUIPAnalyzer)
   , m_maxVar{maxVar}
   , m_lastSeenAmntUnaries{0}
   , m_occurrenceMap{getMaxLit(m_maxVar)} {}
 
-template <typename PropagationT, typename AssignmentProviderT>
+template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
 template <typename StampMapT>
-auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
-    std::vector<CNFLit> const &unaryClauses,
-    std::vector<Clause *> const &possiblyIrredundantClauses,
+auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::simplify(
+    std::vector<CNFLit> &unaryClauses, std::vector<Clause *> const &possiblyIrredundantClauses,
     std::vector<Clause *> const &redundantClauses, StampMapT &tempStamps) -> SimplificationStats {
 
     SimplificationStats result;
-    auto currentDecisionLevel = m_assignmentProvider.getCurrentDecisionLevel();
-
-    if (unaryClauses.size() > m_lastSeenAmntUnaries) {
-
-        m_occurrenceMap.clear();
-        m_occurrenceMap.insert(possiblyIrredundantClauses.begin(),
-                               possiblyIrredundantClauses.end());
-        m_occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
-
-        auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
-        result +=
-            scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, unaryClauses);
-        result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, unaryClauses);
-
-        for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
-            try {
-                result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
-                                                       m_assignmentProvider, tempStamps,
-                                                       CNFLit{i, CNFSign::NEGATIVE});
-            } catch (FailedLiteralException<Clause> &e) {
-                // TODO: failed literal handling: do first-uip-learning, ...
-                m_assignmentProvider.revisitDecisionLevel(e.getDecisionLevelToRevisit());
-            }
-
-            try {
-                result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
-                                                       m_assignmentProvider, tempStamps,
-                                                       CNFLit{i, CNFSign::POSITIVE});
-            } catch (FailedLiteralException<Clause> &e) {
-                // TODO: failed literal handling
-                m_assignmentProvider.revisitDecisionLevel(e.getDecisionLevelToRevisit());
-            }
-        }
 
 
-        m_lastSeenAmntUnaries = unaryClauses.size();
+    if (unaryClauses.size() <= m_lastSeenAmntUnaries) {
+        return result;
     }
+
+    auto currentDecisionLevel = m_assignmentProvider.getCurrentDecisionLevel();
+    m_occurrenceMap.clear();
+    m_occurrenceMap.insert(possiblyIrredundantClauses.begin(), possiblyIrredundantClauses.end());
+    m_occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
+
+    auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
+    result += scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, unaryClauses);
+    result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, unaryClauses);
+
+    for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
+        CNFLit resolveAt{i, CNFSign::NEGATIVE};
+        try {
+            try {
+                result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
+                                                       m_assignmentProvider, tempStamps, resolveAt);
+            } catch (FailedLiteralException<Clause> &e) {
+                eliminateFailedLiteral(~resolveAt, e.getConflictingClause(), unaryClauses,
+                                       e.getDecisionLevelToRevisit());
+                // The unaries decision level is revisited during failed literal elimination
+            }
+
+            try {
+                result +=
+                    ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
+                                                 m_assignmentProvider, tempStamps, ~resolveAt);
+            } catch (FailedLiteralException<Clause> &e) {
+                eliminateFailedLiteral(resolveAt, e.getConflictingClause(), unaryClauses,
+                                       e.getDecisionLevelToRevisit());
+                // The unaries decision level is revisited during failed literal elimination
+            }
+        } catch (DetectedUNSATException &e) {
+            return result;
+        }
+    }
+
+
+    m_lastSeenAmntUnaries = unaryClauses.size();
+
 
     JAM_ASSERT(m_assignmentProvider.getCurrentDecisionLevel() == currentDecisionLevel,
                "Illegal decision level modification");
     return result;
 }
 
-template <typename PropagationT, typename AssignmentProviderT>
-void LightweightSimplifier<PropagationT, AssignmentProviderT>::increaseMaxVarTo(CNFVar newMaxVar) {
+template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+void LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::increaseMaxVarTo(
+    CNFVar newMaxVar) {
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     JAM_ASSERT(newMaxVar >= m_maxVar,
                "Argument newMaxVar must not be smaller than the current maximum variable");
     m_maxVar = newMaxVar;
     m_occurrenceMap.increaseMaxElementTo(getMaxLit(newMaxVar));
+}
+
+template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
+    eliminateFailedLiteral(CNFLit failedLiteral, Clause *conflictingClause,
+                           std::vector<CNFLit> &unaries,
+                           typename AssignmentProviderT::DecisionLevel unaryLevel)
+        -> SimplificationStats {
+    JAM_LOG_LIGHTWEIGHTSIMP(info, "Performing failed literal elimination for failed literal "
+                                      << failedLiteral);
+    SimplificationStats result;
+
+    // The propagation of the assignment represented by failedLiteral resulted in a conflict.
+    // Suppose there are clauses encoding the implications failedLiteral -> x, x -> y,
+    // y -> z, y -> ~z. The solver should not only learn ~failedLiteral, but in this also ~x
+    // - more generally, the negation of the asserting literal obtained by resolution until
+    // the first UIP.
+    //
+    // Thus:
+    std::vector<CNFLit> pseudoLemma;
+    m_firstUIPAnalyzer.computeConflictClause(*conflictingClause, pseudoLemma);
+    CNFLit assertingLit = pseudoLemma[0];
+    JAM_LOG_LIGHTWEIGHTSIMP(info, "Negate of asserting literal " << assertingLit
+                                                                 << " is also a failed literal.");
+
+    // Now learn ~assertingLit and all its consequences:
+    m_assignmentProvider.revisitDecisionLevel(unaryLevel);
+    auto firstNewUnaryIdx = m_assignmentProvider.getNumberOfAssignments();
+    m_assignmentProvider.addAssignment(assertingLit);
+    auto newConflict = m_propagation.propagateUntilFixpoint(assertingLit);
+
+    if (newConflict) {
+        JAM_LOG_LIGHTWEIGHTSIMP(info, "Both " << assertingLit << " and " << ~assertingLit
+                                              << " are failed literals. Detected UNSAT");
+        unaries.push_back(assertingLit);
+        unaries.push_back(~assertingLit);
+        throw DetectedUNSATException{};
+    }
+    JAM_ASSERT(m_assignmentProvider.getAssignment(~failedLiteral) == TBools::TRUE,
+               "FLE failed: the asserting literal is not implied by the failed one");
+
+    auto newUnariesRange = m_assignmentProvider.getAssignments(firstNewUnaryIdx);
+    std::copy(newUnariesRange.begin(), newUnariesRange.end(), std::back_inserter(unaries));
+    result.amntUnariesLearnt += newUnariesRange.size();
+    JAM_LOG_LIGHTWEIGHTSIMP(info, "Detected new unaries "
+                                      << toString(newUnariesRange.begin(), newUnariesRange.end()));
+
+    auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
+    result +=
+        scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, newUnariesRange);
+    result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, newUnariesRange);
+
+    return result;
 }
 }

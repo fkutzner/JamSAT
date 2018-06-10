@@ -55,6 +55,7 @@ struct SimplificationStats {
     uint32_t amntClausesRemovedBySubsumption = 0;
     uint32_t amntClausesStrengthened = 0;
     uint32_t amntLiteralsRemovedByStrengthening = 0;
+    uint32_t amntUnariesLearnt = 0;
 };
 
 auto operator+(SimplificationStats const &lhs, SimplificationStats const &rhs) noexcept

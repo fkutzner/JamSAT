@@ -84,7 +84,8 @@ struct CDCLSatSolverDefaultTypes {
     using RestartPolicy = GlucoseRestartPolicy;
     using ClauseDBReductionPolicy =
         GlucoseClauseDBReductionPolicy<jamsat::Clause, std::vector<jamsat::Clause *>, LBD>;
-    using LightweightSimplifier = jamsat::LightweightSimplifier<Propagation, Trail>;
+    using LightweightSimplifier =
+        jamsat::LightweightSimplifier<Propagation, Trail, ConflictAnalyzer>;
 };
 
 /**
@@ -247,7 +248,7 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
   , m_conflictAnalyzer(CNFVar{0}, m_trail, m_propagation)
   , m_clauseDB(config.clauseMemoryLimit / 128, config.clauseMemoryLimit)
   , m_restartPolicy(typename ST::RestartPolicy::Options{})
-  , m_simplifier(CNFVar{0}, m_propagation, m_trail)
+  , m_simplifier(CNFVar{0}, m_propagation, m_trail, m_conflictAnalyzer)
   , m_stopRequested(false)
   , m_maxVar(0)
   , m_lemmaBuffer()

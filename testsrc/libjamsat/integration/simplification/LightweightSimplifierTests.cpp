@@ -28,9 +28,12 @@
 
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/simplification/LightweightSimplifier.h>
+#include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/StampMap.h>
+
+#include <toolbox/testutils/ClauseUtils.h>
 
 #include <algorithm>
 #include <vector>
@@ -40,19 +43,35 @@
 namespace jamsat {
 using TrailT = Trail<Clause>;
 using PropagationT = Propagation<TrailT>;
-using LightweightSimplifierT = LightweightSimplifier<PropagationT, TrailT>;
+using ConflictAnalyzerT = FirstUIPLearning<TrailT, PropagationT>;
+using LightweightSimplifierT = LightweightSimplifier<PropagationT, TrailT, ConflictAnalyzerT>;
 
 class IntegrationLightweightSimplifier : public ::testing::Test {
 protected:
     IntegrationLightweightSimplifier()
       : ::testing::Test()
-      , m_trail(CNFVar{1024})
-      , m_propagation(CNFVar{1024}, m_trail)
-      , m_stamps(getMaxLit(CNFVar{1024}).getRawValue())
-      , underTest(CNFVar{1024}, m_propagation, m_trail) {}
+      , m_trail(CNFVar{24})
+      , m_propagation(CNFVar{24}, m_trail)
+      , m_conflictAnalyzer(CNFVar{24}, m_trail, m_propagation)
+      , m_stamps(getMaxLit(CNFVar{24}).getRawValue())
+      , underTest(CNFVar{24}, m_propagation, m_trail, m_conflictAnalyzer) {}
+
+    std::unique_ptr<Clause> createAndRegClause(std::vector<CNFLit> const &lits) {
+        auto result = createHeapClause(lits.size());
+        std::copy(lits.begin(), lits.end(), result->begin());
+        m_propagation.registerClause(*result);
+        return result;
+    }
+
+    std::unique_ptr<Clause> createAndRegClause(std::initializer_list<CNFLit> lits) {
+        auto result = createClause(lits);
+        m_propagation.registerClause(*result);
+        return result;
+    }
 
     TrailT m_trail;
     PropagationT m_propagation;
+    ConflictAnalyzerT m_conflictAnalyzer;
     StampMap<uint16_t, CNFLit::Index> m_stamps;
     LightweightSimplifierT underTest;
 };
@@ -69,14 +88,6 @@ TEST_F(IntegrationLightweightSimplifier, doesNotCreateNewClausesOnEmptyProblem) 
     EXPECT_TRUE(redundantClauses.empty());
 }
 
-namespace {
-std::unique_ptr<Clause> createClause(std::vector<CNFLit> const &lits) {
-    auto result = createHeapClause(lits.size());
-    std::copy(lits.begin(), lits.end(), result->begin());
-    return result;
-}
-}
-
 TEST_F(IntegrationLightweightSimplifier, minimizesUsingUnaries) {
     std::vector<CNFLit> rawClause1{1_Lit, ~2_Lit, 3_Lit};
     std::vector<CNFLit> rawClause2{5_Lit, 2_Lit, 6_Lit};
@@ -84,9 +95,9 @@ TEST_F(IntegrationLightweightSimplifier, minimizesUsingUnaries) {
 
     std::vector<CNFLit> unaries{1_Lit, ~2_Lit};
 
-    auto clause1 = createClause(rawClause1);
-    auto clause2 = createClause(rawClause2);
-    auto clause3 = createClause(rawClause3);
+    auto clause1 = createAndRegClause(rawClause1);
+    auto clause2 = createAndRegClause(rawClause2);
+    auto clause3 = createAndRegClause(rawClause3);
 
     // The segmentation in possibly irredundant clauses and redundant
     // clauses is arbitrary in this test
@@ -108,5 +119,64 @@ TEST_F(IntegrationLightweightSimplifier, minimizesUsingUnaries) {
     // Check that clause2 has been strengthened:
     boost::remove_erase(rawClause2, 2_Lit);
     EXPECT_TRUE(std::is_permutation(clause2->begin(), clause2->end(), rawClause2.begin()));
+}
+
+TEST_F(IntegrationLightweightSimplifier, eliminatesFailedLiterals) {
+    auto clause1 = createAndRegClause({~1_Lit, 2_Lit});
+    auto clause2 = createAndRegClause({~2_Lit, 3_Lit});
+    auto clause3 = createAndRegClause({~3_Lit, 4_Lit});
+    auto clause4 = createAndRegClause({~3_Lit, 5_Lit});
+    auto clause5 = createAndRegClause({~4_Lit, 6_Lit});
+    auto clause6 = createAndRegClause({~5_Lit, ~6_Lit});
+    auto clause7 = createAndRegClause({1_Lit, ~8_Lit, 20_Lit});
+
+
+    // should detect that 3_Lit needs to be set to false:
+    std::vector<CNFLit> unaries{10_Lit};
+    std::vector<Clause *> possiblyIrrClauses{clause1.get(), clause2.get(), clause3.get(),
+                                             clause4.get(), clause5.get(), clause6.get(),
+                                             clause7.get()};
+    std::vector<Clause *> redundantClauses;
+    underTest.simplify(unaries, possiblyIrrClauses, redundantClauses, m_stamps);
+
+    std::vector<CNFLit> expectedUnaries{~3_Lit, ~2_Lit, ~1_Lit, 10_Lit};
+
+    ASSERT_EQ(unaries.size(), expectedUnaries.size());
+    EXPECT_TRUE(std::is_permutation(unaries.begin(), unaries.end(), expectedUnaries.begin()));
+
+    EXPECT_TRUE(clause1->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+    EXPECT_TRUE(clause2->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+    EXPECT_TRUE(clause3->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+    EXPECT_TRUE(clause4->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+    EXPECT_FALSE(clause5->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+    EXPECT_FALSE(clause6->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+    EXPECT_FALSE(clause7->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
+
+    expectClauseEqual(*clause5, {~4_Lit, 6_Lit});
+    expectClauseEqual(*clause6, {~5_Lit, ~6_Lit});
+    expectClauseEqual(*clause7, {~8_Lit, 20_Lit});
+}
+
+TEST_F(IntegrationLightweightSimplifier, detectsUnsatViaFailedLiteralElimination) {
+    auto clause1 = createAndRegClause({~1_Lit, 2_Lit});
+    auto clause2 = createAndRegClause({~2_Lit, 3_Lit});
+    auto clause3 = createAndRegClause({~3_Lit, 4_Lit});
+    auto clause4 = createAndRegClause({~3_Lit, 5_Lit});
+    auto clause5 = createAndRegClause({~4_Lit, 6_Lit});
+    auto clause6 = createAndRegClause({~5_Lit, ~6_Lit});
+    auto clause7 = createAndRegClause({1_Lit, 2_Lit});
+
+
+    // Each assignment of 1_Lit leads to a conflict. The simplifier should
+    // append conflicting unaries to the end of the unaries vector:
+    std::vector<CNFLit> unaries{10_Lit};
+    std::vector<Clause *> possiblyIrrClauses{clause1.get(), clause2.get(), clause3.get(),
+                                             clause4.get(), clause5.get(), clause6.get(),
+                                             clause7.get()};
+    std::vector<Clause *> redundantClauses;
+    underTest.simplify(unaries, possiblyIrrClauses, redundantClauses, m_stamps);
+
+    ASSERT_GE(unaries.size(), 2ULL);
+    EXPECT_TRUE(unaries.back() == ~unaries[unaries.size() - 2]);
 }
 }
