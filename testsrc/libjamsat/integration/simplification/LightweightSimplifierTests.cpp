@@ -52,9 +52,8 @@ protected:
       : ::testing::Test()
       , m_trail(CNFVar{24})
       , m_propagation(CNFVar{24}, m_trail)
-      , m_conflictAnalyzer(CNFVar{24}, m_trail, m_propagation)
       , m_stamps(getMaxLit(CNFVar{24}).getRawValue())
-      , underTest(CNFVar{24}, m_propagation, m_trail, m_conflictAnalyzer) {}
+      , underTest(CNFVar{24}, m_propagation, m_trail) {}
 
     std::unique_ptr<Clause> createAndRegClause(std::vector<CNFLit> const &lits) {
         auto result = createHeapClause(lits.size());
@@ -71,7 +70,6 @@ protected:
 
     TrailT m_trail;
     PropagationT m_propagation;
-    ConflictAnalyzerT m_conflictAnalyzer;
     StampMap<uint16_t, CNFLit::Index> m_stamps;
     LightweightSimplifierT underTest;
 };

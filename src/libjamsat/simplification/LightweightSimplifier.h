@@ -76,8 +76,7 @@ public:
      * \param assignmentProvider TODO
      */
     LightweightSimplifier(CNFVar maxVar, PropagationT &propagation,
-                          AssignmentProviderT &assignmentProvider,
-                          ConflictAnalyzerT &firstUIPAnalyzer) noexcept;
+                          AssignmentProviderT &assignmentProvider) noexcept;
 
     /**
      * \brief Performs lightweight simplification
@@ -138,23 +137,25 @@ private:
 
     PropagationT &m_propagation;
     AssignmentProviderT &m_assignmentProvider;
-    ConflictAnalyzerT &m_firstUIPAnalyzer;
 
     CNFVar m_maxVar;
     size_t m_lastSeenAmntUnaries;
     OccurrenceMap<Clause, ClauseDeletedQuery> m_occurrenceMap;
+
+    // Keeping a separate conflict analyzer here to avoid disturbing
+    // heuristics
+    ConflictAnalyzerT m_firstUIPAnalyzer;
 };
 
 template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
 LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::LightweightSimplifier(
-    CNFVar maxVar, PropagationT &propagation, AssignmentProviderT &assignmentProvider,
-    ConflictAnalyzerT &firstUIPAnalyzer) noexcept
+    CNFVar maxVar, PropagationT &propagation, AssignmentProviderT &assignmentProvider) noexcept
   : m_propagation{propagation}
   , m_assignmentProvider{assignmentProvider}
-  , m_firstUIPAnalyzer(firstUIPAnalyzer)
   , m_maxVar{maxVar}
   , m_lastSeenAmntUnaries{0}
-  , m_occurrenceMap{getMaxLit(m_maxVar)} {}
+  , m_occurrenceMap{getMaxLit(m_maxVar)}
+  , m_firstUIPAnalyzer{m_maxVar, m_assignmentProvider, m_propagation} {}
 
 template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
 template <typename StampMapT>
@@ -214,6 +215,7 @@ void LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
                "Argument newMaxVar must not be smaller than the current maximum variable");
     m_maxVar = newMaxVar;
     m_occurrenceMap.increaseMaxElementTo(getMaxLit(newMaxVar));
+    m_firstUIPAnalyzer.increaseMaxVarTo(newMaxVar);
 }
 
 template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
