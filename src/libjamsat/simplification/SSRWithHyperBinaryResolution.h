@@ -46,8 +46,8 @@ namespace jamsat {
  * \ingroup JamSAT_Simplification
  *
  * The main function of this submodule is ssrWithHyperBinaryResolution(), whose parameters should
- * be constructed via createSSRWithHBRParams(). For details about the optimization, see the documentation
- * of ssrWithHyperBinaryResolution().
+ * be constructed via createSSRWithHBRParams(). For details about the optimization, see the
+ * documentation of ssrWithHyperBinaryResolution().
  */
 
 /**

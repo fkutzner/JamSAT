@@ -66,8 +66,9 @@ namespace jamsat {
  * `G` is equivalent to `F`.
  *
  * \tparam PropagationT         A type that is a model of the Propagation concept
- * \tparam AssignmentProviderT  TODO
- * \tparam ConflictAnalyzerT
+ * \tparam AssignmentProviderT  A type that is a model of the AssignmentProvider
+ *                              concept
+ * \tparam ConflictAnalyzerT    TODO
  */
 template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
 class LightweightSimplifier {
@@ -89,9 +90,9 @@ public:
     /**
      * \brief Constructs a LightweightSimplifier
      *
-     * \param maxVar             The maximum variable occurring in the problem instance
-     * \param propagation        A propagator where the problem's clauses are registered
-     * \param assignmentProvider TODO
+     * \param maxVar             The maximum variable occurring in the problem instance.
+     * \param propagation        A propagator where the problem's clauses are registered.
+     * \param assignmentProvider An assignment provider in sync with \p propagation.
      */
     LightweightSimplifier(CNFVar maxVar, PropagationT &propagation,
                           AssignmentProviderT &assignmentProvider) noexcept;
@@ -177,8 +178,68 @@ private:
 
     class DetectedUNSATException {};
 
+    /**
+     * \brief Updates m_occurrenceMap to contain exactly the given clauses
+     *
+     * \param possiblyIrredundantClauses    A vector of pointers of clauses to add.
+     * \param redundantClauses              A vector of pointers of redundant clauses
+     *                                      to add.
+     */
+    void updateOccurrenceMap(std::vector<Clause *> const &possiblyIrredundantClauses,
+                             std::vector<Clause *> const &redundantClauses);
+
+    /**
+     * \brief Subsumption and self-subsuming resolution using unary clauses.
+     *
+     * \param unaryClauses  A vector of literals representing unary clauses.
+     *
+     * \returns Simplification statistics
+     */
+    auto runUnaryOptimizations(std::vector<CNFLit> const &unaryClauses) -> SimplificationStats;
+
+    /**
+     * \brief Runs ssrWithHyperBinaryResolution() for all literals and performs failed
+     * literal elimination for all encountered failed literals.
+     *
+     *
+     * \param tempStamps    A StampMap capable of stamping any CNFLit
+     *                      with a variable no greater than m_maxLit.
+     * \param unaryClauses  A vector of literals representing unary clauses. Unary
+     *                      clauses derived via failed literal elimination are added
+     *                      to this vector.
+     *
+     * \returns Simplification statistics
+     */
+    template <typename StampMapT>
+    auto runSSRWithHBR(StampMapT &tempStamps, std::vector<CNFLit> &unaryClauses)
+        -> SimplificationStats;
+
     enum FLEPostProcessing { NONE, FULL };
 
+    /**
+     * \brief Performs failed literal elimination for a failed literal.
+     *
+     * `m_assignmentProvider` and `m_propagation` must be in the state just after
+     * the propagation (to fixpoint) of \p failedLiteral (with only the assignments
+     * forced by unary clauses being set before the propagation).
+     *
+     * Unless `postProcMode == FLEPostProcessing::FULL`, `m_occurrenceMap` does not
+     * need to be in a valid state during the execution of this method.
+     *
+     * \param failedLiteral      A literal whose propagation until fixpoint (after
+     *                           propagation of assignments forced by unary clauses)
+     *                           results in a conflict with conflicting clause
+     *                           \p conflictingClause.
+     * \param conflictingClause  A conflicting clause for \p failedLiteral.
+     * \param unaries            A vector of literals representing unary clauses.
+     *                           Unary clauses derived via failed literal elimination
+     *                           are added to this vector.
+     * \param unaryLevel         The decision level on which assignments forced by
+     *                           unary clauses are propagated.
+     * \param postProcMode       If FULL, subsumption checks and strengthening is
+     *                           performed for the newly found unaries. If NONE,
+     *                           the problem clauses are not modified by this method.
+     */
     auto eliminateFailedLiteral(CNFLit failedLiteral, Clause *conflictingClause,
                                 std::vector<CNFLit> &unaries,
                                 typename AssignmentProviderT::DecisionLevel unaryLevel,
@@ -186,7 +247,6 @@ private:
 
     PropagationT &m_propagation;
     AssignmentProviderT &m_assignmentProvider;
-
     CNFVar m_maxVar;
     size_t m_lastSeenAmntUnaries;
     OccurrenceMap<Clause, ClauseDeletedQuery> m_occurrenceMap;
@@ -213,49 +273,21 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     std::vector<Clause *> const &redundantClauses, StampMapT &tempStamps) -> SimplificationStats {
 
     SimplificationStats result;
-
-
     if (unaryClauses.size() <= m_lastSeenAmntUnaries) {
         return result;
     }
 
     auto currentDecisionLevel = m_assignmentProvider.getCurrentDecisionLevel();
-    m_occurrenceMap.clear();
-    m_occurrenceMap.insert(possiblyIrredundantClauses.begin(), possiblyIrredundantClauses.end());
-    m_occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
+    OnExitScope assertCorrectDecisionLevel{[this, currentDecisionLevel]() {
+        JAM_ASSERT(m_assignmentProvider.getCurrentDecisionLevel() == currentDecisionLevel,
+                   "Illegal decision level modification");
+    }};
 
-    auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
-    result += scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, unaryClauses);
-    result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, unaryClauses);
-
-    auto ssrWithHBRParams = createSSRWithHBRParams(m_occurrenceMap, delMarker, m_propagation,
-                                                   m_assignmentProvider, tempStamps);
-
-    for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
-        for (CNFSign sign : {CNFSign::NEGATIVE, CNFSign::POSITIVE}) {
-            CNFLit resolveAt{i, sign};
-            try {
-                result += ssrWithHyperBinaryResolution(ssrWithHBRParams, resolveAt);
-            } catch (FailedLiteralException<Clause> &e) {
-                try {
-                    result += eliminateFailedLiteral(~resolveAt, e.getConflictingClause(),
-                                                     unaryClauses, e.getDecisionLevelToRevisit(),
-                                                     FLEPostProcessing::FULL);
-                } catch (DetectedUNSATException &e) {
-                    // The unaries are contradictory now, so simplifying the problem
-                    // further would be redundant
-                    return result;
-                }
-                // The unaries decision level is revisited during failed literal elimination
-            }
-        }
-    }
+    updateOccurrenceMap(possiblyIrredundantClauses, redundantClauses);
+    runUnaryOptimizations(unaryClauses);
+    runSSRWithHBR(tempStamps, unaryClauses);
 
     m_lastSeenAmntUnaries = unaryClauses.size();
-
-
-    JAM_ASSERT(m_assignmentProvider.getCurrentDecisionLevel() == currentDecisionLevel,
-               "Illegal decision level modification");
     return result;
 }
 
@@ -310,6 +342,59 @@ void LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     m_occurrenceMap.increaseMaxElementTo(getMaxLit(newMaxVar));
     m_firstUIPAnalyzer.increaseMaxVarTo(newMaxVar);
 }
+
+template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+void LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
+    updateOccurrenceMap(std::vector<Clause *> const &possiblyIrredundantClauses,
+                        std::vector<Clause *> const &redundantClauses) {
+    m_occurrenceMap.clear();
+    m_occurrenceMap.insert(possiblyIrredundantClauses.begin(), possiblyIrredundantClauses.end());
+    m_occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
+}
+
+template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
+    runUnaryOptimizations(std::vector<CNFLit> const &unaryClauses) -> SimplificationStats {
+
+    SimplificationStats result;
+    auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
+    result += scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, unaryClauses);
+    result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, unaryClauses);
+    return result;
+}
+
+template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+template <typename StampMapT>
+auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::runSSRWithHBR(
+    StampMapT &tempStamps, std::vector<CNFLit> &unaryClauses) -> SimplificationStats {
+
+    SimplificationStats result;
+    auto delMarker = [this](Clause *cla) { m_propagation.notifyClauseModificationAhead(*cla); };
+    auto ssrWithHBRParams = createSSRWithHBRParams(m_occurrenceMap, delMarker, m_propagation,
+                                                   m_assignmentProvider, tempStamps);
+
+    for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
+        for (CNFSign sign : {CNFSign::NEGATIVE, CNFSign::POSITIVE}) {
+            CNFLit resolveAt{i, sign};
+            try {
+                result += ssrWithHyperBinaryResolution(ssrWithHBRParams, resolveAt);
+            } catch (FailedLiteralException<Clause> &e) {
+                try {
+                    result += eliminateFailedLiteral(~resolveAt, e.getConflictingClause(),
+                                                     unaryClauses, e.getDecisionLevelToRevisit(),
+                                                     FLEPostProcessing::FULL);
+                } catch (DetectedUNSATException &e) {
+                    // The unaries are contradictory now, so simplifying the problem
+                    // further would be redundant
+                    return result;
+                }
+                // The unaries decision level is revisited during failed literal elimination
+            }
+        }
+    }
+    return result;
+}
+
 
 template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
 auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
