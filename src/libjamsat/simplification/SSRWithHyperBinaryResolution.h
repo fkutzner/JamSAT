@@ -196,15 +196,11 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
     }
 
     for (auto clause : occMap[resolveAt]) {
+        // Skip this clause if it has been scheduled for deletion or if
+        // changing it would not be sound.
         if (clause->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION) ||
-            propagation.isAssignmentReason(*clause, assignments)) {
-            continue;
-        }
-
-        // If resolveAt has been removed from the clause earlier,
-        // optimizing this clause on the ground of resolveAt's presence
-        // would not be sound, so in that case skip the clause:
-        if (!clause->mightContain(resolveAt) ||
+            propagation.isAssignmentReason(*clause, assignments) ||
+            !clause->mightContain(resolveAt) ||
             std::find(clause->begin(), clause->end(), resolveAt) == clause->end()) {
             continue;
         }
@@ -214,14 +210,13 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
                                                                    notifyModificationAhead, result);
 
         JAM_ASSERT(clause->size() >= 2, "Not expecting to find new unaries during SSR with HBR");
-        if (optResult == simp_ssrhbr_detail::ClauseOptimizationResult::STRENGTHENED) {
-            JAM_LOG_SSRWITHHBR(info, "Strenghtened clause "
-                                         << std::addressof(*clause) << " to "
-                                         << toString(clause->begin(), clause->end()));
-
-        } else if (optResult ==
-                   simp_ssrhbr_detail::ClauseOptimizationResult::SCHEDULED_FOR_DELETION) {
-            JAM_LOG_SSRWITHHBR(info, "Deleting clause " << std::addressof(*clause));
+        if (optResult != simp_ssrhbr_detail::ClauseOptimizationResult::UNCHANGED) {
+            bool deleted =
+                (optResult == simp_ssrhbr_detail::ClauseOptimizationResult::SCHEDULED_FOR_DELETION);
+            (void)deleted; // suppress warning when logging is disabled
+            JAM_LOG_SSRWITHHBR(info, "Modified clause " << std::addressof(*clause) << " (now: "
+                                                        << toString(clause->begin(), clause->end())
+                                                        << (deleted ? ", deleted)" : ")"));
         }
     }
     return result;
