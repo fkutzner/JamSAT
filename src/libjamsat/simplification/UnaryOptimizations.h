@@ -41,15 +41,20 @@
 #endif
 
 namespace jamsat {
-
 /**
- * \defgroup JamSAT_Simplification  JamSAT simplification library
+ * \defgroup JamSAT_Simplification_Unary  Unary-based Optimizations
+ * \ingroup JamSAT_Simplification
+ *
+ * This submodule contains functions for strengthening or deleting
+ * clauses containing literals with a fixed value.
  */
 
 /**
  * \brief Simplification statistics
  *
  * \ingroup JamSAT_Simplification
+ *
+ * TODO: move to extra header
  */
 struct SimplificationStats {
     uint32_t amntClausesRemovedBySubsumption = 0;
@@ -67,7 +72,7 @@ auto operator+=(SimplificationStats &lhs, SimplificationStats const &rhs) noexce
 /**
  * \brief Schedules all clauses subsumed by a unary clause for deletion.
  *
- * \ingroup JamSAT_Simplification
+ * \ingroup JamSAT_Simplification_Unary
  *
  * \tparam OccurrenceMap    A specialization of OccurrenceMap with
  *                          OccurrenceMap::Container::value_type being equal to CNFlit.
@@ -112,7 +117,7 @@ auto scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
 /**
  * \brief For each unary clause (a), removes ~a from all clauses.
  *
- * \ingroup JamSAT_Simplification
+ * \ingroup JamSAT_Simplification_Unary
  *
  * \tparam OccurrenceMap    A specialization of OccurrenceMap with
  *                          OccurrenceMap::Container::value_type being equal to CNFlit.

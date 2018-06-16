@@ -41,11 +41,29 @@
 
 namespace jamsat {
 /**
+ * \defgroup JamSAT_Simplification  JamSAT Simplification Library
+ *
+ * This module contains SAT problem instance simplifiers. Except for
+ * the functions defined in the \ref JamSAT_Simplification_Minimizer
+ * submodule, the functions and classes contained in this module's
+ * submodules should only be used by classes defined in this module
+ * (i.e. \ref JamSAT_Simplification).
+ *
+ * This simplification library is primarily used by the \ref JamSAT_Solver
+ * to perform _inprocessing_, i.e. simplification of the problem during
+ * search.
+ */
+
+/**
  * \ingroup JamSAT_Simplification
  *
  * \brief A problem simplifier for performing lightweight simplifications.
  *
  * Intended usage: simplify a problem during search
+ *
+ * If `F` is a SAT problem instance and `G` is a SAT problem
+ * instance derived from `F` by applying methods of `LightweightSimplifier`,
+ * `G` is equivalent to `F`.
  *
  * \tparam PropagationT         A type that is a model of the Propagation concept
  * \tparam AssignmentProviderT  TODO

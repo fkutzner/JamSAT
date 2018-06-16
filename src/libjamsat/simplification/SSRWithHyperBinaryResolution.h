@@ -42,13 +42,23 @@
 namespace jamsat {
 
 /**
+ * \defgroup JamSAT_Simplification_SSRWithHBR Self-Subsuming Resolution with Hyper-Binary Resolution
+ * \ingroup JamSAT_Simplification
+ *
+ * The main function of this submodule is ssrWithHyperBinaryResolution(), whose parameters should
+ * be constructed via createSSRWithHBRParams(). For details about the optimization, see the documentation
+ * of ssrWithHyperBinaryResolution().
+ */
+
+/**
+ *
  * \brief An exception indicating that a provided literal is a failed
  *        literal.
  *
  * This exception is thrown by ssrWithHyperBinaryResolution() when the pivot
  * literal is detected to be a failed literal.
  *
- * \ingroup JamSAT_Simplification
+ * \ingroup JamSAT_Simplification_SSRWithHBR
  *
  * \tparam ClauseType       The type of the conflicting clause
  */
@@ -104,7 +114,7 @@ struct SSRWithHBRParams {
 /**
  * \brief Creates a parameter-struct for ssrWithHyperBinaryResolution()
  *
- * \ingroup JamSAT_Simplification
+ * \ingroup JamSAT_Simplification_SSRWithHBR
  *
  * \tparam OccurrenceMap            An OccurrenceMap specialization for `Propagation::Clause`
  * \tparam ModFn                    A type such that for an object `o` of type `ModFn` and
@@ -141,6 +151,8 @@ auto createSSRWithHBRParams(OccurrenceMapT &occMap, ModFnT const &notifyModifica
  * \brief Performs self-subsuming resolution and strengthening with hyper-binary
  *        resolution.
  *
+ * \ingroup JamSAT_Simplification_SSRWithHBR
+ *
  * Precondition: All assignments forced by unary clauses (wrt. \p params.propagation)
  * have been propagated to fixpoint.
  *
@@ -169,6 +181,8 @@ auto createSSRWithHBRParams(OccurrenceMapT &occMap, ModFnT const &notifyModifica
  * \returns                         A statistics object indicating how many clauses have been
  *                                  scheduled for deletion and how many literals have been
  *                                  removed from clauses via strengthening.
+ *
+ *
  */
 template <typename SSRWithHBRParamsT>
 auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT &params, CNFLit resolveAt)

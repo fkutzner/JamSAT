@@ -42,7 +42,16 @@
 namespace jamsat {
 
 /**
- * \ingroup JamSAT_Solver
+ * \defgroup JamSAT_Simplification_Minimizer  Lemma Minimization
+ * \ingroup JamSAT_Simplification
+ *
+ * This module contains functions for simplifying lemmas just after
+ * the learning process, before they are added to the problem instance
+ * in the form of regular clauses.
+ */
+
+/**
+ * \ingroup JamSAT_Simplification_Minimizer
  *
  * \brief Erases redundant literals from the given clause.
  *
@@ -89,7 +98,7 @@ void eraseRedundantLiterals(LiteralContainer &literals, const ReasonProvider &re
                             StampMapT &tempStamps) noexcept;
 
 /**
- * \ingroup JamSAT_Solver
+ * \ingroup JamSAT_Simplification_Minimizer
  *
  * \brief Erases literals from the given clause which can be removed via
  * resolution with binary clauses.
