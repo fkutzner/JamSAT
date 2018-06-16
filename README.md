@@ -41,7 +41,7 @@ While JamSAT can be used as a generic SAT solver, its focus lies on
 solving problem instances arising from industrial applications such
 as model checking, artificial intelligence, circuit equivalence checking
 and SMT solving. More
-specififically, it is optimized for _agile_ SAT solving: it is designed
+specifically, it is optimized for _agile_ SAT solving: it is designed
 to efficiently solve vast numbers of SAT problem instances that are
 not very hard individually.
 
