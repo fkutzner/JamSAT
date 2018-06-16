@@ -38,5 +38,5 @@ namespace jamsat {
  *                          after \p timeout seconds.
  * \param timeout           The timeout.
  */
-void configureTimeout(void *ipasirSolver, std::chrono::seconds timeout) noexcept;
+void configureTimeout(void* ipasirSolver, std::chrono::seconds timeout) noexcept;
 }

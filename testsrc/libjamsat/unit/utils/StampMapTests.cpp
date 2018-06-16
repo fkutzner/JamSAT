@@ -40,7 +40,7 @@ struct IntStampKey {
 
 struct ComplexStampKey {
     using Type = std::complex<char>;
-    static size_t getIndex(const Type &x) { return 2 * x.real() + x.imag(); }
+    static size_t getIndex(const Type& x) { return 2 * x.real() + x.imag(); }
 };
 
 struct IntWrapper {
@@ -50,7 +50,7 @@ struct IntWrapper {
 
 struct IntWrapperKey {
     using Type = IntWrapper;
-    static size_t getIndex(const Type &x) { return x.m_x; }
+    static size_t getIndex(const Type& x) { return x.m_x; }
 };
 
 TEST(UnitUtils, StampMap_singleKeyTypeReadWrite) {

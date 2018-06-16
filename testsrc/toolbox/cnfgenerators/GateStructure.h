@@ -43,7 +43,7 @@ namespace jamsat {
  * \param[in,out] target    The CNFProblem instance into which the clauses encoding the gates are
  *                          inserted.
  */
-void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &target);
+void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target);
 
 /**
  * \ingroup JamSAT_TestInfrastructure
@@ -57,7 +57,7 @@ void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &targ
  * \param[in,out] target    The CNFProblem instance into which the clauses encoding the gates are
  *                          inserted.
  */
-void insertOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &target);
+void insertOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target);
 
 /**
  * \ingroup JamSAT_TestInfrastructure
@@ -71,5 +71,5 @@ void insertOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &targe
  * \param[in,out] target    The CNFProblem instance into which the clauses encoding the gates are
  *                          inserted.
  */
-void insertXOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &target);
+void insertXOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target);
 }

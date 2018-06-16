@@ -76,7 +76,7 @@ private:
 
     using PartialClauseRangeType = decltype(boost::adaptors::transform(
         std::declval<WatchersRangeType>(),
-        std::declval<std::function<const Clause *(const WatcherType &)>>()));
+        std::declval<std::function<const Clause*(const WatcherType&)>>()));
 
     using ClauseRangeType = decltype(boost::range::join(std::declval<PartialClauseRangeType>(),
                                                         std::declval<PartialClauseRangeType>()));
@@ -93,7 +93,7 @@ public:
      * \param assignmentProvider  The assignment provider configured such that
      * assignments up to and including maxVar can be kept track of.
      */
-    Propagation(CNFVar maxVar, AssignmentProviderT &assignmentProvider);
+    Propagation(CNFVar maxVar, AssignmentProviderT& assignmentProvider);
 
     /**
      * \brief Registers a clause in the propagation system.
@@ -112,7 +112,7 @@ public:
      * \returns         A conflicting clause if adding \clause caused a
      * propagation and a conflict occured; nullptr otherwise.
      */
-    auto registerClause(Clause &clause) -> Clause *;
+    auto registerClause(Clause& clause) -> Clause*;
 
 
     /**
@@ -133,7 +133,7 @@ public:
      *
      * \param clause    The clause to be inserted.
      */
-    void registerEquivalentSubstitutingClause(Clause &clause);
+    void registerEquivalentSubstitutingClause(Clause& clause);
 
     /**
      * \brief Unregisters all clauses from the propagation system.
@@ -158,7 +158,7 @@ public:
      */
     auto propagateUntilFixpoint(CNFLit toPropagate,
                                 PropagationMode mode = PropagationMode::INCLUDE_REDUNDANT_CLAUSES)
-        -> Clause *;
+        -> Clause*;
 
     /**
      * \brief Propagates the given fact wrt. the clauses registered in the
@@ -180,7 +180,7 @@ public:
      *                                      flag are propagated.
      */
     template <bool propagateRedundantClauses = true>
-    auto propagate(CNFLit toPropagate, size_t &amountOfNewFacts) -> Clause *;
+    auto propagate(CNFLit toPropagate, size_t& amountOfNewFacts) -> Clause*;
 
     /**
      * \brief Determines whether the given variable as a forced assignment.
@@ -202,7 +202,7 @@ public:
      * If the assignment was not forced due to propagation, \p nullptr is returned
      * instead.
      */
-    auto getAssignmentReason(CNFVar variable) const noexcept -> const Clause *;
+    auto getAssignmentReason(CNFVar variable) const noexcept -> const Clause*;
 
     /**
      * \brief Increases the maximum variable which may occur during propagation.
@@ -247,7 +247,7 @@ public:
      * \tparam DecisionLevelProvider    A type satisfying the DecisionLevelProvider concept.
      */
     template <typename DecisionLevelProvider>
-    auto isAssignmentReason(const Clause &clause, const DecisionLevelProvider &dlProvider) const
+    auto isAssignmentReason(const Clause& clause, const DecisionLevelProvider& dlProvider) const
         noexcept -> bool;
 
     /**
@@ -261,7 +261,7 @@ public:
      * \param oldClause     An assignment reason clause.
      * \param newClause     The replacement for \p oldClause, with oldClause == newClause.
      */
-    void updateAssignmentReason(const Clause &oldClause, const Clause &newClause) noexcept;
+    void updateAssignmentReason(const Clause& oldClause, const Clause& newClause) noexcept;
 
     /**
      * \brief Returns the amount of assignments which have been placed on
@@ -290,14 +290,14 @@ public:
      *                at the last propagation rsp. registration of `clause`, this
      *                method must be called before the modification takes place.
      */
-    void notifyClauseModificationAhead(Clause const &clause) noexcept;
+    void notifyClauseModificationAhead(Clause const& clause) noexcept;
 
 private:
-    Clause *propagateBinaries(CNFLit toPropagate, size_t &amountOfNewFacts);
-    Clause *registerClause(Clause &clause, bool autoPropagate);
+    Clause* propagateBinaries(CNFLit toPropagate, size_t& amountOfNewFacts);
+    Clause* registerClause(Clause& clause, bool autoPropagate);
     void cleanupWatchers(CNFLit lit);
 
-    AssignmentProviderT &m_assignmentProvider;
+    AssignmentProviderT& m_assignmentProvider;
     detail_propagation::Watchers<Clause> m_binaryWatchers;
 
     /**
@@ -335,7 +335,7 @@ private:
 /********** Implementation ****************************** */
 
 template <class AssignmentProvider>
-Propagation<AssignmentProvider>::Propagation(CNFVar maxVar, AssignmentProvider &assignmentProvider)
+Propagation<AssignmentProvider>::Propagation(CNFVar maxVar, AssignmentProvider& assignmentProvider)
   : m_assignmentProvider(assignmentProvider)
   , m_binaryWatchers(maxVar)
   , m_unpropagatedStats(0ULL)
@@ -345,17 +345,18 @@ Propagation<AssignmentProvider>::Propagation(CNFVar maxVar, AssignmentProvider &
 }
 
 template <class AssignmentProvider>
-auto Propagation<AssignmentProvider>::registerClause(Clause &clause, bool autoPropagate)
-    -> Clause * {
+auto Propagation<AssignmentProvider>::registerClause(Clause& clause, bool autoPropagate)
+    -> Clause* {
     JAM_ASSERT(clause.size() >= 2ull, "Illegally small clause argument");
-    JAM_LOG_PROPAGATION(info, "Registering clause " << &clause << " ("
-                                                    << toString(clause.begin(), clause.end())
-                                                    << ") for propagation.");
+    JAM_LOG_PROPAGATION(info,
+                        "Registering clause " << &clause << " ("
+                                              << toString(clause.begin(), clause.end())
+                                              << ") for propagation.");
     bool isRedundant = clause.getFlag(Clause::Flag::REDUNDANT);
     detail_propagation::Watcher<Clause> watcher1{clause, clause[0], 1, isRedundant};
     detail_propagation::Watcher<Clause> watcher2{clause, clause[1], 0, isRedundant};
 
-    auto &targetWatchList = (clause.size() <= 2 ? m_binaryWatchers : m_watchers);
+    auto& targetWatchList = (clause.size() <= 2 ? m_binaryWatchers : m_watchers);
     targetWatchList.addWatcher(clause[0], watcher2);
     targetWatchList.addWatcher(clause[1], watcher1);
 
@@ -369,7 +370,8 @@ auto Propagation<AssignmentProvider>::registerClause(Clause &clause, bool autoPr
     if (isDeterminate(secondLiteralAssignment)) {
         JAM_EXPENSIVE_ASSERT(
             std::all_of(
-                clause.begin() + 1, clause.end(),
+                clause.begin() + 1,
+                clause.end(),
                 [this](CNFLit l) { return isFalse(m_assignmentProvider.getAssignment(l)); }),
             "Added a clause requiring first-literal propagation which does not actually "
             "force the first literal");
@@ -383,20 +385,20 @@ auto Propagation<AssignmentProvider>::registerClause(Clause &clause, bool autoPr
 }
 
 template <class AssignmentProvider>
-auto Propagation<AssignmentProvider>::registerClause(Clause &clause) -> Clause * {
+auto Propagation<AssignmentProvider>::registerClause(Clause& clause) -> Clause* {
     // Register with auto-propagation enabled:
     return registerClause(clause, true);
 }
 
 template <class AssignmentProvider>
-void Propagation<AssignmentProvider>::registerEquivalentSubstitutingClause(Clause &clause) {
+void Propagation<AssignmentProvider>::registerEquivalentSubstitutingClause(Clause& clause) {
     // Register with auto-propagation disabled
     registerClause(clause, false);
 }
 
 template <class AssignmentProvider>
 auto Propagation<AssignmentProvider>::getAssignmentReason(CNFVar variable) const noexcept
-    -> const Clause * {
+    -> const Clause* {
     return m_assignmentProvider.getAssignmentReason(variable);
 }
 
@@ -407,7 +409,7 @@ auto Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const
 
 template <class AssignmentProvider>
 auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate,
-                                                             PropagationMode mode) -> Clause * {
+                                                             PropagationMode mode) -> Clause* {
     JAM_LOG_PROPAGATION(info, "Propagating assignment until fixpoint: " << toPropagate);
     auto trailEndIndex = m_assignmentProvider.getNumberOfAssignments();
 
@@ -417,7 +419,7 @@ auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate,
 
     m_unpropagatedStats = 0ULL;
     size_t amountOfNewFacts = 0;
-    Clause *conflictingClause = nullptr;
+    Clause* conflictingClause = nullptr;
     if (mode == PropagationMode::INCLUDE_REDUNDANT_CLAUSES) {
         conflictingClause = propagate<true>(toPropagate, amountOfNewFacts);
     } else {
@@ -434,8 +436,8 @@ auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate,
     auto pqBegin = propagationQueue.begin();
     auto pqEnd = propagationQueue.end() + amountOfNewFacts;
     while (pqBegin != pqEnd) {
-        JAM_LOG_PROPAGATION(info, "  Propagating until fixpoint: " << amountOfNewFacts
-                                                                   << " assignments pending");
+        JAM_LOG_PROPAGATION(
+            info, "  Propagating until fixpoint: " << amountOfNewFacts << " assignments pending");
         size_t localNewFacts = 0;
         if (mode == PropagationMode::INCLUDE_REDUNDANT_CLAUSES) {
             conflictingClause = propagate<true>(*pqBegin, localNewFacts);
@@ -457,23 +459,24 @@ auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate,
 
 template <class AssignmentProvider>
 auto Propagation<AssignmentProvider>::propagateBinaries(CNFLit toPropagate,
-                                                        size_t &amountOfNewFacts) -> Clause * {
+                                                        size_t& amountOfNewFacts) -> Clause* {
     CNFLit negatedToPropagate = ~toPropagate;
     auto watcherListTraversal = m_binaryWatchers.getWatchers(negatedToPropagate);
     while (!watcherListTraversal.hasFinishedTraversal()) {
-        auto &currentWatcher = *watcherListTraversal;
+        auto& currentWatcher = *watcherListTraversal;
         CNFLit secondLit = currentWatcher.getOtherWatchedLiteral();
         TBool assignment = m_assignmentProvider.getAssignment(secondLit);
 
         if (isFalse(assignment)) {
             // conflict case:
-            JAM_LOG_PROPAGATION(info, "  Current assignment is conflicting at clause "
-                                          << &currentWatcher.getClause() << ".");
+            JAM_LOG_PROPAGATION(info,
+                                "  Current assignment is conflicting at clause "
+                                    << &currentWatcher.getClause() << ".");
             return &currentWatcher.getClause();
         } else if (!isDeterminate(assignment)) {
             // propagation case:
             ++amountOfNewFacts;
-            Clause &reason = currentWatcher.getClause();
+            Clause& reason = currentWatcher.getClause();
             JAM_LOG_PROPAGATION(info,
                                 "  Forced assignment: " << secondLit << " Reason: " << &reason);
             m_assignmentProvider.addAssignment(secondLit, reason);
@@ -490,8 +493,8 @@ auto Propagation<AssignmentProvider>::propagateBinaries(CNFLit toPropagate,
 
 template <class AssignmentProvider>
 template <bool propagateRedundantClauses>
-auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t &amountOfNewFacts)
-    -> Clause * {
+auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t& amountOfNewFacts)
+    -> Clause* {
     JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
     amountOfNewFacts = 0;
 
@@ -499,7 +502,7 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t &amou
         cleanupWatchers(~toPropagate);
     }
 
-    if (Clause *conflict = propagateBinaries(toPropagate, amountOfNewFacts)) {
+    if (Clause* conflict = propagateBinaries(toPropagate, amountOfNewFacts)) {
         return conflict;
     }
 
@@ -525,7 +528,7 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t &amou
             continue;
         }
 
-        auto &clause = currentWatcher.getClause();
+        auto& clause = currentWatcher.getClause();
 
         // otherWatchedLit might not actually be the other watched literal due to
         // the swap at (*), so restore it
@@ -581,8 +584,8 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t &amou
             // Propagation case: otherWatchedLit is the only remaining unassigned
             // literal
             ++amountOfNewFacts;
-            JAM_LOG_PROPAGATION(info, "  Forced assignment: " << otherWatchedLit
-                                                              << " Reason: " << &clause);
+            JAM_LOG_PROPAGATION(
+                info, "  Forced assignment: " << otherWatchedLit << " Reason: " << &clause);
             m_assignmentProvider.addAssignment(otherWatchedLit, clause);
         }
 
@@ -615,7 +618,7 @@ void Propagation<AssignmentProvider>::increaseMaxVarTo(CNFVar newMaxVar) {
 
 template <class AssignmentProvider>
 auto Propagation<AssignmentProvider>::getClausesInPropagationOrder() const noexcept -> ClauseRange {
-    std::function<const Clause *(const WatcherType &)> trans = [](const WatcherType &w) {
+    std::function<const Clause*(const WatcherType&)> trans = [](const WatcherType& w) {
         return &w.getClause();
     };
 
@@ -630,7 +633,7 @@ auto Propagation<AssignmentProvider>::getClausesInPropagationOrder() const noexc
 template <class AssignmentProvider>
 template <typename DecisionLevelProvider>
 auto Propagation<AssignmentProvider>::isAssignmentReason(
-    const Clause &clause, const DecisionLevelProvider &dlProvider) const noexcept -> bool {
+    const Clause& clause, const DecisionLevelProvider& dlProvider) const noexcept -> bool {
     JAM_ASSERT(clause.size() >= 2, "Argument clause must at have a size of 2");
     for (auto var : {clause[0].getVariable(), clause[1].getVariable()}) {
         if (m_assignmentProvider.getAssignmentReason(var) != &clause) {
@@ -647,8 +650,8 @@ auto Propagation<AssignmentProvider>::isAssignmentReason(
 }
 
 template <class AssignmentProvider>
-void Propagation<AssignmentProvider>::updateAssignmentReason(const Clause &oldClause,
-                                                             const Clause &newClause) noexcept {
+void Propagation<AssignmentProvider>::updateAssignmentReason(const Clause& oldClause,
+                                                             const Clause& newClause) noexcept {
     // JAM_EXPENSIVE_ASSERT(oldClause == newClause, "Arguments oldClause and newClause must be
     // equal");
     for (auto var : {newClause[0].getVariable(), newClause[1].getVariable()}) {
@@ -670,7 +673,7 @@ auto Propagation<AssignmentProvider>::getCurrentAmountOfUnpropagatedAssignments(
 }
 
 template <class AssignmentProvider>
-void Propagation<AssignmentProvider>::notifyClauseModificationAhead(Clause const &clause) noexcept {
+void Propagation<AssignmentProvider>::notifyClauseModificationAhead(Clause const& clause) noexcept {
     JAM_ASSERT(clause.size() >= 2, "Can't modify clauses with size <= 1");
     m_watcherUpdateRequired[clause[0]] = 1;
     m_watcherUpdateRequired[clause[1]] = 1;
@@ -687,7 +690,7 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
     auto watcherListTraversal = m_watchers.getWatchers(lit);
     while (!watcherListTraversal.hasFinishedTraversal()) {
         WatcherType currentWatcher = *watcherListTraversal;
-        Clause &clause = currentWatcher.getClause();
+        Clause& clause = currentWatcher.getClause();
 
         if (clause.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION) == true) {
             watcherListTraversal.removeCurrent();
@@ -727,7 +730,7 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
     auto binaryWatcherListTraversal = m_binaryWatchers.getWatchers(lit);
     while (!binaryWatcherListTraversal.hasFinishedTraversal()) {
         WatcherType currentWatcher = *binaryWatcherListTraversal;
-        Clause &clause = currentWatcher.getClause();
+        Clause& clause = currentWatcher.getClause();
 
         if (clause.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION) == true) {
             binaryWatcherListTraversal.removeCurrent();

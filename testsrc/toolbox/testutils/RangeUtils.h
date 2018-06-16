@@ -49,9 +49,9 @@ namespace jamsat {
  *                  comparable to the objects obtainable from \p Range objects.
  */
 template <typename Range, typename Expected>
-void expectRangeContainsValues(const Range &r, const Expected &expected) {
+void expectRangeContainsValues(const Range& r, const Expected& expected) {
     uint64_t count = 0;
-    for (auto &elem : r) {
+    for (auto& elem : r) {
         EXPECT_FALSE(std::find(expected.begin(), expected.end(), elem) == expected.end())
             << "Element missing in result range";
         ++count;
@@ -72,7 +72,7 @@ void expectRangeContainsValues(const Range &r, const Expected &expected) {
  *                  elements in \p RangeA.
  */
 template <typename RangeA, typename RangeB>
-void expectRangeElementsSequencedEqual(const RangeA &toTest, const RangeB &reference) {
+void expectRangeElementsSequencedEqual(const RangeA& toTest, const RangeB& reference) {
     auto toTestIt = toTest.begin();
     auto toTestEnd = toTest.end();
     auto referenceIt = reference.begin();

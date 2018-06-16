@@ -33,6 +33,6 @@
  */
 
 namespace jamsat {
-auto jamsatMain(int argc, char **argv, std::ostream &outStream, std::ostream &errStream) noexcept
+auto jamsatMain(int argc, char** argv, std::ostream& outStream, std::ostream& errStream) noexcept
     -> int;
 }

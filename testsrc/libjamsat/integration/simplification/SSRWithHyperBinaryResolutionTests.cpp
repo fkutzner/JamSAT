@@ -45,7 +45,7 @@ using PropagationT = Propagation<TrailT>;
 
 class ClauseDeletedQuery {
 public:
-    bool operator()(Clause const *x) const noexcept {
+    bool operator()(Clause const* x) const noexcept {
         return x->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
     }
 };
@@ -57,7 +57,7 @@ protected:
       , m_trail(CNFVar{1024})
       , m_propagation(CNFVar{1024}, m_trail)
       , m_stamps(getMaxLit(CNFVar{1024}).getRawValue())
-      , m_notifyClauseModification([this](Clause *c) {
+      , m_notifyClauseModification([this](Clause* c) {
           m_propagation.notifyClauseModificationAhead(*c);
           m_notifiedModifications.insert(c);
       })
@@ -73,22 +73,22 @@ protected:
     }
 
     auto performSSRWithHBR(CNFLit resolveAt) -> SimplificationStats {
-        auto ssrWithHBRParams = createSSRWithHBRParams(m_occurrenceMap, m_notifyClauseModification,
-                                                       m_propagation, m_trail, m_stamps);
+        auto ssrWithHBRParams = createSSRWithHBRParams(
+            m_occurrenceMap, m_notifyClauseModification, m_propagation, m_trail, m_stamps);
         return ssrWithHyperBinaryResolution(ssrWithHBRParams, resolveAt);
     }
 
-    void expectDeleted(Clause const &c) {
+    void expectDeleted(Clause const& c) {
         EXPECT_TRUE(c.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
         EXPECT_TRUE(m_notifiedModifications.find(&c) != m_notifiedModifications.end());
     }
 
-    void expectUnmodified(Clause const &c) {
+    void expectUnmodified(Clause const& c) {
         EXPECT_FALSE(c.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
         EXPECT_TRUE(m_notifiedModifications.find(&c) == m_notifiedModifications.end());
     }
 
-    void expectModifiedButNotDeleted(Clause const &c) {
+    void expectModifiedButNotDeleted(Clause const& c) {
         EXPECT_FALSE(c.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION));
         EXPECT_TRUE(m_notifiedModifications.find(&c) != m_notifiedModifications.end());
     }
@@ -96,10 +96,10 @@ protected:
     TrailT m_trail;
     PropagationT m_propagation;
     StampMap<uint16_t, CNFLit::Index> m_stamps;
-    std::function<void(Clause *)> m_notifyClauseModification;
+    std::function<void(Clause*)> m_notifyClauseModification;
     OccurrenceMap<Clause, ClauseDeletedQuery> m_occurrenceMap;
 
-    std::unordered_set<const Clause *> m_notifiedModifications;
+    std::unordered_set<const Clause*> m_notifiedModifications;
 };
 
 TEST_F(IntegrationSSRWithHyperBinaryResolution, DeletesClausesDirectlySubsumedByBinaries) {

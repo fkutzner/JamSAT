@@ -85,14 +85,14 @@ public:
          */
         Stamp getStamp() const noexcept { return m_stamp; }
 
-        StampingContext &operator=(const StampingContext &other) = delete;
-        StampingContext &operator=(StampingContext &&other) = default;
-        StampingContext(const StampingContext &other) = delete;
-        StampingContext(StampingContext &&other) = default;
+        StampingContext& operator=(const StampingContext& other) = delete;
+        StampingContext& operator=(StampingContext&& other) = default;
+        StampingContext(const StampingContext& other) = delete;
+        StampingContext(StampingContext&& other) = default;
 
     private:
         friend class StampMapBase<T>;
-        StampingContext(StampMapBase &m_origin, Stamp stamp) noexcept
+        StampingContext(StampMapBase& m_origin, Stamp stamp) noexcept
           : m_clearStamps([&m_origin]() { m_origin.clear(); }), m_stamp(stamp) {}
 
         OnExitScope m_clearStamps;
@@ -205,7 +205,8 @@ public:
      * instance).
      * \param stamped   true iff \p obj should be marked as stamped.
      */
-    void setStamped(const typename K::Type &obj, typename StampMapBase<T>::Stamp stamp,
+    void setStamped(const typename K::Type& obj,
+                    typename StampMapBase<T>::Stamp stamp,
                     bool stamped) noexcept;
 
     using StampMap<T, Ks...>::setStamped;
@@ -219,7 +220,7 @@ public:
      * instance).
      * \returns         true iff \p index is marked as stamped.
      */
-    bool isStamped(const typename K::Type &obj, const typename StampMapBase<T>::Stamp stamp) const
+    bool isStamped(const typename K::Type& obj, const typename StampMapBase<T>::Stamp stamp) const
         noexcept;
 
     using StampMap<T, Ks...>::isStamped;
@@ -248,7 +249,7 @@ template <typename T>
 void StampMapBase<T>::clear() noexcept {
     if (m_currentStamp == std::numeric_limits<T>::max()) {
         auto clearValue = std::numeric_limits<T>::min();
-        for (auto &x : m_stamps) {
+        for (auto& x : m_stamps) {
             x = clearValue;
         }
         m_currentStamp = clearValue;
@@ -258,7 +259,7 @@ void StampMapBase<T>::clear() noexcept {
 }
 
 template <typename T, typename K, typename... Ks>
-void StampMap<T, K, Ks...>::setStamped(const typename K::Type &obj,
+void StampMap<T, K, Ks...>::setStamped(const typename K::Type& obj,
                                        typename StampMapBase<T>::Stamp stamp,
                                        bool stamped) noexcept {
     JAM_ASSERT(stamp.value == StampMapBase<T>::m_currentStamp, "Invalid stamp");
@@ -269,7 +270,7 @@ void StampMap<T, K, Ks...>::setStamped(const typename K::Type &obj,
 }
 
 template <typename T, typename K, typename... Ks>
-bool StampMap<T, K, Ks...>::isStamped(const typename K::Type &obj,
+bool StampMap<T, K, Ks...>::isStamped(const typename K::Type& obj,
                                       const typename StampMapBase<T>::Stamp stamp) const noexcept {
     JAM_ASSERT(stamp.value == StampMapBase<T>::m_currentStamp, "Invalid stamp");
     auto index = K::getIndex(obj);

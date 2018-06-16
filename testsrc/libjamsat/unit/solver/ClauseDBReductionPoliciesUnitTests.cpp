@@ -44,7 +44,7 @@ public:
     }
 };
 
-using TrivialClauseSeq = std::vector<TrivialClause *>;
+using TrivialClauseSeq = std::vector<TrivialClause*>;
 
 TEST(UnitSolver, GlucoseClauseDBReductionPolicy_forbidsReductionWhenNoClauseHasBeenLearned) {
     TrivialClauseSeq emptyClauseList;
@@ -120,26 +120,27 @@ namespace {
  *                                 indices to \p LBDs
  */
 void test_GlucoseClauseDBReductionPolicy_markedForDeletion(
-    const std::vector<int> &LBDs, uint16_t knownGoods,
-    const std::vector<uint16_t> &expectedDeletedIndices) {
+    const std::vector<int>& LBDs,
+    uint16_t knownGoods,
+    const std::vector<uint16_t>& expectedDeletedIndices) {
     std::vector<std::unique_ptr<Clause>> clauses;
     for (auto lbd : LBDs) {
         clauses.push_back(createHeapClause(3));
         clauses.back()->setLBD(lbd);
     }
 
-    std::vector<Clause *> learntClauses;
-    for (auto &clause : clauses) {
+    std::vector<Clause*> learntClauses;
+    for (auto& clause : clauses) {
         learntClauses.push_back(clause.get());
     }
     auto originalLearntClauses = learntClauses;
 
-    GlucoseClauseDBReductionPolicy<Clause, std::vector<Clause *>, int> underTest{10, learntClauses};
+    GlucoseClauseDBReductionPolicy<Clause, std::vector<Clause*>, int> underTest{10, learntClauses};
     ASSERT_TRUE(underTest.shouldReduceDB());
     auto toDeleteBegin = underTest.getClausesMarkedForDeletion(knownGoods);
 
     for (auto idx : expectedDeletedIndices) {
-        Clause *expected = originalLearntClauses[idx];
+        Clause* expected = originalLearntClauses[idx];
         ASSERT_TRUE(std::find(toDeleteBegin, learntClauses.end(), expected) != learntClauses.end())
             << "Clause at index " << idx << " has not been marked for deletion.";
     }

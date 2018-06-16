@@ -51,14 +51,15 @@ using LBD = uint32_t;
  * levels. \tparam LBD                    The literal block distance type, an integral type.
  */
 template <typename ForwardRange, typename DLProvider, typename StampMapT>
-LBD getLBD(const ForwardRange &literals, const DLProvider &decisionLevelProvider,
-           StampMapT &tempStamps) noexcept {
+LBD getLBD(const ForwardRange& literals,
+           const DLProvider& decisionLevelProvider,
+           StampMapT& tempStamps) noexcept {
 
     auto stampContext = tempStamps.createContext();
     auto stamp = stampContext.getStamp();
     LBD result = 0;
 
-    for (auto &literal : literals) {
+    for (auto& literal : literals) {
         auto variable = literal.getVariable();
         auto level = decisionLevelProvider.getAssignmentDecisionLevel(variable);
         if (!tempStamps.isStamped(level, stamp)) {

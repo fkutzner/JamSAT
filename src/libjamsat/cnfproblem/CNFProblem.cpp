@@ -42,7 +42,7 @@ namespace jamsat {
 
 CNFProblem::CNFProblem() : m_clauses({}), m_maxVar(CNFVar::getUndefinedVariable()) {}
 
-void CNFProblem::addClause(const CNFClause &clause) noexcept {
+void CNFProblem::addClause(const CNFClause& clause) noexcept {
     for (auto literal : clause) {
         CNFVar variable = literal.getVariable();
         if (m_maxVar == CNFVar::getUndefinedVariable() ||
@@ -54,7 +54,7 @@ void CNFProblem::addClause(const CNFClause &clause) noexcept {
     m_clauses.push_back(clause);
 }
 
-void CNFProblem::addClause(CNFClause &&clause) noexcept {
+void CNFProblem::addClause(CNFClause&& clause) noexcept {
     for (auto literal : clause) {
         CNFVar variable = literal.getVariable();
         if (m_maxVar == CNFVar::getUndefinedVariable() ||
@@ -66,7 +66,7 @@ void CNFProblem::addClause(CNFClause &&clause) noexcept {
     m_clauses.push_back(clause);
 }
 
-const std::vector<CNFClause> &CNFProblem::getClauses() const noexcept {
+const std::vector<CNFClause>& CNFProblem::getClauses() const noexcept {
     return m_clauses;
 }
 
@@ -90,21 +90,21 @@ void CNFProblem::clear() noexcept {
     m_maxVar = CNFVar::getUndefinedVariable();
 }
 
-std::ostream &operator<<(std::ostream &output, const CNFProblem &problem) {
+std::ostream& operator<<(std::ostream& output, const CNFProblem& problem) {
     if (problem.isEmpty()) {
         output << "p cnf 0 0" << std::endl;
         return output;
     }
 
     output << "p cnf " << problem.getMaxVar() << " " << problem.getSize() << std::endl;
-    for (auto &clause : problem.getClauses()) {
+    for (auto& clause : problem.getClauses()) {
         output << clause << std::endl;
     }
 
     return output;
 }
 
-std::ostream &operator<<(std::ostream &output, const CNFClause &clause) {
+std::ostream& operator<<(std::ostream& output, const CNFClause& clause) {
     for (auto literal : clause) {
         output << literal << " ";
     }
@@ -125,7 +125,7 @@ namespace {
 // input stream, setting the stream's fail bit if a parsing failed (wrt. the
 // DIMACS CNF format). The resulting DIMACSHeader's "valid" member is set to
 // true iff the header could be parsed correctly.
-DIMACSHeader readDIMACSHeader(std::istream &input) {
+DIMACSHeader readDIMACSHeader(std::istream& input) {
     std::string lineBuffer = "c";
     while (input && (lineBuffer.empty() || lineBuffer[0] != 'p')) {
         input >> std::ws;
@@ -163,8 +163,8 @@ DIMACSHeader readDIMACSHeader(std::istream &input) {
 // and stores them into the given CNFProblem object. If the data read from the
 // stream does not satisfy the DIMACS CNF format, the problem is cleared and the
 // stream's fail bit is set.
-std::istream &readDIMACSClauses(std::istream &input, DIMACSHeader problemHeader,
-                                CNFProblem &problem) {
+std::istream&
+readDIMACSClauses(std::istream& input, DIMACSHeader problemHeader, CNFProblem& problem) {
     for (unsigned int i = 1; i <= problemHeader.clauseCount; ++i) {
         CNFClause newClause;
         input >> newClause;
@@ -190,7 +190,7 @@ std::istream &readDIMACSClauses(std::istream &input, DIMACSHeader problemHeader,
 }
 } // namespace
 
-std::istream &operator>>(std::istream &input, CNFProblem &problem) {
+std::istream& operator>>(std::istream& input, CNFProblem& problem) {
     const DIMACSHeader dimacsHeader = readDIMACSHeader(input);
     if (!dimacsHeader.valid) {
         input.setstate(std::ios::failbit);
@@ -227,13 +227,13 @@ boost::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
     return CNFLit{literalVariable, literalSign};
 }
 
-void parsingFailed(CNFClause &clause, std::istream &source) {
+void parsingFailed(CNFClause& clause, std::istream& source) {
     source.setstate(std::ios::failbit);
     clause.clear();
 }
 } // namespace
 
-std::istream &operator>>(std::istream &input, CNFClause &clause) {
+std::istream& operator>>(std::istream& input, CNFClause& clause) {
     std::string buffer;
     auto originalClauseSize = clause.size();
 

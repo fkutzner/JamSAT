@@ -42,14 +42,14 @@
 
 namespace jamsat {
 
-CNFParserError::CNFParserError(std::string const &what) : std::runtime_error(what) {}
+CNFParserError::CNFParserError(std::string const& what) : std::runtime_error(what) {}
 
 CNFParserError::~CNFParserError() {}
 
 namespace {
 class GZFileResource {
 public:
-    explicit GZFileResource(char const *location) {
+    explicit GZFileResource(char const* location) {
         m_file = (std::string{location} == "-") ? gzdopen(0, "rb") : gzopen(location, "rb");
         if (m_file == nullptr) {
             std::perror(location);
@@ -96,7 +96,7 @@ auto readCharFromGzFile(gzFile file) -> char {
             throw CNFParserError{"Syntax error: unexpected end of input file"};
         } else {
             int errnum = 0;
-            char const *message = gzerror(file, &errnum);
+            char const* message = gzerror(file, &errnum);
             throw CNFParserError{message};
         }
     }
@@ -214,7 +214,7 @@ auto readHeader(gzFile file) -> DIMACSHeader {
  * \p file is not a whitespace character, more characters are read from \p file
  * and appended to \p buffer until a whitespace character has been read.
  */
-auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char> &buffer) -> int {
+auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char>& buffer) -> int {
     if (preferredChunkSize == 0) {
         buffer.push_back(0);
         return 0;
@@ -234,7 +234,7 @@ auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char> &
 
     if (bytesRead <= 0) {
         int errnum = 0;
-        char const *message = gzerror(file, &errnum);
+        char const* message = gzerror(file, &errnum);
         throw CNFParserError{message};
     }
 
@@ -252,7 +252,7 @@ auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char> &
                     return buffer.size() - 1;
                 } else {
                     int errnum = 0;
-                    char const *message = gzerror(file, &errnum);
+                    char const* message = gzerror(file, &errnum);
                     throw CNFParserError{message};
                 }
             }
@@ -281,16 +281,16 @@ auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char> &
  * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file.
  */
-void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
+void readClauses(void* solver, gzFile file, DIMACSHeader problemHeader) {
     std::vector<char> buffer;
 
     uint32_t effectiveClauses = 0;
 
     int bytesRead = 1;
     while ((bytesRead = readChunk(file, 1048576, buffer)) != 0) {
-        char *cursor = buffer.data();
-        char *endCursor = cursor;
-        char *end = buffer.data() + buffer.size();
+        char* cursor = buffer.data();
+        char* endCursor = cursor;
+        char* end = buffer.data() + buffer.size();
 
         while (cursor != end) {
             long literal = strtol(cursor, &endCursor, 10);
@@ -310,7 +310,7 @@ void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
             if (cursor == endCursor) {
                 // No conversion could be perfomed. Possible reasons: the string
                 // is blank or contains something that cannot be parsed as a long.
-                for (char *c = cursor; cursor < end; ++cursor) {
+                for (char* c = cursor; cursor < end; ++cursor) {
                     if (std::isspace(*c) == 0) {
                         throw CNFParserError{"Syntax error: invalid character with code " +
                                              std::to_string(*c)};
@@ -338,7 +338,7 @@ void readClauses(void *solver, gzFile file, DIMACSHeader problemHeader) {
 }
 }
 
-void readProblem(void *solver, std::string const &location, std::ostream &msgStream) {
+void readProblem(void* solver, std::string const& location, std::ostream& msgStream) {
     GZFileResource fileRAII{location.c_str()};
     gzFile file = fileRAII.getFile();
     DIMACSHeader problemHeader = readHeader(file);

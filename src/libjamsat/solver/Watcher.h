@@ -46,14 +46,16 @@ namespace detail_propagation {
 template <class ClauseT>
 class Watcher {
 public:
-    Watcher(ClauseT &watchedClause, CNFLit otherWatchedLiteral, unsigned int index = 0,
+    Watcher(ClauseT& watchedClause,
+            CNFLit otherWatchedLiteral,
+            unsigned int index = 0,
             bool isRedundant = false) noexcept
       : m_clause(&watchedClause, index | (isRedundant ? 2ULL : 0ULL))
       , m_otherWatchedLiteral(otherWatchedLiteral) {}
 
-    ClauseT &getClause() noexcept { return *m_clause; }
+    ClauseT& getClause() noexcept { return *m_clause; }
 
-    const ClauseT &getClause() const noexcept { return *m_clause; }
+    const ClauseT& getClause() const noexcept { return *m_clause; }
 
     CNFLit getOtherWatchedLiteral() const noexcept { return m_otherWatchedLiteral; }
 
@@ -64,11 +66,11 @@ public:
 
     void setOtherWatchedLiteral(CNFLit literal) noexcept { m_otherWatchedLiteral = literal; }
 
-    bool operator==(const Watcher &rhs) const {
+    bool operator==(const Watcher& rhs) const {
         return m_clause == rhs.m_clause && m_otherWatchedLiteral == rhs.m_otherWatchedLiteral;
     }
 
-    bool operator!=(const Watcher &rhs) const {
+    bool operator!=(const Watcher& rhs) const {
         return m_clause != rhs.m_clause || m_otherWatchedLiteral != rhs.m_otherWatchedLiteral;
     }
 
@@ -96,7 +98,7 @@ class WatcherTraversal {
 public:
     using WatcherList = std::vector<WatcherT>;
 
-    explicit WatcherTraversal(WatcherList *iteratee) noexcept
+    explicit WatcherTraversal(WatcherList* iteratee) noexcept
       : m_iteratee(iteratee), m_current(iteratee->begin()), m_toTraverse(iteratee->size()) {}
 
     void removeCurrent() noexcept {
@@ -115,33 +117,33 @@ public:
         // Future implementations might lazily reorder watchers here
     }
 
-    WatcherTraversal &operator++() noexcept {
+    WatcherTraversal& operator++() noexcept {
         JAM_ASSERT(m_toTraverse > 0ull, "Tried to traverse beyond the watcher list");
         ++m_current;
         --m_toTraverse;
         return *this;
     }
 
-    bool operator==(const WatcherTraversal &rhs) const noexcept {
+    bool operator==(const WatcherTraversal& rhs) const noexcept {
         return m_current == rhs.m_current && m_iteratee == rhs.m_iteratee;
     }
 
-    bool operator!=(const WatcherTraversal &rhs) const noexcept {
+    bool operator!=(const WatcherTraversal& rhs) const noexcept {
         return m_current != rhs.m_current || m_iteratee != rhs.m_iteratee;
     }
 
-    WatcherT &operator*() noexcept {
+    WatcherT& operator*() noexcept {
         JAM_ASSERT(m_current != m_iteratee->end(), "Iterator is not pointing to a valid element");
         return *m_current;
     }
 
-    WatcherT *operator->() noexcept {
+    WatcherT* operator->() noexcept {
         JAM_ASSERT(m_current != m_iteratee->end(), "Iterator is not pointing to a valid element");
         return &(*m_current);
     }
 
 private:
-    WatcherList *m_iteratee;
+    WatcherList* m_iteratee;
     typename WatcherList::iterator m_current;
     typename WatcherList::size_type m_toTraverse;
 };
@@ -152,17 +154,17 @@ private:
     using WatcherT = Watcher<ClauseT>;
     using WatcherList = std::vector<WatcherT>;
     using BlockerRange = decltype(
-        boost::adaptors::transform(std::declval<WatcherList const &>(),
-                                   std::declval<std::function<CNFLit(const WatcherT &)>>()));
+        boost::adaptors::transform(std::declval<WatcherList const&>(),
+                                   std::declval<std::function<CNFLit(const WatcherT&)>>()));
 
-    BoundedMap<CNFLit, WatcherList> const *m_watchers;
+    BoundedMap<CNFLit, WatcherList> const* m_watchers;
 
 public:
-    explicit BlockerMap(BoundedMap<CNFLit, WatcherList> const &watchers) noexcept
+    explicit BlockerMap(BoundedMap<CNFLit, WatcherList> const& watchers) noexcept
       : m_watchers(&watchers) {}
 
     BlockerRange operator[](CNFLit index) const noexcept {
-        std::function<CNFLit(const WatcherT &)> trans = [](const WatcherT &w) {
+        std::function<CNFLit(const WatcherT&)> trans = [](const WatcherT& w) {
             return w.getOtherWatchedLiteral();
         };
 

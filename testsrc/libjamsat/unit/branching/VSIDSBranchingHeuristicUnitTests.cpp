@@ -104,7 +104,7 @@ TEST(UnitBranching, VSIDSBranchingHeuristic_variablesInitiallyHaveSameActivities
 
 namespace {
 template <typename Heuristic>
-void expectVariableSequence(Heuristic &underTest, const std::vector<CNFVar> &expectedSequence) {
+void expectVariableSequence(Heuristic& underTest, const std::vector<CNFVar>& expectedSequence) {
     for (auto var : expectedSequence) {
         CNFLit pick = underTest.pickBranchLiteral();
         EXPECT_NE(pick, CNFLit::getUndefinedLiteral());
@@ -114,7 +114,7 @@ void expectVariableSequence(Heuristic &underTest, const std::vector<CNFVar> &exp
 }
 
 template <typename Heuristic>
-void expectLiteralSequence(Heuristic &underTest, const std::vector<CNFLit> &expectedSequence) {
+void expectLiteralSequence(Heuristic& underTest, const std::vector<CNFLit>& expectedSequence) {
     for (auto lit : expectedSequence) {
         CNFLit pick = underTest.pickBranchLiteral();
         EXPECT_EQ(pick, lit);
@@ -122,7 +122,7 @@ void expectLiteralSequence(Heuristic &underTest, const std::vector<CNFLit> &expe
 }
 
 template <typename Heuristic>
-void addDefaultConflictSequence(Heuristic &underTest) {
+void addDefaultConflictSequence(Heuristic& underTest) {
     for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
         underTest.setEligibleForDecisions(CNFVar{i}, true);
     }

@@ -52,10 +52,10 @@ public:
         JAM_ASSERT(callOnExit, "callOnExit must be a callable function, but is not");
     }
 
-    OnExitScope &operator=(const OnExitScope &other) = delete;
-    OnExitScope(const OnExitScope &other) = delete;
+    OnExitScope& operator=(const OnExitScope& other) = delete;
+    OnExitScope(const OnExitScope& other) = delete;
 
-    OnExitScope &operator=(OnExitScope &&other) noexcept {
+    OnExitScope& operator=(OnExitScope&& other) noexcept {
         if (this != &other) {
             this->m_callOnExit = other.m_callOnExit;
             other.m_callOnExit = std::function<void()>{};
@@ -63,7 +63,7 @@ public:
         return *this;
     }
 
-    OnExitScope(OnExitScope &&other) noexcept {
+    OnExitScope(OnExitScope&& other) noexcept {
         this->m_callOnExit = other.m_callOnExit;
         other.m_callOnExit = std::function<void()>{};
     }

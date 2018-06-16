@@ -47,7 +47,7 @@ template <class ClauseDB>
 void clauseDBTest_createSingletonClause() {
     ClauseDB underTest;
     const std::vector<CNFLit> input{1_Lit};
-    auto &result = underTest.insertClause(input);
+    auto& result = underTest.insertClause(input);
 
     EXPECT_EQ(underTest.size(), 1ull);
     ASSERT_EQ(result.size(), 1ull);
@@ -58,7 +58,7 @@ template <class ClauseDB>
 void clauseDBTest_createTernaryClause() {
     ClauseDB underTest;
     const std::vector<CNFLit> input{1_Lit, 10_Lit, 100_Lit};
-    auto &result = underTest.insertClause(input);
+    auto& result = underTest.insertClause(input);
 
     EXPECT_EQ(underTest.size(), 1ull);
     ASSERT_EQ(result.size(), 3ull);
@@ -69,7 +69,7 @@ template <class ClauseDB>
 void clauseDBTest_createUndestroyableSingletonClause() {
     ClauseDB underTest;
     const std::vector<CNFLit> input{1_Lit};
-    auto &result = underTest.insertUndestroyableClause(input);
+    auto& result = underTest.insertUndestroyableClause(input);
 
     EXPECT_EQ(underTest.size(), 1ull);
     ASSERT_EQ(result.size(), 1ull);
@@ -80,7 +80,7 @@ template <class ClauseDB>
 void clauseDBTest_createUndestroyableTernaryClause() {
     ClauseDB underTest;
     const std::vector<CNFLit> input{1_Lit, 10_Lit, 100_Lit};
-    auto &result = underTest.insertUndestroyableClause(input);
+    auto& result = underTest.insertUndestroyableClause(input);
 
     EXPECT_EQ(underTest.size(), 1ull);
     ASSERT_EQ(result.size(), 3ull);
@@ -91,7 +91,7 @@ template <class ClauseDB>
 void clauseDBTest_destroyedClausesAreMarkedDestroyed() {
     ClauseDB underTest;
     const std::vector<CNFLit> input{10_Lit};
-    auto &clause = underTest.insertClause(input);
+    auto& clause = underTest.insertClause(input);
 
     ASSERT_FALSE(underTest.isDestroyed(clause));
     underTest.destroy(clause);
@@ -104,8 +104,8 @@ void clauseDBTest_destroyedClausesVanishInDBPurge() {
     const std::vector<CNFLit> destroyClause{10_Lit};
     const std::vector<CNFLit> keepClause{11_Lit, 12_Lit};
 
-    auto &insertedDestroyClause = underTest.insertClause(destroyClause);
-    auto &insertedKeepClause = underTest.insertClause(keepClause);
+    auto& insertedDestroyClause = underTest.insertClause(destroyClause);
+    auto& insertedKeepClause = underTest.insertClause(keepClause);
     EXPECT_EQ(underTest.size(), 2ull);
 
     ASSERT_FALSE(underTest.isDestroyed(insertedDestroyClause));

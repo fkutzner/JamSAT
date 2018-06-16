@@ -66,7 +66,7 @@ public:
      *                          learnt clauses.
      */
     GlucoseClauseDBReductionPolicy(uint32_t intervalIncrease,
-                                   LearntClauseSeq &learntClauses) noexcept;
+                                   LearntClauseSeq& learntClauses) noexcept;
 
     /**
      * \brief Notifies the policy that the solver has performed a restart.
@@ -100,7 +100,7 @@ public:
 
 private:
     const uint32_t m_intervalIncrease;
-    LearntClauseSeq &m_learntClauses;
+    LearntClauseSeq& m_learntClauses;
     uint64_t m_intervalSize;
     uint64_t m_conflictsRemaining;
 };
@@ -109,15 +109,15 @@ private:
 
 template <class ClauseT, class LearntClauseSeq, typename LBDType>
 GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::GlucoseClauseDBReductionPolicy(
-    uint32_t intervalIncrease, LearntClauseSeq &learntClauses) noexcept
+    uint32_t intervalIncrease, LearntClauseSeq& learntClauses) noexcept
   : m_intervalIncrease(intervalIncrease)
   , m_learntClauses(learntClauses)
   , m_intervalSize(0)
   , m_conflictsRemaining(0) {}
 
 template <class ClauseT, class LearntClauseSeq, typename LBDType>
-void GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq,
-                                    LBDType>::registerConflict() noexcept {
+void GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::
+    registerConflict() noexcept {
     if (m_conflictsRemaining > 0) {
         --m_conflictsRemaining;
     }
@@ -148,7 +148,7 @@ GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::getClausesMar
         return m_learntClauses.end();
     }
 
-    std::sort(m_learntClauses.begin(), m_learntClauses.end(), [](ClauseT *lhs, ClauseT *rhs) {
+    std::sort(m_learntClauses.begin(), m_learntClauses.end(), [](ClauseT* lhs, ClauseT* rhs) {
         return lhs->template getLBD<LBDType>() < rhs->template getLBD<LBDType>();
     });
 

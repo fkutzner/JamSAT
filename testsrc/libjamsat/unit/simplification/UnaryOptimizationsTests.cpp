@@ -38,7 +38,7 @@ using TrivialClause = TestAssignmentProviderClause;
 namespace {
 class TrivialClauseDeletedQuery {
 public:
-    auto operator()(TrivialClause const *clause) const noexcept {
+    auto operator()(TrivialClause const* clause) const noexcept {
         return clause->getFlag(TrivialClause::Flag::SCHEDULED_FOR_DELETION);
     }
 };
@@ -81,18 +81,18 @@ protected:
 TEST_F(UnitUnaryOptimization, unarySubsumptionExactlyDeletesSubsumedClauses) {
     std::vector<CNFLit> unaries{lit1, lit5};
 
-    auto delMarker = [](TrivialClause *) {};
+    auto delMarker = [](TrivialClause*) {};
     scheduleClausesSubsumedByUnariesForDeletion(testData, delMarker, unaries);
 }
 
 TEST_F(UnitUnaryOptimization, unarySubsumptionNotifiesPropagationAboutDeletions) {
     std::vector<CNFLit> unaries{lit1, lit5};
 
-    std::vector<TrivialClause *> markedForDel;
-    auto delMarker = [&markedForDel](TrivialClause *cla) { markedForDel.push_back(cla); };
+    std::vector<TrivialClause*> markedForDel;
+    auto delMarker = [&markedForDel](TrivialClause* cla) { markedForDel.push_back(cla); };
     scheduleClausesSubsumedByUnariesForDeletion(testData, delMarker, unaries);
 
-    std::vector<TrivialClause *> expectedToDel{&clause1, &clause2, &clause4};
+    std::vector<TrivialClause*> expectedToDel{&clause1, &clause2, &clause4};
     ASSERT_EQ(markedForDel.size(), expectedToDel.size());
     EXPECT_TRUE(
         std::is_permutation(markedForDel.begin(), markedForDel.end(), expectedToDel.begin()));
@@ -100,7 +100,7 @@ TEST_F(UnitUnaryOptimization, unarySubsumptionNotifiesPropagationAboutDeletions)
 
 namespace {
 template <typename A, typename B>
-void expectPermutation(A const &seq1, B const &seq2) {
+void expectPermutation(A const& seq1, B const& seq2) {
     ASSERT_EQ(seq1.size(), seq2.size());
     EXPECT_TRUE(std::is_permutation(seq1.begin(), seq1.end(), seq2.begin()));
 }
@@ -109,7 +109,7 @@ void expectPermutation(A const &seq1, B const &seq2) {
 TEST_F(UnitUnaryOptimization, strengthenWithUnariesExactlyStrenghensSuitableClauses) {
     std::vector<CNFLit> unaries{~lit3, lit5};
 
-    auto delMarker = [](TrivialClause *) {};
+    auto delMarker = [](TrivialClause*) {};
     strengthenClausesWithUnaries(testData, delMarker, unaries);
 
     expectPermutation(clause1, TrivialClause{lit1, lit5, lit2});
@@ -121,11 +121,11 @@ TEST_F(UnitUnaryOptimization, strengthenWithUnariesExactlyStrenghensSuitableClau
 TEST_F(UnitUnaryOptimization, strenghtenWithUnariesNotifiesPropagationAboutClauseModifications) {
     std::vector<CNFLit> unaries{~lit3, lit5};
 
-    std::vector<TrivialClause *> markedForMod;
-    auto modMarker = [&markedForMod](TrivialClause *cla) { markedForMod.push_back(cla); };
+    std::vector<TrivialClause*> markedForMod;
+    auto modMarker = [&markedForMod](TrivialClause* cla) { markedForMod.push_back(cla); };
     strengthenClausesWithUnaries(testData, modMarker, unaries);
 
-    std::vector<TrivialClause *> expectedToMod{&clause3, &clause4};
+    std::vector<TrivialClause*> expectedToMod{&clause3, &clause4};
     ASSERT_EQ(markedForMod.size(), expectedToMod.size());
     EXPECT_TRUE(
         std::is_permutation(markedForMod.begin(), markedForMod.end(), expectedToMod.begin()));

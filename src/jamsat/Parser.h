@@ -32,7 +32,7 @@
 namespace jamsat {
 class CNFParserError : public std::runtime_error {
 public:
-    explicit CNFParserError(std::string const &what);
+    explicit CNFParserError(std::string const& what);
     virtual ~CNFParserError();
 };
 
@@ -52,5 +52,5 @@ public:
  * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file.
  */
-void readProblem(void *solver, std::string const &location, std::ostream &msgStream);
+void readProblem(void* solver, std::string const& location, std::ostream& msgStream);
 }

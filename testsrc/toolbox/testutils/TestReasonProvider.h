@@ -37,11 +37,11 @@ class TestReasonProvider {
 public:
     using Clause = ClauseT;
 
-    void setAssignmentReason(CNFVar variable, ClauseT &reason) noexcept {
+    void setAssignmentReason(CNFVar variable, ClauseT& reason) noexcept {
         m_reasons[variable] = &reason;
     }
 
-    const ClauseT *getAssignmentReason(CNFVar variable) const noexcept {
+    const ClauseT* getAssignmentReason(CNFVar variable) const noexcept {
         auto reason = m_reasons.find(variable);
         if (reason != m_reasons.end()) {
             return reason->second;
@@ -50,6 +50,6 @@ public:
     }
 
 private:
-    std::unordered_map<CNFVar, const ClauseT *> m_reasons;
+    std::unordered_map<CNFVar, const ClauseT*> m_reasons;
 };
 }

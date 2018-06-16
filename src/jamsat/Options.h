@@ -56,7 +56,7 @@ struct JamSATOptions {
  *
  * \throws std::invalid_argument    The arguments could not be parsed.
  */
-auto parseOptions(int argc, char **argv) -> JamSATOptions;
+auto parseOptions(int argc, char** argv) -> JamSATOptions;
 
 /**
  * \brief Prints the list of available command-line options.
@@ -67,5 +67,5 @@ auto parseOptions(int argc, char **argv) -> JamSATOptions;
  * \param indent    The amount of space characters that shall be prepended
  *                  to each printed line.
  */
-void printOptions(std::ostream &output, unsigned int indent) noexcept;
+void printOptions(std::ostream& output, unsigned int indent) noexcept;
 }

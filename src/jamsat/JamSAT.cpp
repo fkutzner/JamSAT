@@ -38,11 +38,11 @@
 namespace jamsat {
 
 namespace {
-void printVersion(std::ostream &stream) noexcept {
+void printVersion(std::ostream& stream) noexcept {
     stream << ipasir_signature() << "\n";
 }
 
-void printUsage(std::ostream &stream) noexcept {
+void printUsage(std::ostream& stream) noexcept {
     stream << "Usage: jamsat [OPTION]... <FILE>\n"
            << "  Solves the SATISFIABILITY problem instance given in <FILE>.\n"
            << "  <FILE> is required to be formatted as described in Sec. 2.1 of\n"
@@ -52,11 +52,11 @@ void printUsage(std::ostream &stream) noexcept {
     printOptions(stream, 2);
 }
 
-void printErrorMessage(std::string const &message, std::ostream &errStream) noexcept {
+void printErrorMessage(std::string const& message, std::ostream& errStream) noexcept {
     errStream << "Error: " << message << "\n";
 }
 
-auto solve(void *solver, std::ostream &outStream) noexcept -> int {
+auto solve(void* solver, std::ostream& outStream) noexcept -> int {
     int result = ipasir_solve(solver);
     assert(result == 0 || result == 10 || result == 20);
     if (result == 0) {
@@ -75,19 +75,19 @@ public:
 
     ~IpasirRAII() { ipasir_release(m_solver); }
 
-    auto getSolver() noexcept -> void * { return m_solver; }
+    auto getSolver() noexcept -> void* { return m_solver; }
 
 private:
-    void *m_solver;
+    void* m_solver;
 };
 }
 
-auto jamsatMain(int argc, char **argv, std::ostream &outStream, std::ostream &errStream) noexcept
+auto jamsatMain(int argc, char** argv, std::ostream& outStream, std::ostream& errStream) noexcept
     -> int {
     JamSATOptions options;
     try {
         options = parseOptions(argc, argv);
-    } catch (std::invalid_argument &e) {
+    } catch (std::invalid_argument& e) {
         errStream << "Error: " << e.what() << "\n";
         printUsage(errStream);
         return EXIT_FAILURE;
@@ -115,7 +115,7 @@ auto jamsatMain(int argc, char **argv, std::ostream &outStream, std::ostream &er
         }
         readProblem(wrappedSolver.getSolver(), options.m_problemFilename, outStream);
         return solve(wrappedSolver.getSolver(), outStream);
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         printErrorMessage(e.what(), errStream);
         return EXIT_FAILURE;
     }

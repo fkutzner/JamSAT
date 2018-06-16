@@ -58,7 +58,7 @@ public:
 
     struct IPASIRKillThreadContext {
         std::mutex m_lock;
-        SolverType *m_solver;
+        SolverType* m_solver;
         std::function<bool()> m_userKillCallback;
         bool m_parentIpasirContextExists;
     };
@@ -105,7 +105,7 @@ public:
                 m_solver->addClause(m_clauseAddBuffer);
                 m_clauseAddBuffer.clear();
             }
-        } catch (std::exception &) {
+        } catch (std::exception&) {
             m_failed = true;
         }
     }
@@ -118,7 +118,7 @@ public:
         try {
             ensureSolverExists();
             m_assumptionBuffer.push_back(ipasirLitToCNFLit(lit));
-        } catch (std::exception &) {
+        } catch (std::exception&) {
             m_failed = true;
         }
     }
@@ -147,7 +147,7 @@ public:
                 return 20;
             }
             return 0;
-        } catch (std::exception &) {
+        } catch (std::exception&) {
             m_failed = true;
             return 0;
         }
@@ -185,7 +185,7 @@ public:
         return found ? 1 : 0;
     }
 
-    void setTerminate(void *state, int (*terminate)(void *state)) noexcept {
+    void setTerminate(void* state, int (*terminate)(void* state)) noexcept {
         try {
             bool launchNewThread = false;
             if (m_killThreadContext == nullptr) {
@@ -223,12 +223,12 @@ public:
 
                 killThread.detach();
             }
-        } catch (std::exception &) {
+        } catch (std::exception&) {
             m_failed = true;
         }
     }
 
-    void setLearn(void *state, int max_length, void (*learn)(void *state, int *clause)) noexcept {
+    void setLearn(void* state, int max_length, void (*learn)(void* state, int* clause)) noexcept {
         JAM_ASSERT(false, "IPASIR set_learn() is not implemented yet");
         (void)state;
         (void)learn;
@@ -254,7 +254,7 @@ private:
     std::unordered_set<CNFLit> m_failedAssumptions;
 
     // If the killThreadContext object exists, it is owned by the kill-thread
-    IPASIRKillThreadContext *m_killThreadContext;
+    IPASIRKillThreadContext* m_killThreadContext;
 
     bool m_failed;
 };
@@ -262,68 +262,70 @@ private:
 }
 
 extern "C" {
-const char *ipasir_signature() {
+const char* ipasir_signature() {
     return JAMSAT_SIGNATURE;
 }
 
-void *ipasir_init() {
+void* ipasir_init() {
     try {
-        return reinterpret_cast<void *>(new jamsat::IPASIRContext{});
-    } catch (std::exception &) {
+        return reinterpret_cast<void*>(new jamsat::IPASIRContext{});
+    } catch (std::exception&) {
         return nullptr;
     }
 }
 
-void ipasir_release(void *solver) {
+void ipasir_release(void* solver) {
     if (solver == nullptr) {
         return;
     }
-    delete (reinterpret_cast<jamsat::IPASIRContext *>(solver));
+    delete (reinterpret_cast<jamsat::IPASIRContext*>(solver));
 }
 
-void ipasir_add(void *solver, int lit_or_zero) {
+void ipasir_add(void* solver, int lit_or_zero) {
     if (solver == nullptr) {
         return;
     }
-    reinterpret_cast<jamsat::IPASIRContext *>(solver)->add(lit_or_zero);
+    reinterpret_cast<jamsat::IPASIRContext*>(solver)->add(lit_or_zero);
 }
 
-void ipasir_assume(void *solver, int lit) {
+void ipasir_assume(void* solver, int lit) {
     if (solver == nullptr) {
         return;
     }
-    reinterpret_cast<jamsat::IPASIRContext *>(solver)->assume(lit);
+    reinterpret_cast<jamsat::IPASIRContext*>(solver)->assume(lit);
 }
 
-int ipasir_solve(void *solver) {
+int ipasir_solve(void* solver) {
     if (solver == nullptr) {
         return 0;
     }
-    return reinterpret_cast<jamsat::IPASIRContext *>(solver)->solve();
+    return reinterpret_cast<jamsat::IPASIRContext*>(solver)->solve();
 }
 
-int ipasir_val(void *solver, int lit) {
+int ipasir_val(void* solver, int lit) {
     JAM_ASSERT(solver != nullptr, "The IPASIR solver is not in the SAT state");
-    return reinterpret_cast<jamsat::IPASIRContext *>(solver)->val(lit);
+    return reinterpret_cast<jamsat::IPASIRContext*>(solver)->val(lit);
 }
 
-int ipasir_failed(void *solver, int lit) {
+int ipasir_failed(void* solver, int lit) {
     JAM_ASSERT(solver != nullptr, "The IPASIR solver is not in the UNSAT state");
-    return reinterpret_cast<jamsat::IPASIRContext *>(solver)->failed(lit);
+    return reinterpret_cast<jamsat::IPASIRContext*>(solver)->failed(lit);
 }
 
-void ipasir_set_terminate(void *solver, void *state, int (*terminate)(void *state)) {
+void ipasir_set_terminate(void* solver, void* state, int (*terminate)(void* state)) {
     if (solver == nullptr) {
         return;
     }
-    reinterpret_cast<jamsat::IPASIRContext *>(solver)->setTerminate(state, terminate);
+    reinterpret_cast<jamsat::IPASIRContext*>(solver)->setTerminate(state, terminate);
 }
 
-void ipasir_set_learn(void *solver, void *state, int max_length,
-                      void (*learn)(void *state, int *clause)) {
+void ipasir_set_learn(void* solver,
+                      void* state,
+                      int max_length,
+                      void (*learn)(void* state, int* clause)) {
     if (solver == nullptr) {
         return;
     }
-    reinterpret_cast<jamsat::IPASIRContext *>(solver)->setLearn(state, max_length, learn);
+    reinterpret_cast<jamsat::IPASIRContext*>(solver)->setLearn(state, max_length, learn);
 }
 }

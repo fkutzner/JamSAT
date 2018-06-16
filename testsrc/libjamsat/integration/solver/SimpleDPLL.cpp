@@ -48,7 +48,7 @@ namespace {
 
 class SimpleDPLL {
 public:
-    SimpleDPLL(const CNFProblem &problem)
+    SimpleDPLL(const CNFProblem& problem)
       : m_trail(problem.getMaxVar())
       , m_propagation(problem.getMaxVar(), m_trail)
       , m_clauses()
@@ -92,13 +92,13 @@ private:
         }
     }
 
-    std::unique_ptr<Clause> createInternalClause(const CNFClause &from) {
+    std::unique_ptr<Clause> createInternalClause(const CNFClause& from) {
         auto newClause = createHeapClause(static_checked_cast<Clause::size_type>(from.size()));
         boost::copy(from, newClause->begin());
         return newClause;
     }
 
-    void addClause(const CNFClause &clause) {
+    void addClause(const CNFClause& clause) {
         m_clauses.push_back(createInternalClause(clause));
         m_propagation.registerClause(*(m_clauses.back()));
     }

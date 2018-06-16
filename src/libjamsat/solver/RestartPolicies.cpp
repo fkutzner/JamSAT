@@ -28,14 +28,14 @@
 #include <libjamsat/utils/Assert.h>
 
 namespace jamsat {
-LubyRestartPolicy::LubyRestartPolicy(const LubyRestartPolicy::Options &options) noexcept
+LubyRestartPolicy::LubyRestartPolicy(const LubyRestartPolicy::Options& options) noexcept
   : m_lubySeq()
   , m_conflictsUntilRestart(options.graceTime > 0
                                 ? options.graceTime + 1
                                 : m_lubySeq.current() << options.log2OfScaleFactor)
   , m_log2OfScaleFactor(options.log2OfScaleFactor) {}
 
-void LubyRestartPolicy::registerConflict(RegisterConflictArgs &&args) noexcept {
+void LubyRestartPolicy::registerConflict(RegisterConflictArgs&& args) noexcept {
     (void)args;
     if (m_conflictsUntilRestart > 0) {
         --m_conflictsUntilRestart;
@@ -51,14 +51,14 @@ bool LubyRestartPolicy::shouldRestart() const noexcept {
     return m_conflictsUntilRestart == 0;
 }
 
-GlucoseRestartPolicy::GlucoseRestartPolicy(const GlucoseRestartPolicy::Options &options) noexcept
+GlucoseRestartPolicy::GlucoseRestartPolicy(const GlucoseRestartPolicy::Options& options) noexcept
   : m_averageLBD(options.movingAverageWindowSize)
   , m_K(options.K)
   , m_sumLBD(0.0F)
   , m_conflictCount(0ULL) {}
 
 void GlucoseRestartPolicy::registerConflict(
-    GlucoseRestartPolicy::RegisterConflictArgs &&args) noexcept {
+    GlucoseRestartPolicy::RegisterConflictArgs&& args) noexcept {
     ++m_conflictCount;
     m_sumLBD += args.learntClauseLBD;
     m_averageLBD.add(args.learntClauseLBD);

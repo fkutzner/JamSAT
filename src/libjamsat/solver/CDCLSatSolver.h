@@ -83,7 +83,7 @@ struct CDCLSatSolverDefaultTypes {
     using BranchingHeuristic = VSIDSBranchingHeuristic<Trail>;
     using RestartPolicy = GlucoseRestartPolicy;
     using ClauseDBReductionPolicy =
-        GlucoseClauseDBReductionPolicy<jamsat::Clause, std::vector<jamsat::Clause *>, LBD>;
+        GlucoseClauseDBReductionPolicy<jamsat::Clause, std::vector<jamsat::Clause*>, LBD>;
     using LightweightSimplifier =
         jamsat::LightweightSimplifier<Propagation, Trail, ConflictAnalyzer>;
 };
@@ -113,7 +113,7 @@ public:
          * certificate of unsatisfiability. The solver emits such a certificate
          * iff this option is set.
          */
-        boost::optional<std::ostream *> certificateStream;
+        boost::optional<std::ostream*> certificateStream;
 
         /**
          * The maximum amount of memory which can be allocated for clauses.
@@ -137,7 +137,7 @@ public:
      * \throws std::bad_alloc   The clause database does not have enough memory to
      *                          hold \p problem
      */
-    void addProblem(const CNFProblem &problem);
+    void addProblem(const CNFProblem& problem);
 
     /**
      * \brief Adds a clause of the CNF problem instance to be solved to the solver.
@@ -147,7 +147,7 @@ public:
      * \throws std::bad_alloc   The clause database does not have enough memory to
      *                          hold \p clause
      */
-    void addClause(const CNFClause &clause);
+    void addClause(const CNFClause& clause);
 
     /**
      * \brief Determines whether the CNF problem specified via the methods
@@ -167,7 +167,7 @@ public:
      *         the CNF problem instance is satsifiable rsp. unsatisfiable with
      *         respect to the setting of \p assumptions .
      */
-    SolvingResult solve(const std::vector<CNFLit> &assumptions);
+    SolvingResult solve(const std::vector<CNFLit>& assumptions);
 
     /**
      * \brief Asynchronously instructs the solver to stop solving.
@@ -181,29 +181,29 @@ public:
 
 
 private:
-    SolvingResult createSolvingResult(TBool result, std::vector<CNFLit> const &failedAssumptions);
+    SolvingResult createSolvingResult(TBool result, std::vector<CNFLit> const& failedAssumptions);
 
     enum UnitClausePropagationResult { CONSISTENT, CONFLICTING };
 
 
-    UnitClausePropagationResult propagateOnSystemLevels(std::vector<CNFLit> const &toPropagate,
-                                                        std::vector<CNFLit> *failedAssumptions);
-    UnitClausePropagationResult propagateUnitClauses(std::vector<CNFLit> &units);
-    UnitClausePropagationResult propagateAssumptions(std::vector<CNFLit> const &assumptions,
-                                                     std::vector<CNFLit> &failedAssumptions);
+    UnitClausePropagationResult propagateOnSystemLevels(std::vector<CNFLit> const& toPropagate,
+                                                        std::vector<CNFLit>* failedAssumptions);
+    UnitClausePropagationResult propagateUnitClauses(std::vector<CNFLit>& units);
+    UnitClausePropagationResult propagateAssumptions(std::vector<CNFLit> const& assumptions,
+                                                     std::vector<CNFLit>& failedAssumptions);
 
-    TBool solveUntilRestart(const std::vector<CNFLit> &assumptions,
-                            std::vector<CNFLit> &failedAssumptions);
+    TBool solveUntilRestart(const std::vector<CNFLit>& assumptions,
+                            std::vector<CNFLit>& failedAssumptions);
 
     struct ConflictHandlingResult {
         bool learntUnitClause;
         typename ST::Trail::DecisionLevel backtrackLevel;
     };
 
-    ConflictHandlingResult deriveLemma(typename ST::Clause &conflicting,
-                                       typename ST::Clause **newLemmaOut);
+    ConflictHandlingResult deriveLemma(typename ST::Clause& conflicting,
+                                       typename ST::Clause** newLemmaOut);
 
-    void optimizeLemma(std::vector<CNFLit> &lemma);
+    void optimizeLemma(std::vector<CNFLit>& lemma);
 
     void prepareBacktrack(typename ST::Trail::DecisionLevel level);
     void backtrackToLevel(typename ST::Trail::DecisionLevel level);
@@ -223,9 +223,9 @@ private:
     std::vector<CNFLit> m_lemmaBuffer;
 
     std::vector<CNFLit> m_unitClauses;
-    std::vector<typename ST::Clause *> m_problemClauses;
-    typename std::vector<typename ST::Clause *>::size_type m_newProblemClausesBeginIdx;
-    std::vector<typename ST::Clause *> m_lemmas;
+    std::vector<typename ST::Clause*> m_problemClauses;
+    typename std::vector<typename ST::Clause*>::size_type m_newProblemClausesBeginIdx;
+    std::vector<typename ST::Clause*> m_lemmas;
     uint64_t m_amntBinariesLearnt;
 
     typename ST::ClauseDBReductionPolicy m_clauseDBReductionPolicy;
@@ -274,7 +274,7 @@ void CDCLSatSolver<ST>::stop() noexcept {
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
+void CDCLSatSolver<ST>::addClause(const CNFClause& clause) {
     if (clause.empty()) {
         m_detectedUNSAT = true;
         return;
@@ -299,7 +299,7 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
     if (compressedClause.size() == 1) {
         m_unitClauses.push_back(compressedClause[0]);
     } else {
-        auto &internalClause = m_clauseDB.allocate(
+        auto& internalClause = m_clauseDB.allocate(
             static_checked_cast<typename ST::Clause::size_type>(compressedClause.size()));
         std::copy(compressedClause.begin(), compressedClause.end(), internalClause.begin());
         internalClause.clauseUpdated();
@@ -308,15 +308,15 @@ void CDCLSatSolver<ST>::addClause(const CNFClause &clause) {
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::addProblem(const CNFProblem &problem) {
-    for (auto &clause : problem.getClauses()) {
+void CDCLSatSolver<ST>::addProblem(const CNFProblem& problem) {
+    for (auto& clause : problem.getClauses()) {
         addClause(clause);
     }
 }
 
 template <typename ST>
 typename CDCLSatSolver<ST>::SolvingResult
-CDCLSatSolver<ST>::createSolvingResult(TBool result, std::vector<CNFLit> const &failedAssumptions) {
+CDCLSatSolver<ST>::createSolvingResult(TBool result, std::vector<CNFLit> const& failedAssumptions) {
     std::unique_ptr<Model> model{nullptr};
 
     if (isTrue(result)) {
@@ -326,16 +326,18 @@ CDCLSatSolver<ST>::createSolvingResult(TBool result, std::vector<CNFLit> const &
                                  lit.getSign() == CNFSign::POSITIVE ? TBools::TRUE : TBools::FALSE);
         }
     }
-    return SolvingResult{result, std::move(model),
+    return SolvingResult{result,
+                         std::move(model),
                          isFalse(result) ? std::move(failedAssumptions) : std::vector<CNFLit>{}};
 }
 
 template <typename ST>
 typename CDCLSatSolver<ST>::UnitClausePropagationResult
-CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const &toPropagate,
-                                           std::vector<CNFLit> *failedAssumptions) {
-    JAM_LOG_SOLVER(info, "Propagating system-level assignments on level "
-                             << m_trail.getCurrentDecisionLevel());
+CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const& toPropagate,
+                                           std::vector<CNFLit>* failedAssumptions) {
+    JAM_LOG_SOLVER(info,
+                   "Propagating system-level assignments on level "
+                       << m_trail.getCurrentDecisionLevel());
 
     for (auto unit : toPropagate) {
         auto assignment = m_trail.getAssignment(unit.getVariable());
@@ -376,7 +378,7 @@ CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const &toPropagat
 
 template <typename ST>
 typename CDCLSatSolver<ST>::UnitClausePropagationResult
-CDCLSatSolver<ST>::propagateUnitClauses(std::vector<CNFLit> &units) {
+CDCLSatSolver<ST>::propagateUnitClauses(std::vector<CNFLit>& units) {
     auto amntUnits = units.size();
     auto result = propagateOnSystemLevels(units, nullptr);
     if (result != UnitClausePropagationResult::CONFLICTING &&
@@ -394,14 +396,14 @@ CDCLSatSolver<ST>::propagateUnitClauses(std::vector<CNFLit> &units) {
 
 template <typename ST>
 typename CDCLSatSolver<ST>::UnitClausePropagationResult
-CDCLSatSolver<ST>::propagateAssumptions(std::vector<CNFLit> const &assumptions,
-                                        std::vector<CNFLit> &failedAssumptions) {
+CDCLSatSolver<ST>::propagateAssumptions(std::vector<CNFLit> const& assumptions,
+                                        std::vector<CNFLit>& failedAssumptions) {
     return propagateOnSystemLevels(assumptions, &failedAssumptions);
 }
 
 template <typename ST>
-TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumptions,
-                                           std::vector<CNFLit> &failedAssumptions) {
+TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit>& assumptions,
+                                           std::vector<CNFLit>& failedAssumptions) {
     m_statistics.registerRestart();
     JAM_LOG_SOLVER(info, "Restarting the solver, backtracking to decision level 0.");
     backtrackAll();
@@ -440,8 +442,9 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
         m_trail.newDecisionLevel();
         auto decision = m_branchingHeuristic.pickBranchLiteral();
         m_statistics.registerDecision();
-        JAM_LOG_SOLVER(info, "Picked decision literal " << decision << ", now at decision level "
-                                                        << m_trail.getCurrentDecisionLevel());
+        JAM_LOG_SOLVER(info,
+                       "Picked decision literal " << decision << ", now at decision level "
+                                                  << m_trail.getCurrentDecisionLevel());
         JAM_ASSERT(decision != CNFLit::getUndefinedLiteral(),
                    "The branching heuristic is not expected to return an undefined literal");
         m_trail.addAssignment(decision);
@@ -456,12 +459,12 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             m_statistics.registerConflict();
             JAM_LOG_SOLVER(info, "Last propagation resulted in a conflict");
             m_branchingHeuristic.beginHandlingConflict();
-            typename ST::Clause *newLemma;
+            typename ST::Clause* newLemma;
             auto conflictHandlingResult = deriveLemma(*conflictingClause, &newLemma);
             m_branchingHeuristic.endHandlingConflict();
 
-            JAM_LOG_SOLVER(info, "Backtracking to decision level "
-                                     << conflictHandlingResult.backtrackLevel);
+            JAM_LOG_SOLVER(
+                info, "Backtracking to decision level " << conflictHandlingResult.backtrackLevel);
 
             m_clauseDBReductionPolicy.registerConflict();
 
@@ -517,9 +520,12 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
             auto toDeleteBegin =
                 m_clauseDBReductionPolicy.getClausesMarkedForDeletion(amountKnownGood);
             auto oldLemmasSize = m_lemmas.size();
-            reduceClauseDB(m_clauseDB, m_propagation, m_trail,
+            reduceClauseDB(m_clauseDB,
+                           m_propagation,
+                           m_trail,
                            boost::make_iterator_range(toDeleteBegin, m_lemmas.end()),
-                           m_problemClauses, m_lemmas);
+                           m_problemClauses,
+                           m_lemmas);
             m_statistics.registerLemmaDeletion(oldLemmasSize - m_lemmas.size());
         }
     }
@@ -528,25 +534,27 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit> &assumption
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::optimizeLemma(std::vector<CNFLit> &lemma) {
+void CDCLSatSolver<ST>::optimizeLemma(std::vector<CNFLit>& lemma) {
     eraseRedundantLiterals(lemma, m_propagation, m_trail, m_stamps);
-    JAM_LOG_SOLVER(info, "  After redundant literal removal: ("
-                             << toString(lemma.begin(), lemma.end()) << ")");
+    JAM_LOG_SOLVER(info,
+                   "  After redundant literal removal: (" << toString(lemma.begin(), lemma.end())
+                                                          << ")");
     if (lemma.size() < 30 /* TODO: make constant configurable */) {
         LBD lbd = getLBD(lemma, m_trail, m_stamps);
         if (lbd <= 6 /* TODO: make constant configurable */) {
             auto binariesMap = m_propagation.getBinariesMap();
             resolveWithBinaries(lemma, binariesMap, lemma[0], m_stamps);
-            JAM_LOG_SOLVER(info, "  After resolution with binary clauses: ("
-                                     << toString(lemma.begin(), lemma.end()) << ")");
+            JAM_LOG_SOLVER(info,
+                           "  After resolution with binary clauses: ("
+                               << toString(lemma.begin(), lemma.end()) << ")");
         }
     }
 }
 
 template <typename ST>
 typename CDCLSatSolver<ST>::ConflictHandlingResult
-CDCLSatSolver<ST>::deriveLemma(typename ST::Clause &conflicting,
-                               typename ST::Clause **newLemmaOut) {
+CDCLSatSolver<ST>::deriveLemma(typename ST::Clause& conflicting,
+                               typename ST::Clause** newLemmaOut) {
     /* TODO: bad_alloc handling... */
 
     typename ST::Trail::DecisionLevel backtrackLevel = 0;
@@ -557,8 +565,9 @@ CDCLSatSolver<ST>::deriveLemma(typename ST::Clause &conflicting,
     JAM_LOG_SOLVER(info,
                    "New lemma: (" << toString(m_lemmaBuffer.begin(), m_lemmaBuffer.end()) << ")");
     optimizeLemma(m_lemmaBuffer);
-    JAM_LOG_SOLVER(info, "Optimized new lemma: ("
-                             << toString(m_lemmaBuffer.begin(), m_lemmaBuffer.end()) << ")");
+    JAM_LOG_SOLVER(info,
+                   "Optimized new lemma: (" << toString(m_lemmaBuffer.begin(), m_lemmaBuffer.end())
+                                            << ")");
 
     JAM_ASSERT(m_lemmaBuffer.size() > 0,
                "The empty clause is not expected to be directly derivable");
@@ -566,7 +575,7 @@ CDCLSatSolver<ST>::deriveLemma(typename ST::Clause &conflicting,
     if (m_lemmaBuffer.size() == 1) {
         m_unitClauses.push_back(m_lemmaBuffer[0]);
     } else if (m_lemmaBuffer.size() > 1) {
-        auto &newLemma = m_clauseDB.allocate(
+        auto& newLemma = m_clauseDB.allocate(
             static_checked_cast<typename ST::Clause::size_type>(m_lemmaBuffer.size()));
         std::copy(m_lemmaBuffer.begin(), m_lemmaBuffer.end(), newLemma.begin());
         newLemma.clauseUpdated();
@@ -636,7 +645,7 @@ void CDCLSatSolver<ST>::backtrackAll() {
 
 template <typename ST>
 typename CDCLSatSolver<ST>::SolvingResult
-CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) {
+CDCLSatSolver<ST>::solve(const std::vector<CNFLit>& assumptions) {
     m_statistics.printStatisticsDescription(std::cout);
     m_statistics.registerSolvingStart();
     OnExitScope updateStatsOnExit{[this]() {
@@ -661,7 +670,8 @@ CDCLSatSolver<ST>::solve(const std::vector<CNFLit> &assumptions) {
     m_simplifier.increaseMaxVarTo(m_maxVar);
 
     for (auto newClausesIt = m_problemClauses.begin() + m_newProblemClausesBeginIdx;
-         newClausesIt != m_problemClauses.end(); ++newClausesIt) {
+         newClausesIt != m_problemClauses.end();
+         ++newClausesIt) {
         m_propagation.registerClause(**newClausesIt);
     }
 

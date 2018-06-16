@@ -44,5 +44,5 @@ namespace jamsat {
  *
  * \param[in,out] fuzzerInput    The fuzzing data input stream.
  */
-void JamSATFuzzingEntryPoint(std::istream &fuzzerInput);
+void JamSATFuzzingEntryPoint(std::istream& fuzzerInput);
 }

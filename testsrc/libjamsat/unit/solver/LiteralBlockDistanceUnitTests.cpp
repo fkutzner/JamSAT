@@ -76,7 +76,12 @@ TEST(UnitSolver, getLBD_LBDofMultiLiteralClause) {
     dlProvider.setAssignmentDecisionLevel(CNFVar{10}, 9);
 
     TestClause testData{
-        ~2_Lit, 5_Lit, ~7_Lit, ~1_Lit, 0_Lit, ~10_Lit,
+        ~2_Lit,
+        5_Lit,
+        ~7_Lit,
+        ~1_Lit,
+        0_Lit,
+        ~10_Lit,
     };
 
     LBD result = getLBD(testData, dlProvider, tempStamps);

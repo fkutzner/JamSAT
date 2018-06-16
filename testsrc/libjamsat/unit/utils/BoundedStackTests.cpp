@@ -103,7 +103,7 @@ TEST(UnitUtils, boundedStackIsConstIterableInInsertionOrder) {
     underTest.push_back(20);
     underTest.push_back(30);
 
-    const BoundedStack<int> &constUnderTest = underTest;
+    const BoundedStack<int>& constUnderTest = underTest;
 
     auto begin = constUnderTest.begin();
     ASSERT_TRUE(begin + 3 == constUnderTest.end());

@@ -33,7 +33,7 @@
 // This file contains a fuzzing target for CNF problem parsing.
 
 namespace jamsat {
-void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
+void JamSATFuzzingEntryPoint(std::istream& fuzzerInput) {
     CNFProblem underTest;
     fuzzerInput >> underTest;
 
@@ -41,7 +41,7 @@ void JamSATFuzzingEntryPoint(std::istream &fuzzerInput) {
         return;
     }
 
-    for (auto &clause : underTest.getClauses()) {
+    for (auto& clause : underTest.getClauses()) {
         for (auto lit : clause) {
             (void)lit;
             JAM_ASSERT(lit.getVariable() <= underTest.getMaxVar(), "Invalid literal");

@@ -54,7 +54,7 @@ public:
      * \param clause                A clause.
      */
     template <typename LiteralForwardRange>
-    void addRUPClause(const LiteralForwardRange &clause);
+    void addRUPClause(const LiteralForwardRange& clause);
 
     /**
      * \brief Adds a clause deletion to the proof.
@@ -63,7 +63,7 @@ public:
      * \param clause                A clause.
      */
     template <typename LiteralForwardRange>
-    void deleteClause(const LiteralForwardRange &clause);
+    void deleteClause(const LiteralForwardRange& clause);
 
     /**
      * \brief Closes the UNSAT proof.
@@ -72,10 +72,10 @@ public:
      */
     virtual void closeProof() = 0;
 
-    DRUPCertificate &operator=(const DRUPCertificate &other) = delete;
-    DRUPCertificate &operator=(DRUPCertificate &&other) = delete;
-    DRUPCertificate(const DRUPCertificate &other) = delete;
-    DRUPCertificate(DRUPCertificate &&other) = delete;
+    DRUPCertificate& operator=(const DRUPCertificate& other) = delete;
+    DRUPCertificate& operator=(DRUPCertificate&& other) = delete;
+    DRUPCertificate(const DRUPCertificate& other) = delete;
+    DRUPCertificate(DRUPCertificate&& other) = delete;
 
     virtual ~DRUPCertificate();
 
@@ -83,7 +83,7 @@ protected:
     DRUPCertificate() = default;
 
     template <typename LiteralForwardRange>
-    void addClause(const LiteralForwardRange &clause);
+    void addClause(const LiteralForwardRange& clause);
 
     virtual void beginDeletedClause() = 0;
     virtual void addLiteral(CNFLit lit) = 0;
@@ -97,12 +97,12 @@ protected:
  *
  * \param outputStream      The target output stream.
  */
-std::unique_ptr<DRUPCertificate> createPlainDRUPCertificate(std::ostream &outputStream);
+std::unique_ptr<DRUPCertificate> createPlainDRUPCertificate(std::ostream& outputStream);
 
 /********** Implementation ****************************** */
 
 template <typename LiteralForwardRange>
-void DRUPCertificate::addClause(const LiteralForwardRange &clause) {
+void DRUPCertificate::addClause(const LiteralForwardRange& clause) {
     for (CNFLit lit : clause) {
         addLiteral(lit);
     }
@@ -110,12 +110,12 @@ void DRUPCertificate::addClause(const LiteralForwardRange &clause) {
 }
 
 template <typename LiteralForwardRange>
-void DRUPCertificate::addRUPClause(const LiteralForwardRange &clause) {
+void DRUPCertificate::addRUPClause(const LiteralForwardRange& clause) {
     addClause(clause);
 }
 
 template <typename LiteralForwardRange>
-void DRUPCertificate::deleteClause(const LiteralForwardRange &clause) {
+void DRUPCertificate::deleteClause(const LiteralForwardRange& clause) {
     beginDeletedClause();
     addClause(clause);
 }

@@ -61,10 +61,10 @@ public:
     using size_type = typename BackingType::size_type;
 
     // The type of references to elements of the stack.
-    using reference = T &;
+    using reference = T&;
 
     // The type of const references to elements of the stakc.
-    using const_reference = const T &;
+    using const_reference = const T&;
 
     /**
      * \brief Constructs a new BoundedStack instance.

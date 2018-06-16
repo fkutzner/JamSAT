@@ -49,13 +49,13 @@ TEST(UnitSolver, LubyRestartPolicy_noRestartWithinGraceTime) {
 }
 
 namespace {
-void fastForward(LubyRestartPolicy &target, int conflicts) {
+void fastForward(LubyRestartPolicy& target, int conflicts) {
     for (int i = 0; i < conflicts; ++i) {
         target.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
     }
 }
 
-int failsRestartSequenceAt(LubyRestartPolicy &underTest, int scaleFactor, int lubySteps) {
+int failsRestartSequenceAt(LubyRestartPolicy& underTest, int scaleFactor, int lubySteps) {
     LubySequence lubySequence;
     int executedSteps = 0;
 

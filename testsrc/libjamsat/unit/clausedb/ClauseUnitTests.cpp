@@ -94,7 +94,7 @@ TEST(UnitClauseDB, iterateOverEmptyClause) {
     auto underTest = createHeapClause(0);
     ASSERT_NE(underTest.get(), nullptr);
     bool iterated = false;
-    for (auto &lit : *underTest) {
+    for (auto& lit : *underTest) {
         (void)lit;
         iterated = true;
     }
@@ -102,7 +102,7 @@ TEST(UnitClauseDB, iterateOverEmptyClause) {
 }
 
 namespace {
-void test_iterateOverClause_setup(Clause &underTest) {
+void test_iterateOverClause_setup(Clause& underTest) {
     CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
     CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
     underTest[0] = CNFLit::getUndefinedLiteral();
@@ -111,14 +111,14 @@ void test_iterateOverClause_setup(Clause &underTest) {
 }
 
 template <typename C>
-void test_iterateOverClause_check(C &underTest) {
+void test_iterateOverClause_check(C& underTest) {
     CNFLit testLiteral1{CNFVar{1}, CNFSign::NEGATIVE};
     CNFLit testLiteral2{CNFVar{2}, CNFSign::NEGATIVE};
 
     EXPECT_EQ(underTest[0], CNFLit::getUndefinedLiteral());
 
     int i = 0;
-    for (auto &lit : underTest) {
+    for (auto& lit : underTest) {
         if (i == 3) {
             EXPECT_EQ(lit, testLiteral1);
         } else if (i == 4) {
@@ -139,7 +139,7 @@ TEST(UnitClauseDB, iterateOverClause) {
 TEST(UnitClauseDB, iterateOverConstantClause) {
     auto underTest = createHeapClause(8);
     test_iterateOverClause_setup(*underTest);
-    const Clause &underTestConst = *underTest;
+    const Clause& underTestConst = *underTest;
     test_iterateOverClause_check(underTestConst);
 }
 

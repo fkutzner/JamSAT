@@ -40,7 +40,7 @@
 namespace jamsat {
 
 namespace {
-auto fileExists(std::string const &file) -> bool {
+auto fileExists(std::string const& file) -> bool {
     std::ifstream stream{file};
     return static_cast<bool>(stream);
 }
@@ -51,10 +51,10 @@ public:
 
     ~TestIpasirRAII() { ipasir_release(m_solver); }
 
-    auto getSolver() noexcept -> void * { return m_solver; }
+    auto getSolver() noexcept -> void* { return m_solver; }
 
 private:
-    void *m_solver;
+    void* m_solver;
 };
 }
 

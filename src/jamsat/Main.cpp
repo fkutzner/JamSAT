@@ -27,6 +27,6 @@
 #include <iostream>
 #include <jamsat/JamSAT.h>
 
-auto main(int argc, char **args) -> int {
+auto main(int argc, char** args) -> int {
     return jamsat::jamsatMain(argc, args, std::cout, std::cerr);
 }

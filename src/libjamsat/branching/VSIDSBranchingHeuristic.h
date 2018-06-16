@@ -54,7 +54,7 @@ public:
         return m_activity[lhs] < m_activity[rhs];
     }
 
-    auto getActivityMap() noexcept -> BoundedMap<CNFVar, double> & { return m_activity; }
+    auto getActivityMap() noexcept -> BoundedMap<CNFVar, double>& { return m_activity; }
 
     void increaseMaxSizeTo(CNFVar newMaxElement) { m_activity.increaseSizeTo(newMaxElement); }
 
@@ -89,7 +89,7 @@ public:
      * \param assignmentProvider  A reference to an object using which the current
      * variable assignment can be obtained.
      */
-    VSIDSBranchingHeuristic(CNFVar maxVar, AssignmentProvider const &assignmentProvider);
+    VSIDSBranchingHeuristic(CNFVar maxVar, AssignmentProvider const& assignmentProvider);
 
     /**
      * \brief Informs the branching heuristic that the given variable was
@@ -176,7 +176,7 @@ private:
     using VariableHeap = BinaryMaxHeap<CNFVar, detail::CNFVarActivityOrder>;
     VariableHeap m_variableOrder;
 
-    const AssignmentProvider &m_assignmentProvider;
+    const AssignmentProvider& m_assignmentProvider;
     double m_activityBumpDelta;
     double m_decayRate;
     double m_maxDecayRate;
@@ -187,7 +187,7 @@ private:
 
 template <class AssignmentProvider>
 VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
-    CNFVar maxVar, AssignmentProvider const &assignmentProvider)
+    CNFVar maxVar, AssignmentProvider const& assignmentProvider)
   : BranchingHeuristicBase(maxVar)
   , m_variableOrder(maxVar)
   , m_assignmentProvider(assignmentProvider)
@@ -218,7 +218,7 @@ auto VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept -
 
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(CNFVar variable) noexcept {
-    auto &activityMap = m_variableOrder.getComparator().getActivityMap();
+    auto& activityMap = m_variableOrder.getComparator().getActivityMap();
 
     activityMap[variable] += m_activityBumpDelta;
 
@@ -233,10 +233,10 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(CNFVar variable
 
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() noexcept {
-    auto &activityMap = m_variableOrder.getComparator().getActivityMap();
+    auto& activityMap = m_variableOrder.getComparator().getActivityMap();
     for (size_t i = 0; i < activityMap.size(); ++i) {
         auto rawVariable = static_checked_cast<CNFVar::RawVariable>(i);
-        auto &activity = activityMap[CNFVar{rawVariable}];
+        auto& activity = activityMap[CNFVar{rawVariable}];
         activity = 1e-100 * activity;
     }
     m_activityBumpDelta *= 1e-100;
@@ -245,7 +245,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() noexcept
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept {
     m_variableOrder.clear();
-    auto &activityMap = m_variableOrder.getComparator().getActivityMap();
+    auto& activityMap = m_variableOrder.getComparator().getActivityMap();
     CNFVar max = CNFVar{static_checked_cast<CNFVar::RawVariable>(activityMap.size())};
     for (CNFVar i = CNFVar{0}; i < max; i = nextCNFVar(i)) {
         m_variableOrder.insert(i);
@@ -283,7 +283,7 @@ void VSIDSBranchingHeuristic<AssignmentProvider>::endHandlingConflict() noexcept
 
 template <class AssignmentProvider>
 void VSIDSBranchingHeuristic<AssignmentProvider>::increaseMaxVarTo(CNFVar newMaxVar) {
-    auto &activityMap = m_variableOrder.getComparator().getActivityMap();
+    auto& activityMap = m_variableOrder.getComparator().getActivityMap();
     JAM_ASSERT(newMaxVar.getRawValue() >= (activityMap.size() - 1),
                "Argument newMaxVar must not be smaller than the previous maximum variable");
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");

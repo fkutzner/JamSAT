@@ -38,10 +38,12 @@ namespace jamsat {
 
 // TODO: document reduceClauseDB
 template <typename ClauseDBTy, typename PropagationTy, typename TrailTy, typename ClauseRangeTy>
-void reduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, TrailTy &trail,
+void reduceClauseDB(ClauseDBTy& clauseDB,
+                    PropagationTy& propagation,
+                    TrailTy& trail,
                     ClauseRangeTy toDeleteRange,
-                    std::vector<typename ClauseDBTy::Clause *> &problemClauses,
-                    std::vector<typename ClauseDBTy::Clause *> &learntClauses) {
+                    std::vector<typename ClauseDBTy::Clause*>& problemClauses,
+                    std::vector<typename ClauseDBTy::Clause*>& learntClauses) {
     using Clause = typename ClauseDBTy::Clause;
     static_assert(std::is_same<typename ClauseDBTy::Clause, typename PropagationTy::Clause>::value,
                   "ClauseDBTy and PropagationTy must have the same Clause type");
@@ -60,16 +62,16 @@ void reduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, TrailTy &t
 
     auto clausesInPropOrder = propagation.getClausesInPropagationOrder();
 
-    std::vector<Clause *> clausesAfterRelocation;
+    std::vector<Clause*> clausesAfterRelocation;
     clauseDB.retain(boost::adaptors::filter(clausesInPropOrder,
-                                            [](Clause const *clause) {
+                                            [](Clause const* clause) {
                                                 return !clause->getFlag(
                                                     Clause::Flag::SCHEDULED_FOR_DELETION);
                                             }),
-                    [&propagation, &trail](Clause const &clause) {
+                    [&propagation, &trail](Clause const& clause) {
                         return propagation.isAssignmentReason(clause, trail);
                     },
-                    [&propagation](Clause const &reason, Clause const &relocatedTo) {
+                    [&propagation](Clause const& reason, Clause const& relocatedTo) {
                         propagation.updateAssignmentReason(reason, relocatedTo);
                     },
                     boost::optional<decltype(std::back_inserter(clausesAfterRelocation))>{

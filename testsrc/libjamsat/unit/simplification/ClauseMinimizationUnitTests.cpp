@@ -43,7 +43,7 @@ namespace jamsat {
 using TrivialClause = TestAssignmentProvider::Clause;
 
 template <typename Container>
-bool isPermutation(const Container &c1, const Container &c2) {
+bool isPermutation(const Container& c1, const Container& c2) {
     return std::is_permutation(c1.begin(), c1.end(), c2.begin(), c2.end());
 }
 
@@ -305,7 +305,11 @@ TEST(UnitSolver, resolveWithBinaries_allResolutionOpportunitiesAreUsed) {
     };
 
     TrivialClause testData{
-        ~12_Lit, 15_Lit, ~30_Lit, ~3_Lit, 5_Lit,
+        ~12_Lit,
+        15_Lit,
+        ~30_Lit,
+        ~3_Lit,
+        5_Lit,
     };
 
     StampMap<int, CNFLit::Index> tempStamps{1024};

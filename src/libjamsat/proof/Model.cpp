@@ -40,14 +40,14 @@ public:
     void setAssignment(CNFVar variable, TBool value) noexcept override;
     TBool getAssignment(CNFVar variable) const noexcept override;
 
-    TBool check(const CNFProblem &problem) const noexcept override;
+    TBool check(const CNFProblem& problem) const noexcept override;
 
     // TODO: implement getAssignments()
 
-    ModelImpl &operator=(const ModelImpl &other) = delete;
-    ModelImpl &operator=(const ModelImpl &&other) = delete;
-    ModelImpl(const Model &other) = delete;
-    ModelImpl(const Model &&other) = delete;
+    ModelImpl& operator=(const ModelImpl& other) = delete;
+    ModelImpl& operator=(const ModelImpl&& other) = delete;
+    ModelImpl(const Model& other) = delete;
+    ModelImpl(const Model&& other) = delete;
 
     virtual ~ModelImpl();
 
@@ -76,8 +76,8 @@ TBool ModelImpl::getAssignment(CNFVar variable) const noexcept {
     return TBools::INDETERMINATE;
 }
 
-TBool ModelImpl::check(const jamsat::CNFProblem &problem) const noexcept {
-    for (auto &clause : problem.getClauses()) {
+TBool ModelImpl::check(const jamsat::CNFProblem& problem) const noexcept {
+    for (auto& clause : problem.getClauses()) {
         bool satisfied = false;
         for (auto lit : clause) {
             TBool expectedValue =

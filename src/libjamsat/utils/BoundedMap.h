@@ -43,7 +43,9 @@ namespace jamsat {
  * \tparam KIndex   A type that is a model of the concept `Index` with indexed type `K`.
  * \tparam Allocator  The allocator used by the backing vector.
  */
-template <typename K, typename V, typename KIndex = typename K::Index,
+template <typename K,
+          typename V,
+          typename KIndex = typename K::Index,
           typename Allocator = std::allocator<V>>
 class BoundedMap {
 private:
@@ -97,7 +99,7 @@ public:
      * be larger than the maximum index storable in this map.
      * \returns       A reference to the looked-up element.
      */
-    V &operator[](const K &index) noexcept { return m_values[KIndex::getIndex(index)]; }
+    V& operator[](const K& index) noexcept { return m_values[KIndex::getIndex(index)]; }
 
     /**
      * \brief Gets a reference to the specified element (const version).
@@ -106,7 +108,7 @@ public:
      * be larger than the maximum index storable in this map.
      * \returns       A reference to the looked-up element.
      */
-    const V &operator[](const K &index) const noexcept { return m_values[KIndex::getIndex(index)]; }
+    const V& operator[](const K& index) const noexcept { return m_values[KIndex::getIndex(index)]; }
 
     /**
      * \brief Gets the total size of this map (including default values).

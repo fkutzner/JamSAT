@@ -32,8 +32,8 @@
 
 
 namespace jamsat {
-Rule110PredecessorStateProblem::Rule110PredecessorStateProblem(const std::string &sourceStateSpec,
-                                                               const std::string &targetStateSpec,
+Rule110PredecessorStateProblem::Rule110PredecessorStateProblem(const std::string& sourceStateSpec,
+                                                               const std::string& targetStateSpec,
                                                                uint32_t numberOfIntermediateSteps)
   : m_targetStateSpec(targetStateSpec)
   , m_sourceStateSpec(sourceStateSpec)
@@ -51,9 +51,8 @@ CNFVar Rule110PredecessorStateProblem::getCellVariable(uint32_t step, uint32_t c
     return CNFVar{v};
 }
 
-std::vector<CNFClause>
-Rule110PredecessorStateProblem::createConstraints(uint32_t step, uint32_t cellIndex,
-                                                  std::vector<CNFLit> &freeInputs) const {
+std::vector<CNFClause> Rule110PredecessorStateProblem::createConstraints(
+    uint32_t step, uint32_t cellIndex, std::vector<CNFLit>& freeInputs) const {
     JAM_ASSERT(cellIndex < m_automatonWidth, "Argument cellIndex out of bounds");
     JAM_ASSERT(step < m_numberOfIntermediateSteps + 2, "Argument step out of bounds");
 

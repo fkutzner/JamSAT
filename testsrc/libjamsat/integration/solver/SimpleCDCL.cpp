@@ -62,7 +62,7 @@ namespace {
 class SimpleCDCL {
 public:
     SimpleCDCL();
-    void addClause(const CNFClause &clause);
+    void addClause(const CNFClause& clause);
     TBool isProblemSatisfiable();
 
 private:
@@ -96,7 +96,7 @@ SimpleCDCL::SimpleCDCL()
   , m_clauseDB()
   , m_branchingHeuristic(m_maxVar, m_trail) {}
 
-void SimpleCDCL::addClause(const CNFClause &clause) {
+void SimpleCDCL::addClause(const CNFClause& clause) {
     auto oldMaxVar = m_maxVar;
     for (auto lit : clause) {
         m_maxVar = std::max(m_maxVar, lit.getVariable());
@@ -112,7 +112,7 @@ void SimpleCDCL::addClause(const CNFClause &clause) {
 
     JAM_ASSERT(clause.size() > 0, "Can't add empty clauses for solving");
     if (clause.size() > 1) {
-        auto &newClause = m_clauseDB.insertClause(clause);
+        auto& newClause = m_clauseDB.insertClause(clause);
         JAM_LOG_CDCLITEST(info, "Added clause " << &clause << " " << clause);
         m_propagation.registerClause(newClause);
     } else if (clause.size() == 1) {
@@ -225,7 +225,7 @@ TBool SimpleCDCL::isProblemSatisfiable() {
                     // level.
                     break;
                 } else {
-                    auto &newClause = m_clauseDB.insertClause(learntClause);
+                    auto& newClause = m_clauseDB.insertClause(learntClause);
                     JAM_LOG_CDCLITEST(info, "Learnt a clause: " << newClause);
                     auto targetLevel =
                         m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable());
@@ -257,7 +257,7 @@ TEST(IntegrationSolver, SimpleCDCL_unsatOnConflictInUnitPropagation) {
     ASSERT_FALSE(conduit.fail());
 
     SimpleCDCL underTest;
-    for (auto &clause : testData.getClauses()) {
+    for (auto& clause : testData.getClauses()) {
         underTest.addClause(clause);
     }
 
@@ -283,7 +283,7 @@ TEST(IntegrationSolver, SimpleCDCL_smallUnsatisfiableProblem) {
     ASSERT_FALSE(conduit.fail());
 
     SimpleCDCL underTest;
-    for (auto &clause : testData.getClauses()) {
+    for (auto& clause : testData.getClauses()) {
         underTest.addClause(clause);
     }
 
@@ -307,7 +307,7 @@ TEST(IntegrationSolver, SimpleCDCL_complexUnsatisfiableFormula) {
     testData.addClause(std::move(unit));
 
     SimpleCDCL underTest;
-    for (auto &clause : testData.getClauses()) {
+    for (auto& clause : testData.getClauses()) {
         underTest.addClause(clause);
     }
 
@@ -319,7 +319,7 @@ TEST(IntegrationSolver, SimpleCDCL_rule110_reachable) {
     auto rule110Encoding = problem.getCNFEncoding();
 
     SimpleCDCL underTest;
-    for (auto &clause : rule110Encoding.cnfProblem.getClauses()) {
+    for (auto& clause : rule110Encoding.cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
     EXPECT_EQ(underTest.isProblemSatisfiable(), TBools::TRUE);

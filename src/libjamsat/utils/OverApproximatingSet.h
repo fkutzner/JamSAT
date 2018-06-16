@@ -80,7 +80,7 @@ public:
      *                      that this set is definitely not a subset of `set`;
      *                      `true` otherwise.
      */
-    auto mightBeSubsetOf(OverApproximatingSet<Size, Key> const &set) const noexcept -> bool;
+    auto mightBeSubsetOf(OverApproximatingSet<Size, Key> const& set) const noexcept -> bool;
 
 private:
     std::bitset<Size> m_approximatedSet;
@@ -107,7 +107,7 @@ auto OverApproximatingSet<Size, Key>::mightContain(Type toLookup) const noexcept
 
 template <size_t Size, typename Key>
 auto OverApproximatingSet<Size, Key>::mightBeSubsetOf(
-    OverApproximatingSet<Size, Key> const &set) const noexcept -> bool {
+    OverApproximatingSet<Size, Key> const& set) const noexcept -> bool {
     // Need to check if m_approximatedSet -> set.m_approximatedSet)
     // Applying deMorgan's law to enable better code generation by the
     // compiler:

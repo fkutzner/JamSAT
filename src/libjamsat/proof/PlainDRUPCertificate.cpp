@@ -30,13 +30,13 @@ namespace jamsat {
 
 class PlainDRUPCertificate : public DRUPCertificate {
 public:
-    explicit PlainDRUPCertificate(std::ostream &outputStream);
+    explicit PlainDRUPCertificate(std::ostream& outputStream);
     virtual ~PlainDRUPCertificate();
 
-    PlainDRUPCertificate &operator=(const PlainDRUPCertificate &other) = delete;
-    PlainDRUPCertificate &operator=(PlainDRUPCertificate &&other) = delete;
-    PlainDRUPCertificate(const PlainDRUPCertificate &other) = delete;
-    PlainDRUPCertificate(PlainDRUPCertificate &&other) = delete;
+    PlainDRUPCertificate& operator=(const PlainDRUPCertificate& other) = delete;
+    PlainDRUPCertificate& operator=(PlainDRUPCertificate&& other) = delete;
+    PlainDRUPCertificate(const PlainDRUPCertificate& other) = delete;
+    PlainDRUPCertificate(PlainDRUPCertificate&& other) = delete;
 
     void closeProof() override;
 
@@ -46,14 +46,14 @@ protected:
     void endClause() override;
 
 private:
-    std::ostream &m_outputStream;
+    std::ostream& m_outputStream;
 };
 
-std::unique_ptr<DRUPCertificate> createPlainDRUPCertificate(std::ostream &outputStream) {
+std::unique_ptr<DRUPCertificate> createPlainDRUPCertificate(std::ostream& outputStream) {
     return std::make_unique<PlainDRUPCertificate>(outputStream);
 }
 
-PlainDRUPCertificate::PlainDRUPCertificate(std::ostream &outputStream)
+PlainDRUPCertificate::PlainDRUPCertificate(std::ostream& outputStream)
   : DRUPCertificate(), m_outputStream(outputStream) {}
 
 PlainDRUPCertificate::~PlainDRUPCertificate() {}

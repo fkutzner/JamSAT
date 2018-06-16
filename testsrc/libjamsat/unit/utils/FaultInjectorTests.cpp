@@ -36,13 +36,13 @@ TEST(UnitUtils, noTestFaultThrowsAreInjectedByDefault) {
 
 TEST(UnitUtils, enabledTestFaultThrowsAreExecuted) {
     FaultInjectorResetRAII faultInjectorResetter;
-    auto &faultInjector = FaultInjector::getInstance();
+    auto& faultInjector = FaultInjector::getInstance();
     faultInjector.enableFaults("logic errors");
     EXPECT_TRUE(faultInjector.isFaultEnabled("logic errors"));
     try {
         throwOnInjectedTestFault<std::logic_error>("logic errors", "exception_what_msg");
         FAIL() << "Expected exception to be thrown";
-    } catch (std::logic_error &exception) {
+    } catch (std::logic_error& exception) {
         EXPECT_EQ(exception.what(), std::string("exception_what_msg"));
     } catch (...) {
         FAIL() << "Wrong exception type";
@@ -52,7 +52,7 @@ TEST(UnitUtils, enabledTestFaultThrowsAreExecuted) {
 TEST(UnitUtils, faultInjectorResetRAIIRestoresEnabledFaults) {
     FaultInjectorResetRAII faultInjectorResetter;
 
-    auto &faultInjector = FaultInjector::getInstance();
+    auto& faultInjector = FaultInjector::getInstance();
     faultInjector.enableFaults("fooFaults");
 
     {

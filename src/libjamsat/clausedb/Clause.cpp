@@ -30,7 +30,7 @@
 #include <algorithm>
 
 namespace jamsat {
-std::ostream &operator<<(std::ostream &stream, const Clause &clause) {
+std::ostream& operator<<(std::ostream& stream, const Clause& clause) {
     stream << "( ";
     for (auto lit : clause) {
         stream << lit << " ";
@@ -40,16 +40,16 @@ std::ostream &operator<<(std::ostream &stream, const Clause &clause) {
 }
 
 std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
-    Clause *result;
+    Clause* result;
     if (size == 0) {
         result = new Clause(0);
     } else {
         auto memorySize = Clause::getAllocationSize(size);
-        void *rawMemory = operator new(memorySize);
+        void* rawMemory = operator new(memorySize);
         result = Clause::constructIn(rawMemory, size);
     }
 
-    for (auto &lit : *result) {
+    for (auto& lit : *result) {
         lit = CNFLit::getUndefinedLiteral();
     }
 

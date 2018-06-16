@@ -96,16 +96,16 @@ public:
     const_reference operator*() const;
     const_pointer operator->() const;
 
-    FlatteningIterator<I> &operator++();
+    FlatteningIterator<I>& operator++();
     FlatteningIterator<I> operator++(int dummy);
 
-    bool operator==(const FlatteningIterator<I> &rhs) const noexcept;
-    bool operator!=(const FlatteningIterator<I> &rhs) const noexcept;
+    bool operator==(const FlatteningIterator<I>& rhs) const noexcept;
+    bool operator!=(const FlatteningIterator<I>& rhs) const noexcept;
 
-    FlatteningIterator<I> &operator=(const FlatteningIterator<I> &other) = default;
-    FlatteningIterator<I> &operator=(FlatteningIterator<I> &&other) = default;
-    FlatteningIterator(const FlatteningIterator<I> &other) = default;
-    FlatteningIterator(FlatteningIterator<I> &&other) = default;
+    FlatteningIterator<I>& operator=(const FlatteningIterator<I>& other) = default;
+    FlatteningIterator<I>& operator=(FlatteningIterator<I>&& other) = default;
+    FlatteningIterator(const FlatteningIterator<I>& other) = default;
+    FlatteningIterator(FlatteningIterator<I>&& other) = default;
     ~FlatteningIterator() = default;
 
 private:
@@ -176,7 +176,7 @@ typename FlatteningIterator<I>::const_pointer FlatteningIterator<I>::operator->(
 }
 
 template <typename I>
-FlatteningIterator<I> &FlatteningIterator<I>::operator++() {
+FlatteningIterator<I>& FlatteningIterator<I>::operator++() {
     if (!m_innerIt) {
         // Due to class invariant B, there are no further elements to traverse
         return *this;
@@ -219,7 +219,7 @@ FlatteningIterator<I> FlatteningIterator<I>::operator++(int dummy) {
 }
 
 template <typename I>
-bool FlatteningIterator<I>::operator==(const FlatteningIterator<I> &rhs) const noexcept {
+bool FlatteningIterator<I>::operator==(const FlatteningIterator<I>& rhs) const noexcept {
     if (this == &rhs) {
         return true;
     }
@@ -240,7 +240,7 @@ bool FlatteningIterator<I>::operator==(const FlatteningIterator<I> &rhs) const n
 }
 
 template <typename I>
-bool FlatteningIterator<I>::operator!=(const FlatteningIterator<I> &rhs) const noexcept {
+bool FlatteningIterator<I>::operator!=(const FlatteningIterator<I>& rhs) const noexcept {
     return !this->operator==(rhs);
 }
 }

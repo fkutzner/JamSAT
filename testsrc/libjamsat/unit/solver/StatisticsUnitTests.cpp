@@ -46,7 +46,7 @@ TEST(UnitSolver, StatisticsInitializesCountersToZero) {
 namespace {
 // Registers a conflict, 7 propagations, 3 decisions, 2 restarts, 3 lemmas (sizes: 2,5,11)
 template <typename Statistics>
-void addEvents(Statistics &underTest) {
+void addEvents(Statistics& underTest) {
     underTest.registerConflict();
     underTest.registerPropagations(4);
     underTest.registerPropagations(3);
@@ -80,8 +80,11 @@ TEST(UnitSolver, StatisticsCountsAllItemsInAllEnabledMode) {
 
 namespace {
 template <typename StatisticsConfiguration>
-void test_expectStatsDisabled(bool conflictsDisabled, bool propsDisabled, bool decsDisabled,
-                              bool restartsDisabled, bool lemmaSizeDisabled,
+void test_expectStatsDisabled(bool conflictsDisabled,
+                              bool propsDisabled,
+                              bool decsDisabled,
+                              bool restartsDisabled,
+                              bool lemmaSizeDisabled,
                               bool lemmaDelDisabled) {
     Statistics<StatisticsConfiguration> underTest;
     addEvents(underTest);

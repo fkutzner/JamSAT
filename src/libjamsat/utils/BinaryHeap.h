@@ -183,7 +183,7 @@ public:
      * \par Complexity
      * Worst case: `O(1)`
      */
-    auto getComparator() noexcept -> Comparator &;
+    auto getComparator() noexcept -> Comparator&;
 
     /**
      * \brief Returns the comparator object.
@@ -193,7 +193,7 @@ public:
      * \par Complexity
      * Worst case: `O(1)`
      */
-    auto getComparator() const noexcept -> Comparator const &;
+    auto getComparator() const noexcept -> Comparator const&;
 
     /**
      * \brief Increases the maximal element storable in the heap.
@@ -300,12 +300,12 @@ constexpr auto BinaryMaxHeap<K, Comparator, KIndex>::getRightChildIdx(StorageIdx
 }
 
 template <typename K, typename Comparator, typename KIndex>
-auto BinaryMaxHeap<K, Comparator, KIndex>::getComparator() noexcept -> Comparator & {
+auto BinaryMaxHeap<K, Comparator, KIndex>::getComparator() noexcept -> Comparator& {
     return m_lessThan;
 }
 
 template <typename K, typename Comparator, typename KIndex>
-auto BinaryMaxHeap<K, Comparator, KIndex>::getComparator() const noexcept -> Comparator const & {
+auto BinaryMaxHeap<K, Comparator, KIndex>::getComparator() const noexcept -> Comparator const& {
     return m_lessThan;
 }
 

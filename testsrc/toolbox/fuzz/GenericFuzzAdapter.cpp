@@ -35,7 +35,7 @@
  *
  * This adapter passes the fuzzer-generated input to jamsat::JamSATFuzzingEntryPoint.
  */
-int main(int, char **) {
+int main(int, char**) {
     // JamSAT does not use C I/O
     std::ios_base::sync_with_stdio(false);
 

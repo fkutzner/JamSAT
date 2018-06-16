@@ -37,7 +37,7 @@ namespace jamsat {
  * \param clause        A clause.
  * \param literals      A sequence of literals.
  */
-void expectClauseEqual(Clause const &clause, std::initializer_list<CNFLit> literals) noexcept;
+void expectClauseEqual(Clause const& clause, std::initializer_list<CNFLit> literals) noexcept;
 
 /**
  * \brief Creates a Clause object filled with literals.

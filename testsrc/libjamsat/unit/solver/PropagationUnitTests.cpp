@@ -324,7 +324,7 @@ TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForNonBinaryClauses) {
     // Note: the concrete ordering of clauses is a "hidden" implementation detail because
     // it depends on implementation details of the Watcher implementation.
     expectRangeElementsSequencedEqual(clauses,
-                                      std::vector<TrivialClause *>{&c2, &c3, &c1, &c2, &c1, &c3});
+                                      std::vector<TrivialClause*>{&c2, &c3, &c1, &c2, &c1, &c3});
 }
 
 TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForMixedNonBinaryAndBinaryClauses) {
@@ -347,7 +347,7 @@ TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForMixedNonBinaryAndBinary
     // Note: the concrete ordering of clauses is a "hidden" implementation detail because
     // it depends on implementation details of the Watcher implementation.
     expectRangeElementsSequencedEqual(
-        clauses, std::vector<TrivialClause *>{&c2, &c3, &c1, &c2, &c1, &c3, &c4, &c5, &c5, &c4});
+        clauses, std::vector<TrivialClause*>{&c2, &c3, &c1, &c2, &c1, &c3, &c4, &c5, &c5, &c4});
 }
 
 TEST(UnitSolver, propagationDetectsAssignmentReasonClause) {
@@ -526,7 +526,8 @@ TEST(UnitSolver, binaryClausesCanBeQueriedInPropagation) {
     std::vector<CNFLit> binariesWithNLit2FwdRange{binariesWithNLit2.begin(),
                                                   binariesWithNLit2.end()};
     EXPECT_TRUE(std::is_permutation(binariesWithNLit2FwdRange.begin(),
-                                    binariesWithNLit2FwdRange.end(), expectedForNLit2.begin()));
+                                    binariesWithNLit2FwdRange.end(),
+                                    expectedForNLit2.begin()));
 
     auto binariesWithPLit4 = binaryMap[lit4];
     ASSERT_EQ(binariesWithPLit4.size(), 1ULL);

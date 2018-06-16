@@ -81,8 +81,8 @@ public:
      */
     constexpr TBool() : m_value(0) {}
 
-    TBool(const TBool &other) = default;
-    TBool &operator=(const TBool &other) = default;
+    TBool(const TBool& other) = default;
+    TBool& operator=(const TBool& other) = default;
 
     constexpr bool operator==(TBool const other) const {
         return (m_value > 1 && other.m_value > 1) || (m_value == other.m_value);
@@ -230,7 +230,7 @@ TBool operator*(const TBool lhs, const TBool rhs);
  * \param rhs   The right-hand-side argument.
  * \returns     A reference to \p lhs.
  */
-TBool &operator*=(const TBool &lhs, const TBool &rhs);
+TBool& operator*=(const TBool& lhs, const TBool& rhs);
 
 /**
  * \ingroup JamSAT_Utils
@@ -268,7 +268,7 @@ TBool operator+(const TBool lhs, const TBool rhs);
  * \param rhs   The right-hand-side argument.
  * \returns     A reference to \p lhs.
  */
-TBool &operator+=(const TBool &lhs, const TBool &rhs);
+TBool& operator+=(const TBool& lhs, const TBool& rhs);
 
 /********** Implementation ****************************** */
 
@@ -309,7 +309,7 @@ inline TBool operator*(const TBool lhs, const TBool rhs) {
     return TBools::INDETERMINATE;
 }
 
-inline TBool &operator*=(TBool &lhs, const TBool rhs) {
+inline TBool& operator*=(TBool& lhs, const TBool rhs) {
     lhs = lhs * rhs;
     return lhs;
 }
@@ -324,7 +324,7 @@ inline TBool operator+(const TBool lhs, const TBool rhs) {
     return TBools::INDETERMINATE;
 }
 
-inline TBool &operator+=(TBool &lhs, const TBool rhs) {
+inline TBool& operator+=(TBool& lhs, const TBool rhs) {
     lhs = lhs + rhs;
     return lhs;
 }

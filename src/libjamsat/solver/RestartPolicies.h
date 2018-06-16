@@ -50,7 +50,7 @@ public:
      *
      * \param[in] options   the configuration of the restart policy.
      */
-    explicit GlucoseRestartPolicy(const Options &options) noexcept;
+    explicit GlucoseRestartPolicy(const Options& options) noexcept;
 
     /**
      * \brief Notifies the restart policy that the client has handled a conflict.
@@ -58,7 +58,7 @@ public:
      * \param[in] args      client state just after handling the conflict. See
      * GlucoseRestartPolicy::RegisterConflictArgs.
      */
-    void registerConflict(RegisterConflictArgs &&args) noexcept;
+    void registerConflict(RegisterConflictArgs&& args) noexcept;
 
     /**
      * \brief Notifies the restart policy that the client has handled a restart.
@@ -106,7 +106,7 @@ public:
      *
      * \param[in] options   the configuration of the restart policy.
      */
-    explicit LubyRestartPolicy(const Options &options) noexcept;
+    explicit LubyRestartPolicy(const Options& options) noexcept;
 
     /**
      * \brief Notifies the restart policy that the client has handled a conflict.
@@ -114,7 +114,7 @@ public:
      * \param[in] args      client state just after handling the conflict. See
      * LubyRestartPolicy::RegisterConflictArgs.
      */
-    void registerConflict(RegisterConflictArgs &&args) noexcept;
+    void registerConflict(RegisterConflictArgs&& args) noexcept;
 
     /**
      * \brief Notifies the restart policy that the client has handled a restart.

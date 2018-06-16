@@ -366,7 +366,11 @@ TEST(UnitCNFProblem, parseSingleClauseDIMACSProblem) {
     ASSERT_EQ(underTest.getSize(), 1ull);
 
     CNFClause expected = {
-        0_Lit, 1_Lit, ~2_Lit, 3_Lit, ~4_Lit,
+        0_Lit,
+        1_Lit,
+        ~2_Lit,
+        3_Lit,
+        ~4_Lit,
     };
 
     EXPECT_EQ(underTest.getClauses()[0], expected);

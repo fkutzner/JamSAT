@@ -52,7 +52,7 @@ public:
      * \param which   The name of the faults to be marked as enabled, e.g.
      *   "low memory".
      */
-    void enableFaults(const std::string &which);
+    void enableFaults(const std::string& which);
 
     /**
      * \brief Determines whether synthetic faults matching the given name
@@ -64,7 +64,7 @@ public:
      * \returns true iff \p which denotes a class of faults which should be
      *   synthesized for testing purposes.
      */
-    bool isFaultEnabled(const std::string &which) const noexcept;
+    bool isFaultEnabled(const std::string& which) const noexcept;
 
     /**
      * \brief Marks all synthetic faults as disabled.
@@ -90,15 +90,15 @@ public:
      *
      * \returns the singleton FaultInjector instance.
      */
-    static FaultInjector &getInstance() noexcept {
+    static FaultInjector& getInstance() noexcept {
         static FaultInjector instance;
         return instance;
     }
 
-    FaultInjector(const FaultInjector &other) = delete;
-    FaultInjector(FaultInjector &&other) = delete;
-    FaultInjector &operator=(const FaultInjector &other) = delete;
-    FaultInjector &operator=(FaultInjector &&other) = delete;
+    FaultInjector(const FaultInjector& other) = delete;
+    FaultInjector(FaultInjector&& other) = delete;
+    FaultInjector& operator=(const FaultInjector& other) = delete;
+    FaultInjector& operator=(FaultInjector&& other) = delete;
 
 private:
     FaultInjector();
@@ -147,7 +147,7 @@ private:
  * \tparam ...      The types of exception constructor's arguments.
  */
 template <typename Thrown, typename... Args>
-void throwOnInjectedTestFault(const std::string &fault, Args &&... args) {
+void throwOnInjectedTestFault(const std::string& fault, Args&&... args) {
     if (FaultInjector::getInstance().isFaultEnabled(fault)) {
         throw Thrown(std::forward<Args>(args)...);
     }

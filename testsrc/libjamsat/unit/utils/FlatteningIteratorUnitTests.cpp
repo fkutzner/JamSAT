@@ -56,8 +56,8 @@ TEST(UnitUtils, FlatteningIterator_endIteratorsMatchOnSeqContainingMultipleEmpty
 namespace {
 void test_FlatteningIterator_flattenSeqTest(const std::vector<std::vector<int>> testData) {
     std::vector<int> expected;
-    for (auto &vec : testData) {
-        for (auto &i : vec) {
+    for (auto& vec : testData) {
+        for (auto& i : vec) {
             expected.push_back(i);
         }
     }
@@ -172,7 +172,7 @@ TEST(UnitUtils, FlatteningIterator_incrementReturnsCorrectIterator) {
     NestedConstIntVecIterator it{testData.begin(), testData.end()};
     NestedConstIntVecIterator end;
 
-    NestedConstIntVecIterator &preIncResult = ++it;
+    NestedConstIntVecIterator& preIncResult = ++it;
     ASSERT_FALSE(preIncResult == end || it == end);
     ASSERT_TRUE(&preIncResult == &it)
         << "'preInc' points to " << *preIncResult << " but 'it' points to " << *it;

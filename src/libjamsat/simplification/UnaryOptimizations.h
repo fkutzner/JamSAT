@@ -63,10 +63,10 @@ struct SimplificationStats {
     uint32_t amntUnariesLearnt = 0;
 };
 
-auto operator+(SimplificationStats const &lhs, SimplificationStats const &rhs) noexcept
+auto operator+(SimplificationStats const& lhs, SimplificationStats const& rhs) noexcept
     -> SimplificationStats;
-auto operator+=(SimplificationStats &lhs, SimplificationStats const &rhs) noexcept
-    -> SimplificationStats &;
+auto operator+=(SimplificationStats& lhs, SimplificationStats const& rhs) noexcept
+    -> SimplificationStats&;
 
 
 /**
@@ -91,23 +91,24 @@ auto operator+=(SimplificationStats &lhs, SimplificationStats const &rhs) noexce
  * Before a clause `c` is deleted, `occMap(&c)` is called.
  */
 template <typename OccurrenceMap, typename ModFn, typename CNFLitRange>
-auto scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
-                                                 ModFn const &notifyDeletionAhead,
-                                                 CNFLitRange const &unaries)
+auto scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap& occMap,
+                                                 ModFn const& notifyDeletionAhead,
+                                                 CNFLitRange const& unaries)
     -> SimplificationStats {
     using Clause = typename OccurrenceMap::Container;
     SimplificationStats result;
 
     for (auto unaryLit : unaries) {
-        for (Clause *clause : occMap[unaryLit]) {
+        for (Clause* clause : occMap[unaryLit]) {
             // Subsumption by unaryLit
             notifyDeletionAhead(clause);
             clause->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
             occMap.remove(*clause);
             ++result.amntClausesRemovedBySubsumption;
-            JAM_LOG_UNARYSIMP(info, "Deleting clause "
-                                        << std::addressof(*clause)
-                                        << " (redundancy detected, subsumption with unary)");
+            JAM_LOG_UNARYSIMP(info,
+                              "Deleting clause "
+                                  << std::addressof(*clause)
+                                  << " (redundancy detected, subsumption with unary)");
         }
     }
 
@@ -138,13 +139,14 @@ auto scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap &occMap,
  *  - No clause contained in \p occMap is subsumed by a unary clause.
  */
 template <typename OccurrenceMap, typename ModFn, typename CNFLitRange>
-auto strengthenClausesWithUnaries(OccurrenceMap &occMap, ModFn const &notifyModificationAhead,
-                                  CNFLitRange const &unaries) -> SimplificationStats {
+auto strengthenClausesWithUnaries(OccurrenceMap& occMap,
+                                  ModFn const& notifyModificationAhead,
+                                  CNFLitRange const& unaries) -> SimplificationStats {
     using Clause = typename OccurrenceMap::Container;
     SimplificationStats result;
 
     for (auto unaryLit : unaries) {
-        for (Clause *clause : occMap[~unaryLit]) {
+        for (Clause* clause : occMap[~unaryLit]) {
             notifyModificationAhead(clause);
             auto currentSize = clause->size();
             boost::remove_erase(*clause, ~unaryLit);
@@ -152,15 +154,16 @@ auto strengthenClausesWithUnaries(OccurrenceMap &occMap, ModFn const &notifyModi
 
             ++result.amntClausesStrengthened;
             result.amntLiteralsRemovedByStrengthening += (currentSize - newSize);
-            JAM_LOG_UNARYSIMP(info, "Strenghtened " << std::addressof(*clause) << " to "
-                                                    << toString(clause->begin(), clause->end()));
+            JAM_LOG_UNARYSIMP(info,
+                              "Strenghtened " << std::addressof(*clause) << " to "
+                                              << toString(clause->begin(), clause->end()));
         }
     }
 
     return result;
 }
 
-inline auto operator+(SimplificationStats const &lhs, SimplificationStats const &rhs) noexcept
+inline auto operator+(SimplificationStats const& lhs, SimplificationStats const& rhs) noexcept
     -> SimplificationStats {
     SimplificationStats result;
     result.amntClausesRemovedBySubsumption =
@@ -172,8 +175,8 @@ inline auto operator+(SimplificationStats const &lhs, SimplificationStats const 
     return result;
 }
 
-inline auto operator+=(SimplificationStats &lhs, SimplificationStats const &rhs) noexcept
-    -> SimplificationStats & {
+inline auto operator+=(SimplificationStats& lhs, SimplificationStats const& rhs) noexcept
+    -> SimplificationStats& {
     lhs = lhs + rhs;
     return lhs;
 }

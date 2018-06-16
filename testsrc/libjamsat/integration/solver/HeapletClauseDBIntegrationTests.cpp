@@ -36,8 +36,8 @@
 namespace jamsat {
 
 namespace {
-Clause *allocateClause(HeapletClauseDB<Clause> &db, const std::vector<CNFLit> &literals) {
-    auto &result = db.allocate(literals.size());
+Clause* allocateClause(HeapletClauseDB<Clause>& db, const std::vector<CNFLit>& literals) {
+    auto& result = db.allocate(literals.size());
     std::copy(literals.begin(), literals.end(), result.begin());
     return &result;
 }
@@ -45,9 +45,9 @@ Clause *allocateClause(HeapletClauseDB<Clause> &db, const std::vector<CNFLit> &l
 
 TEST(IntegrationSolver, HeapletClauseDB_retainWatchedClauses) {
     HeapletClauseDB<Clause> clauseDB{1048576ull, 10485760ull};
-    std::vector<Clause *> clauses = {allocateClause(clauseDB, {3_Lit, 4_Lit, 5_Lit}),
-                                     allocateClause(clauseDB, {6_Lit, 7_Lit, 8_Lit}),
-                                     allocateClause(clauseDB, {9_Lit, 10_Lit, 11_Lit})};
+    std::vector<Clause*> clauses = {allocateClause(clauseDB, {3_Lit, 4_Lit, 5_Lit}),
+                                    allocateClause(clauseDB, {6_Lit, 7_Lit, 8_Lit}),
+                                    allocateClause(clauseDB, {9_Lit, 10_Lit, 11_Lit})};
 
     Trail<Clause> trail{CNFVar{100}};
     Propagation<Trail<Clause>> propagation{CNFVar{100}, trail};
@@ -56,15 +56,16 @@ TEST(IntegrationSolver, HeapletClauseDB_retainWatchedClauses) {
     propagation.registerClause(*clauses[1]);
     propagation.registerClause(*clauses[2]);
 
-    std::vector<Clause *> relocated;
+    std::vector<Clause*> relocated;
     using BackInserterType = decltype(std::back_inserter(relocated));
 
     ASSERT_NO_THROW(
         clauseDB.retain(propagation.getClausesInPropagationOrder(),
-                        [](const Clause &c) {
+                        [](const Clause& c) {
                             (void)c;
                             return false;
                         },
-                        {}, boost::optional<BackInserterType>{std::back_inserter(relocated)}));
+                        {},
+                        boost::optional<BackInserterType>{std::back_inserter(relocated)}));
 }
 }

@@ -30,62 +30,64 @@
 
 #include <vector>
 
-const char *IPASIRTestMockSignature = "JamSAT IPASIR test mock";
+const char* IPASIRTestMockSignature = "JamSAT IPASIR test mock";
 
 namespace jamsat {
-auto getIPASIRMockContext(void *solver) noexcept -> IpasirMockContext * {
-    return reinterpret_cast<jamsat::IpasirMockContext *>(solver);
+auto getIPASIRMockContext(void* solver) noexcept -> IpasirMockContext* {
+    return reinterpret_cast<jamsat::IpasirMockContext*>(solver);
 }
 }
 
 extern "C" {
-auto ipasir_signature() -> const char * {
+auto ipasir_signature() -> const char* {
     return IPASIRTestMockSignature;
 }
 
-auto ipasir_init() -> void * {
-    return reinterpret_cast<void *>(new jamsat::IpasirMockContext{});
+auto ipasir_init() -> void* {
+    return reinterpret_cast<void*>(new jamsat::IpasirMockContext{});
 }
 
-void ipasir_release(void *solver) {
-    delete reinterpret_cast<jamsat::IpasirMockContext *>(solver);
+void ipasir_release(void* solver) {
+    delete reinterpret_cast<jamsat::IpasirMockContext*>(solver);
 }
 
-void ipasir_add(void *solver, int lit_or_zero) {
-    jamsat::IpasirMockContext *context = reinterpret_cast<jamsat::IpasirMockContext *>(solver);
+void ipasir_add(void* solver, int lit_or_zero) {
+    jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
     context->m_literals.push_back(lit_or_zero);
 }
 
-void ipasir_assume(void *solver, int lit) {
+void ipasir_assume(void* solver, int lit) {
     (void)solver;
     (void)lit;
 }
 
-auto ipasir_solve(void *solver) -> int {
+auto ipasir_solve(void* solver) -> int {
     (void)solver;
     return 0;
 }
 
-auto ipasir_val(void *solver, int lit) -> int {
-    (void)solver;
-    (void)lit;
-    return 0;
-}
-
-auto ipasir_failed(void *solver, int lit) -> int {
+auto ipasir_val(void* solver, int lit) -> int {
     (void)solver;
     (void)lit;
     return 0;
 }
 
-void ipasir_set_terminate(void *solver, void *state, int (*terminate)(void *state)) {
+auto ipasir_failed(void* solver, int lit) -> int {
+    (void)solver;
+    (void)lit;
+    return 0;
+}
+
+void ipasir_set_terminate(void* solver, void* state, int (*terminate)(void* state)) {
     (void)solver;
     (void)state;
     (void)terminate;
 }
 
-void ipasir_set_learn(void *solver, void *state, int max_length,
-                      void (*learn)(void *state, int *clause)) {
+void ipasir_set_learn(void* solver,
+                      void* state,
+                      int max_length,
+                      void (*learn)(void* state, int* clause)) {
     (void)solver;
     (void)state;
     (void)max_length;

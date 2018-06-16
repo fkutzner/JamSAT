@@ -27,7 +27,7 @@
 #include <jamsat/Options.h>
 
 namespace jamsat {
-auto parseOptions(int argc, char **argv) -> JamSATOptions {
+auto parseOptions(int argc, char** argv) -> JamSATOptions {
     if (argc < 2) {
         throw std::invalid_argument{"<FILE> argument missing"};
     }
@@ -47,7 +47,7 @@ auto parseOptions(int argc, char **argv) -> JamSATOptions {
             std::string timeoutValue{argument.begin() + timeoutArgPrefix.size(), argument.end()};
             try {
                 result.m_timeout = std::chrono::seconds{std::stoul(timeoutValue)};
-            } catch (std::exception &) {
+            } catch (std::exception&) {
                 throw std::invalid_argument{"Error: invalid timeout value"};
             }
         } else if (argument.compare(0, 2, "--") == 0) {
@@ -61,20 +61,21 @@ auto parseOptions(int argc, char **argv) -> JamSATOptions {
 }
 
 namespace {
-void printIndentedLine(std::ostream &output, unsigned int indent, std::string const &line) {
+void printIndentedLine(std::ostream& output, unsigned int indent, std::string const& line) {
     std::string indentString;
     indentString.resize(indent, ' ');
     output << indentString << line << "\n";
 }
 }
 
-void printOptions(std::ostream &output, unsigned int indent) noexcept {
+void printOptions(std::ostream& output, unsigned int indent) noexcept {
     printIndentedLine(output, indent, "Options:");
-    printIndentedLine(output, indent,
-                      " --version              Print the version of JamSAT and exit.");
+    printIndentedLine(
+        output, indent, " --version              Print the version of JamSAT and exit.");
     printIndentedLine(output, indent, " --timeout=N            Stop solving after N seconds.");
     printIndentedLine(
-        output, indent,
+        output,
+        indent,
         "                        N must be a nonnegative integer not greater than 2^32-1.");
     printIndentedLine(output, indent, " --help                 Print usage information and exit.");
 }

@@ -29,7 +29,7 @@
 #include <toolbox/cnfgenerators/GateStructure.h>
 
 namespace jamsat {
-void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &target) {
+void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target) {
     CNFClause fwd;
     for (auto inputLit : inputs) {
         fwd.push_back(~inputLit);
@@ -43,7 +43,7 @@ void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &targ
     }
 }
 
-void insertOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &target) {
+void insertOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target) {
     CNFClause bwd;
     for (auto inputLit : inputs) {
         bwd.push_back(inputLit);
@@ -57,7 +57,7 @@ void insertOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &targe
     }
 }
 
-void insertXOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem &target) {
+void insertXOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target) {
     uint32_t max = (1 << inputs.size());
     for (uint32_t i = 0; i < max; ++i) {
         CNFClause clause;

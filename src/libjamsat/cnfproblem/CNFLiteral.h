@@ -132,10 +132,10 @@ public:
         }
     };
 
-    CNFVar(const CNFVar &other) = default;
-    CNFVar &operator=(const CNFVar &other) = default;
-    CNFVar(CNFVar &&other) = default;
-    CNFVar &operator=(CNFVar &&other) = default;
+    CNFVar(const CNFVar& other) = default;
+    CNFVar& operator=(const CNFVar& other) = default;
+    CNFVar(CNFVar&& other) = default;
+    CNFVar& operator=(CNFVar&& other) = default;
 
 private:
     RawVariable m_value;
@@ -226,17 +226,17 @@ public:
         }
     };
 
-    CNFLit(const CNFLit &other) = default;
-    CNFLit &operator=(const CNFLit &other) = default;
-    CNFLit(CNFLit &&other) = default;
-    CNFLit &operator=(CNFLit &&other) = default;
+    CNFLit(const CNFLit& other) = default;
+    CNFLit& operator=(const CNFLit& other) = default;
+    CNFLit(CNFLit&& other) = default;
+    CNFLit& operator=(CNFLit&& other) = default;
 
 private:
     CNFLit::RawLiteral m_value;
 };
 
-std::ostream &operator<<(std::ostream &stream, const CNFVar &variable);
-std::ostream &operator<<(std::ostream &stream, const CNFLit &literal);
+std::ostream& operator<<(std::ostream& stream, const CNFVar& variable);
+std::ostream& operator<<(std::ostream& stream, const CNFLit& literal);
 
 /**
  * \brief Gets the next-higher CNF variable.
@@ -271,7 +271,7 @@ constexpr bool isRegular(CNFVar variable) noexcept;
  * \param rhs   The right-hand-side variable.
  * \returns \p true iff \p lhs is equal to \p rhs.
  */
-constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+constexpr bool operator==(const CNFVar& lhs, const CNFVar& rhs) noexcept;
 
 /**
  * \brief Equality operator for CNFVar.
@@ -284,7 +284,7 @@ constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept;
  * \param rhs   The right-hand-side variable.
  * \returns \p false iff \p lhs is equal to \p rhs.
  */
-constexpr bool operator!=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+constexpr bool operator!=(const CNFVar& lhs, const CNFVar& rhs) noexcept;
 
 /**
  * \brief Less-than operator for CNFVar.
@@ -303,7 +303,7 @@ constexpr bool operator!=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
  * \param rhs   The right-hand-side variable.
  * \returns \p true iff \p lhs less than \p rhs .
  */
-constexpr bool operator<(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+constexpr bool operator<(const CNFVar& lhs, const CNFVar& rhs) noexcept;
 
 /**
  * \brief Greater-than operator for CNFVar.
@@ -317,7 +317,7 @@ constexpr bool operator<(const CNFVar &lhs, const CNFVar &rhs) noexcept;
  * \param rhs   The right-hand-side variable.
  * \returns \p true iff \p lhs greater than \p rhs .
  */
-constexpr bool operator>(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+constexpr bool operator>(const CNFVar& lhs, const CNFVar& rhs) noexcept;
 
 /**
  * \brief Smaller-than-or-equal-to operator for CNFVar.
@@ -328,7 +328,7 @@ constexpr bool operator>(const CNFVar &lhs, const CNFVar &rhs) noexcept;
  * \param rhs   The right-hand-side variable.
  * \returns \p true iff \p lhs smaller than or equal to \p rhs .
  */
-constexpr bool operator<=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+constexpr bool operator<=(const CNFVar& lhs, const CNFVar& rhs) noexcept;
 
 /**
  * \brief Greater-than-or-equal-to operator for CNFVar.
@@ -339,7 +339,7 @@ constexpr bool operator<=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
  * \param rhs   The right-hand-side variable.
  * \returns \p true iff \p lhs greater than or equal to \p rhs .
  */
-constexpr bool operator>=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
+constexpr bool operator>=(const CNFVar& lhs, const CNFVar& rhs) noexcept;
 
 /**
  * \brief Equality operator for CNFLit.
@@ -353,7 +353,7 @@ constexpr bool operator>=(const CNFVar &lhs, const CNFVar &rhs) noexcept;
  * \param rhs   The right-hand-side literal.
  * \returns \p true iff \p lhs is equal to \p rhs.
  */
-constexpr bool operator==(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+constexpr bool operator==(const CNFLit& lhs, const CNFLit& rhs) noexcept;
 
 /**
  * \brief Inequality operator for CNFLit.
@@ -367,7 +367,7 @@ constexpr bool operator==(const CNFLit &lhs, const CNFLit &rhs) noexcept;
  * \param rhs   The right-hand-side literal.
  * \returns \p false iff \p lhs is equal to \p rhs.
  */
-constexpr bool operator!=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+constexpr bool operator!=(const CNFLit& lhs, const CNFLit& rhs) noexcept;
 
 /**
  * \brief Less-than operator for CNFLit.
@@ -390,7 +390,7 @@ constexpr bool operator!=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
  * \param rhs   The right-hand-side literal.
  * \returns \p true iff \p lhs less than \p rhs .
  */
-constexpr bool operator<(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+constexpr bool operator<(const CNFLit& lhs, const CNFLit& rhs) noexcept;
 
 /**
  * \brief Greater-than operator for CNFLit.
@@ -404,7 +404,7 @@ constexpr bool operator<(const CNFLit &lhs, const CNFLit &rhs) noexcept;
  * \param rhs   The right-hand-side literal.
  * \returns \p true iff \p lhs greater than \p rhs .
  */
-constexpr bool operator>(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+constexpr bool operator>(const CNFLit& lhs, const CNFLit& rhs) noexcept;
 
 /**
  * \brief Less-than-or-equal-to operator for CNFLit.
@@ -416,7 +416,7 @@ constexpr bool operator>(const CNFLit &lhs, const CNFLit &rhs) noexcept;
  * \param rhs   The right-hand-side literal.
  * \returns \p true iff \p lhs less than or equal to \p rhs .
  */
-constexpr bool operator<=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+constexpr bool operator<=(const CNFLit& lhs, const CNFLit& rhs) noexcept;
 
 /**
  * \brief Greater-than-or-equal-to operator for CNFLit.
@@ -428,7 +428,7 @@ constexpr bool operator<=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
  * \param rhs   The right-hand-side literal.
  * \returns \p true iff \p lhs greater than or equal to \p rhs .
  */
-constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept;
+constexpr bool operator>=(const CNFLit& lhs, const CNFLit& rhs) noexcept;
 
 /**
  * \brief Computes the literal L with variable \p var such that L > ~L
@@ -478,27 +478,27 @@ constexpr CNFVar::RawVariable CNFVar::getMaxRawValue() noexcept {
     return CNFVar::getUndefinedVariable().getRawValue() - 1;
 }
 
-constexpr bool operator==(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+constexpr bool operator==(const CNFVar& lhs, const CNFVar& rhs) noexcept {
     return lhs.getRawValue() == rhs.getRawValue();
 }
 
-constexpr bool operator!=(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+constexpr bool operator!=(const CNFVar& lhs, const CNFVar& rhs) noexcept {
     return lhs.getRawValue() != rhs.getRawValue();
 }
 
-constexpr bool operator<(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+constexpr bool operator<(const CNFVar& lhs, const CNFVar& rhs) noexcept {
     return lhs.getRawValue() < rhs.getRawValue();
 }
 
-constexpr bool operator>(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+constexpr bool operator>(const CNFVar& lhs, const CNFVar& rhs) noexcept {
     return lhs.getRawValue() > rhs.getRawValue();
 }
 
-constexpr bool operator<=(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+constexpr bool operator<=(const CNFVar& lhs, const CNFVar& rhs) noexcept {
     return lhs.getRawValue() <= rhs.getRawValue();
 }
 
-constexpr bool operator>=(const CNFVar &lhs, const CNFVar &rhs) noexcept {
+constexpr bool operator>=(const CNFVar& lhs, const CNFVar& rhs) noexcept {
     return lhs.getRawValue() >= rhs.getRawValue();
 }
 
@@ -545,27 +545,27 @@ constexpr CNFLit CNFLit::getUndefinedLiteral() noexcept {
     return CNFLit{};
 }
 
-constexpr bool operator==(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+constexpr bool operator==(const CNFLit& lhs, const CNFLit& rhs) noexcept {
     return lhs.getRawValue() == rhs.getRawValue();
 }
 
-constexpr bool operator!=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+constexpr bool operator!=(const CNFLit& lhs, const CNFLit& rhs) noexcept {
     return !(lhs == rhs);
 }
 
-constexpr bool operator<(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+constexpr bool operator<(const CNFLit& lhs, const CNFLit& rhs) noexcept {
     return lhs.getRawValue() < rhs.getRawValue();
 }
 
-constexpr bool operator>(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+constexpr bool operator>(const CNFLit& lhs, const CNFLit& rhs) noexcept {
     return lhs.getRawValue() > rhs.getRawValue();
 }
 
-constexpr bool operator<=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+constexpr bool operator<=(const CNFLit& lhs, const CNFLit& rhs) noexcept {
     return lhs.getRawValue() <= rhs.getRawValue();
 }
 
-constexpr bool operator>=(const CNFLit &lhs, const CNFLit &rhs) noexcept {
+constexpr bool operator>=(const CNFLit& lhs, const CNFLit& rhs) noexcept {
     return lhs.getRawValue() >= rhs.getRawValue();
 }
 

@@ -77,8 +77,8 @@ public:
      *                          \p targetStateSpec.
      * \param numberOfIntermediateSteps The number of intermediate Rule 110 steps.
      */
-    Rule110PredecessorStateProblem(const std::string &sourceStateSpec,
-                                   const std::string &targetStateSpec,
+    Rule110PredecessorStateProblem(const std::string& sourceStateSpec,
+                                   const std::string& targetStateSpec,
                                    uint32_t numberOfIntermediateSteps);
 
     /**
@@ -103,7 +103,7 @@ private:
     uint32_t m_automatonWidth;
 
     CNFVar getCellVariable(uint32_t step, uint32_t cellIndex) const noexcept;
-    std::vector<CNFClause> createConstraints(uint32_t step, uint32_t cellIndex,
-                                             std::vector<CNFLit> &freeInputs) const;
+    std::vector<CNFClause>
+    createConstraints(uint32_t step, uint32_t cellIndex, std::vector<CNFLit>& freeInputs) const;
 };
 }

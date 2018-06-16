@@ -52,15 +52,15 @@ private:
 // TODO: add timeoutContext to the IPASIR solver context object
 TimeoutContext timeoutContext{std::chrono::seconds{0}};
 
-auto ipasirTimeoutCallback(void *cookie) -> int {
-    TimeoutContext *context = reinterpret_cast<TimeoutContext *>(cookie);
+auto ipasirTimeoutCallback(void* cookie) -> int {
+    TimeoutContext* context = reinterpret_cast<TimeoutContext*>(cookie);
     return context->isTimeout() ? 1 : 0;
 }
 }
 
-void configureTimeout(void *ipasirSolver, std::chrono::seconds timeout) noexcept {
+void configureTimeout(void* ipasirSolver, std::chrono::seconds timeout) noexcept {
     timeoutContext = TimeoutContext{timeout};
-    ipasir_set_terminate(ipasirSolver, reinterpret_cast<void *>(&timeoutContext),
-                         ipasirTimeoutCallback);
+    ipasir_set_terminate(
+        ipasirSolver, reinterpret_cast<void*>(&timeoutContext), ipasirTimeoutCallback);
 }
 }

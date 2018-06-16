@@ -40,5 +40,5 @@ namespace jamsat {
  * \return TBools::TRUE if \p problem is satisfiable, TBools::FALSE if \p problem is not
  * satisfiable.
  */
-TBool isSatisfiableViaMinisat(CNFProblem const &problem);
+TBool isSatisfiableViaMinisat(CNFProblem const& problem);
 }

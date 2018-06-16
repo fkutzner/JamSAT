@@ -104,7 +104,7 @@ public:
      * \tparam CtorArgs... The argument types of T::constructIn(void*, CtorArgs...).
      */
     template <typename T, typename... CtorArgs>
-    T *allocate(size_type size, CtorArgs &&... constructionArgs) noexcept;
+    T* allocate(size_type size, CtorArgs&&... constructionArgs) noexcept;
 
     /**
      * \brief Returns the amount of bytes which are available for allocation.
@@ -113,24 +113,24 @@ public:
      */
     size_type getFreeSize() const noexcept { return m_free; }
 
-    Heaplet &operator=(const Heaplet &other) = delete;
-    Heaplet(const Heaplet &other) = delete;
+    Heaplet& operator=(const Heaplet& other) = delete;
+    Heaplet(const Heaplet& other) = delete;
 
-    Heaplet &operator=(Heaplet &&other) noexcept;
-    Heaplet(Heaplet &&other) noexcept;
+    Heaplet& operator=(Heaplet&& other) noexcept;
+    Heaplet(Heaplet&& other) noexcept;
 
 #if defined(JAM_EXPOSE_INTERNAL_TESTING_INTERFACES)
     // Functions for testing the internal state of heaplets:
-    bool test_isRegionInHeaplet(const void *ptr, size_type length) const noexcept;
+    bool test_isRegionInHeaplet(const void* ptr, size_type length) const noexcept;
 #endif
 
 private:
-    void *m_memory;
+    void* m_memory;
 
     // Pointer to the first free byte of the Heaplet. In case the Heaplet is full,
     // this is a past-the-end pointer.
     // Invariant: m_memory != nullptr => (m_memory <= m_firstFree <= m_memory + m_size)
-    void *m_firstFree;
+    void* m_firstFree;
 
     size_type m_size;
 
@@ -150,8 +150,8 @@ private:
 template <typename ClauseT>
 class HeapletClauseDB {
 public:
-    using ReasonClausePredicateFunc = std::function<bool(const ClauseT &) noexcept>;
-    using RelocateReasonClauseFunc = std::function<void(const ClauseT &, const ClauseT &) noexcept>;
+    using ReasonClausePredicateFunc = std::function<bool(const ClauseT&) noexcept>;
+    using RelocateReasonClauseFunc = std::function<void(const ClauseT&, const ClauseT&) noexcept>;
 
     /// The clause type.
     using Clause = ClauseT;
@@ -179,7 +179,7 @@ public:
      * \returns         A reference to the newly constructed clause. Ownership of the clause
      *                  remains with the allocator.
      */
-    ClauseT &allocate(typename ClauseT::size_type size);
+    ClauseT& allocate(typename ClauseT::size_type size);
 
     /**
      * \brief Deletes all clauses except the specified ones.
@@ -228,17 +228,19 @@ public:
      *                          `ClauseT`.
      */
     template <typename ClauseTIterable, typename ClauseTPtrOutputIter>
-    void retain(ClauseTIterable const &clausePointers, ReasonClausePredicateFunc m_isReasonClause,
+    void retain(ClauseTIterable const& clausePointers,
+                ReasonClausePredicateFunc m_isReasonClause,
                 RelocateReasonClauseFunc m_relocateReasonClause,
                 boost::optional<ClauseTPtrOutputIter> relocedReceiver);
 
 #if defined(JAM_EXPOSE_INTERNAL_TESTING_INTERFACES)
     // Functions for testing the internal state of the clause database:
-    bool test_isRegionInHeapletList(const std::vector<clausedb_detail::Heaplet> &heaplets,
-                                    const void *ptr, size_type length) const noexcept;
-    bool test_isRegionInActiveHeaplet(const void *ptr, size_type length) const noexcept;
+    bool test_isRegionInHeapletList(const std::vector<clausedb_detail::Heaplet>& heaplets,
+                                    const void* ptr,
+                                    size_type length) const noexcept;
+    bool test_isRegionInActiveHeaplet(const void* ptr, size_type length) const noexcept;
     size_type
-    test_getAvailableSpaceInHeapletList(const std::vector<clausedb_detail::Heaplet> &heaplets) const
+    test_getAvailableSpaceInHeapletList(const std::vector<clausedb_detail::Heaplet>& heaplets) const
         noexcept;
     size_type test_getAvailableSpaceInActiveHeaplets() const noexcept;
     size_type test_getAvailableSpaceInFreeHeaplets() const noexcept;
@@ -247,7 +249,7 @@ public:
 private:
     using HeapletList = std::vector<clausedb_detail::Heaplet>;
 
-    ClauseT &allocateIn(typename ClauseT::size_type size, HeapletList &target, HeapletList &from);
+    ClauseT& allocateIn(typename ClauseT::size_type size, HeapletList& target, HeapletList& from);
 
     size_type m_heapletSize;
     size_type m_memoryLimit;
@@ -287,20 +289,20 @@ inline void Heaplet::clear() noexcept {
 }
 
 template <typename T, typename... CtorArgs>
-T *Heaplet::allocate(size_type size, CtorArgs &&... constructionArgs) noexcept {
+T* Heaplet::allocate(size_type size, CtorArgs&&... constructionArgs) noexcept {
     JAM_ASSERT(isInitialized(), "Cannot allocate on an uninitialized Heaplet");
     JAM_ASSERT(size >= sizeof(T), "Fewer bytes allocated than required by type");
 
-    void *result = std::align(alignof(T), size, m_firstFree, m_free);
+    void* result = std::align(alignof(T), size, m_firstFree, m_free);
     if (result == nullptr) {
         return nullptr;
     }
     m_free -= size;
-    m_firstFree = reinterpret_cast<char *>(m_firstFree) + size;
+    m_firstFree = reinterpret_cast<char*>(m_firstFree) + size;
     return T::constructIn(result, std::forward<CtorArgs>(constructionArgs)...);
 }
 
-inline Heaplet &Heaplet::operator=(Heaplet &&other) noexcept {
+inline Heaplet& Heaplet::operator=(Heaplet&& other) noexcept {
     if (m_memory != nullptr) {
         std::free(m_memory);
     }
@@ -314,7 +316,7 @@ inline Heaplet &Heaplet::operator=(Heaplet &&other) noexcept {
     return *this;
 }
 
-inline Heaplet::Heaplet(Heaplet &&other) noexcept {
+inline Heaplet::Heaplet(Heaplet&& other) noexcept {
     m_memory = other.m_memory;
     m_firstFree = other.m_firstFree;
     m_size = other.m_size;
@@ -325,7 +327,7 @@ inline Heaplet::Heaplet(Heaplet &&other) noexcept {
 
 #if defined(JAM_EXPOSE_INTERNAL_TESTING_INTERFACES)
 // Functions for testing the internal state of heaplets:
-inline bool Heaplet::test_isRegionInHeaplet(const void *ptr, size_type length) const noexcept {
+inline bool Heaplet::test_isRegionInHeaplet(const void* ptr, size_type length) const noexcept {
     if (!isInitialized()) {
         return false;
     }
@@ -340,7 +342,7 @@ namespace clausedb_detail {
 inline uintptr_t getEffectiveHeapletSize(uintptr_t proposedSize) {
     uintptr_t realSize = proposedSize;
 
-    void *test = nullptr;
+    void* test = nullptr;
     while (test == nullptr && realSize != 0) {
         test = std::malloc(realSize);
         if (test != nullptr) {
@@ -376,14 +378,15 @@ HeapletClauseDB<ClauseT>::HeapletClauseDB(size_type heapletSize, size_type memor
 }
 
 template <typename ClauseT>
-ClauseT &HeapletClauseDB<ClauseT>::allocateIn(typename ClauseT::size_type size,
-                                              HeapletList &targetPool, HeapletList &freePool) {
-    auto &currentHeaplet = targetPool.back();
+ClauseT& HeapletClauseDB<ClauseT>::allocateIn(typename ClauseT::size_type size,
+                                              HeapletList& targetPool,
+                                              HeapletList& freePool) {
+    auto& currentHeaplet = targetPool.back();
     if (!currentHeaplet.isInitialized()) {
         currentHeaplet.initialize();
     }
 
-    ClauseT *newClause = currentHeaplet.allocate<ClauseT>(ClauseT::getAllocationSize(size), size);
+    ClauseT* newClause = currentHeaplet.allocate<ClauseT>(ClauseT::getAllocationSize(size), size);
     if (newClause == nullptr) {
         if (freePool.empty()) {
             throw std::bad_alloc{};
@@ -391,7 +394,7 @@ ClauseT &HeapletClauseDB<ClauseT>::allocateIn(typename ClauseT::size_type size,
         targetPool.push_back(std::move(m_freeHeapletPool.back()));
         freePool.pop_back();
 
-        auto &freeHeaplet = targetPool.back();
+        auto& freeHeaplet = targetPool.back();
         if (!freeHeaplet.isInitialized()) {
             freeHeaplet.initialize();
         }
@@ -405,14 +408,14 @@ ClauseT &HeapletClauseDB<ClauseT>::allocateIn(typename ClauseT::size_type size,
 }
 
 template <typename ClauseT>
-ClauseT &HeapletClauseDB<ClauseT>::allocate(typename ClauseT::size_type size) {
+ClauseT& HeapletClauseDB<ClauseT>::allocate(typename ClauseT::size_type size) {
     JAM_ASSERT(size >= 2ull, "Can't allocate clauses of size 0 or 1");
     return allocateIn(size, m_activeHeaplets, m_freeHeapletPool);
 }
 
 template <typename ClauseT>
 template <typename ClauseTIterable, typename ClauseTPtrOutputIter>
-void HeapletClauseDB<ClauseT>::retain(ClauseTIterable const &clausePointers,
+void HeapletClauseDB<ClauseT>::retain(ClauseTIterable const& clausePointers,
                                       ReasonClausePredicateFunc isReasonClauseFn,
                                       RelocateReasonClauseFunc relocateReasonClauseFn,
                                       boost::optional<ClauseTPtrOutputIter> relocedReceiver) {
@@ -425,10 +428,10 @@ void HeapletClauseDB<ClauseT>::retain(ClauseTIterable const &clausePointers,
     m_freeHeapletPool.pop_back();
 
     // Postponing the announcement of reason clause replacements for exception safety
-    std::vector<std::pair<const ClauseT *, const ClauseT *>> reasonClauses;
-    for (ClauseT const *const oldClauseConst : clausePointers) {
+    std::vector<std::pair<const ClauseT*, const ClauseT*>> reasonClauses;
+    for (ClauseT const* const oldClauseConst : clausePointers) {
         // This const_cast is safe since the clause memory is guaranteed to be non-constant:
-        ClauseT *oldClause = const_cast<ClauseT *>(oldClauseConst);
+        ClauseT* oldClause = const_cast<ClauseT*>(oldClauseConst);
         // TODO: eliminate the const_cast? It's safe, but rather ugly.
 
         auto size = oldClause->size();
@@ -441,7 +444,7 @@ void HeapletClauseDB<ClauseT>::retain(ClauseTIterable const &clausePointers,
             continue;
         }
 
-        auto &replacement = allocateIn(size, newActiveHeaplets, m_freeHeapletPool);
+        auto& replacement = allocateIn(size, newActiveHeaplets, m_freeHeapletPool);
         replacement = *oldClause;
 
         if (isReasonClauseFn(*oldClause)) {
@@ -460,7 +463,7 @@ void HeapletClauseDB<ClauseT>::retain(ClauseTIterable const &clausePointers,
     }
 
     std::swap(newActiveHeaplets, m_activeHeaplets);
-    for (auto &freeHeaplet : newActiveHeaplets) {
+    for (auto& freeHeaplet : newActiveHeaplets) {
         if (freeHeaplet.isInitialized()) {
             freeHeaplet.clear();
         }
@@ -472,9 +475,9 @@ void HeapletClauseDB<ClauseT>::retain(ClauseTIterable const &clausePointers,
 
 template <typename ClauseT>
 bool HeapletClauseDB<ClauseT>::test_isRegionInHeapletList(
-    const std::vector<clausedb_detail::Heaplet> &heaplets, const void *ptr, size_type length) const
+    const std::vector<clausedb_detail::Heaplet>& heaplets, const void* ptr, size_type length) const
     noexcept {
-    for (auto &heaplet : heaplets) {
+    for (auto& heaplet : heaplets) {
         if (heaplet.test_isRegionInHeaplet(ptr, length)) {
             return true;
         }
@@ -483,7 +486,7 @@ bool HeapletClauseDB<ClauseT>::test_isRegionInHeapletList(
 }
 
 template <typename ClauseT>
-bool HeapletClauseDB<ClauseT>::test_isRegionInActiveHeaplet(const void *ptr, size_type length) const
+bool HeapletClauseDB<ClauseT>::test_isRegionInActiveHeaplet(const void* ptr, size_type length) const
     noexcept {
     return test_isRegionInHeapletList(m_activeHeaplets, ptr, length);
 }
@@ -491,9 +494,9 @@ bool HeapletClauseDB<ClauseT>::test_isRegionInActiveHeaplet(const void *ptr, siz
 template <typename ClauseT>
 typename HeapletClauseDB<ClauseT>::size_type
 HeapletClauseDB<ClauseT>::test_getAvailableSpaceInHeapletList(
-    const std::vector<clausedb_detail::Heaplet> &heaplets) const noexcept {
+    const std::vector<clausedb_detail::Heaplet>& heaplets) const noexcept {
     size_type result = 0;
-    for (auto &heaplet : heaplets) {
+    for (auto& heaplet : heaplets) {
         if (heaplet.isInitialized()) {
             result += heaplet.getFreeSize();
         }

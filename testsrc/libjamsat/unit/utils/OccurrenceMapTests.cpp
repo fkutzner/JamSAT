@@ -55,7 +55,7 @@ private:
 
 class TestUIntVecDelPred {
 public:
-    bool operator()(TestUIntVec const *x) const noexcept { return x->isDeleted(); }
+    bool operator()(TestUIntVec const* x) const noexcept { return x->isDeleted(); }
 };
 }
 
@@ -68,7 +68,8 @@ TEST(UnitUtils, emptyOccurrenceMapContainsNoEntries) {
 
 namespace {
 template <typename OccurrenceMapT, typename OccAnalog>
-void expectAnalogousToOccurrenceMap(OccAnalog const &expected, OccurrenceMapT &underTest,
+void expectAnalogousToOccurrenceMap(OccAnalog const& expected,
+                                    OccurrenceMapT& underTest,
                                     uint32_t maxValue) {
     for (uint32_t i = 0; i <= maxValue; ++i) {
         ASSERT_EQ(underTest[i].size(), expected[i].size())
@@ -86,7 +87,7 @@ TEST(UnitUtils, elementsAreRetrievableFromOccurrenceMap) {
     TestUIntVec testData1{9, 10, 15};
     TestUIntVec testData2{22, 10, 13};
 
-    std::vector<std::vector<TestUIntVec *>> expected;
+    std::vector<std::vector<TestUIntVec*>> expected;
     expected.resize(32);
     expected[9].push_back(&testData1);
     expected[10].push_back(&testData1);
@@ -107,7 +108,7 @@ TEST(UnitUtils, deletedElementsAreRemovedFromOccurrenceMap) {
     TestUIntVec testData2{22, 10, 13};
     TestUIntVec testData3{22, 10};
 
-    std::vector<std::vector<TestUIntVec *>> expected;
+    std::vector<std::vector<TestUIntVec*>> expected;
     expected.resize(32);
     expected[10].push_back(&testData2);
     expected[10].push_back(&testData3);
@@ -127,7 +128,7 @@ TEST(UnitUtils, deletedElementsAreRemovedFromOccurrenceMap) {
 
 TEST(UnitUtils, OccurrenceMapIsEmptyAfterInsertionOfEmptySequence) {
     jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{31};
-    std::vector<TestUIntVec *> containers;
+    std::vector<TestUIntVec*> containers;
     underTest.insert(containers.begin(), containers.end());
     for (uint32_t i = 0; i < 32; ++i) {
         EXPECT_EQ(underTest[i].size(), 0ULL) << "No container expected for index " << i;
@@ -135,7 +136,7 @@ TEST(UnitUtils, OccurrenceMapIsEmptyAfterInsertionOfEmptySequence) {
 }
 
 TEST(UnitUtils, OccurenceMapIsEmptyAfterConstructionWithEmptySequence) {
-    std::vector<TestUIntVec *> containers;
+    std::vector<TestUIntVec*> containers;
     jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{
         31, containers.begin(), containers.end()};
     for (uint32_t i = 0; i < 32; ++i) {
@@ -147,7 +148,7 @@ TEST(UnitUtils, OccurrenceMapContainsExpectedContainersAfterRangeInsert) {
     TestUIntVec testData1{9, 10, 15};
     TestUIntVec testData2{22, 10, 13};
 
-    std::vector<std::vector<TestUIntVec *>> expected;
+    std::vector<std::vector<TestUIntVec*>> expected;
     expected.resize(32);
     expected[9].push_back(&testData1);
     expected[10].push_back(&testData1);
@@ -156,7 +157,7 @@ TEST(UnitUtils, OccurrenceMapContainsExpectedContainersAfterRangeInsert) {
     expected[15].push_back(&testData1);
     expected[22].push_back(&testData2);
 
-    std::vector<TestUIntVec *> testDataVec{&testData1, &testData2};
+    std::vector<TestUIntVec*> testDataVec{&testData1, &testData2};
 
     jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{31};
     underTest.insert(testDataVec.begin(), testDataVec.end());
@@ -167,7 +168,7 @@ TEST(UnitUtils, OccurrenceMapContainsExpectedContainersAfterRangeConstruction) {
     TestUIntVec testData1{9, 10, 15};
     TestUIntVec testData2{22, 10, 13};
 
-    std::vector<std::vector<TestUIntVec *>> expected;
+    std::vector<std::vector<TestUIntVec*>> expected;
     expected.resize(32);
     expected[9].push_back(&testData1);
     expected[10].push_back(&testData1);
@@ -176,7 +177,7 @@ TEST(UnitUtils, OccurrenceMapContainsExpectedContainersAfterRangeConstruction) {
     expected[15].push_back(&testData1);
     expected[22].push_back(&testData2);
 
-    std::vector<TestUIntVec *> testDataVec{&testData1, &testData2};
+    std::vector<TestUIntVec*> testDataVec{&testData1, &testData2};
 
     jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntIndex> underTest{
         31, testDataVec.begin(), testDataVec.end()};
@@ -193,7 +194,7 @@ TEST(UnitUtils, OccurrenceMapContainsNoElementsAfterClear) {
     underTest.insert(testData2);
     underTest.insert(testData3);
 
-    std::vector<std::vector<TestUIntVec *>> expected;
+    std::vector<std::vector<TestUIntVec*>> expected;
     expected.resize(32);
 
     underTest.clear();
@@ -205,7 +206,7 @@ TEST(UnitUtils, OccurrenceMapDoesNotAddDeletedElements) {
     TestUIntVec testData1{9, 10, 15};
     testData1.setDeleted();
     underTest.insert(testData1);
-    std::vector<std::vector<TestUIntVec *>> expected;
+    std::vector<std::vector<TestUIntVec*>> expected;
     expected.resize(32);
     expectAnalogousToOccurrenceMap(expected, underTest, 31);
 }

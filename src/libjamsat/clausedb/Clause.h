@@ -53,8 +53,8 @@ private:
 public:
     using value_type = CNFLit;
     using size_type = uint32_t;
-    using iterator = CNFLit *;
-    using const_iterator = const CNFLit *;
+    using iterator = CNFLit*;
+    using const_iterator = const CNFLit*;
     using lbd_type = uint16_t;
 
     enum class Flag : flag_type { SCHEDULED_FOR_DELETION = 1, REDUNDANT = 2 };
@@ -66,8 +66,8 @@ public:
      * the clause size.
      * \returns A reference to the literal with index \p index.
      */
-    CNFLit &operator[](size_type index) noexcept;
-    const CNFLit &operator[](size_type index) const noexcept;
+    CNFLit& operator[](size_type index) noexcept;
+    const CNFLit& operator[](size_type index) const noexcept;
 
     /**
      * \brief Returns the clause's size.
@@ -164,11 +164,11 @@ public:
      * \param other     The clause to be copied. \p other must not be larger than this clause.
      * \returns Reference to this clause
      */
-    Clause &operator=(const Clause &other) noexcept;
+    Clause& operator=(const Clause& other) noexcept;
 
-    Clause &operator=(Clause &&other) = delete;
-    Clause(const Clause &other) = delete;
-    Clause(Clause &&other) = delete;
+    Clause& operator=(Clause&& other) = delete;
+    Clause(const Clause& other) = delete;
+    Clause(Clause&& other) = delete;
 
     /**
      * \brief Computes the size of a non-empty Clause object.
@@ -188,7 +188,7 @@ public:
      * constructed.
      * \returns         The pointer to the constructed clause.
      */
-    static Clause *constructIn(void *target, size_type size);
+    static Clause* constructIn(void* target, size_type size);
 
     /**
      * \brief Sets the given flag for the clause.
@@ -230,7 +230,7 @@ public:
      * \return        If `false` is returned, the clause is definitely not a subset of `other`.
      *                If `true` is returned, the clause might be a subset of `other`.
      */
-    bool mightBeSubsetOf(Clause const &other) const noexcept;
+    bool mightBeSubsetOf(Clause const& other) const noexcept;
 
     /**
      * \brief Notifies the clause that its contents have been updated.
@@ -239,8 +239,8 @@ public:
 
     friend std::unique_ptr<Clause> createHeapClause(size_type size);
 
-    bool operator==(Clause const &rhs) const noexcept;
-    bool operator!=(Clause const &rhs) const noexcept;
+    bool operator==(Clause const& rhs) const noexcept;
+    bool operator!=(Clause const& rhs) const noexcept;
 
 private:
     /**
@@ -269,7 +269,7 @@ private:
  */
 std::unique_ptr<Clause> createHeapClause(Clause::size_type size);
 
-std::ostream &operator<<(std::ostream &stream, const Clause &clause);
+std::ostream& operator<<(std::ostream& stream, const Clause& clause);
 
 /********** Implementation ****************************** */
 
@@ -295,12 +295,12 @@ void Clause::setLBD(LBDType LBD) noexcept {
 inline Clause::Clause(size_type size) noexcept
   : m_size(size), m_lbd(0), m_flags(0), m_anchor(CNFLit::getUndefinedLiteral()) {}
 
-inline CNFLit &Clause::operator[](size_type index) noexcept {
+inline CNFLit& Clause::operator[](size_type index) noexcept {
     JAM_ASSERT(index < m_size, "Index out of bounds");
     return *(&m_anchor + index);
 }
 
-inline const CNFLit &Clause::operator[](size_type index) const noexcept {
+inline const CNFLit& Clause::operator[](size_type index) const noexcept {
     JAM_ASSERT(index < m_size, "Index out of bounds");
     return *(&m_anchor + index);
 }
@@ -359,7 +359,7 @@ inline Clause::iterator Clause::erase(const_iterator begin, const_iterator end) 
     return result;
 }
 
-inline Clause &Clause::operator=(const Clause &other) noexcept {
+inline Clause& Clause::operator=(const Clause& other) noexcept {
     if (this == &other) {
         return *this;
     }
@@ -384,11 +384,11 @@ inline size_t Clause::getAllocationSize(Clause::size_type clauseSize) {
     return size;
 }
 
-inline Clause *Clause::constructIn(void *target, size_type size) {
+inline Clause* Clause::constructIn(void* target, size_type size) {
     return new (target) Clause(size);
 }
 
-inline bool Clause::operator==(Clause const &rhs) const noexcept {
+inline bool Clause::operator==(Clause const& rhs) const noexcept {
     if (this == &rhs) {
         return true;
     }
@@ -398,7 +398,7 @@ inline bool Clause::operator==(Clause const &rhs) const noexcept {
     return std::equal(begin(), end(), rhs.begin());
 }
 
-inline bool Clause::operator!=(Clause const &rhs) const noexcept {
+inline bool Clause::operator!=(Clause const& rhs) const noexcept {
     return !(*this == rhs);
 }
 
@@ -419,7 +419,7 @@ inline bool Clause::mightContain(CNFLit lit) const noexcept {
     return m_approximatedClause.mightContain(lit);
 }
 
-inline bool Clause::mightBeSubsetOf(Clause const &other) const noexcept {
+inline bool Clause::mightBeSubsetOf(Clause const& other) const noexcept {
     return m_approximatedClause.mightBeSubsetOf(other.m_approximatedClause);
 }
 

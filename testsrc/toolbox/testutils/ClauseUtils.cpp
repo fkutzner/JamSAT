@@ -30,7 +30,7 @@
 #include <gtest/gtest.h>
 
 namespace jamsat {
-void expectClauseEqual(Clause const &clause, std::initializer_list<CNFLit> literals) noexcept {
+void expectClauseEqual(Clause const& clause, std::initializer_list<CNFLit> literals) noexcept {
     ASSERT_EQ(clause.size(), literals.size());
     EXPECT_TRUE(std::is_permutation(clause.begin(), clause.end(), literals.begin()));
 }

@@ -80,8 +80,9 @@ public:
      * live
      * as long as the constructed object.
      */
-    FirstUIPLearning(CNFVar maxVar, const DLProvider &dlProvider,
-                     ReasonProvider const &reasonProvider);
+    FirstUIPLearning(CNFVar maxVar,
+                     const DLProvider& dlProvider,
+                     ReasonProvider const& reasonProvider);
 
     /**
      * \brief Given a conflicting clause, computes a conflict clause.
@@ -92,7 +93,7 @@ public:
      * of the conflicting clause with reason clauses. The asserting literal is placed
      * first in the result.
      */
-    void computeConflictClause(Clause &conflictingClause, std::vector<CNFLit> &result) const;
+    void computeConflictClause(Clause& conflictingClause, std::vector<CNFLit>& result) const;
 
 
     /**
@@ -145,7 +146,7 @@ private:
      * \returns The amount of literals on the current decision level found in
      * \p conflictingClause.
      */
-    auto initializeResult(Clause const &conflictingClause, std::vector<CNFLit> &result) const
+    auto initializeResult(Clause const& conflictingClause, std::vector<CNFLit>& result) const
         -> int;
 
     /**
@@ -169,7 +170,7 @@ private:
      *
      * \returns The amount of literals added to \p work
      */
-    auto addResolvent(Clause const &reason, CNFLit resolveAtLit, std::vector<CNFLit> &result) const
+    auto addResolvent(Clause const& reason, CNFLit resolveAtLit, std::vector<CNFLit>& result) const
         -> int;
 
     /**
@@ -181,17 +182,17 @@ private:
      * \param[in] unresolvedCount      The amount of literals contained in \p result
      * whose variable is on the current decision level.
      */
-    void resolveUntilUIP(std::vector<CNFLit> &result, int unresolvedCount) const;
+    void resolveUntilUIP(std::vector<CNFLit>& result, int unresolvedCount) const;
 
     /**
      * \brief Clears \p m_stamps for the variables of the given literals.
      *
      * \param lits    A vector of literals.
      */
-    void clearStamps(std::vector<CNFLit> const &lits) const noexcept;
+    void clearStamps(std::vector<CNFLit> const& lits) const noexcept;
 
-    const DLProvider &m_dlProvider;
-    const ReasonProvider &m_reasonProvider;
+    const DLProvider& m_dlProvider;
+    const ReasonProvider& m_reasonProvider;
     const CNFVar m_maxVar;
 
     // Temporary storage for stamps, since we can't afford to allocate
@@ -210,8 +211,8 @@ private:
 
 template <class DLProvider, class ReasonProvider>
 FirstUIPLearning<DLProvider, ReasonProvider>::FirstUIPLearning(CNFVar maxVar,
-                                                               const DLProvider &dlProvider,
-                                                               const ReasonProvider &reasonProvider)
+                                                               const DLProvider& dlProvider,
+                                                               const ReasonProvider& reasonProvider)
   : m_dlProvider(dlProvider), m_reasonProvider(reasonProvider), m_maxVar(maxVar), m_stamps(maxVar) {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
@@ -229,7 +230,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::increaseMaxVarTo(CNFVar newMa
 
 #if defined(JAM_ASSERT_ENABLED)
 namespace detail_solver {
-inline bool isAllZero(const BoundedMap<CNFVar, char> &stamps, CNFVar maxVar) noexcept {
+inline bool isAllZero(const BoundedMap<CNFVar, char>& stamps, CNFVar maxVar) noexcept {
     bool result = true;
     for (CNFVar::RawVariable v = 0; v <= maxVar.getRawValue(); ++v) {
         result &= (stamps[CNFVar{v}] == 0);
@@ -241,7 +242,7 @@ inline bool isAllZero(const BoundedMap<CNFVar, char> &stamps, CNFVar maxVar) noe
 
 template <class DLProvider, class ReasonProvider>
 auto FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
-    Clause const &conflictingClause, std::vector<CNFLit> &result) const -> int {
+    Clause const& conflictingClause, std::vector<CNFLit>& result) const -> int {
 
     result.push_back(CNFLit::getUndefinedLiteral());
 
@@ -272,9 +273,9 @@ auto FirstUIPLearning<DLProvider, ReasonProvider>::initializeResult(
 }
 
 template <class DLProvider, class ReasonProvider>
-auto FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(Clause const &reason,
+auto FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(Clause const& reason,
                                                                 CNFLit resolveAtLit,
-                                                                std::vector<CNFLit> &result) const
+                                                                std::vector<CNFLit>& result) const
     -> int {
     int unresolvedCount = 0;
 
@@ -320,7 +321,7 @@ auto FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(Clause const &re
 }
 
 template <class DLProvider, class ReasonProvider>
-void FirstUIPLearning<DLProvider, ReasonProvider>::resolveUntilUIP(std::vector<CNFLit> &result,
+void FirstUIPLearning<DLProvider, ReasonProvider>::resolveUntilUIP(std::vector<CNFLit>& result,
                                                                    int unresolvedCount) const {
 
     // unresolvedCount counts how many literals L are left to resolve on the
@@ -363,13 +364,14 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::resolveUntilUIP(std::vector<C
             JAM_ASSERT(reason != nullptr, "Encountered the UIP too early");
             unresolvedCount += addResolvent(*reason, resolveAtLit, result);
             --unresolvedCount;
-            JAM_LOG_CA(info, "  Resolved with reason clause "
-                                 << &reason
-                                 << ". Remaining literals to resolve: " << unresolvedCount);
+            JAM_LOG_CA(info,
+                       "  Resolved with reason clause "
+                           << &reason << ". Remaining literals to resolve: " << unresolvedCount);
         }
 
-        JAM_ASSERT(cursor != trailIterators.begin(), "Reached the beginning of the current "
-                                                     "decision level without finding the UIP");
+        JAM_ASSERT(cursor != trailIterators.begin(),
+                   "Reached the beginning of the current "
+                   "decision level without finding the UIP");
         --cursor;
     }
 
@@ -389,7 +391,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::resolveUntilUIP(std::vector<C
 
 template <class DLProvider, class ReasonProvider>
 void FirstUIPLearning<DLProvider, ReasonProvider>::clearStamps(
-    std::vector<CNFLit> const &lits) const noexcept {
+    std::vector<CNFLit> const& lits) const noexcept {
     for (CNFLit w : lits) {
         m_stamps[w.getVariable()] = 0;
         if (m_onSeenVariableCallback) {
@@ -400,7 +402,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::clearStamps(
 
 template <class DLProvider, class ReasonProvider>
 void FirstUIPLearning<DLProvider, ReasonProvider>::computeConflictClause(
-    Clause &conflictingClause, std::vector<CNFLit> &result) const {
+    Clause& conflictingClause, std::vector<CNFLit>& result) const {
     // This implementation closely follows Donald Knuth's prosaic description
     // of first-UIP clause learning. See TAOCP, chapter 7.2.2.2.
     JAM_LOG_CA(info, "Beginning conflict analysis.");
@@ -422,7 +424,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::computeConflictClause(
         JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
 
         JAM_LOG_CA(info, "Finished conflict resolution.");
-    } catch (std::bad_alloc &oomException) {
+    } catch (std::bad_alloc& oomException) {
         (void)oomException;
         // Restore class invariant A before throwing on the exception.
         for (CNFVar::RawVariable v = 0; v <= m_maxVar.getRawValue(); ++v) {

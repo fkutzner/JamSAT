@@ -132,7 +132,7 @@ public:
      *
      * \param stats     Statistics about the performed simplifications
      */
-    void registerSimplification(SimplificationStats &stats) noexcept;
+    void registerSimplification(SimplificationStats& stats) noexcept;
 
     /**
      * \brief Notifies the statistics system that the solver entered its main search
@@ -159,7 +159,7 @@ public:
      *
      * \return The recorded statistics of the current era.
      */
-    auto getCurrentEra() const noexcept -> Era const &;
+    auto getCurrentEra() const noexcept -> Era const&;
 
     /**
      * \brief Returns the recorded statistics of the era that ended with
@@ -167,7 +167,7 @@ public:
      *
      * \return The recorded statistics of the previous era.
      */
-    auto getPreviousEra() const noexcept -> Era const &;
+    auto getPreviousEra() const noexcept -> Era const&;
 
 
     /**
@@ -176,7 +176,7 @@ public:
      *
      * @param stream The target output stream.
      */
-    void printStatisticsDescription(std::ostream &stream) const noexcept;
+    void printStatisticsDescription(std::ostream& stream) const noexcept;
 
 private:
     Era m_previousEra;
@@ -184,8 +184,8 @@ private:
 };
 
 template <typename StatisticsConfig>
-auto operator<<(std::ostream &stream, const Statistics<StatisticsConfig> &stats) noexcept
-    -> std::ostream &;
+auto operator<<(std::ostream& stream, const Statistics<StatisticsConfig>& stats) noexcept
+    -> std::ostream&;
 
 /********** Implementation ****************************** */
 
@@ -250,7 +250,7 @@ void Statistics<StatisticsConfig>::registerLemmaDeletion(uint32_t amount) {
 
 
 template <typename StatisticsConfig>
-void Statistics<StatisticsConfig>::registerSimplification(SimplificationStats &stats) noexcept {
+void Statistics<StatisticsConfig>::registerSimplification(SimplificationStats& stats) noexcept {
     if (StatisticsConfig::CountSimplificationStats::value == true) {
         m_currentEra.m_simplificationStats += stats;
         m_currentEra.m_unitLemmas += stats.amntUnariesLearnt;
@@ -264,18 +264,18 @@ void Statistics<StatisticsConfig>::concludeEra() noexcept {
 }
 
 template <typename StatisticsConfig>
-auto Statistics<StatisticsConfig>::getCurrentEra() const noexcept -> Era const & {
+auto Statistics<StatisticsConfig>::getCurrentEra() const noexcept -> Era const& {
     return m_currentEra;
 }
 
 template <typename StatisticsConfig>
-auto Statistics<StatisticsConfig>::getPreviousEra() const noexcept -> Era const & {
+auto Statistics<StatisticsConfig>::getPreviousEra() const noexcept -> Era const& {
     return m_previousEra;
 }
 
 
 template <typename StatisticsConfig>
-void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream &stream) const noexcept {
+void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream& stream) const noexcept {
     stream << "Statistics: "
            << "#C = amount of conflicts; "
            << "#P = amount of propagations; "
@@ -293,9 +293,9 @@ void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream &stre
 
 
 template <typename StatisticsConfig>
-auto operator<<(std::ostream &stream, const Statistics<StatisticsConfig> &stats) noexcept
-    -> std::ostream & {
-    auto &currentEra = stats.getCurrentEra();
+auto operator<<(std::ostream& stream, const Statistics<StatisticsConfig>& stats) noexcept
+    -> std::ostream& {
+    auto& currentEra = stats.getCurrentEra();
 
     auto now = decltype(currentEra.m_startTime)::clock::now();
 

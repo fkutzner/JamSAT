@@ -49,7 +49,7 @@ TEST(UnitClauseDB, HeapletIsUninitializedBeforeInitialization) {
 struct alignas(32) LargeAlignedTestStruct {
     int x;
 
-    static LargeAlignedTestStruct *constructIn(void *memory) noexcept {
+    static LargeAlignedTestStruct* constructIn(void* memory) noexcept {
         return new (memory) LargeAlignedTestStruct{};
     }
 };
@@ -96,7 +96,7 @@ TEST(UnitClauseDB, HeapletAllocationsDecreaseFreeSize) {
 struct alignas(8) SmallAlignedTestStruct {
     int x;
 
-    static SmallAlignedTestStruct *constructIn(void *memory) noexcept {
+    static SmallAlignedTestStruct* constructIn(void* memory) noexcept {
         return new (memory) SmallAlignedTestStruct{};
     }
 };
@@ -152,7 +152,7 @@ public:
 
     int getY() const noexcept { return m_y; }
 
-    static ClassWithNontrivialConstructor *constructIn(void *memory, int x, int y) noexcept {
+    static ClassWithNontrivialConstructor* constructIn(void* memory, int x, int y) noexcept {
         return new (memory) ClassWithNontrivialConstructor{x, y};
     }
 
@@ -183,38 +183,38 @@ TEST(UnitClauseDB, HeapletClauseDBFreeSpaceDecreasedAtClauseCreation) {
     HeapletClauseDB<Clause>::size_type maxFree = 512ull;
 
     const Clause::size_type clauseSize = 5;
-    auto &clause = underTest.allocate(clauseSize);
+    auto& clause = underTest.allocate(clauseSize);
     (void)clause;
     maxFree -= Clause::getAllocationSize(clauseSize);
 
     EXPECT_GT(underTest.test_getAvailableSpaceInActiveHeaplets(), 0ull);
     EXPECT_LE(underTest.test_getAvailableSpaceInActiveHeaplets(), maxFree);
-    EXPECT_TRUE(underTest.test_isRegionInActiveHeaplet(reinterpret_cast<void *>(&clause),
+    EXPECT_TRUE(underTest.test_isRegionInActiveHeaplet(reinterpret_cast<void*>(&clause),
                                                        Clause::getAllocationSize(clauseSize)));
 
     const Clause::size_type clauseSize2 = 7;
-    auto &clause2 = underTest.allocate(clauseSize2);
+    auto& clause2 = underTest.allocate(clauseSize2);
     (void)clause2;
     maxFree -= Clause::getAllocationSize(clauseSize2);
     EXPECT_GT(underTest.test_getAvailableSpaceInActiveHeaplets(), 0ull);
     EXPECT_LE(underTest.test_getAvailableSpaceInActiveHeaplets(), maxFree);
-    EXPECT_TRUE(underTest.test_isRegionInActiveHeaplet(reinterpret_cast<void *>(&clause2),
+    EXPECT_TRUE(underTest.test_isRegionInActiveHeaplet(reinterpret_cast<void*>(&clause2),
                                                        Clause::getAllocationSize(clauseSize2)));
 }
 
 TEST(UnitClauseDB, HeapletClauseDBAllocatesClausesOfCorrectSize) {
     HeapletClauseDB<Clause> underTest{512ull, 2048ull};
     const Clause::size_type clauseSize = 5;
-    auto &clause = underTest.allocate(clauseSize);
+    auto& clause = underTest.allocate(clauseSize);
     EXPECT_EQ(clause.size(), clauseSize);
 }
 
 TEST(UnitClauseDB, HeapletClauseDBUsesFreshHeapletWhenFirstIsFull) {
     HeapletClauseDB<Clause> underTest{512ull, 2048ull};
-    auto &clause1 = underTest.allocate(96);
+    auto& clause1 = underTest.allocate(96);
     (void)clause1;
     auto free = underTest.test_getAvailableSpaceInActiveHeaplets();
-    auto &clause2 = underTest.allocate(96);
+    auto& clause2 = underTest.allocate(96);
     (void)clause2;
     auto laterFree = underTest.test_getAvailableSpaceInActiveHeaplets();
     EXPECT_GT(laterFree, free);
@@ -238,18 +238,18 @@ TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenClauseTooLarge) {
 }
 
 namespace {
-std::function<bool(const Clause &)> createNoReasonClausePred() noexcept {
-    return [](const Clause &) { return false; };
+std::function<bool(const Clause&)> createNoReasonClausePred() noexcept {
+    return [](const Clause&) { return false; };
 }
 }
 
 TEST(UnitClauseDB, HeapletClauseDBIsEmptyAfterRetainingNoClauses) {
     HeapletClauseDB<Clause> underTest{512ull, 3096ull};
-    auto &clause1 = underTest.allocate(96);
-    auto &clause2 = underTest.allocate(96);
-    std::vector<Clause *> empty;
-    underTest.retain(empty, createNoReasonClausePred(), {},
-                     boost::optional<std::vector<Clause *>::iterator>{});
+    auto& clause1 = underTest.allocate(96);
+    auto& clause2 = underTest.allocate(96);
+    std::vector<Clause*> empty;
+    underTest.retain(
+        empty, createNoReasonClausePred(), {}, boost::optional<std::vector<Clause*>::iterator>{});
 
     // The two heaplets used by the clauses should show up as free memory now:
     EXPECT_EQ(underTest.test_getAvailableSpaceInFreeHeaplets(), 1024ull);
@@ -266,9 +266,9 @@ TEST(UnitClauseDB, HeapletClauseDBCanAllocateAfterRetainingNoClauses) {
     HeapletClauseDB<Clause> underTest{512ull, 1536ull};
     underTest.allocate(80);
     underTest.allocate(80);
-    std::vector<Clause *> empty;
-    underTest.retain(empty, createNoReasonClausePred(), {},
-                     boost::optional<std::vector<Clause *>::iterator>{});
+    std::vector<Clause*> empty;
+    underTest.retain(
+        empty, createNoReasonClausePred(), {}, boost::optional<std::vector<Clause*>::iterator>{});
     EXPECT_NO_THROW(underTest.allocate(96));
     EXPECT_NO_THROW(underTest.allocate(96));
     EXPECT_NO_THROW(underTest.allocate(96));
@@ -278,10 +278,12 @@ TEST(UnitClauseDB, HeapletClauseDBCanAllocateAfterRetainingNoClauses) {
 TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenRetainIsOutOfMemory) {
     HeapletClauseDB<Clause> underTest{512ull, 512ull};
     // This clause DB has no heaplets that might be used for retain()
-    auto &clause = underTest.allocate(2);
-    std::vector<Clause *> empty;
-    ASSERT_THROW(underTest.retain(empty, createNoReasonClausePred(), {},
-                                  boost::optional<std::vector<Clause *>::iterator>{}),
+    auto& clause = underTest.allocate(2);
+    std::vector<Clause*> empty;
+    ASSERT_THROW(underTest.retain(empty,
+                                  createNoReasonClausePred(),
+                                  {},
+                                  boost::optional<std::vector<Clause*>::iterator>{}),
                  std::bad_alloc);
     // Check exception safety: the clause should remain intact
     EXPECT_TRUE(underTest.test_isRegionInActiveHeaplet(&clause, Clause::getAllocationSize(3)));
@@ -289,20 +291,24 @@ TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenRetainIsOutOfMemory) {
 
 TEST(UnitClauseDB, HeapletClauseDBContainsCorrectClausesAfterRetain) {
     HeapletClauseDB<Clause> underTest{64ull, 8192ull};
-    std::vector<Clause *> clauses{&underTest.allocate(4), &underTest.allocate(3),
-                                  &underTest.allocate(10), &underTest.allocate(4)};
+    std::vector<Clause*> clauses{&underTest.allocate(4),
+                                 &underTest.allocate(3),
+                                 &underTest.allocate(10),
+                                 &underTest.allocate(4)};
     std::vector<CNFLit> retainedClauseALiterals{3_Lit, ~2_Lit, 1_Lit};
     std::vector<CNFLit> retainedClauseBLiterals{10_Lit, ~8_Lit, ~6_Lit, 4_Lit};
 
-    std::vector<Clause *> retained{clauses[1], clauses[3]};
+    std::vector<Clause*> retained{clauses[1], clauses[3]};
     retained[0]->setLBD<unsigned char>(5);
     retained[1]->setLBD<unsigned char>(3);
     std::copy(retainedClauseALiterals.begin(), retainedClauseALiterals.end(), retained[0]->begin());
     std::copy(retainedClauseBLiterals.begin(), retainedClauseBLiterals.end(), retained[1]->begin());
 
-    std::vector<Clause *> relocated;
+    std::vector<Clause*> relocated;
     using BackInserterType = decltype(std::back_inserter(relocated));
-    underTest.retain(retained, createNoReasonClausePred(), {},
+    underTest.retain(retained,
+                     createNoReasonClausePred(),
+                     {},
                      boost::optional<BackInserterType>{std::back_inserter(relocated)});
     ASSERT_EQ(relocated.size(), 2ull);
 
@@ -326,16 +332,18 @@ TEST(UnitClauseDB, HeapletClauseDBContainsCorrectClausesAfterRetain) {
 
 TEST(UnitClauseDB, HeapletClauseDBIgnoresDuplicateClauses) {
     HeapletClauseDB<Clause> underTest{512ull, 8192ull};
-    std::vector<Clause *> clauses{&underTest.allocate(91), &underTest.allocate(92),
-                                  &underTest.allocate(93)};
+    std::vector<Clause*> clauses{
+        &underTest.allocate(91), &underTest.allocate(92), &underTest.allocate(93)};
 
-    std::vector<Clause *> retained{clauses[1], clauses[2], clauses[1]};
+    std::vector<Clause*> retained{clauses[1], clauses[2], clauses[1]};
 
-    std::vector<Clause *> relocated;
+    std::vector<Clause*> relocated;
     using BackInserterType = decltype(std::back_inserter(relocated));
 
     ASSERT_NO_THROW(
-        underTest.retain(retained, createNoReasonClausePred(), {},
+        underTest.retain(retained,
+                         createNoReasonClausePred(),
+                         {},
                          boost::optional<BackInserterType>{std::back_inserter(relocated)}));
     ASSERT_EQ(relocated.size(), 2ull);
 
@@ -344,30 +352,34 @@ TEST(UnitClauseDB, HeapletClauseDBIgnoresDuplicateClauses) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBAnnouncesRewriteOfReasonClauses) {
-    std::vector<const Clause *> reasons;
-    std::vector<std::pair<const Clause *, const Clause *>> reasonRelocations;
+    std::vector<const Clause*> reasons;
+    std::vector<std::pair<const Clause*, const Clause*>> reasonRelocations;
 
-    auto reasonPred = [&reasons](const Clause &c) {
+    auto reasonPred = [&reasons](const Clause& c) {
         return std::find(reasons.begin(), reasons.end(), &c) != reasons.end();
     };
-    auto reasonRelocationRecv = [&reasonRelocations](const Clause &oldR, const Clause &newR) {
+    auto reasonRelocationRecv = [&reasonRelocations](const Clause& oldR, const Clause& newR) {
         reasonRelocations.push_back({&oldR, &newR});
     };
 
     HeapletClauseDB<Clause> underTest{512ull, 2048ull};
 
-    std::vector<Clause *> clauses{&underTest.allocate(4), &underTest.allocate(3),
-                                  &underTest.allocate(10), &underTest.allocate(4)};
+    std::vector<Clause*> clauses{&underTest.allocate(4),
+                                 &underTest.allocate(3),
+                                 &underTest.allocate(10),
+                                 &underTest.allocate(4)};
     reasons.push_back(clauses[0]);
     reasons.push_back(clauses[1]);
 
     (*clauses[0])[0] = 3_Lit;
     (*clauses[1])[0] = 5_Lit;
 
-    std::vector<Clause *> retained{clauses[0], clauses[1], clauses[3]};
-    std::vector<Clause *> relocated;
+    std::vector<Clause*> retained{clauses[0], clauses[1], clauses[3]};
+    std::vector<Clause*> relocated;
     using BackInserterType = decltype(std::back_inserter(relocated));
-    underTest.retain(retained, reasonPred, reasonRelocationRecv,
+    underTest.retain(retained,
+                     reasonPred,
+                     reasonRelocationRecv,
                      boost::optional<BackInserterType>{std::back_inserter(relocated)});
 
     ASSERT_EQ(reasonRelocations.size(), 2ull);

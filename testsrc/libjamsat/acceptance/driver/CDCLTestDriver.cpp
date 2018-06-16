@@ -18,7 +18,7 @@ void printUsage() {
               << " If <FILENAME> is " - ", the problem is read from stdin.\n";
 }
 
-int getParseErrorExitValue(std::string const &parseErrorMode) {
+int getParseErrorExitValue(std::string const& parseErrorMode) {
     if (parseErrorMode == "--fail-on-parse-error") {
         return EXIT_FAILURE;
     }
@@ -29,13 +29,13 @@ int getParseErrorExitValue(std::string const &parseErrorMode) {
     return EXIT_FAILURE;
 }
 
-bool isCheckingResultEnabled(std::string const &checkParameter) {
+bool isCheckingResultEnabled(std::string const& checkParameter) {
     return checkParameter == "--check-result";
 }
 
 enum class CheckMinisatResult { MATCH, NO_MATCH, SKIPPED };
 
-CheckMinisatResult checkResultWithMinisat(jamsat::CNFProblem &problem, jamsat::TBool result) {
+CheckMinisatResult checkResultWithMinisat(jamsat::CNFProblem& problem, jamsat::TBool result) {
     if (!isDeterminate(result)) {
         return CheckMinisatResult::SKIPPED;
     }
@@ -52,7 +52,7 @@ CheckMinisatResult checkResultWithMinisat(jamsat::CNFProblem &problem, jamsat::T
 }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     if (argc != 4) {
         printUsage();
         return EXIT_FAILURE;
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
-    std::istream *cnfFile;
+    std::istream* cnfFile;
     std::ifstream cnfPhysFile;
 
     if (std::string{argv[3]} == "-") {

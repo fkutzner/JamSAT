@@ -71,7 +71,7 @@ public:
     TBool getAssignment(CNFVar variable) const noexcept;
     TBool getAssignment(CNFLit literal) const noexcept;
     void addAssignment(CNFLit literal) noexcept;
-    void addAssignment(CNFLit literal, Clause const &clause) noexcept;
+    void addAssignment(CNFLit literal, Clause const& clause) noexcept;
     void popLiteral() noexcept;
     size_t getNumberOfAssignments() const noexcept;
 
@@ -86,8 +86,8 @@ public:
     DecisionLevel getCurrentDecisionLevel() const noexcept;
     void setCurrentDecisionLevel(DecisionLevel level) noexcept;
 
-    auto getAssignmentReason(CNFVar variable) const noexcept -> Clause const *;
-    void setAssignmentReason(CNFVar variable, Clause const *reason) noexcept;
+    auto getAssignmentReason(CNFVar variable) const noexcept -> Clause const*;
+    void setAssignmentReason(CNFVar variable, Clause const* reason) noexcept;
 
     struct DecisionLevelKey {
         using Type = DecisionLevel;
@@ -99,6 +99,6 @@ private:
     std::unordered_map<CNFVar, DecisionLevel> m_decisionLevels;
     DecisionLevel m_currentLevel;
     BoundedStack<CNFLit> m_trail;
-    std::unordered_map<CNFVar, Clause const *> m_reasons;
+    std::unordered_map<CNFVar, Clause const*> m_reasons;
 };
 }

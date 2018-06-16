@@ -53,7 +53,7 @@ public:
      *
      * \param clause    The clause to be added.
      */
-    void addClause(const CNFClause &clause) noexcept;
+    void addClause(const CNFClause& clause) noexcept;
 
     /**
      * \brief Adds the given clause to the problem instance, transferring
@@ -61,14 +61,14 @@ public:
      *
      * \param clause    The clause to be added.
      */
-    void addClause(CNFClause &&clause) noexcept;
+    void addClause(CNFClause&& clause) noexcept;
 
     /**
      * \brief Gets the problem instance's clauses.
      *
      * \returns A vector of clauses.
      */
-    const std::vector<CNFClause> &getClauses() const noexcept;
+    const std::vector<CNFClause>& getClauses() const noexcept;
 
     /**
      * \brief Gets the number of clauses contained in the problem instance.
@@ -110,7 +110,7 @@ private:
  * \param output    The target output stream.
  * \param problem   The problem instance to be printed.
  */
-std::ostream &operator<<(std::ostream &output, const CNFProblem &problem);
+std::ostream& operator<<(std::ostream& output, const CNFProblem& problem);
 
 /**
  * \ingroup JamSAT_CNFProblem
@@ -120,7 +120,7 @@ std::ostream &operator<<(std::ostream &output, const CNFProblem &problem);
  * \param output    The target output stream.
  * \param clause    The clause to be printed.
  */
-std::ostream &operator<<(std::ostream &output, const CNFClause &clause);
+std::ostream& operator<<(std::ostream& output, const CNFClause& clause);
 
 /**
  * \ingroup JamSAT_CNFProblem
@@ -135,7 +135,7 @@ std::ostream &operator<<(std::ostream &output, const CNFClause &clause);
  * \param problem   The empty problem instance to which the problem instance's
  * clauses should be added.
  */
-std::istream &operator>>(std::istream &input, CNFProblem &problem);
+std::istream& operator>>(std::istream& input, CNFProblem& problem);
 
 /**
  * \ingroup JamSAT_CNFProblem
@@ -149,5 +149,5 @@ std::istream &operator>>(std::istream &input, CNFProblem &problem);
  * read.
  * \param clause    The clause where the literals should be appended.
  */
-std::istream &operator>>(std::istream &input, CNFClause &clause);
+std::istream& operator>>(std::istream& input, CNFClause& clause);
 }

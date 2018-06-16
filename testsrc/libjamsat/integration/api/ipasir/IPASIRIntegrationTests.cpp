@@ -34,7 +34,7 @@
 #include <thread>
 
 TEST(IpasirIntegration, solveWithImmediateConflict) {
-    void *solver = ipasir_init();
+    void* solver = ipasir_init();
     auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
 
     ipasir_add(solver, 1);
@@ -49,7 +49,7 @@ TEST(IpasirIntegration, solveWithImmediateConflict) {
 
 namespace {
 // Adds the problem (1 2) (-2 3) (-1 -3)
-void addMiniSatisfiableProblem(void *solver) {
+void addMiniSatisfiableProblem(void* solver) {
     ipasir_add(solver, 1);
     ipasir_add(solver, 2);
     ipasir_add(solver, 0);
@@ -65,7 +65,7 @@ void addMiniSatisfiableProblem(void *solver) {
 }
 
 TEST(IpasirIntegration, solveMiniSatisfiableProblem) {
-    void *solver = ipasir_init();
+    void* solver = ipasir_init();
     auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
 
     addMiniSatisfiableProblem(solver);
@@ -82,7 +82,7 @@ TEST(IpasirIntegration, solveMiniSatisfiableProblem) {
 }
 
 TEST(IpasirIntegration, assumptionsAreClearedBetweenSolveCalls) {
-    void *solver = ipasir_init();
+    void* solver = ipasir_init();
     auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
 
     addMiniSatisfiableProblem(solver);
@@ -97,7 +97,7 @@ TEST(IpasirIntegration, assumptionsAreClearedBetweenSolveCalls) {
 }
 
 TEST(IpasirIntegration, assumptionsLeadingToUnsatAreMarkedAsFailed) {
-    void *solver = ipasir_init();
+    void* solver = ipasir_init();
     auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
 
     ipasir_add(solver, 1);
@@ -117,13 +117,13 @@ TEST(IpasirIntegration, assumptionsLeadingToUnsatAreMarkedAsFailed) {
 }
 
 namespace {
-void addHardProblem(void *ipasirSolver) {
+void addHardProblem(void* ipasirSolver) {
     jamsat::Rule110PredecessorStateProblem problem{"xxxxxxxxxxxxxxx0xxxxxxxxxxxxxxxxxxxxxxxxxx",
                                                    "xxxxxxxxxxxxxx1000001xxxxxxxxxxxxxxxxxxxxx",
                                                    500};
-    jamsat::CNFProblem const &cnfProblem = problem.getCNFEncoding().cnfProblem;
+    jamsat::CNFProblem const& cnfProblem = problem.getCNFEncoding().cnfProblem;
 
-    for (jamsat::CNFClause const &clause : cnfProblem.getClauses()) {
+    for (jamsat::CNFClause const& clause : cnfProblem.getClauses()) {
         for (jamsat::CNFLit lit : clause) {
             int var = lit.getVariable().getRawValue() + 1;
             if (lit.getSign() == jamsat::CNFSign::NEGATIVE) {
@@ -135,21 +135,21 @@ void addHardProblem(void *ipasirSolver) {
     }
 }
 
-int killCallbackFn(void *blob) {
-    int result = *(reinterpret_cast<volatile int *>(blob));
+int killCallbackFn(void* blob) {
+    int result = *(reinterpret_cast<volatile int*>(blob));
     return result;
 }
 }
 
 TEST(IpasirIntegration, solverIsKilledOnTimeout) {
-    void *solver = ipasir_init();
+    void* solver = ipasir_init();
     auto destroyOnRelease = jamsat::OnExitScope([solver]() { ipasir_release(solver); });
     addHardProblem(solver);
 
     int callbackResult = 0;
 
     std::thread callbackChanger{
-        [](volatile int *callbackResult) {
+        [](volatile int* callbackResult) {
             std::chrono::seconds graceTime{2};
             std::this_thread::sleep_for(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(graceTime));
@@ -157,7 +157,7 @@ TEST(IpasirIntegration, solverIsKilledOnTimeout) {
         },
         &callbackResult};
 
-    ipasir_set_terminate(solver, reinterpret_cast<void *>(&callbackResult), killCallbackFn);
+    ipasir_set_terminate(solver, reinterpret_cast<void*>(&callbackResult), killCallbackFn);
 
     EXPECT_EQ(ipasir_solve(solver), 0);
     callbackChanger.join();

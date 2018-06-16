@@ -28,12 +28,12 @@
 
 #include <vector>
 
-extern const char *IPASIRTestMockSignature;
+extern const char* IPASIRTestMockSignature;
 
 namespace jamsat {
 struct IpasirMockContext {
     std::vector<int> m_literals;
 };
 
-auto getIPASIRMockContext(void *solver) noexcept -> IpasirMockContext *;
+auto getIPASIRMockContext(void* solver) noexcept -> IpasirMockContext*;
 }

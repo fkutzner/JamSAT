@@ -282,7 +282,7 @@ TEST(UnitSolver, watchersAllOccurInCompleteWatchersTraversal) {
     };
 
     std::vector<TestWatcher> watchers;
-    for (auto &clause : clauses) {
+    for (auto& clause : clauses) {
         watchers.emplace_back(clause, clause[1]);
         watchers.emplace_back(clause, clause[0]);
     }
@@ -320,7 +320,7 @@ TEST(UnitSolver, binaryWatchersOccurInBlockerMap) {
     };
 
     std::vector<TestWatcher> watchers;
-    for (auto &clause : clauses) {
+    for (auto& clause : clauses) {
         watchers.emplace_back(clause, clause[1]);
         watchers.emplace_back(clause, clause[0]);
     }
@@ -337,15 +337,15 @@ TEST(UnitSolver, binaryWatchersOccurInBlockerMap) {
     std::vector<CNFLit> expectedBlockersOfP0{1_Lit, 2_Lit};
     ASSERT_EQ(blockersOfP0.size(), expectedBlockersOfP0.size());
     std::vector<CNFLit> blockersOfP0FwdRange{blockersOfP0.begin(), blockersOfP0.end()};
-    EXPECT_TRUE(std::is_permutation(blockersOfP0FwdRange.begin(), blockersOfP0FwdRange.end(),
-                                    expectedBlockersOfP0.begin()));
+    EXPECT_TRUE(std::is_permutation(
+        blockersOfP0FwdRange.begin(), blockersOfP0FwdRange.end(), expectedBlockersOfP0.begin()));
 
     auto blockersOfP2 = blockerMap[2_Lit];
     std::vector<CNFLit> expectedBlockersOfP2{0_Lit, 1_Lit};
     ASSERT_EQ(blockersOfP2.size(), expectedBlockersOfP2.size());
     std::vector<CNFLit> blockersOfP2FwdRange{blockersOfP2.begin(), blockersOfP2.end()};
-    EXPECT_TRUE(std::is_permutation(blockersOfP2FwdRange.begin(), blockersOfP2FwdRange.end(),
-                                    expectedBlockersOfP2.begin()));
+    EXPECT_TRUE(std::is_permutation(
+        blockersOfP2FwdRange.begin(), blockersOfP2FwdRange.end(), expectedBlockersOfP2.begin()));
 
     auto blockersOfP10 = blockerMap[10_Lit];
     EXPECT_TRUE(blockersOfP10.empty());

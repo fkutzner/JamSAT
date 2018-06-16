@@ -71,14 +71,14 @@ public:
      * \returns             TBools::TRUE if the model is a model for \p problem; TBools::FALSE
      *                      otherwise.
      */
-    virtual TBool check(const CNFProblem &problem) const noexcept = 0;
+    virtual TBool check(const CNFProblem& problem) const noexcept = 0;
 
     // TODO: add getAssignments() returning a range of assignments
 
-    Model &operator=(const Model &other) = delete;
-    Model &operator=(Model &&other) = delete;
-    Model(const Model &other) = delete;
-    Model(Model &&other) = delete;
+    Model& operator=(const Model& other) = delete;
+    Model& operator=(Model&& other) = delete;
+    Model(const Model& other) = delete;
+    Model(Model&& other) = delete;
 
     Model();
     virtual ~Model();

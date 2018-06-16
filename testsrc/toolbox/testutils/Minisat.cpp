@@ -38,13 +38,13 @@
 #endif
 
 namespace jamsat {
-TBool isSatisfiableViaMinisat(CNFProblem const &problem) {
+TBool isSatisfiableViaMinisat(CNFProblem const& problem) {
     Minisat::Solver solver;
     for (unsigned int i = 0; i <= problem.getMaxVar().getRawValue(); ++i) {
         solver.newVar();
     }
 
-    for (auto &clause : problem.getClauses()) {
+    for (auto& clause : problem.getClauses()) {
         Minisat::vec<Minisat::Lit> minisatClause;
         for (auto lit : clause) {
             Minisat::Lit minisatLit =

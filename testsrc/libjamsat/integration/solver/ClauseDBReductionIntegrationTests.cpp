@@ -50,7 +50,7 @@ namespace {
 using ClauseFingerprint = uint64_t;
 
 template <typename ClauseTy>
-auto fingerprintClause(ClauseTy const &clause) -> ClauseFingerprint {
+auto fingerprintClause(ClauseTy const& clause) -> ClauseFingerprint {
     uint64_t result = clause.size();
     result ^= (static_cast<uint64_t>(clause.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION)) << 32);
     result ^= (static_cast<uint64_t>(clause.template getLBD<LBD>()) << 32);
@@ -64,7 +64,7 @@ auto fingerprintClause(ClauseTy const &clause) -> ClauseFingerprint {
 }
 
 template <typename ClausePtrRange>
-auto fingerprint(ClausePtrRange const &clauses) -> ClauseFingerprint {
+auto fingerprint(ClausePtrRange const& clauses) -> ClauseFingerprint {
     uint64_t result = 0ULL;
     for (auto clause : clauses) {
         result ^= fingerprintClause(*clause);
@@ -72,13 +72,19 @@ auto fingerprint(ClausePtrRange const &clauses) -> ClauseFingerprint {
     return result;
 }
 
-template <typename ClauseTy, typename ClauseDBTy, typename PropagationTy, typename TrailTy,
+template <typename ClauseTy,
+          typename ClauseDBTy,
+          typename PropagationTy,
+          typename TrailTy,
           typename ClauseRangeTy>
-void checkedReduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, TrailTy &trail,
-                           ClauseRangeTy toDeleteRange, std::vector<ClauseTy *> &problemClauses,
-                           std::vector<ClauseTy *> &learntClauses) {
+void checkedReduceClauseDB(ClauseDBTy& clauseDB,
+                           PropagationTy& propagation,
+                           TrailTy& trail,
+                           ClauseRangeTy toDeleteRange,
+                           std::vector<ClauseTy*>& problemClauses,
+                           std::vector<ClauseTy*>& learntClauses) {
 
-    auto assignmentReasonPred = [&propagation, &trail](Clause *clause) {
+    auto assignmentReasonPred = [&propagation, &trail](Clause* clause) {
         return propagation.isAssignmentReason(*clause, trail);
     };
 
@@ -114,7 +120,7 @@ void checkedReduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, Tra
 
     // Check that the watchers contain exactly the pointers to the relocated clauses
     auto relocatedClauses = boost::range::join(problemClauses, learntClauses);
-    std::vector<Clause const *> watchedClausesVec;
+    std::vector<Clause const*> watchedClausesVec;
     auto watchedClauses = propagation.getClausesInPropagationOrder();
 
     // Each clause occurs twice in watchedClauses => compute unique clauses
@@ -124,14 +130,15 @@ void checkedReduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, Tra
     watchedClausesVec.erase(watchedClausesVecEnd, watchedClausesVec.end());
 
     ASSERT_EQ(watchedClausesVec.size(), problemClauses.size() + learntClauses.size());
-    EXPECT_TRUE(std::is_permutation(watchedClausesVec.begin(), watchedClausesVec.end(),
-                                    relocatedClauses.begin()));
+    EXPECT_TRUE(std::is_permutation(
+        watchedClausesVec.begin(), watchedClausesVec.end(), relocatedClauses.begin()));
 
     // Check that reason clauses have been preserved:
     for (CNFLit assignment : trail.getAssignments(0)) {
-        if (Clause const *reason = propagation.getAssignmentReason(assignment.getVariable())) {
-            bool found = (std::find(relocatedClauses.begin(), relocatedClauses.end(),
-                                    const_cast<Clause *>(reason)) != relocatedClauses.end());
+        if (Clause const* reason = propagation.getAssignmentReason(assignment.getVariable())) {
+            bool found = (std::find(relocatedClauses.begin(),
+                                    relocatedClauses.end(),
+                                    const_cast<Clause*>(reason)) != relocatedClauses.end());
             EXPECT_TRUE(found) << "Reason clause not preserved";
         }
     }
@@ -139,9 +146,12 @@ void checkedReduceClauseDB(ClauseDBTy &clauseDB, PropagationTy &propagation, Tra
 
 // Inserts \p nClauses random clauses of lengths in [2...20] into ClauseDB
 // and returns a vector containing pointers to the inserted clauses.
-auto makeClauses(HeapletClauseDB<Clause> &clauseDB, Propagation<Trail<Clause>> &trail, int nClauses,
-                 CNFVar maxVar, bool isLearnt) -> std::vector<Clause *> {
-    std::vector<Clause *> result;
+auto makeClauses(HeapletClauseDB<Clause>& clauseDB,
+                 Propagation<Trail<Clause>>& trail,
+                 int nClauses,
+                 CNFVar maxVar,
+                 bool isLearnt) -> std::vector<Clause*> {
+    std::vector<Clause*> result;
 
     std::mt19937_64 rng; // using no random seed => deterministic results
 
@@ -155,7 +165,7 @@ auto makeClauses(HeapletClauseDB<Clause> &clauseDB, Propagation<Trail<Clause>> &
 
     for (int i = 0; i < nClauses; ++i) {
         usedVariables.clear();
-        Clause &clause = clauseDB.allocate(clauseLengthDistribution(rng));
+        Clause& clause = clauseDB.allocate(clauseLengthDistribution(rng));
         for (unsigned int j = 0; j < clause.size(); ++j) {
             CNFVar variable;
             do {
@@ -183,9 +193,9 @@ TEST(IntegrationClauseDBReduction, reduceIsConsistentOnEmptyProblem) {
     Propagation<Trail<Clause>> propagation{CNFVar{100}, trail};
     HeapletClauseDB<Clause> clauseDB{256ULL, 1048576ULL};
 
-    std::vector<Clause *> problemClauses;
-    std::vector<Clause *> learntClauses;
-    std::vector<Clause *> toDelete;
+    std::vector<Clause*> problemClauses;
+    std::vector<Clause*> learntClauses;
+    std::vector<Clause*> toDelete;
 
     checkedReduceClauseDB(clauseDB, propagation, trail, toDelete, problemClauses, learntClauses);
 }
@@ -196,14 +206,15 @@ TEST(IntegrationClauseDBReduction, reduceDeletesNonreasonClauses) {
     Propagation<Trail<Clause>> propagation{maxVar, trail};
     HeapletClauseDB<Clause> clauseDB{256ULL, 1048576ULL};
 
-    std::vector<Clause *> problemClauses = makeClauses(clauseDB, propagation, 20, maxVar, false);
-    std::vector<Clause *> learntClauses = makeClauses(clauseDB, propagation, 150, maxVar, true);
+    std::vector<Clause*> problemClauses = makeClauses(clauseDB, propagation, 20, maxVar, false);
+    std::vector<Clause*> learntClauses = makeClauses(clauseDB, propagation, 150, maxVar, true);
     auto toDelete = boost::make_iterator_range(learntClauses.end() - 100, learntClauses.end());
     checkedReduceClauseDB(clauseDB, propagation, trail, toDelete, problemClauses, learntClauses);
 }
 
-void tryCreateForcingAssignment(Trail<Clause> &trail, Propagation<Trail<Clause>> &propagation,
-                                Clause const *clause) {
+void tryCreateForcingAssignment(Trail<Clause>& trail,
+                                Propagation<Trail<Clause>>& propagation,
+                                Clause const* clause) {
     for (auto lit : *clause) {
         if (!isDeterminate(trail.getAssignment(lit))) {
             trail.addAssignment(~lit);
@@ -218,8 +229,8 @@ TEST(IntegrationClauseDBReduction, reducePreservesReasonClauses) {
     Propagation<Trail<Clause>> propagation{maxVar, trail};
     HeapletClauseDB<Clause> clauseDB{256ULL, 1048576ULL};
 
-    std::vector<Clause *> problemClauses = makeClauses(clauseDB, propagation, 20, maxVar, false);
-    std::vector<Clause *> learntClauses = makeClauses(clauseDB, propagation, 150, maxVar, true);
+    std::vector<Clause*> problemClauses = makeClauses(clauseDB, propagation, 20, maxVar, false);
+    std::vector<Clause*> learntClauses = makeClauses(clauseDB, propagation, 150, maxVar, true);
     auto toDelete = boost::make_iterator_range(learntClauses.end() - 100, learntClauses.end());
 
     // pick clauses in problemClauses and try to make them reason clauses:
@@ -228,8 +239,9 @@ TEST(IntegrationClauseDBReduction, reducePreservesReasonClauses) {
         tryCreateForcingAssignment(trail, propagation, problemClauses[i]);
     }
 
-    ASSERT_TRUE(std::any_of(problemClauses.begin(), problemClauses.end(),
-                            [&propagation, &trail](Clause const *clause) {
+    ASSERT_TRUE(std::any_of(problemClauses.begin(),
+                            problemClauses.end(),
+                            [&propagation, &trail](Clause const* clause) {
                                 return propagation.isAssignmentReason(*clause, trail);
                             }))
         << "Bad test data: did not create reason clauses in problemClauses";
@@ -240,8 +252,9 @@ TEST(IntegrationClauseDBReduction, reducePreservesReasonClauses) {
         tryCreateForcingAssignment(trail, propagation, *(toDelete.begin() + i));
     }
 
-    ASSERT_TRUE(std::any_of(toDelete.begin(), toDelete.end(),
-                            [&propagation, &trail](Clause const *clause) {
+    ASSERT_TRUE(std::any_of(toDelete.begin(),
+                            toDelete.end(),
+                            [&propagation, &trail](Clause const* clause) {
                                 return propagation.isAssignmentReason(*clause, trail);
                             }))
         << "Bad test data: did not create reason clauses in toDelete";

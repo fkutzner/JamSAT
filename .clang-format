@@ -5,9 +5,11 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 2
 IndentWidth: 4
 MaxEmptyLinesToKeep: 2
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: false
+BinPackParameters: false
 AllowShortFunctionsOnASingleLine: Inline
 AlwaysBreakTemplateDeclarations: true
 AccessModifierOffset: -4
 FixNamespaceComments: false
+DerivePointerAlignment: false
+PointerAlignment: Left

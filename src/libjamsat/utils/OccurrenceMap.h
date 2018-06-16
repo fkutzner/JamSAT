@@ -56,12 +56,13 @@ namespace jamsat {
  * \tparam ContainerValueIndex      A type that is a model of the concept `Index` with indexed
  *                                  type `Container::value_type`.
  */
-template <typename ContainerT, typename ContainerDeletedQuery,
+template <typename ContainerT,
+          typename ContainerDeletedQuery,
           typename ContainerValueIndex = typename ContainerT::value_type::Index>
 class OccurrenceMap {
 public:
     using Container = ContainerT;
-    using ContainerRange = boost::iterator_range<typename std::vector<Container *>::const_iterator>;
+    using ContainerRange = boost::iterator_range<typename std::vector<Container*>::const_iterator>;
 
     /**
      * \brief Constructs an OccurrenceMap
@@ -83,7 +84,8 @@ public:
      * \param end           The end of the range of pointers to containers to be added.
      */
     template <typename ContainerPtrIt>
-    OccurrenceMap(typename Container::value_type maxElement, ContainerPtrIt begin,
+    OccurrenceMap(typename Container::value_type maxElement,
+                  ContainerPtrIt begin,
                   ContainerPtrIt end);
 
     /**
@@ -100,7 +102,7 @@ public:
      *
      * \param container     The container to be added.
      */
-    void insert(Container &container);
+    void insert(Container& container);
 
     /**
      * \brief Adds containers to the occurrence map.
@@ -134,24 +136,24 @@ public:
      * \param container     The container to be marked as to-be-deleted from the
      *                      occurrence map.
      */
-    void remove(Container const &container) noexcept;
+    void remove(Container const& container) noexcept;
 
     /**
      * \brief Removes all elements from the occurrence map.
      */
     void clear() noexcept;
 
-    OccurrenceMap(OccurrenceMap const &rhs) = delete;
-    auto operator=(OccurrenceMap const &rhs) -> OccurrenceMap & = delete;
+    OccurrenceMap(OccurrenceMap const& rhs) = delete;
+    auto operator=(OccurrenceMap const& rhs) -> OccurrenceMap& = delete;
 
-    OccurrenceMap(OccurrenceMap &&rhs) noexcept = default;
-    auto operator=(OccurrenceMap &&rhs) noexcept -> OccurrenceMap & = default;
+    OccurrenceMap(OccurrenceMap&& rhs) noexcept = default;
+    auto operator=(OccurrenceMap&& rhs) noexcept -> OccurrenceMap& = default;
 
 private:
     using value_type = typename Container::value_type;
     struct OccurrenceListWithFlags {
         bool m_requiresUpdate;
-        std::vector<Container *> m_occList;
+        std::vector<Container*> m_occList;
     };
 
     BoundedMap<typename Container::value_type, OccurrenceListWithFlags, ContainerValueIndex>
@@ -183,11 +185,11 @@ void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::incr
 
 template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
 void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::insert(
-    Container &container) {
+    Container& container) {
     if (m_deletedQuery(&container)) {
         return;
     }
-    for (auto &element : container) {
+    for (auto& element : container) {
         m_occurrences[element].m_occList.push_back(&container);
     }
 }
@@ -204,10 +206,10 @@ void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::inse
 
 template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
 void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::remove(
-    Container const &container) noexcept {
+    Container const& container) noexcept {
     JAM_ASSERT(m_deletedQuery(&container),
                "Only remove containers marked for deletion may be deleted");
-    for (auto &element : container) {
+    for (auto& element : container) {
         m_occurrences[element].m_requiresUpdate = true;
     }
 }
@@ -215,7 +217,7 @@ void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::remov
 template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
 auto OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::
 operator[](typename Container::value_type value) noexcept -> ContainerRange {
-    auto &occList = m_occurrences[value].m_occList;
+    auto& occList = m_occurrences[value].m_occList;
     if (m_occurrences[value].m_requiresUpdate) {
         boost::remove_erase_if(occList, m_deletedQuery);
         m_occurrences[value].m_requiresUpdate = false;
@@ -225,7 +227,7 @@ operator[](typename Container::value_type value) noexcept -> ContainerRange {
 
 template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
 void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::clear() noexcept {
-    for (auto &x : m_occurrences.values()) {
+    for (auto& x : m_occurrences.values()) {
         x.m_occList.clear();
     }
 }

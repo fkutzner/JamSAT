@@ -75,7 +75,7 @@ TEST(SolverIntegration, CDCLSatSolver_rule110_reachable) {
     testConfig.clauseMemoryLimit = 1048576ULL;
     CDCLSatSolver<> underTest{testConfig};
 
-    for (auto &clause : rule110Encoding.cnfProblem.getClauses()) {
+    for (auto& clause : rule110Encoding.cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
 
@@ -94,7 +94,7 @@ TEST(SolverIntegration, CDCLSatSolver_rule110_unreachable) {
     testConfig.clauseMemoryLimit = 1048576ULL;
     CDCLSatSolver<> underTest{testConfig};
 
-    for (auto &clause : rule110Encoding.cnfProblem.getClauses()) {
+    for (auto& clause : rule110Encoding.cnfProblem.getClauses()) {
         underTest.addClause(clause);
     }
     ASSERT_EQ(isSatisfiableViaMinisat(rule110Encoding.cnfProblem), TBools::FALSE)
@@ -111,7 +111,7 @@ TEST(SolverIntegration, CDCLSatSolver_rule110_incremental) {
     CDCLSatSolver<> underTest{testConfig};
     underTest.addProblem(rule110Encoding.cnfProblem);
 
-    auto &inputs = rule110Encoding.freeInputs;
+    auto& inputs = rule110Encoding.freeInputs;
     ASSERT_EQ(inputs.size(), 8ULL);
 
     // Should be satistiable with input "xxxxxxx1":
@@ -127,8 +127,14 @@ TEST(SolverIntegration, CDCLSatSolver_rule110_incremental) {
     EXPECT_EQ(result.isSatisfiable, TBools::TRUE);
 
     // Should be satistiable with input "00000001":
-    result = underTest.solve({~inputs[0], ~inputs[1], ~inputs[2], ~inputs[3], ~inputs[4],
-                              ~inputs[5], ~inputs[6], inputs[7]});
+    result = underTest.solve({~inputs[0],
+                              ~inputs[1],
+                              ~inputs[2],
+                              ~inputs[3],
+                              ~inputs[4],
+                              ~inputs[5],
+                              ~inputs[6],
+                              inputs[7]});
     EXPECT_EQ(result.isSatisfiable, TBools::TRUE);
 }
 }

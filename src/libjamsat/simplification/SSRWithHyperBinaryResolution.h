@@ -65,7 +65,7 @@ namespace jamsat {
 template <typename ClauseType>
 class FailedLiteralException {
 public:
-    FailedLiteralException(ClauseType *conflictingClause, size_t decisionLevelToRevisit);
+    FailedLiteralException(ClauseType* conflictingClause, size_t decisionLevelToRevisit);
 
     ~FailedLiteralException();
 
@@ -73,7 +73,7 @@ public:
      * \brief Returns the conflicting clause.
      * \returns The conflicting clause.
      */
-    ClauseType *getConflictingClause() const noexcept;
+    ClauseType* getConflictingClause() const noexcept;
 
     /**
      * \brief Returns the decision level to revisit after having finished
@@ -84,13 +84,16 @@ public:
     size_t getDecisionLevelToRevisit() const noexcept;
 
 private:
-    ClauseType *m_conflictingClause;
+    ClauseType* m_conflictingClause;
     size_t m_decisionLevelToRevisit;
 };
 
 namespace simp_ssrhbr_detail {
-template <typename OccurrenceMapT, typename ModFnT, typename PropagationT,
-          typename AssignmentProviderT, typename StampMapT>
+template <typename OccurrenceMapT,
+          typename ModFnT,
+          typename PropagationT,
+          typename AssignmentProviderT,
+          typename StampMapT>
 struct SSRWithHBRParams {
     static_assert(
         std::is_same<typename PropagationT::Clause, typename AssignmentProviderT::Clause>::value,
@@ -103,11 +106,11 @@ struct SSRWithHBRParams {
     using AssignmentProvider = AssignmentProviderT;
     using StampMap = StampMapT;
 
-    OccurrenceMap *const occMap;
-    ModFn const *const notifyModificationAhead;
-    Propagation *const propagation;
-    AssignmentProvider *const assignments;
-    StampMap *const tempStamps;
+    OccurrenceMap* const occMap;
+    ModFn const* const notifyModificationAhead;
+    Propagation* const propagation;
+    AssignmentProvider* const assignments;
+    StampMap* const tempStamps;
 };
 }
 
@@ -139,13 +142,17 @@ struct SSRWithHBRParams {
  *                                  in any clause contained in \p occMap, and during propagation
  *                                  of \p resolveAt with \p propagation.
  */
-template <typename OccurrenceMapT, typename ModFnT, typename PropagationT,
-          typename AssignmentProviderT, typename StampMapT>
-auto createSSRWithHBRParams(OccurrenceMapT &occMap, ModFnT const &notifyModificationAhead,
-                            PropagationT &propagation, AssignmentProviderT &assignmentProvider,
-                            StampMapT &tempStamps)
-    -> simp_ssrhbr_detail::SSRWithHBRParams<OccurrenceMapT, ModFnT, PropagationT,
-                                            AssignmentProviderT, StampMapT>;
+template <typename OccurrenceMapT,
+          typename ModFnT,
+          typename PropagationT,
+          typename AssignmentProviderT,
+          typename StampMapT>
+auto createSSRWithHBRParams(OccurrenceMapT& occMap,
+                            ModFnT const& notifyModificationAhead,
+                            PropagationT& propagation,
+                            AssignmentProviderT& assignmentProvider,
+                            StampMapT& tempStamps) -> simp_ssrhbr_detail::
+    SSRWithHBRParams<OccurrenceMapT, ModFnT, PropagationT, AssignmentProviderT, StampMapT>;
 
 /**
  * \brief Performs self-subsuming resolution and strengthening with hyper-binary
@@ -185,7 +192,7 @@ auto createSSRWithHBRParams(OccurrenceMapT &occMap, ModFnT const &notifyModifica
  *
  */
 template <typename SSRWithHBRParamsT>
-auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT &params, CNFLit resolveAt)
+auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT& params, CNFLit resolveAt)
     -> SimplificationStats;
 
 /********** Implementation ****************************** */
@@ -196,33 +203,38 @@ enum ClauseOptimizationResult { UNCHANGED, STRENGTHENED, SCHEDULED_FOR_DELETION 
 // Removes stamped literals from a clause and marks the clause as scheduled for deletion
 // if it contains some literal L such that ~L is stamped.
 template <typename SSRWithHBRParamsT, typename Clause>
-auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT &params, Clause &clause,
+auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT& params,
+                                Clause& clause,
                                 typename SSRWithHBRParamsT::StampMap::Stamp stamp,
-                                SimplificationStats &simpStats) -> ClauseOptimizationResult;
+                                SimplificationStats& simpStats) -> ClauseOptimizationResult;
 }
 
-template <typename OccurrenceMapT, typename ModFnT, typename PropagationT,
-          typename AssignmentProviderT, typename StampMapT>
-auto createSSRWithHBRParams(OccurrenceMapT &occMap, ModFnT const &notifyModificationAhead,
-                            PropagationT &propagation, AssignmentProviderT &assignmentProvider,
-                            StampMapT &tempStamps)
-    -> simp_ssrhbr_detail::SSRWithHBRParams<OccurrenceMapT, ModFnT, PropagationT,
-                                            AssignmentProviderT, StampMapT> {
+template <typename OccurrenceMapT,
+          typename ModFnT,
+          typename PropagationT,
+          typename AssignmentProviderT,
+          typename StampMapT>
+auto createSSRWithHBRParams(OccurrenceMapT& occMap,
+                            ModFnT const& notifyModificationAhead,
+                            PropagationT& propagation,
+                            AssignmentProviderT& assignmentProvider,
+                            StampMapT& tempStamps) -> simp_ssrhbr_detail::
+    SSRWithHBRParams<OccurrenceMapT, ModFnT, PropagationT, AssignmentProviderT, StampMapT> {
     return {&occMap, &notifyModificationAhead, &propagation, &assignmentProvider, &tempStamps};
 }
 
 template <typename SSRWithHBRParamsT>
-auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT &params, CNFLit resolveAt)
+auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT& params, CNFLit resolveAt)
     -> SimplificationStats {
 
     using Clause = typename SSRWithHBRParamsT::Propagation::Clause;
 
     SimplificationStats result;
 
-    auto &occMap = *(params.occMap);
-    auto &propagation = *(params.propagation);
-    auto &assignments = *(params.assignments);
-    auto &tempStamps = *(params.tempStamps);
+    auto& occMap = *(params.occMap);
+    auto& propagation = *(params.propagation);
+    auto& assignments = *(params.assignments);
+    auto& tempStamps = *(params.tempStamps);
 
     if (assignments.getAssignment(resolveAt) != TBools::INDETERMINATE) {
         // The assignment of resolveAt is already forced by a unary clause
@@ -272,9 +284,10 @@ auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT &params, CNFLit resolveAt)
             bool deleted =
                 (optResult == simp_ssrhbr_detail::ClauseOptimizationResult::SCHEDULED_FOR_DELETION);
             (void)deleted; // suppress warning when logging is disabled
-            JAM_LOG_SSRWITHHBR(info, "Modified clause " << std::addressof(*clause) << " (now: "
-                                                        << toString(clause->begin(), clause->end())
-                                                        << (deleted ? ", deleted)" : ")"));
+            JAM_LOG_SSRWITHHBR(info,
+                               "Modified clause " << std::addressof(*clause) << " (now: "
+                                                  << toString(clause->begin(), clause->end())
+                                                  << (deleted ? ", deleted)" : ")"));
         }
     }
     return result;
@@ -282,9 +295,10 @@ auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT &params, CNFLit resolveAt)
 
 namespace simp_ssrhbr_detail {
 template <typename SSRWithHBRParamsT, typename Clause>
-auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT &params, Clause &clause,
+auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT& params,
+                                Clause& clause,
                                 typename SSRWithHBRParamsT::StampMap::Stamp stamp,
-                                SimplificationStats &simpStats) -> ClauseOptimizationResult {
+                                SimplificationStats& simpStats) -> ClauseOptimizationResult {
     auto notifyModificationAheadFn = *(params.notifyModificationAhead);
     bool clauseModified = false;
     bool strengthened = false;
@@ -326,7 +340,7 @@ auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT &params, Clause &clause,
 }
 
 template <typename ClauseType>
-FailedLiteralException<ClauseType>::FailedLiteralException(ClauseType *conflictingClause,
+FailedLiteralException<ClauseType>::FailedLiteralException(ClauseType* conflictingClause,
                                                            size_t decisionLevelToRevisit)
   : m_conflictingClause{conflictingClause}, m_decisionLevelToRevisit{decisionLevelToRevisit} {}
 
@@ -334,7 +348,7 @@ template <typename ClauseType>
 FailedLiteralException<ClauseType>::~FailedLiteralException() {}
 
 template <typename ClauseType>
-ClauseType *FailedLiteralException<ClauseType>::getConflictingClause() const noexcept {
+ClauseType* FailedLiteralException<ClauseType>::getConflictingClause() const noexcept {
     return m_conflictingClause;
 }
 

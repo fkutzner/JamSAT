@@ -91,7 +91,7 @@ TEST(UnitUtils, boundedMapValueRangeContainsExactlyTheValues) {
     underTest[2] = 2.0f;
     std::vector<double> expected{1.0f, 2.0f, 3.0f};
     expectRangeContainsValues(underTest.values(), expected);
-    expectRangeContainsValues(const_cast<const decltype(underTest) *>(&underTest)->values(),
+    expectRangeContainsValues(const_cast<const decltype(underTest)*>(&underTest)->values(),
                               expected);
 }
 }
