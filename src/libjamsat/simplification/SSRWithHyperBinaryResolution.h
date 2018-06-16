@@ -140,6 +140,18 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
 
 /********** Implementation ****************************** */
 
+namespace simp_ssrhbr_detail {
+enum ClauseOptimizationResult { UNCHANGED, STRENGTHENED, SCHEDULED_FOR_DELETION };
+
+// Removes stamped literals from a clause and marks the clause as scheduled for deletion
+// if it contains some literal L such that ~L is stamped.
+template <typename Clause, typename StampMap, typename ModFn>
+auto ssrWithHBRMinimizeOrDelete(Clause &clause, StampMap &tempStamps,
+                                typename StampMap::Stamp stamp,
+                                ModFn const &notifyModificationAhead,
+                                SimplificationStats &simpStats) -> ClauseOptimizationResult;
+}
+
 template <typename OccurrenceMap, typename ModFn, typename Propagation, typename AssignmentProvider,
           typename StampMap>
 auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModificationAhead,
@@ -160,31 +172,27 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
 
     auto backtrackLevel = assignments.getCurrentDecisionLevel();
     assignments.newDecisionLevel();
-
     assignments.addAssignment(~resolveAt);
     auto confl = propagation.propagateUntilFixpoint(
         ~resolveAt, Propagation::PropagationMode::EXCLUDE_REDUNDANT_CLAUSES);
     if (confl) {
+        // Deliberately not backtracking before throwing the exception:
+        // The current assignment & reason clauses might be needed by
+        // the exception handler to derive failed literals.
         throw FailedLiteralException<Clause>(confl, backtrackLevel);
     }
-
     OnExitScope backtrackOnExit{
         [&assignments, backtrackLevel]() { assignments.revisitDecisionLevel(backtrackLevel); }};
 
-    auto stampingContext = tempStamps.createContext();
-    auto stamp = stampingContext.getStamp();
-
     auto currentDL = assignments.getDecisionLevelAssignments(assignments.getCurrentDecisionLevel());
-    auto currentDLEnd = currentDL.end();
-
-    bool resolveAtImpliedAnything = false;
-    for (auto lit = currentDL.begin() + 1; lit != currentDLEnd; ++lit) {
-        tempStamps.setStamped(*lit, stamp, true);
-        resolveAtImpliedAnything = true;
+    if (currentDL.size() == 1) {
+        return result; // the assignment didn't force any other assignments
     }
 
-    if (!resolveAtImpliedAnything) {
-        return result;
+    auto stampingContext = tempStamps.createContext();
+    auto stamp = stampingContext.getStamp();
+    for (auto lit = currentDL.begin() + 1; lit != currentDL.end(); ++lit) {
+        tempStamps.setStamped(*lit, stamp, true);
     }
 
     for (auto clause : occMap[resolveAt]) {
@@ -201,48 +209,67 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
             continue;
         }
 
-        bool clauseModified = false;
-        bool strengthened = false;
-        for (auto litIt = clause->begin(); litIt != clause->end();) {
-            if (tempStamps.isStamped(*litIt, stamp)) {
-                // remove by subsumption: the clause contains some literal
-                // b such that (resolveAt b) is a "virtual" binary
-                if (!clauseModified) {
-                    notifyModificationAhead(clause);
-                }
-                ++result.amntClausesRemovedBySubsumption;
-                clause->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
-                break;
-            } else if (tempStamps.isStamped(~(*litIt), stamp)) {
-                // strengthen the clause: the clause contains some
-                // literal b such that (resolveAt ~b) is a "virtual" binary,
-                // therefore b can be removed via resolution:
-                if (!clauseModified) {
-                    notifyModificationAhead(clause);
-                    clauseModified = true;
-                }
-                ++result.amntLiteralsRemovedByStrengthening;
-                litIt = clause->erase(litIt);
-                strengthened = true;
-            } else {
-                ++litIt;
-            }
-        }
+        simp_ssrhbr_detail::ClauseOptimizationResult optResult;
+        optResult = simp_ssrhbr_detail::ssrWithHBRMinimizeOrDelete(*clause, tempStamps, stamp,
+                                                                   notifyModificationAhead, result);
 
-        if (clause->size() <= 1) {
-            JAM_ASSERT(assignments.getAssignmentDecisionLevel((*clause)[0].getVariable()) == 0ULL,
-                       "Not expecting to find new unaries here :O");
-            clause->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
-            JAM_LOG_SSRWITHHBR(info, "Deleting clause "
-                                         << std::addressof(*clause)
-                                         << " (redundancy detected by strenghtening)");
-        } else if (strengthened) {
-            JAM_LOG_SSRWITHHBR(info, "Strenghtened " << std::addressof(*clause) << " to "
-                                                     << toString(clause->begin(), clause->end()));
-            clause->clauseUpdated();
+        JAM_ASSERT(clause->size() >= 2, "Not expecting to find new unaries during SSR with HBR");
+        if (optResult == simp_ssrhbr_detail::ClauseOptimizationResult::STRENGTHENED) {
+            JAM_LOG_SSRWITHHBR(info, "Strenghtened clause "
+                                         << std::addressof(*clause) << " to "
+                                         << toString(clause->begin(), clause->end()));
+
+        } else if (optResult ==
+                   simp_ssrhbr_detail::ClauseOptimizationResult::SCHEDULED_FOR_DELETION) {
+            JAM_LOG_SSRWITHHBR(info, "Deleting clause " << std::addressof(*clause));
         }
     }
     return result;
+}
+
+namespace simp_ssrhbr_detail {
+template <typename Clause, typename StampMap, typename ModFn>
+auto ssrWithHBRMinimizeOrDelete(Clause &clause, StampMap &tempStamps,
+                                typename StampMap::Stamp stamp,
+                                ModFn const &notifyModificationAhead,
+                                SimplificationStats &simpStats) -> ClauseOptimizationResult {
+    bool clauseModified = false;
+    bool strengthened = false;
+    for (auto litIt = clause.begin(); litIt != clause.end();) {
+        if (tempStamps.isStamped(*litIt, stamp)) {
+            // remove by subsumption: the clause contains some literal
+            // b such that (resolveAt b) is a "virtual" binary
+            if (!clauseModified) {
+                notifyModificationAhead(&clause);
+            }
+            ++simpStats.amntClausesRemovedBySubsumption;
+            clause.setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
+            break;
+        } else if (tempStamps.isStamped(~(*litIt), stamp)) {
+            // strengthen the clause: the clause contains some
+            // literal b such that (resolveAt ~b) is a "virtual" binary,
+            // therefore b can be removed via resolution:
+            if (!clauseModified) {
+                notifyModificationAhead(&clause);
+                clauseModified = true;
+            }
+            ++simpStats.amntLiteralsRemovedByStrengthening;
+            litIt = clause.erase(litIt);
+            strengthened = true;
+        } else {
+            ++litIt;
+        }
+    }
+
+    if (clause.getFlag(Clause::Flag::SCHEDULED_FOR_DELETION)) {
+        return ClauseOptimizationResult::SCHEDULED_FOR_DELETION;
+    } else if (strengthened) {
+        clause.clauseUpdated();
+        return ClauseOptimizationResult::STRENGTHENED;
+    } else {
+        return ClauseOptimizationResult::UNCHANGED;
+    }
+}
 }
 
 template <typename ClauseType>
