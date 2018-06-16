@@ -73,8 +73,9 @@ protected:
     }
 
     auto performSSRWithHBR(CNFLit resolveAt) -> SimplificationStats {
-        return ssrWithHyperBinaryResolution(m_occurrenceMap, m_notifyClauseModification,
-                                            m_propagation, m_trail, m_stamps, resolveAt);
+        auto ssrWithHBRParams = createSSRWithHBRParams(m_occurrenceMap, m_notifyClauseModification,
+                                                       m_propagation, m_trail, m_stamps);
+        return ssrWithHyperBinaryResolution(ssrWithHBRParams, resolveAt);
     }
 
     void expectDeleted(Clause const &c) {

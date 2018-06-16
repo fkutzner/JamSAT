@@ -78,22 +78,31 @@ private:
     size_t m_decisionLevelToRevisit;
 };
 
+namespace simp_ssrhbr_detail {
+template <typename OccurrenceMapT, typename ModFnT, typename PropagationT,
+          typename AssignmentProviderT, typename StampMapT>
+struct SSRWithHBRParams {
+    static_assert(
+        std::is_same<typename PropagationT::Clause, typename AssignmentProviderT::Clause>::value,
+        "Propagation and AssignmentProvider must have the same Clause type");
+
+    using Clause = typename PropagationT::Clause;
+    using OccurrenceMap = OccurrenceMapT;
+    using ModFn = ModFnT;
+    using Propagation = PropagationT;
+    using AssignmentProvider = AssignmentProviderT;
+    using StampMap = StampMapT;
+
+    OccurrenceMap *const occMap;
+    ModFn const *const notifyModificationAhead;
+    Propagation *const propagation;
+    AssignmentProvider *const assignments;
+    StampMap *const tempStamps;
+};
+}
+
 /**
- * \brief Performs self-subsuming resolution and strengthening with hyper-binary
- *        resolution.
- *
- * Precondition: All assignments forced by unary clauses (wrt. \p propagation)
- * have been propagated to fixpoint.
- *
- * Computes the set `A` of assignments implied by an assignment represented
- * by `resolveAt` and for each clause containing `resolveAt`, applies the following:
- *
- * - (a) if the intersection of `A` and `C` is not empty, `C` is scheduled for deletion
- *   since it is redundant.
- * - (b) for each `c in C`: if `~c in A`, `c` is removed from `C`.
- *
- * When this function returns, \p assignments contains exactly the assignments it
- * contians at the corresponding call to this function.
+ * \brief Creates a parameter-struct for ssrWithHyperBinaryResolution()
  *
  * \ingroup JamSAT_Simplification
  *
@@ -119,6 +128,35 @@ private:
  * \param tempStamps                A StampMap capable of stamping all CNFLit objects occurring
  *                                  in any clause contained in \p occMap, and during propagation
  *                                  of \p resolveAt with \p propagation.
+ */
+template <typename OccurrenceMapT, typename ModFnT, typename PropagationT,
+          typename AssignmentProviderT, typename StampMapT>
+auto createSSRWithHBRParams(OccurrenceMapT &occMap, ModFnT const &notifyModificationAhead,
+                            PropagationT &propagation, AssignmentProviderT &assignmentProvider,
+                            StampMapT &tempStamps)
+    -> simp_ssrhbr_detail::SSRWithHBRParams<OccurrenceMapT, ModFnT, PropagationT,
+                                            AssignmentProviderT, StampMapT>;
+
+/**
+ * \brief Performs self-subsuming resolution and strengthening with hyper-binary
+ *        resolution.
+ *
+ * Precondition: All assignments forced by unary clauses (wrt. \p params.propagation)
+ * have been propagated to fixpoint.
+ *
+ * Computes the set `A` of assignments implied by an assignment represented
+ * by `resolveAt` and for each clause containing `resolveAt`, applies the following:
+ *
+ * - (a) if the intersection of `A` and `C` is not empty, `C` is scheduled for deletion
+ *   since it is redundant.
+ * - (b) for each `c in C`: if `~c in A`, `c` is removed from `C`.
+ *
+ * When this function returns, \p params.assignments contains exactly the assignments it
+ * contians at the corresponding call to this function.
+ *
+ * \tparam SSRWithHBRParamsT        Any return type of createSSRWithHBRParams()
+ *
+ * \param params                    Parameter object created using createSSRWithHBRParams().
  * \param resolveAt                 The pivot literal.
  *
  *
@@ -132,11 +170,9 @@ private:
  *                                  scheduled for deletion and how many literals have been
  *                                  removed from clauses via strengthening.
  */
-template <typename OccurrenceMap, typename ModFn, typename Propagation, typename AssignmentProvider,
-          typename StampMap>
-auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModificationAhead,
-                                  Propagation &propagation, AssignmentProvider &assignments,
-                                  StampMap &tempStamps, CNFLit resolveAt) -> SimplificationStats;
+template <typename SSRWithHBRParamsT>
+auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT &params, CNFLit resolveAt)
+    -> SimplificationStats;
 
 /********** Implementation ****************************** */
 
@@ -145,25 +181,34 @@ enum ClauseOptimizationResult { UNCHANGED, STRENGTHENED, SCHEDULED_FOR_DELETION 
 
 // Removes stamped literals from a clause and marks the clause as scheduled for deletion
 // if it contains some literal L such that ~L is stamped.
-template <typename Clause, typename StampMap, typename ModFn>
-auto ssrWithHBRMinimizeOrDelete(Clause &clause, StampMap &tempStamps,
-                                typename StampMap::Stamp stamp,
-                                ModFn const &notifyModificationAhead,
+template <typename SSRWithHBRParamsT, typename Clause>
+auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT &params, Clause &clause,
+                                typename SSRWithHBRParamsT::StampMap::Stamp stamp,
                                 SimplificationStats &simpStats) -> ClauseOptimizationResult;
 }
 
-template <typename OccurrenceMap, typename ModFn, typename Propagation, typename AssignmentProvider,
-          typename StampMap>
-auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModificationAhead,
-                                  Propagation &propagation, AssignmentProvider &assignments,
-                                  StampMap &tempStamps, CNFLit resolveAt) -> SimplificationStats {
-    static_assert(
-        std::is_same<typename Propagation::Clause, typename AssignmentProvider::Clause>::value,
-        "Propagation and AssignmentProvider must have the same Clause type");
+template <typename OccurrenceMapT, typename ModFnT, typename PropagationT,
+          typename AssignmentProviderT, typename StampMapT>
+auto createSSRWithHBRParams(OccurrenceMapT &occMap, ModFnT const &notifyModificationAhead,
+                            PropagationT &propagation, AssignmentProviderT &assignmentProvider,
+                            StampMapT &tempStamps)
+    -> simp_ssrhbr_detail::SSRWithHBRParams<OccurrenceMapT, ModFnT, PropagationT,
+                                            AssignmentProviderT, StampMapT> {
+    return {&occMap, &notifyModificationAhead, &propagation, &assignmentProvider, &tempStamps};
+}
 
-    using Clause = typename Propagation::Clause;
+template <typename SSRWithHBRParamsT>
+auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT &params, CNFLit resolveAt)
+    -> SimplificationStats {
+
+    using Clause = typename SSRWithHBRParamsT::Propagation::Clause;
 
     SimplificationStats result;
+
+    auto &occMap = *(params.occMap);
+    auto &propagation = *(params.propagation);
+    auto &assignments = *(params.assignments);
+    auto &tempStamps = *(params.tempStamps);
 
     if (assignments.getAssignment(resolveAt) != TBools::INDETERMINATE) {
         // The assignment of resolveAt is already forced by a unary clause
@@ -174,7 +219,7 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
     assignments.newDecisionLevel();
     assignments.addAssignment(~resolveAt);
     auto confl = propagation.propagateUntilFixpoint(
-        ~resolveAt, Propagation::PropagationMode::EXCLUDE_REDUNDANT_CLAUSES);
+        ~resolveAt, SSRWithHBRParamsT::Propagation::PropagationMode::EXCLUDE_REDUNDANT_CLAUSES);
     if (confl) {
         // Deliberately not backtracking before throwing the exception:
         // The current assignment & reason clauses might be needed by
@@ -206,8 +251,7 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
         }
 
         simp_ssrhbr_detail::ClauseOptimizationResult optResult;
-        optResult = simp_ssrhbr_detail::ssrWithHBRMinimizeOrDelete(*clause, tempStamps, stamp,
-                                                                   notifyModificationAhead, result);
+        optResult = simp_ssrhbr_detail::ssrWithHBRMinimizeOrDelete(params, *clause, stamp, result);
 
         JAM_ASSERT(clause->size() >= 2, "Not expecting to find new unaries during SSR with HBR");
         if (optResult != simp_ssrhbr_detail::ClauseOptimizationResult::UNCHANGED) {
@@ -223,29 +267,29 @@ auto ssrWithHyperBinaryResolution(OccurrenceMap &occMap, ModFn const &notifyModi
 }
 
 namespace simp_ssrhbr_detail {
-template <typename Clause, typename StampMap, typename ModFn>
-auto ssrWithHBRMinimizeOrDelete(Clause &clause, StampMap &tempStamps,
-                                typename StampMap::Stamp stamp,
-                                ModFn const &notifyModificationAhead,
+template <typename SSRWithHBRParamsT, typename Clause>
+auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT &params, Clause &clause,
+                                typename SSRWithHBRParamsT::StampMap::Stamp stamp,
                                 SimplificationStats &simpStats) -> ClauseOptimizationResult {
+    auto notifyModificationAheadFn = *(params.notifyModificationAhead);
     bool clauseModified = false;
     bool strengthened = false;
     for (auto litIt = clause.begin(); litIt != clause.end();) {
-        if (tempStamps.isStamped(*litIt, stamp)) {
+        if (params.tempStamps->isStamped(*litIt, stamp)) {
             // remove by subsumption: the clause contains some literal
             // b such that (resolveAt b) is a "virtual" binary
             if (!clauseModified) {
-                notifyModificationAhead(&clause);
+                notifyModificationAheadFn(&clause);
             }
             ++simpStats.amntClausesRemovedBySubsumption;
             clause.setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
             break;
-        } else if (tempStamps.isStamped(~(*litIt), stamp)) {
+        } else if (params.tempStamps->isStamped(~(*litIt), stamp)) {
             // strengthen the clause: the clause contains some
             // literal b such that (resolveAt ~b) is a "virtual" binary,
             // therefore b can be removed via resolution:
             if (!clauseModified) {
-                notifyModificationAhead(&clause);
+                notifyModificationAheadFn(&clause);
                 clauseModified = true;
             }
             ++simpStats.amntLiteralsRemovedByStrengthening;

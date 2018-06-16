@@ -210,12 +210,14 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     result += scheduleClausesSubsumedByUnariesForDeletion(m_occurrenceMap, delMarker, unaryClauses);
     result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, unaryClauses);
 
+    auto ssrWithHBRParams = createSSRWithHBRParams(m_occurrenceMap, delMarker, m_propagation,
+                                                   m_assignmentProvider, tempStamps);
+
     for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
         for (CNFSign sign : {CNFSign::NEGATIVE, CNFSign::POSITIVE}) {
             CNFLit resolveAt{i, sign};
             try {
-                result += ssrWithHyperBinaryResolution(m_occurrenceMap, delMarker, m_propagation,
-                                                       m_assignmentProvider, tempStamps, resolveAt);
+                result += ssrWithHyperBinaryResolution(ssrWithHBRParams, resolveAt);
             } catch (FailedLiteralException<Clause> &e) {
                 try {
                     result += eliminateFailedLiteral(~resolveAt, e.getConflictingClause(),
