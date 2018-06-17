@@ -288,8 +288,8 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     }};
 
     updateOccurrenceMap(possiblyIrredundantClauses, redundantClauses);
-    runUnaryOptimizations(unaryClauses);
-    runSSRWithHBR(tempStamps, unaryClauses);
+    result += runUnaryOptimizations(unaryClauses);
+    result += runSSRWithHBR(tempStamps, unaryClauses);
 
     m_lastSeenAmntUnaries = unaryClauses.size();
     return result;
