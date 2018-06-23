@@ -41,7 +41,7 @@ Table of contents:
 3. [Building JamSAT](#building-jamsat)
 4. [Using JamSAT](#using-jamsat)
 5. [Implementation Status](#implementation-status)
-
+6. [Developer Documentation](#developer-documentation)
 
 ## Scope
 
@@ -229,3 +229,11 @@ implements the following techniques:
 | ipasir_failed | Supported |
 | ipasir_set_terminate | Supported |
 | ipasir_set_learn  | TODO |
+
+
+## Developer Documentation
+
+Build the target `doxygen` to generate JamSAT's developer documentation, which
+can then be browsed at  `<JamSAT-Build-Dir>/doc/html/index.html`. The
+[Doxygen](https://www.stack.nl/~dimitri/doxygen/) documentation system is
+required to build the documentation.
