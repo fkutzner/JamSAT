@@ -100,18 +100,11 @@ for a build recipe.
 
 Building the JamSAT test suite can be enabled by additionally
 passing the argument `-DJAMSAT_ENABLE_TESTING=ON` to the first
-`cmake` invocation. The tests have an additional dependency
-on Minisat (for acceptance test result comparisons). You'll
-need to build a Minisat [fork](https://github.com/fkutzner/minisat)
-and add the installation directory of that fork to
-JamSAT's `CMAKE_PREFIX_PATH`.
+`cmake` invocation.
 
-To run the test suite, navigate to JamSAT's build directory
-(e.g. the `JamSAT-build` created in the script above) and run
-`ctest`.
-
-
-JamSAT supports fuzz testing with
+To run the test suite, navigate to JamSAT's
+build directory (e.g. the `JamSAT-build` created in the script above) and run
+`ctest`. JamSAT supports fuzz testing with
 [afl-fuzz](http://lcamtuf.coredump.cx/afl/). To enable
 fuzzing, pass `-DJAMSAT_ENABLE_AFL_FUZZER=ON` to the first
 `cmake` invocation. You can then fuzz-test JamSAT by
@@ -125,8 +118,57 @@ description of building with testing enabled.
 
 ### Build Options
 
-TODO: Describe options that can be passed to JamSAT's CMake
-scripts
+Set options by passing `-D<OPTION>=ON|OFF` to `cmake`, e.g.
+`-DJAMSAT_ENABLE_TESTING=ON`. Unless otherwise noted, options are set to `OFF`
+by default. The list of JamSAT build options is given below.
+
+#### Controlling the scope of the build
+
+* `JAMSAT_ENABLE_TESTING` - Enable building the JamSAT test suite.
+* `JAMSAT_DISABLE_FRONTEND` - Disable building the standalone JamSAT executable.
+  If this option is set to `ON`, JamSAT will have no dependency to `zlib`.
+
+#### General compiler and linker settings
+
+* `JAMSAT_DISABLE_BOOST_LINKING_SETUP` - Don't override linker settings for Boost
+* `JAMSAT_LINK_VERBOSE` - Print information about linked dependencies
+* `JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB` - Enable symbol hiding for the
+static JamSAT library. This might be useful if you want to use the static JamSAT
+library with a dynamic library as a client.
+
+#### Logging
+
+* `JAMSAT_ENABLE_LOGGING` - Enable logging.
+* `JAMSAT_LOGGING_DEFAULT_START_EPOCH` - The first logging epoch in which
+logging is performed. Currently, a new logging epoch starts at every CDCL
+conflict. After this logging epoch, logging remains enabled. The default
+value is 0. This option only has an effect if `JAMSAT_ENABLE_LOGGING` is
+set to `ON`.
+
+When logging is enabled, JamSAT emits very fine-grained logging information.
+This can slow down the solver and produce masses of extraneous data, making
+it infeasible to use full logging for large SAT problem instances. For
+effective logging, either
+* use fuzz testing to find a small input example for the bug you're trying
+  to fix and use full logging to understand it,
+* or use the `JAMSAT_LOGGING_DEFAULT_START_EPOCH` option to restrict logging
+  to the last few (1000 to 10000) conflicts before observing the behaviour
+  you are investigating.
+
+#### Debugging
+* `JAMSAT_ENABLE_AFL_FUZZER` - Use afl-clang rsp. afl-gcc for compilation and
+  build the fuzzing targets for AFL
+* `JAMSAT_DISABLE_OPTIMIZATIONS` - Disable compiler optimimzations
+* `JAMSAT_ENABLE_SANITIZERS` - Enable code sanitizers if supported by the
+  compiler. Currently, only clang and GCC sanitizers are enabled if this option
+  is set to `ON`.
+* `JAMSAT_ENABLE_MEMORY_SANITIZER` - When using sanitizers, also enable clang's
+  memory sanitizer.
+* `JAMSAT_ENABLE_RELEASE_ASSERTIONS` Enable release-mode assertions
+* `JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS` - Enable more thorough, but expensive
+  assertions
+* `JAMSAT_ENABLE_COVERAGE` - Enable code coverage measurements. Currently only
+  works on Linux and macOS and produces `lcov`-readable coverage data.
 
 ## Using JamSAT
 
