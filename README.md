@@ -35,6 +35,14 @@ section contains a summary of its capabilities.
 JamSAT is free software distributed under the [MIT license](LICENSE)
 (X11 variant).
 
+Table of contents:
+1. [Scope](#scope)
+2. [Supported Platforms and Ecosystems](#supported-platforms-and-ecosystems)
+3. [Building JamSAT](#building-jamsat)
+4. [Using JamSAT](#using-jamsat)
+5. [Implementation Status](#implementation-status)
+
+
 ## Scope
 
 While JamSAT can be used as a generic SAT solver, its focus lies on
