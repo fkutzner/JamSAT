@@ -36,14 +36,6 @@ install:
   - cmake -G %CMAKE_GENERATOR% -DCMAKE_INSTALL_PREFIX=%INSTALLATION_DIR% ..\zlib
   - cmake --build . --config %CONFIGURATION% --target install
 
-  # Build Minisat (a testing dependency of JamSAT)
-  - cd %REPO_DIR%
-  - git clone https://github.com/fkutzner/minisat
-  - mkdir minisat-build
-  - cd minisat-build
-  - cmake -G %CMAKE_GENERATOR% -DONLY_LIBRARIES=ON -DCMAKE_INSTALL_PREFIX=%INSTALLATION_DIR% ..\minisat
-  - cmake --build . --config %CONFIGURATION% --target install
-
   # Build and test JamSAT
   - echo %PLATFORM%
   - echo %BOOST_LIBRARYDIR%
