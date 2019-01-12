@@ -42,6 +42,9 @@ public:
     auto getLBD() -> LBDType {
         return 0;
     }
+
+    template <typename LBDType>
+    void setLBD(LBDType) {}
 };
 
 using TrivialClauseSeq = std::vector<TrivialClause*>;

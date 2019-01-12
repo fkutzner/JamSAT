@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <cstdint>
 
+#include <libjamsat/solver/SolverTypeTraits.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/Logger.h>
 
@@ -49,13 +50,16 @@ namespace jamsat {
  * with `K` increasing by a fixed value at each reduction. The first reduction may be performed
  * any time when at least one clause has been learned.
  *
- * \tparam ClauseT              The clause type. `LBD l = c.getLBD()` must be a valid expression
- *                              for all ClauseT objects `c`.
+ * \tparam ClauseT              The clause type, a type satisfying the LBDCarrier concept (i.e.
+ *                              `is_lbd_carrier<ClauseT>::value` is `true`).
  * \tparam LearntClauseSeq      A sequence container type for pointers to ClauseT.
  * \tparam LBD                  The LBD type, which must be an integral type.
  */
 template <class ClauseT, class LearntClauseSeq, typename LBD>
 class GlucoseClauseDBReductionPolicy {
+    static_assert(is_lbd_carrier<ClauseT>::value,
+                  "ClauseT must satisfy is_lbd_carrier<T>, but does not");
+
 public:
     /**
      * \brief Constructs a new ClauseDBReductionPolicy instance.
