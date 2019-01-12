@@ -24,5 +24,6 @@
 
 add_jamsat_core_library(jamsatConcepts
   ClauseTraits.h
+  TraitUtils.h
   Dummy.cpp
 )

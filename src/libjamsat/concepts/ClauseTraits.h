@@ -27,42 +27,21 @@
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
+#include <libjamsat/concepts/TraitUtils.h>
 #include <type_traits>
 
 /** \file */
 
 /**
- * \ingroup JamSAT_Solver
- *
- * \brief Preprocessor macro that evaluates to a type if and only if a given expression has the
- *        specified type.
- *
- * \param expr  An expression.
- * \param ty    A type.
- *
- * If \p expr has type \p ty, `JAM_REQUIRE_EXPR(expr, ty)` has type `void`. Otherwise, the
- * expression `JAM_REQUIRE_EXPR(expr, ty)` is ill-formed. This macro is intended to be used in
- * SFINAE constructs, inducing a substitution failure if `expr` is ill-formed, `ty` is ill-formed
- * or `decltype(expr)` is not the same type as `ty`.
+ * \defgroup JamSAT_Concepts  JamSAT concept definitions
+ * This module contains definitions of named requirements used in JamSAT, as well as related
+ * type trait definitions.
  */
-#define JAM_REQUIRE_EXPR(expr, ty)                                                                 \
-    typename std::enable_if<std::is_same<decltype(expr), ty>::value, void>::type
 
 namespace jamsat {
 
 /**
- * \ingroup JamSAT_Solver
- *
- * \brief Utility metafunction mapping sequences of any type to the type `void`
- *
- * See https://en.cppreference.com/w/cpp/types/void_t for details about this metafunction.
- * `j_void_t` should be replaced with `std::void_t` when JamSAT moves to C++17.
- */
-template <class...>
-using j_void_t = void;
-
-/**
- * \ingroup JamSAT_Solver
+ * \ingroup JamSAT_Concepts
  *
  * \brief Checks whether a type is a literal container type.
  *
@@ -257,7 +236,7 @@ struct is_literal_container<
 
 
 /**
- * \ingroup JamSAT_Solver
+ * \ingroup JamSAT_Concepts
  *
  * \brief Checks whether a type is an LBD value carrier
  *
@@ -306,7 +285,7 @@ struct is_lbd_carrier<T,
                                            void)>> : public std::true_type {};
 
 /**
- * \ingroup JamSAT_Solver
+ * \ingroup JamSAT_Concepts
  *
  * \brief Checks whether a type is a clause flag type
  *
@@ -343,7 +322,7 @@ struct is_clause_flag<T, j_void_t<decltype(T::SCHEDULED_FOR_DELETION), decltype(
 
 
 /**
- * \ingroup JamSAT_Solver
+ * \ingroup JamSAT_Concepts
  *
  * \brief Checks whether a type is a clause type
  *
