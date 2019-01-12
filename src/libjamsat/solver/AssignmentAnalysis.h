@@ -27,6 +27,8 @@
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/concepts/ClauseTraits.h>
+#include <libjamsat/concepts/SolverTypeTraits.h>
 #include <libjamsat/utils/StampMap.h>
 
 #include <vector>
@@ -53,7 +55,8 @@ namespace jamsat {
  *
  * \result The set of assignment-representing literals as described above.
  *
- * \tparam ReasonProviderTy     A type satisfying the ReasonProvider concept.
+ * \tparam ReasonProviderTy     A type satisfying the ReasonProvider concept, with the reason type
+ *                              satisfying the LiteralContainer concept.
  * \tparam TrailTy              A type satisfying the AssignmentProvider and
  *                              DecisionLevelProvider concepts, with the same
  *                              clause type as ReasonProviderTy has.
@@ -73,6 +76,13 @@ std::vector<CNFLit> analyzeAssignment(ReasonProviderTy& reasonProvider,
                                       TrailTy& trail,
                                       StampMapTy& stamps,
                                       CNFLit query) {
+    static_assert(is_reason_provider<ReasonProviderTy, typename ReasonProviderTy::Reason>::value,
+                  "Template argument ReasonProviderTy must satisfy the ReasonProvider concept, but"
+                  " does not");
+    static_assert(is_literal_container<typename ReasonProviderTy::Reason>::value,
+                  "Template argument ReasonProviderTy::Reason must satisfy the LiteralContainer"
+                  " concept, but does not");
+
     const auto stampContext = stamps.createContext();
     const auto stamp = stampContext.getStamp();
 

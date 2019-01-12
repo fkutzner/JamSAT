@@ -112,6 +112,8 @@ if (JAMSAT_ENABLE_LOGGING AND NOT Boost_USE_STATIC_LIBS)
     add_general_compile_options(-DBOOST_LOG_DYN_LINK=1)
 endif()
 
+set(JAMSAT_BUILD_DSO ON)
+
 if(COMPILING_WITH_GNULIKE)
   add_general_compile_options(-Wall -Wextra -pedantic-errors)
   if(JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB)
@@ -125,6 +127,7 @@ if(COMPILING_WITH_GNULIKE)
   endif()
 
   if(JAMSAT_ENABLE_SANITIZERS)
+    set(JAMSAT_BUILD_DSO OFF)
     if(COMPILING_WITH_CLANG)
       # Configure the ASAN suppression file to disable warnings in 3rd party libraries
       configure_file(${PROJECT_SOURCE_DIR}/etc/asan.supp.in ${PROJECT_BINARY_DIR}/asan.supp)

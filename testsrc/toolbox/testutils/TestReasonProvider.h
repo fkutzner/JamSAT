@@ -36,6 +36,7 @@ template <class ClauseT>
 class TestReasonProvider {
 public:
     using Clause = ClauseT;
+    using Reason = ClauseT;
 
     void setAssignmentReason(CNFVar variable, ClauseT& reason) noexcept {
         m_reasons[variable] = &reason;

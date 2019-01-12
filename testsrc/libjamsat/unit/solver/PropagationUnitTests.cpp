@@ -26,12 +26,16 @@
 
 #include <gtest/gtest.h>
 
+#include <libjamsat/concepts/SolverTypeTraits.h>
 #include <libjamsat/solver/Propagation.h>
 #include <toolbox/testutils/RangeUtils.h>
 #include <toolbox/testutils/TestAssignmentProvider.h>
 
 namespace jamsat {
 using TrivialClause = jamsat::TestAssignmentProvider::Clause;
+
+static_assert(is_reason_provider<Propagation<TestAssignmentProvider>, TrivialClause>::value,
+              "Propagation<TestAssignmentProvider> should satisfy ReasonProvider, but does not");
 
 TEST(UnitSolver, propagateWithoutClausesIsNoop) {
     TestAssignmentProvider assignments;

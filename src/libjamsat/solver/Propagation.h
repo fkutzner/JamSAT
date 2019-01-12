@@ -70,6 +70,8 @@ public:
                   "AssignmentProviderT::Clause must satisfy the Clause"
                   " concept, but does not");
 
+    using Reason = Clause;
+
     /// The AssignmentProvider type.
     using AssignmentProvider = AssignmentProviderT;
 
