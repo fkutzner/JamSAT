@@ -373,7 +373,9 @@ struct is_clause_flag<T, j_void_t<decltype(T::SCHEDULED_FOR_DELETION), decltype(
  * Given
  * - `c`, an object of type `T` with const qualifiers removed,
  * - `cc`, an object of type `T` with const qualifier added,
+ * - `cc2`, an object of type `T` with const qualifier added,
  * - `f`, an object of type `T::Flag`,
+ * - `l`, an object of type `CNFLit`
  *
  * the following expressions must be well-formed:
  * <table>
@@ -391,6 +393,23 @@ struct is_clause_flag<T, j_void_t<decltype(T::SCHEDULED_FOR_DELETION), decltype(
  *  <tr>
  *   <td>`c.clearFlag(f)`</td>
  *   <td>Clears the flag `f` for `c`. Afterwards, `c.getFlag(f)` must be `false`.</td>
+ *   <td></td>
+ *  </tr>
+ *  <tr>
+ *   <td>`cc.mightContain(l)`</td>
+ *   <td>If `cc.mightContain(l)` returns `false`, `cc` does not contain `l`. If
+ *       `cc.mightContain(l)` returns true, `cc` might contain `l`.</td>
+ *   <td>`bool`</td>
+ *  </tr>
+ *  <tr>
+ *   <td>`cc.mightBeSubsetOf(cc2)`</td>
+ *   <td>If `cc.mightContain(cc2)` returns `false`, `cc` is not a subset of `cc2`. If
+ *       `cc.mightBeSubsetOf(cc2)` returns true, `cc` might be a subset of `cc2`.</td>
+ *   <td>`bool`</td>
+ *  </tr>
+ *  <tr>
+ *   <td>`c.clauseUpdated()`</td>
+ *   <td>Notifies the clause that one of its literals has been changed.</td>
  *   <td></td>
  *  </tr>
  * </table>
@@ -424,6 +443,22 @@ struct is_clause<
         // valid expression:
         JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>().clearFlag(
                              std::declval<typename T::Flag>()),
-                         void)>> : public std::true_type {};
+                         void),
 
+        // For t of type const T and l of type CNFLit, require that `t.mightContain(l)` is a valid
+        // expression of type `bool`:
+        JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().mightContain(std::declval<CNFLit>()),
+                         bool),
+
+        // For t of type const T and t2 of type T const&, require that `t.mightBeSubsetOf(t2)`
+        // is a valid expression of type `bool`:
+        JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().mightBeSubsetOf(
+                             std::declval<std::add_lvalue_reference_t<std::add_const_t<T>>>()),
+                         bool),
+
+        // For t of type T, require that `t.clauseUpdated()` is a valid expression:
+        JAM_REQUIRE_EXPR(std::declval<std::remove_const_t<T>>().clauseUpdated(), void)
+
+        // end requirements
+        >> : public std::true_type {};
 }
