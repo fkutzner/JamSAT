@@ -26,12 +26,16 @@
 
 #include <gtest/gtest.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/concepts/SolverTypeTraits.h>
 #include <libjamsat/solver/Trail.h>
 
 #include <vector>
 
 namespace jamsat {
 using TrivialClause = std::vector<CNFLit>;
+
+static_assert(is_decision_level_provider<Trail<TrivialClause>>::value,
+              "Trail<TrivialClause> must satisfy the DecisionLevelProvider concept, but does not");
 
 TEST(UnitSolver, emptyTrailHasDecisionLevel0) {
     Trail<TrivialClause> underTest{CNFVar{10}};

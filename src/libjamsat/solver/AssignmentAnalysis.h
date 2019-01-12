@@ -82,6 +82,9 @@ std::vector<CNFLit> analyzeAssignment(ReasonProviderTy& reasonProvider,
     static_assert(is_literal_container<typename ReasonProviderTy::Reason>::value,
                   "Template argument ReasonProviderTy::Reason must satisfy the LiteralContainer"
                   " concept, but does not");
+    static_assert(is_decision_level_provider<TrailTy>::value,
+                  "Template argument TrailTy must satisfy the DecisionLevelProvider concept,"
+                  " but does not");
 
     const auto stampContext = stamps.createContext();
     const auto stamp = stampContext.getStamp();

@@ -27,6 +27,7 @@
 #pragma once
 
 #include <cstdint>
+#include <libjamsat/concepts/SolverTypeTraits.h>
 
 namespace jamsat {
 using LBD = uint32_t;
@@ -54,6 +55,9 @@ template <typename ForwardRange, typename DLProvider, typename StampMapT>
 LBD getLBD(const ForwardRange& literals,
            const DLProvider& decisionLevelProvider,
            StampMapT& tempStamps) noexcept {
+    static_assert(is_decision_level_provider<DLProvider>::value,
+                  "Template argument DLProvider must satisfy the DecisionLevelProvider concept,"
+                  " but does not");
 
     auto stampContext = tempStamps.createContext();
     auto stamp = stampContext.getStamp();

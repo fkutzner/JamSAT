@@ -35,7 +35,7 @@ namespace jamsat {
 /**
  * \ingroup JamSAT_Concepts
  *
- * \brief Checks whether a type is an assignment-reason provider.
+ * \brief Checks whether a type is an assignment-reason provider type.
  *
  * \tparam T    A type.
  *
@@ -47,7 +47,7 @@ namespace jamsat {
  * to access the assignment reason of a variable, eg. the clause having forced
  * its assignment.
  *
- * A type satisfies the ReasonProvider concepts iff it satisfies the following requirements:
+ * A type satisfies the ReasonProvider concept iff it satisfies the following requirements:
  *
  * \par Requirements
  *
@@ -89,4 +89,105 @@ struct is_reason_provider<
 
         // end requirements
         >> : public std::true_type {};
+
+
+// clang-format off
+
+template<typename, typename, typename = j_void_t<>>
+struct is_const_range : public std::false_type {};
+
+template<typename T, typename O>
+struct is_const_range<T, O, j_void_t<
+    std::enable_if_t<
+      std::is_same<typename std::iterator_traits<decltype(std::declval<T>().begin())>::reference,
+                   std::add_lvalue_reference_t<std::add_const_t<O>>>::value,
+      void>,
+
+    std::enable_if_t<
+      std::is_same<typename std::iterator_traits<decltype(std::declval<T>().end())>::reference,
+         std::add_lvalue_reference_t<std::add_const_t<O>>>::value,
+      void>
+
+  >> : public std::true_type {};
+
+/**
+ * \ingroup JamSAT_Concepts
+ *
+ * \brief Checks whether a type is a decision level provider type.
+ *
+ * \tparam T    A type.
+ *
+ * `is_decision_level_provider<T>::value` is `true` if `T` satisfies the
+ * DecisionLevelProvider concept defined below. Otherwise,
+ * `is_decision_level_provider<T>::value` is `false`.
+ *
+ * Objects of types satisfying DecisionLevelProvider can be used to obtain the
+ * decision level of variables and to obtain the assignments made in decision
+ * levels.
+ *
+ * A type satisfies the DecisionLevelProvider concept iff it satisfies the following requirements:
+ *
+ * \par Requirements
+ *
+ * Given
+ *  - `d`, an object of type const `T`
+ *  - `L`, a Random Access Range type with CNFLit const iterators
+ *  - `v`, an object of type `CNFVar`
+ *  - `e`, an object of type `D::DecisionLevel`
+ *
+ * <table>
+ *  <tr><th>Expression</th><th>Requirements</th><th>Return value</th></tr>
+ *  <tr>
+ *    <td> `T::DecisionLevel` </td>
+ *    <td> `T::DecisionLevel` is an integral type that can represent the largest
+ *         decision level index which an object of type `D` can store. </td>
+ *    <td> </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `d.getCurrentDecisionLevel()` </td>
+ *    <td> </td>
+ *    <td> `D::DecisionLevel` </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `d.getAssignmentDecisionLevel(v)` </td>
+ *    <td> Returns the decision level on which `v` has been assigned. `v` must
+ *         be a variable with an assignment.</td>
+ *    <td> `D::DecisionLevel` </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `d.getDecisionLevelAssignments(e)` </td>
+ *    <td> Returns the const range of literals which have been assigned on level `e`.
+ *         If `e` is larger than the current decision level, an empty range is
+ *         returned. </td>
+ *    <td> `L` </td>
+ *  </tr>
+ * </table>
+ */
+template<typename, typename = j_void_t<>>
+struct is_decision_level_provider : public std::false_type {};
+
+template<typename T>
+struct is_decision_level_provider<T,
+                                  j_void_t<
+    // Require that T::DecisionLevel is an integral type:
+    std::enable_if_t<std::is_integral<typename T::DecisionLevel>::value, void>,
+
+    // For t of type const T, require that t.getCurrentDecisionLevel() returns a decision level:
+    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getCurrentDecisionLevel(),
+                     typename T::DecisionLevel),
+
+    // For t of type const T and v of type CNFVar, require that t.getAssignmentDecisionLevel(v)
+    // returns a decision level:
+    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getAssignmentDecisionLevel(std::declval<CNFVar>()),
+                     typename T::DecisionLevel),
+
+    // For t of type const T and l of type T::DecisionLevel, require that
+    // t.getDecisionLevelAssignments(l) returns a range over CNFLit const:
+    std::enable_if_t<is_const_range<decltype(std::declval<T>().getDecisionLevelAssignments(std::declval<typename T::DecisionLevel>())),
+                     CNFLit>::value, void>
+
+  // end requirements
+  >> : public std::true_type {};
+
+// clang-format on
 }

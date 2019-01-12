@@ -109,50 +109,6 @@
  * \}
  */
 
-/**
- * \defgroup DecisionLevelProvider
- * \ingroup JamSAT_Solver_Concepts
- * \{
- *
- * Objects of types satisfying DecisionLevelProvider can be used to obtain the
- * decision level of variables and to obtain the assignments made in decision
- * levels.
- *
- * \par Requirements
- *
- * Given
- *  - `D`, a \ref DecisionLevelProvider type
- *  - `L`, a Random Access Range type with CNFLit const iterators
- *  - `d`, an object of type `D`
- *  - `v`, an object of type `CNFVar`
- *  - `e`, an object of type `D::DecisionLevel`
- *
- * <table>
- *  <tr><th>Expression</th><th>Requirements</th><th>Return value</th></tr>
- *  <tr>
- *    <td> `D::DecisionLevel` </td>
- *    <td> `D::DecisionLevel` is an integral type that can represent the largest
- *         decision level index which an object of type `D` can store. </td>
- *    <td> </td>
- *  </tr>
- *  <tr>
- *    <td> `d.getCurrentDecisionLevel()` </td>
- *    <td> </td>
- *    <td> `D::DecisionLevel` </td>
- *  </tr>
- *  <tr>
- *    <td> `d.getAssignmentDecisionLevel(v)` </td>
- *    <td> Returns the decision level on which `v` has been assigned. `v` must
- *         be a variable with an assignment.</td>
- *    <td> `D::DecisionLevel` </td>
- *  </tr>
- *  <tr>
- *    <td> `d.getDecisionLevelAssignments(e)` </td>
- *    <td> Returns the range of literals which have been assigned on level `e`.
- *         If `e` is larger than the current decision level, an empty range is
- *         returned. </td>
- *    <td> `L` </td>
- *  </tr>
- * </table>
- * \}
- */
+* \
+}
+* /

@@ -61,14 +61,11 @@ namespace jamsat {
  *
  * \tparam DLProvider           A type that is a model of the \ref DecisionLevelProvider concept.
  * \tparam ReasonProvider       A type that is a model of the ReasonProvider concept, with the
- *                              reason type R satisfying the LiteralContainer concept and R
- *                              being the same type as DLProvider::Clause.
+ *                              reason type satisfying the LiteralContainer concept.
  *
  */
 template <class DLProvider, class ReasonProvider>
 class FirstUIPLearning {
-    static_assert(std::is_same<typename DLProvider::Clause, typename ReasonProvider::Reason>::value,
-                  "DLProvider and ReasonProvider must have the same Clause type");
 
 public:
     /// The clause type. This type equals the reason provider's clause type.
@@ -79,6 +76,9 @@ public:
                   " does not");
     static_assert(is_literal_container<Clause>::value,
                   "The ReasonProvider's reason type must satisfy LiteralContainer, but does not");
+    static_assert(is_decision_level_provider<DLProvider>::value,
+                  "Template argument DLProvider must satisfy the DecisionLevelProvider concept,"
+                  " but does not");
 
 
     /**
