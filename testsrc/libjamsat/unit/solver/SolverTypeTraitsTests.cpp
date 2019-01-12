@@ -51,8 +51,3 @@ static_assert(!jamsat::is_lbd_carrier<EmptyStruct>::value,
               "The empty struct is marked as an LBD carrier, but should not be");
 
 // Tests for jamsat::is_clause<T>:
-static_assert(jamsat::is_clause<jamsat::Clause>::value,
-              "Type Clause must be marked as a clause by is_clause, but is not");
-
-static_assert(jamsat::is_clause<jamsat::Clause const>::value,
-              "Type Clause const must be marked as a clause by is_clause, but is not");

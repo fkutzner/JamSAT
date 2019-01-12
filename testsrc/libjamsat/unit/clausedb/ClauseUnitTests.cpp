@@ -27,10 +27,17 @@
 #include <gtest/gtest.h>
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/solver/SolverTypeTraits.h>
 
 #include <iostream>
 
 namespace jamsat {
+
+static_assert(jamsat::is_clause<jamsat::Clause>::value,
+              "Type Clause must be marked as a clause by is_clause, but is not");
+
+static_assert(jamsat::is_clause<jamsat::Clause const>::value,
+              "Type Clause const must be marked as a clause by is_clause, but is not");
 
 TEST(UnitClauseDB, allocateClauseOnHeap) {
     auto allocatedClause = createHeapClause(11);
