@@ -31,6 +31,7 @@
 #include <boost/range/join.hpp>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/concepts/ClauseTraits.h>
 #include <libjamsat/solver/Watcher.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
@@ -65,6 +66,9 @@ class Propagation {
 public:
     /// The clause type. This type equals the assignment provider's clause type.
     using Clause = typename AssignmentProviderT::Clause;
+    static_assert(is_clause<Clause>::value,
+                  "AssignmentProviderT::Clause must satisfy the Clause"
+                  " concept, but does not");
 
     /// The AssignmentProvider type.
     using AssignmentProvider = AssignmentProviderT;
