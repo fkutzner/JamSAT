@@ -225,7 +225,8 @@ public:
      * addAssignment(...) if \p level is the current decision level. Both iterators
      * are invalidated by calls to increaseMaxVarTo().
      */
-    auto getAssignments(size_type beginIndex) -> boost::iterator_range<const_iterator>;
+    auto getAssignments(size_type beginIndex) const noexcept
+        -> boost::iterator_range<const_iterator>;
 
     /**
      * \brief Gets the value of the given variable's last assignment.
@@ -369,7 +370,7 @@ auto Trail<ClauseT>::getDecisionLevelAssignments(DecisionLevel level) const noex
 }
 
 template <typename ClauseT>
-auto Trail<ClauseT>::getAssignments(size_type beginIndex)
+auto Trail<ClauseT>::getAssignments(size_type beginIndex) const noexcept
     -> boost::iterator_range<Trail<ClauseT>::const_iterator> {
     JAM_ASSERT(beginIndex <= m_trail.size(), "beginIndex out of bounds");
     return boost::make_iterator_range(m_trail.begin() + beginIndex, m_trail.end());

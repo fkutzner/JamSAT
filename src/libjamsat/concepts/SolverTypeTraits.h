@@ -28,6 +28,7 @@
 
 #include <libjamsat/concepts/ClauseTraits.h>
 #include <libjamsat/concepts/TraitUtils.h>
+#include <libjamsat/utils/Truth.h>
 #include <type_traits>
 
 namespace jamsat {
@@ -140,7 +141,7 @@ struct is_const_range<T, O, j_void_t<
  *  <tr>
  *    <td> `T::DecisionLevel` </td>
  *    <td> `T::DecisionLevel` is an integral type that can represent the largest
- *         decision level index which an object of type `D` can store. </td>
+ *         decision level index which an object of type `T` can store. </td>
  *    <td> </td>
  *  </tr>
  *  <tr>
@@ -188,6 +189,99 @@ struct is_decision_level_provider<T,
 
   // end requirements
   >> : public std::true_type {};
+
+
+/**
+ * \ingroup JamSAT_Concepts
+ *
+ * \brief Checks whether a type is an assignment provider type.
+ *
+ * \tparam T    A type.
+ *
+ * `is_assignment_provider<T>::value` is `true` if `T` satisfies the
+ * AssignmentProvider concept defined below. Otherwise,
+ * `is_assignment_provider<T>::value` is `false`.
+ *
+ * Objects of types satisfying AssignmentProvider can be used to access the
+ * solver's current variable assignment.
+ *
+ * A type satisfies the AssignmentProvider concept iff it satisfies the following requirements:
+ *
+ * \par Requirements
+ *
+ * Given
+ *  - `L`, a Random Access Range type with CNFLit const iterators
+ *  - `a`, an object of type `T`
+ *  - `l`, an object of type CNFLit
+ *  - `v`, an object of type CNFVar
+ *  - `s`, an object of type `A::size_type`
+ *
+ * <table>
+ *  <tr><th>Expression</th><th>Requirements</th><th>Return value</th></tr>
+ *  <tr>
+ *    <td> `T::size_type` </td>
+ *    <td> `T::size_type` is an integral type that can represent the size of the
+ *         largest amount of variable assignments an object of T can hold. </td>
+ *    <td> </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `a.getAssignment(l)` </td>
+ *    <td> Returns the assignment of `l`'s variable.</td>
+ *    <td> `TBool` </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `a.getAssignment(v)` </td>
+ *    <td> Returns the assignment of `v`.</td>
+ *    <td> `TBool` </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `a.getAssignments(s)` </td>
+ *    <td> Returns a range of literals sorted in chronological order of
+ *         assignment, beginning with the `s`th assignment (counted from 0).
+ *         </td>
+ *    <td> `L` </td>
+ *  </tr>
+ *  <tr>
+ *    <td> `a.getNumberOfAssignments()` </td>
+ *    <td> Returns the total number of variable assignments the object holds.
+ *         </td>
+ *    <td> `T::size_type` </td>
+ *  </tr>
+ * </table>
+ */
+template<typename, typename = j_void_t<>>
+struct is_assignment_provider : public std::false_type {};
+
+template<typename T>
+struct is_assignment_provider<T, j_void_t<
+
+    // Require that T::size_type is an integral type:
+    std::enable_if_t<std::is_integral<typename T::size_type>::value, void>,
+
+    // For t of type const T and l of type CNFLit, require that t.getAssignment(l) returns
+    // a TBool:
+    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getAssignment(std::declval<CNFLit>()),
+                     TBool),
+
+    // For t of type const T and v of type CNFVar, require that t.getAssignment(l) returns
+    // a TBool:
+    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getAssignment(std::declval<CNFVar>()),
+                     TBool),
+
+    // For t of type const T, require that t.getNumberOfAssignments() returns a value of type
+    // T::size_type:
+    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getNumberOfAssignments(),
+                     typename T::size_type),
+
+    // For t of type const T and l of type T::size_type, require that t.getAssignments(s)
+    // returns a const range of CNFLit objects:
+    std::enable_if_t<is_const_range<decltype(std::declval<std::add_const_t<T>>()
+                                            .getAssignments(std::declval<typename T::size_type>())),
+                     CNFLit>::value, void>
+
+
+    // end requirements
+    >> : public std::true_type {};
 
 // clang-format on
 }

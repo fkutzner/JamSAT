@@ -37,6 +37,10 @@ using TrivialClause = std::vector<CNFLit>;
 static_assert(is_decision_level_provider<Trail<TrivialClause>>::value,
               "Trail<TrivialClause> must satisfy the DecisionLevelProvider concept, but does not");
 
+static_assert(is_assignment_provider<Trail<TrivialClause>>::value,
+              "Trail<TrivialClause> must satisfy the AssignmentProvider concept, but does not");
+
+
 TEST(UnitSolver, emptyTrailHasDecisionLevel0) {
     Trail<TrivialClause> underTest{CNFVar{10}};
     EXPECT_EQ(underTest.getCurrentDecisionLevel(), 0ull);

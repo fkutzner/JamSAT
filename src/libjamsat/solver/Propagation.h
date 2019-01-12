@@ -32,6 +32,7 @@
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/concepts/ClauseTraits.h>
+#include <libjamsat/concepts/SolverTypeTraits.h>
 #include <libjamsat/solver/Watcher.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
@@ -68,6 +69,9 @@ public:
     using Clause = typename AssignmentProviderT::Clause;
     static_assert(is_clause<Clause>::value,
                   "AssignmentProviderT::Clause must satisfy the Clause"
+                  " concept, but does not");
+    static_assert(is_assignment_provider<AssignmentProviderT>::value,
+                  "Template argument AssignmentProviderT must satisfy the AssignmentProvider"
                   " concept, but does not");
 
     using Reason = Clause;
