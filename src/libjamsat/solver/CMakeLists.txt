@@ -34,7 +34,6 @@ add_jamsat_core_library(jamsatSolver
   RestartPolicies.cpp
   ClauseDBReduction.h
   ClauseDBReductionPolicies.h
-  Concepts.h
   CDCLSatSolver.h
   Statistics.h
 )
