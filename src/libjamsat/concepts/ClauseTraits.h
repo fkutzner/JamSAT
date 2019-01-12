@@ -163,11 +163,10 @@ struct is_literal_container<
     T,
     j_void_t<
         // Require that T::size_type is integral:
-        typename std::enable_if<std::is_integral<typename T::size_type>::value, void>::type,
+        std::enable_if_t<std::is_integral<typename T::size_type>::value, void>,
 
         // Require that T::value_type is CNFLit:
-        typename std::enable_if<std::is_same<typename T::value_type, jamsat::CNFLit>::value,
-                                void>::type,
+        std::enable_if_t<std::is_same<typename T::value_type, jamsat::CNFLit>::value, void>,
 
         // Require that T::iterator exists:
         typename T::iterator,
@@ -180,55 +179,48 @@ struct is_literal_container<
         JAM_REQUIRE_EXPR(std::declval<T>() != std::declval<T>(), bool),
 
         // Require that non-const T has a bracket operator returning CNFLit&:
-        JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>()
-                             [std::declval<typename T::size_type>()],
-                         CNFLit&),
+        JAM_REQUIRE_EXPR(
+            std::declval<std::remove_const_t<T>>()[std::declval<typename T::size_type>()], CNFLit&),
 
         // Require that const T has a bracket operator returning CNFLit&:
-        JAM_REQUIRE_EXPR(
-            std::declval<typename std::add_const<T>::type>()[std::declval<typename T::size_type>()],
-            CNFLit const&),
+        JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>()[std::declval<typename T::size_type>()],
+                         CNFLit const&),
 
         // For t of non-const type T and x of T::size_type, require that t.resize(x) is a valid
         // expression:
-        JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>().resize(
-                             std::declval<typename T::size_type>()),
-                         void),
+        JAM_REQUIRE_EXPR(
+            std::declval<std::remove_const_t<T>>().resize(std::declval<typename T::size_type>()),
+            void),
 
         // For t of non-const type T, require that t.begin() returns a T::iterator:
-        JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>().begin(),
-                         typename T::iterator),
+        JAM_REQUIRE_EXPR(std::declval<std::remove_const_t<T>>().begin(), typename T::iterator),
 
         // For t of const type T, require that t.begin() returns a T::const_iterator:
-        JAM_REQUIRE_EXPR(std::declval<typename std::add_const<T>::type>().begin(),
-                         typename T::const_iterator),
+        JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().begin(), typename T::const_iterator),
 
         // For t of non-const type T, require that t.end() returns a T::iterator:
-        JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>().end(),
-                         typename T::iterator),
+        JAM_REQUIRE_EXPR(std::declval<std::remove_const_t<T>>().end(), typename T::iterator),
 
         // For t of const type T, require that t.end() returns a T::const_iterator:
-        JAM_REQUIRE_EXPR(std::declval<typename std::add_const<T>::type>().end(),
-                         typename T::const_iterator),
+        JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().end(), typename T::const_iterator),
 
         // For t of non-const type T and i of T::const_iterator, require that t.erase(i) returns a
         // T::iterator:
-        JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>().erase(
+        JAM_REQUIRE_EXPR(std::declval<std::remove_const_t<T>>().erase(
                              std::declval<typename T::const_iterator>()),
                          typename T::iterator),
 
         // For t of non-const type T and i, j of T::const_iterator, require that t.erase(i) returns
         // a T::iterator:
-        JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>().erase(
+        JAM_REQUIRE_EXPR(std::declval<std::remove_const_t<T>>().erase(
                              std::declval<typename T::const_iterator>(),
                              std::declval<typename T::const_iterator>()),
                          typename T::iterator),
 
         // Require that non-const T is assignable:
-        JAM_REQUIRE_EXPR(
-            std::declval<typename std::remove_const<T>::type>() =
-                std::declval<typename std::add_const<T>::type>(),
-            typename std::add_lvalue_reference<typename std::remove_const<T>::type>::type),
+        JAM_REQUIRE_EXPR(std::declval<std::remove_const_t<T>>() =
+                             std::declval<std::add_const_t<T>>(),
+                         std::add_lvalue_reference_t<std::remove_const_t<T>>),
 
         // For t of type T, require that t.size() exists and has type T::size_type:
         JAM_REQUIRE_EXPR(std::declval<T>().size(), typename T::size_type)>>
@@ -280,7 +272,7 @@ struct is_lbd_carrier<T,
 
                           // For t of non-const type T and int i, require that t.template
                           // setLBD<int>(i) has type void:
-                          JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>()
+                          JAM_REQUIRE_EXPR(std::declval<std::remove_const_t<T>>()
                                                .template setLBD<int>(std::declval<int>()),
                                            void)>> : public std::true_type {};
 
@@ -401,28 +393,27 @@ struct is_clause<
     T,
     j_void_t<
         // Require that T is a literal container:
-        typename std::enable_if<is_literal_container<T>::value, void>::type,
+        std::enable_if_t<is_literal_container<T>::value, void>,
 
         // Require that T is an LBD carrier:
-        typename std::enable_if<is_lbd_carrier<T>::value, void>::type,
+        std::enable_if_t<is_lbd_carrier<T>::value, void>,
 
         // Require that T::Flag is a clause flag type:
-        typename std::enable_if<is_clause_flag<typename T::Flag>::value, void>::type,
+        std::enable_if_t<is_clause_flag<typename T::Flag>::value, void>,
 
         // For t of type T, require that t.getFlag() has type T::Flag:
         JAM_REQUIRE_EXPR(std::declval<T>().getFlag(std::declval<typename T::Flag>()), bool),
 
         // For t of type non-const type T and f of type T::Flag, require that t.setFlag(f) is a
         // valid expression:
-        JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>().setFlag(
-                             std::declval<typename T::Flag>()),
-                         void),
+        JAM_REQUIRE_EXPR(
+            std::declval<std::remove_const_t<T>>().setFlag(std::declval<typename T::Flag>()), void),
 
         // For t of type non-const type T and f of type T::Flag, require that t.clearFlag(f) is a
         // valid expression:
-        JAM_REQUIRE_EXPR(std::declval<typename std::remove_const<T>::type>().clearFlag(
-                             std::declval<typename T::Flag>()),
-                         void),
+        JAM_REQUIRE_EXPR(
+            std::declval<std::remove_const_t<T>>().clearFlag(std::declval<typename T::Flag>()),
+            void),
 
         // For t of type const T and l of type CNFLit, require that `t.mightContain(l)` is a valid
         // expression of type `bool`:

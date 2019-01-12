@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 /** \file */
 
 /**
@@ -42,8 +44,7 @@
  * SFINAE constructs, inducing a substitution failure if `expr` is ill-formed, `ty` is ill-formed
  * or `decltype(expr)` is not the same type as `ty`.
  */
-#define JAM_REQUIRE_EXPR(expr, ty)                                                                 \
-    typename std::enable_if<std::is_same<decltype(expr), ty>::value, void>::type
+#define JAM_REQUIRE_EXPR(expr, ty) std::enable_if_t<std::is_same<decltype(expr), ty>::value, void>
 
 
 /**
