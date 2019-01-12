@@ -22,19 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-add_jamsat_core_library(jamsatSolver
-  Trail.cpp
-  Trail.h
-  Propagation.h
-  Watcher.h
-  AssignmentAnalysis.h
-  FirstUIPLearning.h
-  LiteralBlockDistance.h
-  RestartPolicies.h
-  RestartPolicies.cpp
-  ClauseDBReduction.h
-  ClauseDBReductionPolicies.h
-  Concepts.h
-  CDCLSatSolver.h
-  Statistics.h
+add_jamsat_core_library(jamsatConcepts
+  ClauseTraits.h
+  Dummy.cpp
 )

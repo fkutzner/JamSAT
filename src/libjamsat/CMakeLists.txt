@@ -50,6 +50,7 @@ function(add_jamsat_core_library TARGET)
   jamsat_configure_jamcore_library(${TARGET}-dso TRUE)
 endfunction()
 
+add_subdirectory(concepts)
 add_subdirectory(cnfproblem)
 add_subdirectory(utils)
 add_subdirectory(clausedb)
@@ -60,6 +61,7 @@ add_subdirectory(api)
 add_subdirectory(simplification)
 
 set(jamcore-objects
+  $<TARGET_OBJECTS:jamsatConcepts>
   $<TARGET_OBJECTS:jamsatCnfProblem>
   $<TARGET_OBJECTS:jamsatUtils>
   $<TARGET_OBJECTS:jamsatClauseDB>
@@ -71,6 +73,7 @@ set(jamcore-objects
 )
 
 set(jamcore-dso-objects
+  $<TARGET_OBJECTS:jamsatConcepts>
   $<TARGET_OBJECTS:jamsatCnfProblem-dso>
   $<TARGET_OBJECTS:jamsatUtils-dso>
   $<TARGET_OBJECTS:jamsatClauseDB-dso>

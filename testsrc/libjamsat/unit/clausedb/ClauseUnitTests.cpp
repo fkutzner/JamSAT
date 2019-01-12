@@ -27,7 +27,7 @@
 #include <gtest/gtest.h>
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/solver/SolverTypeTraits.h>
+#include <libjamsat/concepts/ClauseTraits.h>
 
 #include <iostream>
 

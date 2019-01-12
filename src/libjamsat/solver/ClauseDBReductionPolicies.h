@@ -29,7 +29,7 @@
 #include <algorithm>
 #include <cstdint>
 
-#include <libjamsat/solver/SolverTypeTraits.h>
+#include <libjamsat/concepts/ClauseTraits.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/Logger.h>
 
