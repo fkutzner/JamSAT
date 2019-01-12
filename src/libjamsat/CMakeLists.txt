@@ -46,8 +46,10 @@ function(add_jamsat_core_library TARGET)
   add_library(${TARGET} OBJECT ${ARGN})
   jamsat_configure_jamcore_library(${TARGET} FALSE)
 
-  add_library(${TARGET}-dso OBJECT ${ARGN})
-  jamsat_configure_jamcore_library(${TARGET}-dso TRUE)
+  if(JAMSAT_BUILD_DSO)
+    add_library(${TARGET}-dso OBJECT ${ARGN})
+    jamsat_configure_jamcore_library(${TARGET}-dso TRUE)
+  endif()
 endfunction()
 
 add_subdirectory(concepts)
@@ -72,17 +74,19 @@ set(jamcore-objects
   $<TARGET_OBJECTS:jamsatSimplification>
 )
 
-set(jamcore-dso-objects
-  $<TARGET_OBJECTS:jamsatConcepts>
-  $<TARGET_OBJECTS:jamsatCnfProblem-dso>
-  $<TARGET_OBJECTS:jamsatUtils-dso>
-  $<TARGET_OBJECTS:jamsatClauseDB-dso>
-  $<TARGET_OBJECTS:jamsatSolver-dso>
-  $<TARGET_OBJECTS:jamsatBranching-dso>
-  $<TARGET_OBJECTS:jamsatProof-dso>
-  $<TARGET_OBJECTS:jamsatApiIPASIR-dso>
-  $<TARGET_OBJECTS:jamsatSimplification-dso>
-)
+if(JAMSAT_BUILD_DSO)
+  set(jamcore-dso-objects
+    $<TARGET_OBJECTS:jamsatConcepts>
+    $<TARGET_OBJECTS:jamsatCnfProblem-dso>
+    $<TARGET_OBJECTS:jamsatUtils-dso>
+    $<TARGET_OBJECTS:jamsatClauseDB-dso>
+    $<TARGET_OBJECTS:jamsatSolver-dso>
+    $<TARGET_OBJECTS:jamsatBranching-dso>
+    $<TARGET_OBJECTS:jamsatProof-dso>
+    $<TARGET_OBJECTS:jamsatApiIPASIR-dso>
+    $<TARGET_OBJECTS:jamsatSimplification-dso>
+  )
+endif()
 
 
 add_library(jamcore STATIC ${jamcore-objects})
@@ -90,11 +94,12 @@ jamsat_configure_jamcore_library(jamcore FALSE)
 target_link_libraries(jamcore ${JAMSAT_LIB_DEPS})
 set_property(TARGET jamcore PROPERTY OUTPUT_NAME "jamsats")
 
-add_library(jamcore-dso SHARED ${jamcore-dso-objects})
-jamsat_configure_jamcore_library(jamcore-dso TRUE)
-target_link_libraries(jamcore-dso ${JAMSAT_LIB_DEPS})
-set_property(TARGET jamcore-dso PROPERTY OUTPUT_NAME "jamsatd")
-
+if(JAMSAT_BUILD_DSO)
+  add_library(jamcore-dso SHARED ${jamcore-dso-objects})
+  jamsat_configure_jamcore_library(jamcore-dso TRUE)
+  target_link_libraries(jamcore-dso ${JAMSAT_LIB_DEPS})
+  set_property(TARGET jamcore-dso PROPERTY OUTPUT_NAME "jamsatd")
+endif()
 
 
 ### Installation
@@ -102,18 +107,23 @@ set_property(TARGET jamcore-dso PROPERTY OUTPUT_NAME "jamsatd")
 # Automatically add the directory containing the jamsat header directory
 # to clients linking against jamcore or jamcore-dso
 target_include_directories(jamcore INTERFACE $<INSTALL_INTERFACE:include>)
-target_include_directories(jamcore-dso INTERFACE $<INSTALL_INTERFACE:include>)
+set(INSTALL_TARGETS jamcore)
 
-# JamSAT DSO clients should automatically define JAMSAT_SHARED_LIB to make
-# __declspec(dllimport) work properly
-target_compile_definitions(jamcore-dso INTERFACE -DJAMSAT_SHARED_LIB)
+if(JAMSAT_BUILD_DSO)
+  target_include_directories(jamcore-dso INTERFACE $<INSTALL_INTERFACE:include>)
+
+  # JamSAT DSO clients should automatically define JAMSAT_SHARED_LIB to make
+  # __declspec(dllimport) work properly
+  target_compile_definitions(jamcore-dso INTERFACE -DJAMSAT_SHARED_LIB)
+  list(APPEND INSTALL_TARGETS jamcore-dso)
+endif()
 
 # Install API headers
 install(FILES api/ipasir/JamSatIpasir.h DESTINATION include/jamsat)
 
 # Install JamSAT libraries
 install(
-  TARGETS jamcore-dso jamcore
+  TARGETS ${INSTALL_TARGETS}
   EXPORT JamSAT
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
