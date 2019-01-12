@@ -37,4 +37,5 @@ add_jamsat_core_library(jamsatSolver
   Concepts.h
   CDCLSatSolver.h
   Statistics.h
+  SolverTypeTraits.h
 )
