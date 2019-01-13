@@ -39,6 +39,7 @@ add_jamsat_core_library(jamsatUtils
   Casts.h
   Printers.h
   RangeUtils.h
+  TraitUtils.h
   Logger.h
   Logger.cpp
   OverApproximatingSet.h

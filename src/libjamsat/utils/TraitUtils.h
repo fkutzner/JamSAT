@@ -31,7 +31,7 @@
 /** \file */
 
 /**
- * \ingroup JamSAT_Concepts
+ * \ingroup JamSAT_Utils
  *
  * \brief Preprocessor macro that evaluates to a type if and only if a given expression has the
  *        specified type.
@@ -48,7 +48,7 @@
 
 
 /**
- * \ingroup JamSAT_Concepts
+ * \ingroup JamSAT_Utils
  *
  * \brief Utility metafunction mapping sequences of any type to the type `void`
  *

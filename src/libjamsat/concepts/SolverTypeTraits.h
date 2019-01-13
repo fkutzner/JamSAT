@@ -27,7 +27,7 @@
 #pragma once
 
 #include <libjamsat/concepts/ClauseTraits.h>
-#include <libjamsat/concepts/TraitUtils.h>
+#include <libjamsat/utils/TraitUtils.h>
 #include <libjamsat/utils/Truth.h>
 #include <type_traits>
 

@@ -27,7 +27,7 @@
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
-#include <libjamsat/concepts/TraitUtils.h>
+#include <libjamsat/utils/TraitUtils.h>
 #include <type_traits>
 
 /** \file */
