@@ -48,46 +48,39 @@ namespace jamsat {
  * an assignment reason.
  *
  * \param reasonProvider    A provider of reason clauses.
- * \param trail             A provider of variable assignments and decision level information.
+ * \param dlProvider        A provider of decision levels for literals.
  * \param stamps            A StampMap suitable for stamping CNFVar objects. \p stamps must
  *                          support stamping the greatest variable occuring on \p trail.
  * \param query             The literal as described above.
  *
  * \result The set of assignment-representing literals as described above.
  *
- * \tparam ReasonProviderTy     A type satisfying the ReasonProvider concept, with the reason type
+ * \tparam ReasonProviderT      A type satisfying the ReasonProvider concept, with the reason type
  *                              satisfying the LiteralContainer concept.
- * \tparam TrailTy              A type satisfying the AssignmentProvider and
- *                              DecisionLevelProvider concepts, with the same
- *                              clause type as ReasonProviderTy has.
- * \tparam StampMapTy           A specialization of StampMap<...> supporting stamping of
+ * \tparam DLProviderT          A type satisfying the DecisionLevelProvider concept.
+ * \tparam StampMapT            A specialization of StampMap<...> supporting stamping of
  *                              CNFVar objects.
  */
-template <typename ReasonProviderTy, typename TrailTy, typename StampMapTy>
-std::vector<CNFLit> analyzeAssignment(ReasonProviderTy& reasonProvider,
-                                      TrailTy& trail,
-                                      StampMapTy& stamps,
+template <typename ReasonProviderT, typename DLProviderT, typename StampMapT>
+std::vector<CNFLit> analyzeAssignment(ReasonProviderT& reasonProvider,
+                                      DLProviderT& trail,
+                                      StampMapT& stamps,
                                       CNFLit query);
 
 /********** Implementation ****************************** */
 
-template <typename ReasonProviderTy, typename TrailTy, typename StampMapTy>
-std::vector<CNFLit> analyzeAssignment(ReasonProviderTy& reasonProvider,
-                                      TrailTy& trail,
-                                      StampMapTy& stamps,
+template <typename ReasonProviderT, typename DLProviderT, typename StampMapT>
+std::vector<CNFLit> analyzeAssignment(ReasonProviderT& reasonProvider,
+                                      DLProviderT& dlProvider,
+                                      StampMapT& stamps,
                                       CNFLit query) {
-    static_assert(is_reason_provider<ReasonProviderTy, typename ReasonProviderTy::Reason>::value,
-                  "Template argument ReasonProviderTy must satisfy the ReasonProvider concept, but"
-                  " does not");
-    static_assert(is_literal_container<typename ReasonProviderTy::Reason>::value,
-                  "Template argument ReasonProviderTy::Reason must satisfy the LiteralContainer"
-                  " concept, but does not");
-    static_assert(is_decision_level_provider<TrailTy>::value,
-                  "Template argument TrailTy must satisfy the DecisionLevelProvider concept,"
-                  " but does not");
-    static_assert(is_assignment_provider<TrailTy>::value,
-                  "Template argument TrailTy must satisfy the AssignmentProvider concept,"
-                  " but does not");
+    static_assert(is_reason_provider<ReasonProviderT, typename ReasonProviderT::Reason>::value,
+                  "Template arg. ReasonProviderT doesn't satisfy the ReasonProvider concept");
+    static_assert(is_literal_container<typename ReasonProviderT::Reason>::value,
+                  "Template arg. ReasonProviderT::Reason doesn't satisfy the"
+                  " LiteralContainer concept");
+    static_assert(is_decision_level_provider<DLProviderT>::value,
+                  "Template arg. DLProviderT doesn't satisfy the DecisionLevelProvider concept");
 
     const auto stampContext = stamps.createContext();
     const auto stamp = stampContext.getStamp();
@@ -98,7 +91,7 @@ std::vector<CNFLit> analyzeAssignment(ReasonProviderTy& reasonProvider,
         return result;
     }
 
-    auto currentDecisionLevel = trail.getCurrentDecisionLevel();
+    auto currentDecisionLevel = dlProvider.getCurrentDecisionLevel();
 
     std::vector<CNFVar> toAnalyze{query.getVariable()};
     while (!toAnalyze.empty()) {
@@ -113,7 +106,7 @@ std::vector<CNFLit> analyzeAssignment(ReasonProviderTy& reasonProvider,
                 continue;
             }
             stamps.setStamped(lit.getVariable(), stamp, true);
-            if (trail.getAssignmentDecisionLevel(lit.getVariable()) == currentDecisionLevel) {
+            if (dlProvider.getAssignmentDecisionLevel(lit.getVariable()) == currentDecisionLevel) {
                 if (reasonProvider.getAssignmentReason(lit.getVariable()) != nullptr) {
                     toAnalyze.push_back(lit.getVariable());
                 } else {
