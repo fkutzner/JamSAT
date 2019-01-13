@@ -345,7 +345,7 @@ CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const& toPropagat
             toTBool(unit.getSign() == CNFSign::POSITIVE) != assignment) {
             JAM_LOG_SOLVER(info, "Detected conflict at unit clause " << unit);
             if (failedAssumptions != nullptr) {
-                *failedAssumptions = analyzeAssignment(m_propagation, m_trail, m_stamps, unit);
+                *failedAssumptions = analyzeAssignment(m_trail, m_trail, m_stamps, unit);
             }
             return UnitClausePropagationResult::CONFLICTING;
         }

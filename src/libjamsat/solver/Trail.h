@@ -82,6 +82,7 @@ public:
     using const_iterator = BoundedStack<CNFLit>::const_iterator;
 
     using Clause = ClauseT;
+    using Reason = Clause;
 
     /**
      * \brief StampMap key for Trail::DecisionLevel
@@ -435,14 +436,14 @@ void Trail<ClauseT>::increaseMaxVarTo(CNFVar newMaxVar) {
 }
 
 template <typename ClauseT>
-auto Trail<ClauseT>::getAssignmentReason(CNFVar variable) const noexcept -> ClauseT const* {
+auto Trail<ClauseT>::getAssignmentReason(CNFVar variable) const noexcept -> Reason const* {
     JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_assignments.size()),
                "Variable out of bounds");
     return m_reasonsAndALs[variable].m_reason;
 }
 
 template <typename ClauseT>
-void Trail<ClauseT>::setAssignmentReason(CNFVar variable, ClauseT const* reason) noexcept {
+void Trail<ClauseT>::setAssignmentReason(CNFVar variable, Reason const* reason) noexcept {
     JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_assignments.size()),
                "Variable out of bounds");
     m_reasonsAndALs[variable].m_reason = reason;
