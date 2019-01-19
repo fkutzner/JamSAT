@@ -81,6 +81,8 @@ std::vector<CNFLit> analyzeAssignment(ReasonProviderT& reasonProvider,
                   " LiteralContainer concept");
     static_assert(is_decision_level_provider<DLProviderT>::value,
                   "Template arg. DLProviderT doesn't satisfy the DecisionLevelProvider concept");
+    static_assert(is_stamp_map<StampMapT, CNFVar>::value,
+                  "Template arg. StampMapT is not a StampMap specialization supporting CNFVar");
 
     const auto stampContext = stamps.createContext();
     const auto stamp = stampContext.getStamp();

@@ -28,6 +28,7 @@
 
 #include <cstdint>
 #include <libjamsat/concepts/SolverTypeTraits.h>
+#include <libjamsat/utils/StampMap.h>
 
 namespace jamsat {
 using LBD = uint32_t;
@@ -49,7 +50,8 @@ using LBD = uint32_t;
  * \tparam ForwardRange           a forward range of literals.
  * \tparam DLProvider             A type satisfying the \ref DecisionLevelProvider concept.
  * \tparam StampMapT              A StampMap specialization supporting stamping of the decision
- * levels. \tparam LBD                    The literal block distance type, an integral type.
+ *                                levels.
+ * \tparam LBD                    The literal block distance type, an integral type.
  */
 template <typename ForwardRange, typename DLProvider, typename StampMapT>
 LBD getLBD(const ForwardRange& literals,
@@ -58,6 +60,9 @@ LBD getLBD(const ForwardRange& literals,
     static_assert(is_decision_level_provider<DLProvider>::value,
                   "Template argument DLProvider must satisfy the DecisionLevelProvider concept,"
                   " but does not");
+    static_assert(is_stamp_map<StampMapT, typename DLProvider::DecisionLevel>::value,
+                  "Template argument StampMapT must be a specialization of StampMap<...> supporting"
+                  " stamping of DLProvider::DecisionLevel objects");
 
     auto stampContext = tempStamps.createContext();
     auto stamp = stampContext.getStamp();
