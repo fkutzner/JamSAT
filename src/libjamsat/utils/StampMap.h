@@ -28,7 +28,9 @@
 
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/ControlFlow.h>
+#include <libjamsat/utils/TraitUtils.h>
 #include <limits>
+#include <type_traits>
 #include <vector>
 
 namespace jamsat {
@@ -155,6 +157,11 @@ public:
      */
     explicit StampMap<T>(typename StampMapBase<T>::size_type maxIdx) : StampMapBase<T>(maxIdx) {}
 
+    /**
+     * \brief The StampMap's internal index type.
+     */
+    using InternalIndexType = T;
+
 protected:
     // TODO: refactor the inheritance hierarchy to remove these method declarations
     void setStamped();
@@ -225,6 +232,36 @@ public:
 
     using StampMap<T, Ks...>::isStamped;
 };
+
+/**
+ * \brief Metafunction checking whether a given type is a StampMap<...> specialization supporting
+ *        stamping objects of a given type.
+ *
+ * \ingroup JamSAT_Utils
+ *
+ * \tparam StampMapT    An arbitrary type.
+ * \tparam S            An arbitrary type.
+ *
+ * `is_stamp_map<StampMapT, S>::value` is a `constexpr bool` value which is `true`
+ * iff \p StampMapT is a \p StampMap specialization supporting stamping objects of type \p S.
+ */
+template <typename StampMapT, typename S, typename = j_void_t<>>
+struct is_stamp_map : public std::false_type {};
+
+// clang-format off
+template<typename StampMapT, typename S>
+struct is_stamp_map<StampMapT, S, j_void_t<
+        std::is_base_of<StampMapBase<typename StampMapT::InternalIndexType>, StampMapT>,
+        JAM_REQUIRE_EXPR(std::declval<StampMapT>().setStamped(std::declval<S>(),
+                                                              std::declval<typename StampMapT::Stamp>(),
+                                                              std::declval<bool>()),
+                         void),
+        JAM_REQUIRE_EXPR(std::declval<StampMapT>().isStamped(std::declval<S>(),
+                                                             std::declval<typename StampMapT::Stamp>()),
+                         bool)
+        >> : public std::true_type {};
+
+// clang-format on
 
 /********** Implementation ****************************** */
 
