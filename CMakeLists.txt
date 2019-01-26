@@ -77,7 +77,7 @@ if (NOT JAMSAT_DISABLE_BOOST_LINKING_SETUP)
 endif()
 
 find_package(Boost
-    1.54.0
+    1.59.0
     REQUIRED
     COMPONENTS
       ${JAMSAT_REQUIRED_BOOST_LIBRARIES}
