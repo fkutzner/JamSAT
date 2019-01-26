@@ -23,10 +23,11 @@
 # other dealings in this Software without prior written authorization.
 
 find_package(ZLIB REQUIRED)
+nm_add_thirdparty_libs(LIBS ${ZLIB_LIBRARIES} jamcore)
 
 # The actual frontend code is in the static library jamsatFrontend => can
 # "mock" the IPASIR/JamSAT implementation for testing
-add_library(jamsatFrontend STATIC
+nm_add_library(jamsatFrontend STATIC
   JamSAT.h
   JamSAT.cpp
   Parser.h
@@ -35,17 +36,9 @@ add_library(jamsatFrontend STATIC
   Options.cpp
   Timeout.h
   Timeout.cpp)
-jamsat_configure_target(jamsatFrontend)
 
-get_property(jamcore_include_dirs TARGET jamcore PROPERTY INCLUDE_DIRECTORIES)
-target_include_directories(jamsatFrontend PRIVATE ${jamcore_include_dirs})
-target_include_directories(jamsatFrontend PRIVATE ${ZLIB_INCLUDE_DIRS})
-target_link_libraries(jamsatFrontend ${ZLIB_LIBRARIES})
 set_property(TARGET jamsatFrontend PROPERTY FOLDER "JamSAT Frontend")
 
-add_executable(jamsat Main.cpp)
-jamsat_configure_target(jamsat)
+nm_add_tool(jamsat Main.cpp)
 set_property(TARGET jamsat PROPERTY FOLDER "JamSAT Frontend")
-
-
-target_link_libraries(jamsat jamsatFrontend jamcore)
+target_link_libraries(jamsat PUBLIC jamsatFrontend)
