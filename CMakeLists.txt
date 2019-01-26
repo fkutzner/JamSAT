@@ -52,7 +52,8 @@ option(JAMSAT_ENABLE_TESTING "Enable building the JamSAT test suite." OFF)
 
 ### Load CMake code
 
-include(etc/cmake/Platform.cmake) # Defines COMPILING_WITH_* and PLATFORM_SUPPORTS_* variables
+include(etc/cmake/nicemake/NiceMake.cmake)
+
 include(etc/cmake/CompilerOptions.cmake)
 include(etc/cmake/Utils.cmake)
 
@@ -114,7 +115,7 @@ endif()
 
 set(JAMSAT_BUILD_DSO ON)
 
-if(COMPILING_WITH_GNULIKE)
+if(NM_COMPILING_WITH_GNULIKE)
   add_general_compile_options(-Wall -Wextra -pedantic-errors)
   if(JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB)
     add_general_compile_options(-fvisibility=hidden)
@@ -128,7 +129,7 @@ if(COMPILING_WITH_GNULIKE)
 
   if(JAMSAT_ENABLE_SANITIZERS)
     set(JAMSAT_BUILD_DSO OFF)
-    if(COMPILING_WITH_CLANG)
+    if(NM_COMPILING_WITH_CLANG)
       # Configure the ASAN suppression file to disable warnings in 3rd party libraries
       configure_file(${PROJECT_SOURCE_DIR}/etc/asan.supp.in ${PROJECT_BINARY_DIR}/asan.supp)
       set(sanitizer_flags
@@ -138,11 +139,11 @@ if(COMPILING_WITH_GNULIKE)
       string(REPLACE ";" " " SANITIZER_LINKER_FLAGS "${sanitizer_flags}")
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SANITIZER_LINKER_FLAGS}")
 
-      if(COMPILING_WITH_CLANG AND JAMSAT_USE_SEPARATE_CLANG_SANITIZERS)
+      if(NM_COMPILING_WITH_CLANG AND JAMSAT_USE_SEPARATE_CLANG_SANITIZERS)
         add_sanitizer_compile_options(-fsanitize=leak)
       endif()
 
-      if(COMPILING_WITH_CLANG AND JAMSAT_ENABLE_MEMORY_SANITIZER)
+      if(NM_COMPILING_WITH_CLANG AND JAMSAT_ENABLE_MEMORY_SANITIZER)
         # TODO: don't enable leak and address sanitizers in the first place since
         # they are not compatible with the memory sanitizer
         remove_sanitizer_compile_options(-fsanitize=leak)
@@ -165,7 +166,7 @@ if(COMPILING_WITH_GNULIKE)
     string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_CXX_FLAGS_MINSIZEREL})
   endif()
 
-elseif(COMPILING_WITH_MSVC)
+elseif(NM_COMPILING_WITH_MSVC)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   add_general_compile_options(/EHsc)
 
