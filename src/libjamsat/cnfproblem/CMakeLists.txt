@@ -22,7 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-add_jamsat_core_library(jamsatCnfProblem
+add_jamsat_core_library(libjamsat.cnfproblem
   CNFLiteral.h
   CNFLiteral.cpp
   CNFProblem.h

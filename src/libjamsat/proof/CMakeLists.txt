@@ -22,7 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-add_jamsat_core_library(jamsatProof
+add_jamsat_core_library(libjamsat.proof
   Model.h
   Model.cpp
   DRUPCertificate.h

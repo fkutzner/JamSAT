@@ -22,8 +22,8 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-cmake_minimum_required(VERSION 3.2.2)
-cmake_policy(VERSION 3.2.2)
+cmake_minimum_required(VERSION 3.12)
+cmake_policy(VERSION 3.12)
 
 project(JamSAT VERSION 0.2.0)
 
@@ -56,6 +56,7 @@ set(NM_CONF_INCLUDE_DIR "src")
 set(NM_CONF_LIB_DIR="src")
 set(NM_CONF_TOOLS_DIR="src")
 include(etc/cmake/nicemake/NiceMake.cmake)
+include(etc/cmake/nicemake/experimental/CollectObjsFromSubdirectories.cmake)
 
 include(etc/cmake/CompilerOptions.cmake)
 include(etc/cmake/Utils.cmake)
