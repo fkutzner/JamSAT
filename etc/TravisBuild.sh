@@ -29,6 +29,12 @@ process_coverage_results() {
   lcov --list coverage.info
 }
 
+echo "Tool versions:"
+cmake --version
+clang --version
+gcc --version
+echo "(End tool versions)"
+
 if [ "${SONARSOURCE_SCAN}" != "1" ]
 then
   echo "Building JamSAT in ${JAMSAT_MODE} mode."
