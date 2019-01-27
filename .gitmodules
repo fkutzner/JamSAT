@@ -1,8 +1,8 @@
 [submodule "lib/state_ptr"]
-	path = lib/state_ptr
+	path = deps/state_ptr
 	url = https://github.com/robbepop/state_ptr
 [submodule "lib/minisat"]
-	path = lib/minisat
+	path = deps/minisat
 	url = https://github.com/fkutzner/minisat
 [submodule "etc/cmake/nicemake"]
 	path = etc/cmake/nicemake

@@ -92,7 +92,7 @@ if(UNIX AND Boost_USE_MULTITHREADED)
   set(JAMSAT_LIB_DEPS ${JAMSAT_LIB_DEPS} pthread)
 endif()
 
-include_directories(SYSTEM lib/state_ptr/include)
+include_directories(SYSTEM deps/state_ptr/include)
 
 if(JAMSAT_LINK_VERBOSE)
   message_list(STATUS "${JAMSAT_LIB_DEPS}" "JamSAT will be linked to the following external libraries:")
@@ -225,7 +225,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/bin)
 
 ### Compile dependencies added via git submodules
-add_subdirectory(lib)
+add_subdirectory(deps)
 
 ### Add JamSAT sources
 nm_add_compile_options(PUBLIC ${JAMSAT_COMPILE_OPTIONS})
