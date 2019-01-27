@@ -23,7 +23,10 @@
 # other dealings in this Software without prior written authorization.
 
 find_package(ZLIB REQUIRED)
-nm_add_thirdparty_libs(LIBS ${ZLIB_LIBRARIES} jamcore)
+nm_add_thirdparty_libs(LIBS jamcore)
+nm_add_thirdparty_libs(NAME zlib_if
+                       LIBS ${ZLIB_LIBRARIES}
+                       INTERFACE_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS})
 
 # The actual frontend code is in the static library jamsatFrontend => can
 # "mock" the IPASIR/JamSAT implementation for testing
