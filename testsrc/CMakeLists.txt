@@ -24,7 +24,7 @@
 
 ### Set up fuzzing
 
-set(JAMSAT_FUZZ_ADAPTER_LIBRARY jamsatFuzzGenericFuzzAdapter)
+set(JAMSAT_FUZZ_ADAPTER_LIBRARY jstest.toolbox.fuzz.genericfuzzadapter)
 if(JAMSAT_ENABLE_AFL_FUZZER)
   # uses the default generic fuzz adapter.
 

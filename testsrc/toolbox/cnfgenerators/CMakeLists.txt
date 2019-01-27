@@ -22,16 +22,11 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-SET(JAMSAT_LIBRARY_CNFGENERATORS_FOLDER_NAME "JamSAT Test Infrastructure")
-
-add_library(cnfgenerators OBJECT
+nm_add_library(jstest.toolbox.cnfgenerators OBJECT
   GateStructure.h
   GateStructure.cpp
   Rule110.h
   Rule110.cpp
 )
-jamsat_configure_target(cnfgenerators)
 
-target_include_directories(cnfgenerators PRIVATE ${PROJECT_SOURCE_DIR}/testsrc
-                                                 ${PROJECT_SOURCE_DIR}/src)
-set_property(TARGET cnfgenerators PROPERTY FOLDER ${JAMSAT_LIBRARY_CNFGENERATORS_FOLDER_NAME})
+target_include_directories(jstest.toolbox.cnfgenerators PRIVATE ${PROJECT_SOURCE_DIR}/testsrc)

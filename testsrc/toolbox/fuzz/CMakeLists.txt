@@ -22,12 +22,6 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-SET(JAMSAT_LIBRARY_TEST_INFRASTR_FOLDER_NAME "JamSAT Test Infrastructure")
-
-add_library(jamsatFuzzGenericFuzzAdapter OBJECT
+nm_add_library(jstest.toolbox.fuzz.genericfuzzadapter OBJECT
   GenericFuzzAdapter.cpp
 )
-
-jamsat_configure_target(jamsatFuzzGenericFuzzAdapter)
-set_property(TARGET jamsatFuzzGenericFuzzAdapter
-             PROPERTY FOLDER ${JAMSAT_LIBRARY_TEST_INFRASTR_FOLDER_NAME})

@@ -50,11 +50,11 @@ add_executable(libjamsat_integration_testsuite
   $<TARGET_OBJECTS:simplification_integration_tests>
 
   # From toolbox/cnfgenerators:
-  $<TARGET_OBJECTS:cnfgenerators>
+  $<TARGET_OBJECTS:jstest.toolbox.cnfgenerators>
 )
 jamsat_configure_target(libjamsat_integration_testsuite)
 
-target_link_libraries(libjamsat_integration_testsuite jamcore jamsatTestUtils gtest gtest_main)
+target_link_libraries(libjamsat_integration_testsuite jamcore jstest.toolbox.testutils gtest gtest_main)
 set_property(TARGET libjamsat_integration_testsuite
              PROPERTY FOLDER ${JAMSAT_LIBRARY_INTEGRATIONTEST_FOLDER_NAME})
 add_test(

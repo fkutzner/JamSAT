@@ -22,9 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-SET(JAMSAT_LIBRARY_CNFGENERATORS_FOLDER_NAME "JamSAT Test Infrastructure")
-
-add_library(jamsatTestUtils STATIC
+nm_add_library(jstest.toolbox.testutils STATIC
   RangeUtils.h
   Minisat.cpp
   Minisat.h
@@ -34,11 +32,7 @@ add_library(jamsatTestUtils STATIC
   ClauseUtils.h
   ClauseUtils.cpp
 )
-jamsat_configure_target(jamsatTestUtils)
 
-target_include_directories(jamsatTestUtils PUBLIC ${PROJECT_SOURCE_DIR}/testsrc)
-
-target_link_libraries(jamsatTestUtils jamcore minisat-lib-static gtest gmock)
-target_include_directories(jamsatTestUtils SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/lib/minisat)
-
-set_property(TARGET jamsatTestUtils PROPERTY FOLDER ${JAMSAT_LIBRARY_CNFGENERATORS_FOLDER_NAME})
+target_include_directories(jstest.toolbox.testutils PUBLIC ${PROJECT_SOURCE_DIR}/testsrc)
+target_link_libraries(jstest.toolbox.testutils PUBLIC jamcore minisat-lib-static gtest gmock)
+target_include_directories(jstest.toolbox.testutils SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/lib/minisat)

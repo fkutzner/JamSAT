@@ -60,7 +60,7 @@ add_executable(libjamsat_unit_testsuite
 )
 jamsat_configure_target(libjamsat_unit_testsuite)
 
-target_link_libraries(libjamsat_unit_testsuite jamcore jamsatTestUtils gtest gtest_main)
+target_link_libraries(libjamsat_unit_testsuite jamcore jstest.toolbox.testutils gtest gtest_main)
 set_property(TARGET libjamsat_unit_testsuite PROPERTY FOLDER ${JAMSAT_LIBRARY_UNITTEST_FOLDER_NAME})
 add_test(
     NAME libjamsat_unit_testsuite
