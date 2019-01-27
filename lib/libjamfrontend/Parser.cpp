@@ -24,7 +24,7 @@
 
 */
 
-#include <jamsat/Parser.h>
+#include <libjamfrontend/Parser.h>
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
 #include <cctype>

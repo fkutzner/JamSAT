@@ -24,7 +24,7 @@
 
 */
 
-#include <jamsat/Timeout.h>
+#include <libjamfrontend/Timeout.h>
 
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 

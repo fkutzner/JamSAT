@@ -22,4 +22,6 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-add_subdirectory(jamsat)
+if(NOT JAMSAT_DISABLE_FRONTEND)
+  add_subdirectory(jamsat)
+endif()

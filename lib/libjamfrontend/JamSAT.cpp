@@ -24,9 +24,9 @@
 
 */
 
-#include <jamsat/Options.h>
-#include <jamsat/Parser.h>
-#include <jamsat/Timeout.h>
+#include <libjamfrontend/Options.h>
+#include <libjamfrontend/Parser.h>
+#include <libjamfrontend/Timeout.h>
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
 #include <cassert>

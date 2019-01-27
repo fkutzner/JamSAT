@@ -26,7 +26,7 @@
 
 #include <gtest/gtest.h>
 
-#include <jamsat/Parser.h>
+#include <libjamfrontend/Parser.h>
 #include <jamsat/ipasirmock/IpasirMock.h>
 #include <libjamsat/api/ipasir/JamSatIpasir.h>
 
