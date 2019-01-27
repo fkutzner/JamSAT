@@ -52,9 +52,8 @@ option(JAMSAT_ENABLE_TESTING "Enable building the JamSAT test suite." OFF)
 
 ### Load CMake code
 
-set(NM_CONF_INCLUDE_DIR "src")
-set(NM_CONF_LIB_DIR="src")
-set(NM_CONF_TOOLS_DIR="src")
+set(NM_CONF_INCLUDE_DIR "lib")
+set(NM_CONF_TOOLS_DIR="lib")
 set(NM_CONF_GTEST_TAG="release-1.8.1")
 include(etc/cmake/nicemake/NiceMake.cmake)
 include(etc/cmake/nicemake/experimental/CollectObjsFromSubdirectories.cmake)
@@ -230,7 +229,7 @@ add_subdirectory(deps)
 ### Add JamSAT sources
 nm_add_compile_options(PUBLIC ${JAMSAT_COMPILE_OPTIONS})
 nm_add_compile_options(PUBLIC ${JAMSAT_SANITIZER_COMPILE_OPTIONS})
-add_subdirectory(src)
+add_subdirectory(lib)
 
 
 ### Enable testing
