@@ -22,7 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-nm_add_thirdparty_libs(LIBS jamsatFrontend gtest gtest_main)
+nm_add_thirdparty_libs(LIBS libjamfrontend gtest gtest_main)
 
 nm_add_tool(jstest.jamsat.unit
   ProblemParsingTests.cpp

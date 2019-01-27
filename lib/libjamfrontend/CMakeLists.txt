@@ -30,7 +30,7 @@ nm_add_thirdparty_libs(NAME zlib_if
 
 # The actual frontend code is in the static library jamsatFrontend => can
 # "mock" the IPASIR/JamSAT implementation for testing
-nm_add_library(jamsatFrontend STATIC
+nm_add_library(libjamfrontend STATIC
   JamSAT.h
   JamSAT.cpp
   Parser.h

@@ -23,4 +23,4 @@
 # other dealings in this Software without prior written authorization.
 
 nm_add_tool(jamsat Main.cpp)
-target_link_libraries(jamsat PUBLIC jamsatFrontend)
+target_link_libraries(jamsat PUBLIC libjamfrontend)
