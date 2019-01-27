@@ -22,7 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-add_jamsat_core_unittest_library(cnfproblem_unit_tests
+add_jamsat_core_unittest_library(jstest.libjamsat.unit.cnfproblem
   CNFLiteralUnitTests.cpp
   CNFProblemUnitTests.cpp
 )
