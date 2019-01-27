@@ -22,21 +22,4 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-find_package(ZLIB REQUIRED)
-nm_add_thirdparty_libs(LIBS jamcore)
-nm_add_thirdparty_libs(NAME zlib_if
-                       LIBS ${ZLIB_LIBRARIES}
-                       INTERFACE_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS})
-
-# The actual frontend code is in the static library jamsatFrontend => can
-# "mock" the IPASIR/JamSAT implementation for testing
-nm_add_library(jamsatFrontend STATIC
-  JamSAT.h
-  JamSAT.cpp
-  Parser.h
-  Parser.cpp
-  Options.h
-  Options.cpp
-  Timeout.h
-  Timeout.cpp)
-
+add_subdirectory(jamsat)

@@ -230,6 +230,7 @@ add_subdirectory(deps)
 nm_add_compile_options(PUBLIC ${JAMSAT_COMPILE_OPTIONS})
 nm_add_compile_options(PUBLIC ${JAMSAT_SANITIZER_COMPILE_OPTIONS})
 add_subdirectory(lib)
+add_subdirectory(tools)
 
 
 ### Enable testing
