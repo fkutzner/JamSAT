@@ -12,6 +12,4 @@ endif()
 
 # Relax standard-compliance requirements (e.g. minisat uses zero-length arrays)
 set(CMAKE_CXX_EXTENSIONS ON)
-
-add_subdirectory(googletest EXCLUDE_FROM_ALL)
 add_subdirectory(minisat EXCLUDE_FROM_ALL)

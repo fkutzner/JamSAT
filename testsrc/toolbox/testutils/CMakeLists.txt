@@ -38,10 +38,7 @@ jamsat_configure_target(jamsatTestUtils)
 
 target_include_directories(jamsatTestUtils PUBLIC ${PROJECT_SOURCE_DIR}/testsrc)
 
-target_include_directories(jamsatTestUtils PUBLIC ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include
-                                                  ${PROJECT_SOURCE_DIR}/lib/googletest/googlemock/include)
-
-target_link_libraries(jamsatTestUtils jamcore minisat-lib-static)
+target_link_libraries(jamsatTestUtils jamcore minisat-lib-static gtest gmock)
 target_include_directories(jamsatTestUtils SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/lib/minisat)
 
 set_property(TARGET jamsatTestUtils PROPERTY FOLDER ${JAMSAT_LIBRARY_CNFGENERATORS_FOLDER_NAME})

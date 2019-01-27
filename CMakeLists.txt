@@ -55,6 +55,7 @@ option(JAMSAT_ENABLE_TESTING "Enable building the JamSAT test suite." OFF)
 set(NM_CONF_INCLUDE_DIR "src")
 set(NM_CONF_LIB_DIR="src")
 set(NM_CONF_TOOLS_DIR="src")
+set(NM_CONF_GTEST_TAG="release-1.8.1")
 include(etc/cmake/nicemake/NiceMake.cmake)
 include(etc/cmake/nicemake/experimental/CollectObjsFromSubdirectories.cmake)
 
@@ -235,6 +236,7 @@ add_subdirectory(src)
 ### Enable testing
 
 if(JAMSAT_ENABLE_TESTING)
+  nm_add_gtest()
   enable_testing()
   add_subdirectory(testsrc)
 endif()
