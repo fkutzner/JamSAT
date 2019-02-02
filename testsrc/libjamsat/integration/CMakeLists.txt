@@ -22,7 +22,8 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-nm_add_thirdparty_libs(LIBS gtest gtest_main jamcore
+nm_add_thirdparty_libs(LIBS gtest gtest_main
+                            jamcore-testing
                             jstest.toolbox.testutils
                             jstest.toolbox.cnfgenerators)
 

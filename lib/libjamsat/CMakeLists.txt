@@ -66,6 +66,10 @@ nm_collect_objs_from_subdirectories(COLLECT_IN jamcore-objects
 nm_add_library(jamcore ${JAMSAT_LIBRARY_KIND} ${jamcore-objects})
 set_property(TARGET jamcore PROPERTY OUTPUT_NAME ${JAMSAT_LIB_ARTIFACT_NAME})
 
+# The tests can't directly use the jamcore DSO, so the object files are
+# packaged into a static library archive:
+nm_add_library(jamcore-testing STATIC ${jamcore-objects})
+
 
 ### Installation
 

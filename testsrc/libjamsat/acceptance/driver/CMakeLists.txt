@@ -22,7 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-nm_add_thirdparty_libs(LIBS jstest.toolbox.testutils)
+nm_add_thirdparty_libs(LIBS jstest.toolbox.testutils jamcore-testing)
 
 nm_add_tool(jstest.libjamsat.acceptance.driver
   CDCLTestDriver.cpp
