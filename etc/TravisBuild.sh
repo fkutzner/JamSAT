@@ -15,8 +15,8 @@ build_and_test() {
   if [ "$1" == "--only-unit-and-integration-tests" ]
   then
     echo "(only unit and integration tests)..."
-    ctest -V -R "unit_tests"
-    ctest -V -R "integration_tests"
+    ctest -V -R "unit\$"
+    ctest -V -R "integration\$"
   else
     echo "..."
     ctest -V
@@ -25,7 +25,7 @@ build_and_test() {
 
 process_coverage_results() {
   lcov --directory . --capture --output-file coverage.info
-  lcov --remove coverage.info 'lib/*' 'testsrc/*' '/usr/*' --output-file coverage.info
+  lcov --remove coverage.info 'deps/*' 'testsrc/*' '/usr/*' --output-file coverage.info
   lcov --list coverage.info
 }
 
