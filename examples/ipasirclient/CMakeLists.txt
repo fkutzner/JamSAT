@@ -24,14 +24,14 @@
 
 # Example CMake project showing how to use JamSAT in client projects
 #
-# Build this with a JamSAT installation in your CMAKE_PREFIX_PATH.
+# Build this with a shared-libarry JamSAT installation in your CMAKE_PREFIX_PATH.
 
 project(JamSAT-IpasirClientExample)
 cmake_minimum_required(VERSION 3.6)
 
-find_package(JamSAT REQUIRED)
+find_package(JamSATShared REQUIRED)
 add_executable(ipasirclient IpasirClient.cpp)
-target_link_libraries(ipasirclient jamcore-dso)
+target_link_libraries(ipasirclient jamcore)
 
 # The include directories of ipasirclient are automatically set up so that
 # jamsat/JamSatIpasir.h can be included
