@@ -118,7 +118,7 @@ fuzzing, pass `-DJAMSAT_ENABLE_AFL_FUZZER=ON` to the first
 `cmake` invocation. You can then fuzz-test JamSAT by
 building the target `barecdclsolver_fuzzer-run`. Fuzzing results
 will be placed in the directory
-`artifacts/bin/barecdclsolver_fuzzer-fuzzer-findings`.
+`bin/barecdclsolver_fuzzer-fuzzer-findings`.
 
 See the [Travis CI build script](etc/TravisBuild.sh) or
 [AppVeyor configuration](appveyor.yml) for a more detailed

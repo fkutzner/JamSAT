@@ -60,15 +60,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(etc/cmake/JamSATThirdPartyLibs.cmake)
 
 
-### Fix DLL lookup e.g. on Windows
-
-if ((NOT PLATFORM_SUPPORTS_RPATH_LIKE_SO_LOOKUP)
-    AND PLATFORM_SUPPORTS_SO_LOOKUP_IN_PATH)
-  set(JAMSAT_CTEST_PATH_PREFIIX "${Boost_LIBRARY_DIRS}")
-  # TODO: fix separators in ${Boost_LIBRARY_DIRS} add path to ctests
-endif()
-
-
 ### Compiler arguments
 
 # Opt out of boost's linker magic, which causes linker errors on Windows.
@@ -136,13 +127,6 @@ nm_add_compile_definitions(PUBLIC -DJAMSAT_SIGNATURE="JamSAT ${JamSAT_VERSION}")
 if(NOT JAMSAT_BUILD_STATIC_LIB)
   nm_add_lib_compile_definitions(PUBLIC -DJAMSAT_SHARED_LIB)
 endif()
-
-
-### Place artifacts in the artifacts/ subdirectories of the build root
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/bin)
 
 
 ### Configure RPATH on macOS
