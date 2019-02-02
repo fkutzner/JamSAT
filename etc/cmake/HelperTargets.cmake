@@ -22,37 +22,29 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-macro(add_general_compile_options OPTION)
-  list(APPEND JAMSAT_COMPILE_OPTIONS ${OPTION} ${ARGN})
-endmacro()
+file(GLOB_RECURSE SRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/lib/*.cpp ${PROJECT_SOURCE_DIR}/lib/*.h)
+file(GLOB_RECURSE TESTSRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/testsrc/*.cpp ${PROJECT_SOURCE_DIR}/testsrc/*.h)
+set(ALL_SOURCE_FILES ${SRC_SOURCE_FILES} ${TESTSRC_SOURCE_FILES})
 
-macro(add_dso_compile_options OPTION)
-  list(APPEND JAMSAT_DSO_COMPILE_OPTIONS ${OPTION} ${ARGN})
-endmacro()
+set(JAMSAT_MAINTENANCE_TARGET_FOLDER "Maintenance Targets")
 
-macro(add_sanitizer_compile_options OPTION)
-  list(APPEND JAMSAT_SANITIZER_COMPILE_OPTIONS ${OPTION} ${ARGN})
-endmacro()
+add_custom_target(
+        format-src
+        COMMAND clang-format
+        -i
+        ${ALL_SOURCE_FILES}
+)
+set_property(TARGET format-src PROPERTY FOLDER ${JAMSAT_MAINTENANCE_TARGET_FOLDER})
 
-macro(remove_sanitizer_compile_options OPTION)
-  list(REMOVE_ITEM JAMSAT_SANITIZER_COMPILE_OPTIONS ${OPTION} ${ARGN})
-endmacro()
-
-
-macro(jamsat_configure_target TARGET)
-  target_compile_options(${TARGET} PRIVATE ${JAMSAT_COMPILE_OPTIONS})
-  target_compile_options(${TARGET} PRIVATE ${JAMSAT_SANITIZER_COMPILE_OPTIONS})
-endmacro()
-
-macro(jamsat_configure_dso_target TARGET)
-  target_compile_options(${TARGET} PRIVATE ${JAMSAT_COMPILE_OPTIONS})
-  target_compile_options(${TARGET} PRIVATE ${JAMSAT_DSO_COMPILE_OPTIONS})
-
-  if(PLATFORM_REQUIRES_EXTRA_PIC_FOR_DSO)
-    if(COMPILING_WITH_GNULIKE)
-      target_compile_options(${TARGET} PRIVATE -fPIC)
-    else()
-      message(WARNING "PIC compiler flags unknown for this compiler. Not adding PIC flags for shared libraries.")
-    endif()
-  endif()
-endmacro()
+add_custom_target(
+        cppcheck
+        COMMAND cppcheck
+        -I ${PROJECT_SOURCE_DIR}/src
+        -I ${PROJECT_SOURCE_DIR}/testsrc
+        --enable=all
+        --suppress=missingIncludeSystem
+        --std=c++14
+        --verbose
+        ${ALL_SOURCE_FILES}
+)
+set_property(TARGET cppcheck PROPERTY FOLDER ${JAMSAT_MAINTENANCE_TARGET_FOLDER})

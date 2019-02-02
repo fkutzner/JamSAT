@@ -36,8 +36,6 @@ else()
   set(JAMSAT_LIB_ARTIFACT_NAME "jamsatd")
 endif()
 
-nm_add_thirdparty_libs(LIBS ${JAMSAT_LIB_DEPS})
-
 # Adds a JamSAT core library.
 #
 # Usage: add_jamsat_core_library(TargetName Source1.cpp Source2.cpp ...)

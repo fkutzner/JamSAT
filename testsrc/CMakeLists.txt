@@ -81,7 +81,7 @@ function(add_fuzzing_target TARGET_NAME TARGET_FILE SEED_DIRECTORY)
   endif()
 
   nm_add_tool(${TARGET_NAME} $<TARGET_OBJECTS:${JAMSAT_FUZZ_ADAPTER_LIBRARY}> ${TARGET_FILE})
-  target_link_libraries(${TARGET_NAME} jamcore-testing)
+  target_link_libraries(${TARGET_NAME} PRIVATE jamcore-testing)
   target_include_directories(${TARGET_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/testsrc)
   add_fuzzing_execution_target(${TARGET_NAME} ${SEED_DIRECTORY})
 endfunction()

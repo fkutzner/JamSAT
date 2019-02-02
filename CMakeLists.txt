@@ -44,45 +44,21 @@ option(JAMSAT_BUILD_STATIC_LIB "Build libjamsat as a static library" OFF)
 ### Load CMake code
 
 set(NM_CONF_INCLUDE_DIR "lib")
-set(NM_CONF_TOOLS_DIR="lib")
 set(NM_CONF_GTEST_TAG="release-1.8.1")
 include(etc/cmake/nicemake/NiceMake.cmake)
 include(etc/cmake/nicemake/experimental/CollectObjsFromSubdirectories.cmake)
-include(etc/cmake/Utils.cmake)
 
 ### Language options
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-### Find libraries
+### Set up 3rd party libraries that shall be ubiquitously available
+### (Boost; state_ptr; pthread if required by Boost).
+### Note: zlib is required by the JamSAT frontend and is added to the
+### 3rd party libraries in lib/libjamfrontend
+include(etc/cmake/JamSATThirdPartyLibs.cmake)
 
-if (JAMSAT_ENABLE_LOGGING)
-  list(APPEND JAMSAT_REQUIRED_BOOST_LIBRARIES log log_setup)
-endif()
-
-if (NOT JAMSAT_DISABLE_BOOST_LINKING_SETUP)
-  set(Boost_USE_STATIC_LIBS OFF)
-endif()
-
-find_package(Boost
-    1.59.0
-    REQUIRED
-    COMPONENTS
-      ${JAMSAT_REQUIRED_BOOST_LIBRARIES}
-)
-
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-
-set(JAMSAT_LIB_DEPS ${Boost_LIBRARIES})
-
-if(UNIX AND Boost_USE_MULTITHREADED)
-  set(JAMSAT_LIB_DEPS ${JAMSAT_LIB_DEPS} pthread)
-endif()
-
-include_directories(SYSTEM deps/state_ptr/include)
-
-message_list(STATUS "${JAMSAT_LIB_DEPS}" "JamSAT will be linked to the following external libraries:")
 
 ### Fix DLL lookup e.g. on Windows
 
@@ -91,6 +67,7 @@ if ((NOT PLATFORM_SUPPORTS_RPATH_LIKE_SO_LOOKUP)
   set(JAMSAT_CTEST_PATH_PREFIIX "${Boost_LIBRARY_DIRS}")
   # TODO: fix separators in ${Boost_LIBRARY_DIRS} add path to ctests
 endif()
+
 
 ### Compiler arguments
 
@@ -160,13 +137,16 @@ if(NOT JAMSAT_BUILD_STATIC_LIB)
   nm_add_lib_compile_definitions(PUBLIC -DJAMSAT_SHARED_LIB)
 endif()
 
+
 ### Place artifacts in the artifacts/ subdirectories of the build root
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/bin)
 
 
 ### Configure RPATH on macOS
+
 if(APPLE)
   set(CMAKE_MACOSX_RPATH ON)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -179,10 +159,13 @@ if(APPLE)
 endif()
 
 
-### Compile dependencies added via git submodules
+### Set up dependencies added via git submodules
+
 add_subdirectory(deps)
 
+
 ### Add JamSAT sources
+
 add_subdirectory(lib)
 add_subdirectory(tools)
 
@@ -197,31 +180,5 @@ endif()
 
 ### Auxiliary targets
 
-add_subdirectory(doc)
-
-file(GLOB_RECURSE SRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/lib/*.cpp ${PROJECT_SOURCE_DIR}/lib/*.h)
-file(GLOB_RECURSE TESTSRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/testsrc/*.cpp ${PROJECT_SOURCE_DIR}/testsrc/*.h)
-set(ALL_SOURCE_FILES ${SRC_SOURCE_FILES} ${TESTSRC_SOURCE_FILES})
-
-set(JAMSAT_MAINTENANCE_TARGET_FOLDER "Maintenance Targets")
-
-add_custom_target(
-        format-src
-        COMMAND clang-format
-        -i
-        ${ALL_SOURCE_FILES}
-)
-set_property(TARGET format-src PROPERTY FOLDER ${JAMSAT_MAINTENANCE_TARGET_FOLDER})
-
-add_custom_target(
-        cppcheck
-        COMMAND cppcheck
-        -I ${PROJECT_SOURCE_DIR}/src
-        -I ${PROJECT_SOURCE_DIR}/testsrc
-        --enable=all
-        --suppress=missingIncludeSystem
-        --std=c++14
-        --verbose
-        ${ALL_SOURCE_FILES}
-)
-set_property(TARGET cppcheck PROPERTY FOLDER ${JAMSAT_MAINTENANCE_TARGET_FOLDER})
+nm_add_doxygen()
+include(etc/cmake/HelperTargets.cmake)

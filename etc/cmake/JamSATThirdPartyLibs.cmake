@@ -22,14 +22,30 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-#
-# Prints the list List, one item per line. The Mode argument is passed as the first
-# argument to each MESSAGE call. ${HeaderLine} is printed prior to the list.
-#
-function(message_list Mode List HeaderLine)
-  message(${MODE} "${HeaderLine}")
-  foreach (item ${List})
-    message(${MODE} "    ${item}")
-  endforeach()
-  message(${MODE} "  (end of list)")
-endfunction()
+if (JAMSAT_ENABLE_LOGGING)
+  list(APPEND JAMSAT_REQUIRED_BOOST_LIBRARIES log log_setup)
+endif()
+
+if (NOT JAMSAT_DISABLE_BOOST_LINKING_SETUP)
+  set(Boost_USE_STATIC_LIBS OFF)
+endif()
+
+find_package(Boost
+    1.59.0
+    REQUIRED
+    COMPONENTS
+      ${JAMSAT_REQUIRED_BOOST_LIBRARIES}
+)
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+
+if(${Boost_LIBRARIES})
+  nm_add_thirdparty_libs(LIBS ${Boost_LIBRARIES})
+endif()
+
+if(UNIX AND Boost_USE_MULTITHREADED)
+  nm_add_thirdparty_libs(LIBS pthread)
+endif()
+
+# state_ptr is a header-only library:
+include_directories(SYSTEM deps/state_ptr/include)
