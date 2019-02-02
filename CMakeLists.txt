@@ -30,25 +30,16 @@ project(JamSAT VERSION 0.2.0)
 ### Options
 
 # The default for all boolean options is "OFF".
-option(JAMSAT_ENABLE_SANITIZERS "Enable code sanitizers" OFF)
-option(JAMSAT_USE_SEPARATE_CLANG_SANITIZERS "Activate sanitizers separately for clang" OFF)
-option(JAMSAT_ENABLE_MEMORY_SANITIZER "When using sanitizers, also enable clang's memory sanitizer" OFF)
 option(JAMSAT_ENABLE_AFL_FUZZER "Use afl-clang rsp. afl-gcc for compilation and build the fuzzing targets for AFL" OFF)
-
 option(JAMSAT_DISABLE_OPTIMIZATIONS "Disable compiler optimimzations" OFF)
 option(JAMSAT_ENABLE_RELEASE_ASSERTIONS "Enable release-mode assertions" OFF)
 option(JAMSAT_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(JAMSAT_ENABLE_LOGGING "Enable logging for debug" OFF)
 option(JAMSAT_LOGGING_DEFAULT_START_EPOCH "The default logging epoch in which logging starts" 0)
 option(JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS "Enable more thorough, but expensive assertions" OFF)
-
 option(JAMSAT_DISABLE_BOOST_LINKING_SETUP "Don't override linker settings for Boost" OFF)
-option(JAMSAT_LINK_VERBOSE "Print information about linked dependencies" OFF)
-option(JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB "Enables symbol hiding for the static JamSAT library" OFF)
-
-option(JAMSAT_DISABLE_FRONTEND "Disables building the standalone JamSAT executable." OFF)
-
 option(JAMSAT_ENABLE_TESTING "Enable building the JamSAT test suite." OFF)
+option(JAMSAT_BUILD_STATIC_LIB "Build libjamsat as a static library" OFF)
 
 ### Load CMake code
 
@@ -57,8 +48,6 @@ set(NM_CONF_TOOLS_DIR="lib")
 set(NM_CONF_GTEST_TAG="release-1.8.1")
 include(etc/cmake/nicemake/NiceMake.cmake)
 include(etc/cmake/nicemake/experimental/CollectObjsFromSubdirectories.cmake)
-
-include(etc/cmake/CompilerOptions.cmake)
 include(etc/cmake/Utils.cmake)
 
 ### Language options
@@ -110,84 +99,47 @@ endif()
 
 # Opt out of boost's linker magic, which causes linker errors on Windows.
 # See https://www.boost.org/doc/libs/1_57_0/libs/config/doc/html/index.html
-add_general_compile_options(-DBOOST_ALL_NO_LIB)
+nm_add_compile_definitions(PRIVATE -DBOOST_ALL_NO_LIB)
 
 # BOOST_ALL_NO_LIB does not disable boost's linker magic entirely :(
 if (JAMSAT_ENABLE_LOGGING AND NOT Boost_USE_STATIC_LIBS)
-    add_general_compile_options(-DBOOST_LOG_DYN_LINK=1)
+    nm_add_compile_definitions(PRIVATE -DBOOST_LOG_DYN_LINK=1)
 endif()
 
-set(JAMSAT_BUILD_DSO ON)
+nm_enforce_lang_standard_adherence()
+nm_use_high_compiler_warning_level()
+
+if(JAMSAT_ENABLE_RELEASE_ASSERTIONS)
+  nm_enable_release_assertions()
+endif()
 
 if(NM_COMPILING_WITH_GNULIKE)
-  add_general_compile_options(-Wall -Wextra -pedantic-errors)
-  if(JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB)
-    add_general_compile_options(-fvisibility=hidden)
-  else()
-    add_dso_compile_options(-fvisibility=hidden)
+  if(NOT JAMSAT_BUILD_STATIC_LIB)
+    nm_add_lib_compile_options(PRIVATE -fvisibility=hidden)
   endif()
 
   if(JAMSAT_DISABLE_OPTIMIZATIONS)
-    add_general_compile_options(-fno-inline -O0)
-  endif()
-
-  if(JAMSAT_ENABLE_SANITIZERS)
-    set(JAMSAT_BUILD_DSO OFF)
-    if(NM_COMPILING_WITH_CLANG)
-      # Configure the ASAN suppression file to disable warnings in 3rd party libraries
-      configure_file(${PROJECT_SOURCE_DIR}/etc/asan.supp.in ${PROJECT_BINARY_DIR}/asan.supp)
-      set(sanitizer_flags
-          "-fsanitize-blacklist=${PROJECT_BINARY_DIR}/asan.supp" -fsanitize=address -fsanitize=undefined)
-      add_sanitizer_compile_options(-fno-omit-frame-pointer ${sanitizer_flags})
-
-      string(REPLACE ";" " " SANITIZER_LINKER_FLAGS "${sanitizer_flags}")
-      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SANITIZER_LINKER_FLAGS}")
-
-      if(NM_COMPILING_WITH_CLANG AND JAMSAT_USE_SEPARATE_CLANG_SANITIZERS)
-        add_sanitizer_compile_options(-fsanitize=leak)
-      endif()
-
-      if(NM_COMPILING_WITH_CLANG AND JAMSAT_ENABLE_MEMORY_SANITIZER)
-        # TODO: don't enable leak and address sanitizers in the first place since
-        # they are not compatible with the memory sanitizer
-        remove_sanitizer_compile_options(-fsanitize=leak)
-        remove_sanitizer_compile_options(-fsanitize=address)
-        add_sanitizer_compile_options(-fsanitize=memory)
-      endif()
-    else()
-      message(ERROR "GCC sanitizer support is not implemented yet")
-    endif()
+    nm_add_compile_options(PRIVATE -fno-inline -O0)
   endif()
 
   if(JAMSAT_ENABLE_COVERAGE)
-    add_general_compile_options(--coverage)
+    nm_add_compile_options(PRIVATE --coverage)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
   endif()
-
-  if(JAMSAT_ENABLE_RELEASE_ASSERTIONS)
-    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
-    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
-    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_CXX_FLAGS_MINSIZEREL})
-  endif()
-
 elseif(NM_COMPILING_WITH_MSVC)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-  add_general_compile_options(/EHsc)
-
-  # Disable warnings about usage of C++ TR1. Google Test apparently still uses
-  # TR1 functions.
-  add_general_compile_options(/wd4996)
+  nm_add_compile_options(PUBLIC /EHsc)
 
   # Suppress warnings about unused parameters. Some dependencies have functions
   # with parameters that are only used in debug builds.
-  add_general_compile_options(/wd4100)
+  # TODO: move this. nm_add_compile_options(/wd4100)
 
-  add_general_compile_options(/W4)
+  nm_add_compile_options(PRIVATE /W4)
 endif()
 
 ### Set preprocessor definitions
 if(JAMSAT_ENABLE_LOGGING)
-  add_general_compile_options(
+  nm_add_compile_definitions(PRIVATE
     -DJAM_ENABLE_LOGGING
     -DJAM_ENABLE_PROPAGATION_LOGGING
     -DJAM_ENABLE_CA_LOGGING
@@ -202,21 +154,14 @@ if(JAMSAT_ENABLE_LOGGING)
 endif()
 
 if(JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS)
-    add_general_compile_options(-DJAM_ENABLE_EXPENSIVE_ASSERTIONS)
+    nm_add_compile_definitions(PRIVATE -DJAM_ENABLE_EXPENSIVE_ASSERTIONS)
 endif()
 
-add_general_compile_options(-DJAMSAT_SIGNATURE="JamSAT ${JamSAT_VERSION}")
+nm_add_compile_definitions(PUBLIC -DJAMSAT_SIGNATURE="JamSAT ${JamSAT_VERSION}")
 
-
-add_dso_compile_options(-DJAMSAT_SHARED_LIB -DBUILDING_JAMSAT_SHARED_LIB)
-
-# Now: compile options for all targets are listed in JAMSAT_COMPILE_OPTIONS
-#      compile options for targets supporting sanitizers are listed in
-#        JAMSAT_SANITIZER_COMPILE_OPTIONS
-
-message_list(STATUS "${JAMSAT_COMPILE_OPTIONS}" "General JamSAT compiler options:")
-message_list(STATUS "${JAMSAT_SANITIZER_COMPILE_OPTIONS}" "Sanitizing-related compiler options:")
-message_list(STATUS "${JAMSAT_DSO_COMPILE_OPTIONS}" "Shared-object/DLL compiler options:")
+if(NOT JAMSAT_BUILD_STATIC_LIB)
+  nm_add_lib_compile_definitions(PUBLIC -DJAMSAT_SHARED_LIB)
+endif()
 
 ### Place artifacts in the artifacts/ subdirectories of the build root
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/bin)
@@ -227,8 +172,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/artifacts/bin)
 add_subdirectory(deps)
 
 ### Add JamSAT sources
-nm_add_compile_options(PUBLIC ${JAMSAT_COMPILE_OPTIONS})
-nm_add_compile_options(PUBLIC ${JAMSAT_SANITIZER_COMPILE_OPTIONS})
 add_subdirectory(lib)
 add_subdirectory(tools)
 
@@ -245,7 +188,7 @@ endif()
 
 add_subdirectory(doc)
 
-file(GLOB_RECURSE SRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.h)
+file(GLOB_RECURSE SRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/lib/*.cpp ${PROJECT_SOURCE_DIR}/lib/*.h)
 file(GLOB_RECURSE TESTSRC_SOURCE_FILES ${PROJECT_SOURCE_DIR}/testsrc/*.cpp ${PROJECT_SOURCE_DIR}/testsrc/*.h)
 set(ALL_SOURCE_FILES ${SRC_SOURCE_FILES} ${TESTSRC_SOURCE_FILES})
 

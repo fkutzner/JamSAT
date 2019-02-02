@@ -23,7 +23,4 @@
 # other dealings in this Software without prior written authorization.
 
 add_subdirectory(libjamsat)
-
-if(NOT JAMSAT_DISABLE_FRONTEND)
-  add_subdirectory(libjamfrontend)
-endif()
+add_subdirectory(libjamfrontend)

@@ -22,19 +22,31 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
+if(JAMSAT_BUILD_STATIC_LIB)
+  set(JAMSAT_LIBRARY_KIND STATIC)
+  set(JAMSAT_OBJ_LIBRARY_KIND OBJECT)
+  set(JAMSAT_LIB_PACKAGE_NAME "JamSATStatic")
+  set(JAMSAT_LIB_ARTIFACT_NAME "jamsats")
+else()
+  nm_add_lib_compile_definitions(PRIVATE -DBUILDING_JAMSAT_SHARED_LIB)
+  nm_add_lib_compile_definitions(PUBLIC -DJAMSAT_SHARED_LIB)
+  set(JAMSAT_LIBRARY_KIND SHARED)
+  set(JAMSAT_OBJ_LIBRARY_KIND OBJECT-SHARED)
+  set(JAMSAT_LIB_PACKAGE_NAME "JamSATShared")
+  set(JAMSAT_LIB_ARTIFACT_NAME "jamsatd")
+endif()
+
 nm_add_thirdparty_libs(LIBS ${JAMSAT_LIB_DEPS})
 
 # Adds a JamSAT core library.
+#
 # Usage: add_jamsat_core_library(TargetName Source1.cpp Source2.cpp ...)
+#
 # Creates an object library target ${TargetName} containing the objects
-# of the given source files. If neccessary, a target ${TargetName}-so
-# is created with compiler flags for shared-object building.
+# of the given source files. The object library is created using nm_add_library()
+# with library kind ${JAMSAT_OBJ_LIBRARY_KIND}.
 function(add_jamsat_core_library TARGET)
-  nm_add_library(${TARGET} OBJECT ${ARGN})
-
-  if(JAMSAT_BUILD_DSO)
-    nm_add_library(${TARGET}-dso OBJECT-SHARED ${ARGN})
-  endif()
+  nm_add_library(${TARGET} ${JAMSAT_OBJ_LIBRARY_KIND} ${ARGN})
 endfunction()
 
 add_subdirectory(concepts)
@@ -51,18 +63,8 @@ add_subdirectory(simplification)
 nm_collect_objs_from_subdirectories(COLLECT_IN jamcore-objects
                                     TARGET_NAME_PREFIX "libjamsat."
                                     EXCLUDE_REGEX "^api$")
-nm_add_library(jamcore STATIC ${jamcore-objects})
-set_property(TARGET jamcore PROPERTY OUTPUT_NAME "jamsats")
-
-if(JAMSAT_BUILD_DSO)
-  # Collect all libjamsat.*-dso object libraries:
-  nm_collect_objs_from_subdirectories(COLLECT_IN jamcore-dso-objects
-                                      TARGET_NAME_PREFIX "libjamsat."
-                                      TARGET_NAME_SUFFIX "-dso"
-                                      EXCLUDE_REGEX "^api$")
-  nm_add_library(jamcore-dso SHARED ${jamcore-dso-objects})
-  set_property(TARGET jamcore-dso PROPERTY OUTPUT_NAME "jamsatd")
-endif()
+nm_add_library(jamcore ${JAMSAT_LIBRARY_KIND} ${jamcore-objects})
+set_property(TARGET jamcore PROPERTY OUTPUT_NAME ${JAMSAT_LIB_ARTIFACT_NAME})
 
 
 ### Installation
@@ -70,28 +72,20 @@ endif()
 # Automatically add the directory containing the jamsat header directory
 # to clients linking against jamcore or jamcore-dso
 target_include_directories(jamcore INTERFACE $<INSTALL_INTERFACE:include>)
-set(INSTALL_TARGETS jamcore)
-
-if(JAMSAT_BUILD_DSO)
-  target_include_directories(jamcore-dso INTERFACE $<INSTALL_INTERFACE:include>)
-
-  # JamSAT DSO clients should automatically define JAMSAT_SHARED_LIB to make
-  # __declspec(dllimport) work properly
-  target_compile_definitions(jamcore-dso INTERFACE -DJAMSAT_SHARED_LIB)
-  list(APPEND INSTALL_TARGETS jamcore-dso)
-endif()
 
 # Install API headers
 install(FILES api/ipasir/JamSatIpasir.h DESTINATION include/jamsat)
 
 # Install JamSAT libraries
 install(
-  TARGETS ${INSTALL_TARGETS}
-  EXPORT JamSAT
+  TARGETS jamcore
+  EXPORT ${JAMSAT_LIB_PACKAGE_NAME}
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
 
 # Generate and install CMake scripts for find_package
-install(EXPORT JamSAT DESTINATION lib/cmake/JamSAT FILE JamSATConfig.cmake)
+install(EXPORT ${JAMSAT_LIB_PACKAGE_NAME}
+        DESTINATION lib/cmake/${JAMSAT_LIB_PACKAGE_NAME}
+        FILE "${JAMSAT_LIB_PACKAGE_NAME}Config.cmake")
