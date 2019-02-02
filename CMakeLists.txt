@@ -82,10 +82,7 @@ endif()
 
 include_directories(SYSTEM deps/state_ptr/include)
 
-if(JAMSAT_LINK_VERBOSE)
-  message_list(STATUS "${JAMSAT_LIB_DEPS}" "JamSAT will be linked to the following external libraries:")
-endif()
-
+message_list(STATUS "${JAMSAT_LIB_DEPS}" "JamSAT will be linked to the following external libraries:")
 
 ### Fix DLL lookup e.g. on Windows
 

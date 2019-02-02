@@ -133,16 +133,11 @@ by default. The list of JamSAT build options is given below.
 #### Controlling the scope of the build
 
 * `JAMSAT_ENABLE_TESTING` - Enable building the JamSAT test suite.
-* `JAMSAT_DISABLE_FRONTEND` - Disable building the standalone JamSAT executable.
-  If this option is set to `ON`, JamSAT will have no dependency to `zlib`.
 
 #### General compiler and linker settings
 
+* `JAMSAT_BUILD_STATIC_LIB` - Build the JamSAT library as a static library
 * `JAMSAT_DISABLE_BOOST_LINKING_SETUP` - Don't override linker settings for Boost
-* `JAMSAT_LINK_VERBOSE` - Print information about linked dependencies
-* `JAMSAT_ENABLE_SYMBOL_HIDING_IN_STATIC_LIB` - Enable symbol hiding for the
-static JamSAT library. This might be useful if you want to use the static JamSAT
-library with a dynamic library as a client.
 
 #### Logging
 
@@ -167,11 +162,10 @@ effective logging, either
 * `JAMSAT_ENABLE_AFL_FUZZER` - Use afl-clang rsp. afl-gcc for compilation and
   build the fuzzing targets for AFL
 * `JAMSAT_DISABLE_OPTIMIZATIONS` - Disable compiler optimimzations
-* `JAMSAT_ENABLE_SANITIZERS` - Enable code sanitizers if supported by the
-  compiler. Currently, only clang and GCC sanitizers are enabled if this option
-  is set to `ON`.
-* `JAMSAT_ENABLE_MEMORY_SANITIZER` - When using sanitizers, also enable clang's
-  memory sanitizer.
+* `JAMSAT_ENABLE_ASAN` - Enable the address sanitizer if the compiler supports
+  address sanitizing
+* `JAMSAT_ENABLE_UBSAN` - Enable the undefined-behaviour sanitizer if the
+  compiler supports undefined-behaviour sanitizing
 * `JAMSAT_ENABLE_RELEASE_ASSERTIONS` Enable release-mode assertions
 * `JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS` - Enable more thorough, but expensive
   assertions
@@ -180,7 +174,7 @@ effective logging, either
 
 ## Using JamSAT
 
-The JamSAT build produces three artifacts:
+The JamSAT build produces two artifacts:
 
 * `jamsat` rsp. `jamsat.exe` is JamSAT's frontend, for solving
   DIMACS-formatted SAT problem instances. The problem instances
@@ -188,13 +182,14 @@ The JamSAT build produces three artifacts:
   Run `jamsat --help` for a description of its parameters and
   output rsp. return values.
 
-* A static library containing the JamSAT solver, implementing
-  the IPASIR interface. Depending on your platform, this file
-  is named `libjamsats.a` or `jamsats.lib`.
+* Depending on the setting of `JAMSAT_BUILD_STATIC_LIB`, one of
+    * A static library containing the JamSAT solver, implementing
+      the IPASIR interface. Depending on your platform, this file
+      is named `libjamsats.a` or `jamsats.lib`.
 
-* A dynamic library containing the JamSAT solver, implementing
-  the IPASIR interface. Depending on your platform, this file
-  is named `libjamsatd.so`, `libjamsatd.dylib` or `jamsatd.dll`.
+    * A dynamic library containing the JamSAT solver, implementing
+      the IPASIR interface. Depending on your platform, this file
+      is named `libjamsatd.so`, `libjamsatd.dylib` or `jamsatd.dll`.
 
 ## Implementation Status
 
