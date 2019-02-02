@@ -24,3 +24,8 @@
 
 nm_add_tool(jamsat Main.cpp)
 target_link_libraries(jamsat PUBLIC libjamfrontend)
+
+install(TARGETS jamsat
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
