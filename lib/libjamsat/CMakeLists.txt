@@ -64,15 +64,23 @@ nm_collect_objs_from_subdirectories(COLLECT_IN jamcore-objects
 nm_add_library(jamcore ${JAMSAT_LIBRARY_KIND} ${jamcore-objects})
 set_property(TARGET jamcore PROPERTY OUTPUT_NAME ${JAMSAT_LIB_ARTIFACT_NAME})
 
-# The tests can't directly use the jamcore DSO, so the object files are
-# packaged into a static library archive:
+
+# Due to symbol hiding, the tests can't directly use the jamcore DSO, so the object
+# files are packaged into a static library archive as well:
 nm_add_library(jamcore-testing STATIC ${jamcore-objects})
+if(NOT JAMSAT_BUILD_STATIC_LIB)
+  # On Windows/MSVC, clients of jamcore-testing can't use dllimport declarations to refer
+  # to dllexport symbols defined within jamcore-testing. Thus a workaround: make sure
+  # jamcore-testing clients see the JamSAT API functions as dllexport declarations, not
+  # as dllimport declarations
+  target_compile_definitions(jamcore-testing INTERFACE -DBUILDING_JAMSAT_SHARED_LIB)
+endif()
 
 
 ### Installation
 
 # Automatically add the directory containing the jamsat header directory
-# to clients linking against jamcore or jamcore-dso
+# to clients linking against jamcore
 target_include_directories(jamcore INTERFACE $<INSTALL_INTERFACE:include>)
 
 # Install API headers
