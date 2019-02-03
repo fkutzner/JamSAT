@@ -282,7 +282,12 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     }
 
     auto currentDecisionLevel = m_assignmentProvider.getCurrentDecisionLevel();
+
     OnExitScope assertCorrectDecisionLevel{[this, currentDecisionLevel]() {
+        // The lambda captures are deliberately not used when assertions are disabled,
+        // so suppress the warnings:
+        (void)this;
+        (void)currentDecisionLevel;
         JAM_ASSERT(m_assignmentProvider.getCurrentDecisionLevel() == currentDecisionLevel,
                    "Illegal decision level modification");
     }};
