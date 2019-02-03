@@ -43,7 +43,6 @@ option(JAMSAT_BUILD_STATIC_LIB "Build libjamsat as a static library" OFF)
 
 ### Load CMake code
 
-set(NM_CONF_INCLUDE_DIR "lib")
 set(NM_CONF_GTEST_TAG="release-1.8.1")
 include(etc/cmake/nicemake/NiceMake.cmake)
 include(etc/cmake/nicemake/experimental/CollectObjsFromSubdirectories.cmake)

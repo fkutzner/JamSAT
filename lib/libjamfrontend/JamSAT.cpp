@@ -24,10 +24,10 @@
 
 */
 
-#include <libjamfrontend/Options.h>
-#include <libjamfrontend/Parser.h>
-#include <libjamfrontend/Timeout.h>
-#include <libjamsat/api/ipasir/JamSatIpasir.h>
+#include "Options.h"
+#include "Parser.h"
+#include "Timeout.h"
+#include <libjamsat/JamSatIpasir.h>
 
 #include <cassert>
 #include <cstdio>

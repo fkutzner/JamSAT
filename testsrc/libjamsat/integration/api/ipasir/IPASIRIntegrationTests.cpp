@@ -26,7 +26,7 @@
 
 #include <gtest/gtest.h>
 
-#include <libjamsat/api/ipasir/JamSatIpasir.h>
+#include <libjamsat/JamSatIpasir.h>
 #include <libjamsat/utils/ControlFlow.h>
 #include <toolbox/cnfgenerators/Rule110.h>
 

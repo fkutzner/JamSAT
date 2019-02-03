@@ -24,9 +24,9 @@
 
 */
 
-#include <libjamfrontend/Timeout.h>
+#include "Timeout.h"
 
-#include <libjamsat/api/ipasir/JamSatIpasir.h>
+#include <libjamsat/JamSatIpasir.h>
 
 namespace jamsat {
 

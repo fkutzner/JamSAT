@@ -32,12 +32,11 @@ nm_add_thirdparty_libs(NAME zlib_if
                        INTERFACE_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS})
 
 nm_add_library(libjamfrontend STATIC
-  JamSAT.h
   JamSAT.cpp
+  ${PROJECT_SOURCE_DIR}/${NM_CONF_INCLUDE_DIR}/libjamfrontend/JamSat.h
   Parser.h
   Parser.cpp
   Options.h
   Options.cpp
   Timeout.h
   Timeout.cpp)
-

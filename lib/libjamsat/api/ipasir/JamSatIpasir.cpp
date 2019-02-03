@@ -24,7 +24,7 @@
 
 */
 
-#include <libjamsat/api/ipasir/JamSatIpasir.h>
+#include <libjamsat/JamSatIpasir.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/solver/CDCLSatSolver.h>
 #include <libjamsat/utils/Assert.h>

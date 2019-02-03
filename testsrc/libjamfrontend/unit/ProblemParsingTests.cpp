@@ -28,7 +28,7 @@
 
 #include <libjamfrontend/Parser.h>
 #include <libjamfrontend/ipasirmock/IpasirMock.h>
-#include <libjamsat/api/ipasir/JamSatIpasir.h>
+#include <libjamsat/JamSatIpasir.h>
 
 #include <cstdlib>
 #include <fstream>

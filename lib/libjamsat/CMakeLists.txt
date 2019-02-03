@@ -36,6 +36,7 @@ else()
   set(JAMSAT_LIB_ARTIFACT_NAME "jamsatd")
 endif()
 
+
 # Adds a JamSAT core library.
 #
 # Usage: add_jamsat_core_library(TargetName Source1.cpp Source2.cpp ...)
@@ -45,6 +46,10 @@ endif()
 # with library kind ${JAMSAT_OBJ_LIBRARY_KIND}.
 function(add_jamsat_core_library TARGET)
   nm_add_library(${TARGET} ${JAMSAT_OBJ_LIBRARY_KIND} ${ARGN})
+
+  # Add lib/ to the include search path, as JamSAT modules currently contain their public
+  # headers:
+  target_include_directories(${TARGET} PRIVATE "${PROJECT_SOURCE_DIR}/${NM_CONF_LIB_DIR}")
 endfunction()
 
 add_subdirectory(concepts)
@@ -75,6 +80,7 @@ if(NOT JAMSAT_BUILD_STATIC_LIB)
   # as dllimport declarations
   target_compile_definitions(jamcore-testing INTERFACE -DBUILDING_JAMSAT_SHARED_LIB)
 endif()
+target_include_directories(jamcore-testing INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${NM_CONF_LIB_DIR}>)
 
 
 ### Installation
@@ -84,7 +90,8 @@ endif()
 target_include_directories(jamcore INTERFACE $<INSTALL_INTERFACE:include>)
 
 # Install API headers
-install(FILES api/ipasir/JamSatIpasir.h DESTINATION include/jamsat)
+install(FILES ${PROJECT_SOURCE_DIR}/${NM_CONF_INCLUDE_DIR}/libjamsat/JamSatIpasir.h
+        DESTINATION include/jamsat)
 
 # Install JamSAT libraries
 install(

@@ -26,7 +26,7 @@
 
 #include "IpasirMock.h"
 
-#include <libjamsat/api/ipasir/JamSatIpasir.h>
+#include <libjamsat/JamSatIpasir.h>
 
 #include <vector>
 

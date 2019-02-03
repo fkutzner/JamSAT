@@ -24,7 +24,7 @@
 
 */
 
-#include <libjamfrontend/Options.h>
+#include "Options.h"
 
 namespace jamsat {
 auto parseOptions(int argc, char** argv) -> JamSATOptions {

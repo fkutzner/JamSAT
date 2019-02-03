@@ -30,7 +30,9 @@ nm_add_tool(jstest.libjamfrontend.unit
   $<TARGET_OBJECTS:jstest.libjamfrontend.ipasirmock>
 )
 
-target_include_directories(jstest.libjamfrontend.unit PRIVATE "${PROJECT_SOURCE_DIR}/testsrc")
+target_include_directories(jstest.libjamfrontend.unit PRIVATE
+                           "${PROJECT_SOURCE_DIR}/testsrc"
+                           "${PROJECT_SOURCE_DIR}/${NM_CONF_LIB_DIR}")
 
 add_test(
     NAME jstest.libjamfrontend.unit
