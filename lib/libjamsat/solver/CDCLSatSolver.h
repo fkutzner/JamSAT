@@ -459,7 +459,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit>& assumption
             m_statistics.registerConflict();
             JAM_LOG_SOLVER(info, "Last propagation resulted in a conflict");
             m_branchingHeuristic.beginHandlingConflict();
-            typename ST::Clause* newLemma;
+            typename ST::Clause* newLemma = nullptr;
             auto conflictHandlingResult = deriveLemma(*conflictingClause, &newLemma);
             m_branchingHeuristic.endHandlingConflict();
 
