@@ -25,7 +25,7 @@ build_and_test() {
 
 process_coverage_results() {
   lcov --directory . --capture --output-file coverage.info
-  lcov --remove coverage.info 'deps/*' 'testsrc/*' '/usr/*' --output-file coverage.info
+  lcov --remove coverage.info 'deps/*' 'testsrc/*' '/usr/*' 'gtest-src-wrap/*' --output-file coverage.info
   lcov --list coverage.info
 }
 
