@@ -174,22 +174,7 @@ effective logging, either
 
 ## Using JamSAT
 
-The JamSAT build produces two artifacts:
-
-* `jamsat` rsp. `jamsat.exe` is JamSAT's frontend, for solving
-  DIMACS-formatted SAT problem instances. The problem instances
-  can be provided as plain-text or gzip-compressed files.
-  Run `jamsat --help` for a description of its parameters and
-  output rsp. return values.
-
-* Depending on the setting of `JAMSAT_BUILD_STATIC_LIB`, one of
-    * A static library containing the JamSAT solver, implementing
-      the IPASIR interface. Depending on your platform, this file
-      is named `libjamsats.a` or `jamsats.lib`.
-
-    * A dynamic library containing the JamSAT solver, implementing
-      the IPASIR interface. Depending on your platform, this file
-      is named `libjamsatd.so`, `libjamsatd.dylib` or `jamsatd.dll`.
+See [Using JamSAT](doc/UsingJamSAT.md)
 
 ## Implementation Status
 
@@ -228,7 +213,9 @@ implements the following techniques:
 
 ## Developer Documentation
 
-Build the target `doxygen` to generate JamSAT's developer documentation, which
-can then be browsed at  `<JamSAT-Build-Dir>/doc/html/index.html`. The
+* Reference manual: Build the target `doxygen` to generate JamSAT's developer
+documentation, which can then be browsed at
+`<JamSAT-Build-Dir>/doc/html/index.html`. The
 [Doxygen](https://www.stack.nl/~dimitri/doxygen/) documentation system is
 required to build the documentation.
+* [Repository description](doc/Repository.md)
