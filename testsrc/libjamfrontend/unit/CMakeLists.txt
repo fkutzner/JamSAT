@@ -24,16 +24,16 @@
 
 nm_add_thirdparty_libs(LIBS libjamfrontend gtest gtest_main)
 
-nm_add_tool(jstest.jamsat.unit
+nm_add_tool(jstest.libjamfrontend.unit
   ProblemParsingTests.cpp
   # From jamsat/ipasirmock:
-  $<TARGET_OBJECTS:jstest.jamsat.ipasirmock>
+  $<TARGET_OBJECTS:jstest.libjamfrontend.ipasirmock>
 )
 
-target_include_directories(jstest.jamsat.unit PRIVATE "${PROJECT_SOURCE_DIR}/testsrc")
+target_include_directories(jstest.libjamfrontend.unit PRIVATE "${PROJECT_SOURCE_DIR}/testsrc")
 
 add_test(
-    NAME jstest.jamsat.unit
-    COMMAND jstest.jamsat.unit
+    NAME jstest.libjamfrontend.unit
+    COMMAND jstest.libjamfrontend.unit
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ProblemParsingTestInputs
 )

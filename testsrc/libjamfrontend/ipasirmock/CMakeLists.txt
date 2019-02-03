@@ -22,4 +22,4 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-nm_add_library(jstest.jamsat.ipasirmock OBJECT IpasirMock.cpp IpasirMock.h)
+nm_add_library(jstest.libjamfrontend.ipasirmock OBJECT IpasirMock.cpp IpasirMock.h)

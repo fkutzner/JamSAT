@@ -88,4 +88,4 @@ endfunction()
 
 add_subdirectory(toolbox)
 add_subdirectory(libjamsat)
-add_subdirectory(jamsat)
+add_subdirectory(libjamfrontend)
