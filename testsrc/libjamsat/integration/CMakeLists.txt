@@ -23,7 +23,7 @@
 # other dealings in this Software without prior written authorization.
 
 nm_add_thirdparty_libs(LIBS gtest gtest_main
-                            jamcore-testing
+                            libjamsat-testing
                             jstest.toolbox.testutils
                             jstest.toolbox.cnfgenerators)
 

@@ -43,14 +43,14 @@ JamSAT installation, use `find_package(JamSATStatic REQUIRED)`.
 ### Linking to JamSAT
 
 Both `find_package` invocations described above provide a target
-`jamcore` representing the JamSAT solver library. The `jamcore` target
+`libjamsat` representing the JamSAT solver library. The `libjamsat` target
 carries interface definitions: include directories and preprocessor
 flags (e.g. `JAMSAT_SHARED_LIB`) are automatically set up for targets
-linking to `jamcore`.
+linking to `libjamsat`.
 
-**Note:** Linking to `jamcore` only causes preprocessor flags related to
+**Note:** Linking to `libjamsat` only causes preprocessor flags related to
 the JamSAT API as well as include search paths to be added to the client
 library's target. In particular, language-related compiler flags are not
 modified. However, you can insulate your code by creating a thin wrapper
-module and linking `jamcore` against that module's target, with `PRIVATE`
+module and linking `libjamsat` against that module's target, with `PRIVATE`
 scope.

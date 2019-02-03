@@ -31,7 +31,7 @@ cmake_minimum_required(VERSION 3.6)
 
 find_package(JamSATShared REQUIRED)
 add_executable(ipasirclient IpasirClient.cpp)
-target_link_libraries(ipasirclient jamcore)
+target_link_libraries(ipasirclient libjamsat)
 
 # The include directories of ipasirclient are automatically set up so that
 # jamsat/JamSatIpasir.h can be included

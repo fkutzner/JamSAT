@@ -70,7 +70,7 @@ endfunction()
 
 #
 # Given a file TARGET_FILE containing a fuzzer entry point (i.e. when linked
-# with jamcore and a fuzzing adapter, results in a complete fuzzing target
+# with libjamsat and a fuzzing adapter, results in a complete fuzzing target
 # program) and a directory SEED_DIRECTORY containing fuzzing seeds, this
 # function defines an executable target TARGET_NAME and a fuzzer-running target
 # TARGET_NAME-run. By convention, the TARGET_NAME must end with _fuzzer.
@@ -81,7 +81,7 @@ function(add_fuzzing_target TARGET_NAME TARGET_FILE SEED_DIRECTORY)
   endif()
 
   nm_add_tool(${TARGET_NAME} $<TARGET_OBJECTS:${JAMSAT_FUZZ_ADAPTER_LIBRARY}> ${TARGET_FILE})
-  target_link_libraries(${TARGET_NAME} PRIVATE jamcore-testing)
+  target_link_libraries(${TARGET_NAME} PRIVATE libjamsat-testing)
   target_include_directories(${TARGET_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/testsrc)
   add_fuzzing_execution_target(${TARGET_NAME} ${SEED_DIRECTORY})
 endfunction()

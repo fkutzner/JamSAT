@@ -30,4 +30,4 @@ nm_add_library(jstest.toolbox.cnfgenerators OBJECT
 )
 
 target_include_directories(jstest.toolbox.cnfgenerators PRIVATE ${PROJECT_SOURCE_DIR}/testsrc)
-target_link_libraries(jstest.toolbox.cnfgenerators PRIVATE jamcore-testing)
+target_link_libraries(jstest.toolbox.cnfgenerators PRIVATE libjamsat-testing)

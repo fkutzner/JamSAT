@@ -24,7 +24,7 @@
 
 find_package(ZLIB REQUIRED)
 
-# Not linking directly to jamcore, so that the IPASIR implementation can
+# Not linking directly to libjamsat, so that the IPASIR implementation can
 # be mocked for testing.
 
 nm_add_thirdparty_libs(NAME zlib_if
@@ -40,3 +40,5 @@ nm_add_library(libjamfrontend STATIC
   Options.cpp
   Timeout.h
   Timeout.cpp)
+
+set_property(TARGET libjamfrontend PROPERTY OUTPUT_NAME jamfrontend)

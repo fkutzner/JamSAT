@@ -34,5 +34,5 @@ nm_add_library(jstest.toolbox.testutils STATIC
 )
 
 target_include_directories(jstest.toolbox.testutils PUBLIC ${PROJECT_SOURCE_DIR}/testsrc)
-target_link_libraries(jstest.toolbox.testutils PRIVATE jamcore-testing minisat-lib-static gtest gmock)
+target_link_libraries(jstest.toolbox.testutils PRIVATE libjamsat-testing minisat-lib-static gtest gmock)
 target_include_directories(jstest.toolbox.testutils SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/deps/minisat)

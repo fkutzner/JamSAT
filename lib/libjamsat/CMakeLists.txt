@@ -63,31 +63,32 @@ add_subdirectory(api)
 add_subdirectory(simplification)
 
 # Collect libjamsat.* object libraries:
-nm_collect_objs_from_subdirectories(COLLECT_IN jamcore-objects
+nm_collect_objs_from_subdirectories(COLLECT_IN libjamsat-objects
                                     TARGET_NAME_PREFIX "libjamsat."
                                     EXCLUDE_REGEX "^api$")
-nm_add_library(jamcore ${JAMSAT_LIBRARY_KIND} ${jamcore-objects})
-set_property(TARGET jamcore PROPERTY OUTPUT_NAME ${JAMSAT_LIB_ARTIFACT_NAME})
+nm_add_library(libjamsat ${JAMSAT_LIBRARY_KIND} ${libjamsat-objects})
+set_property(TARGET libjamsat PROPERTY OUTPUT_NAME ${JAMSAT_LIB_ARTIFACT_NAME})
 
 
-# Due to symbol hiding, the tests can't directly use the jamcore DSO, so the object
+# Due to symbol hiding, the tests can't directly use the libjamsat DSO, so the object
 # files are packaged into a static library archive as well:
-nm_add_library(jamcore-testing STATIC ${jamcore-objects})
+nm_add_library(libjamsat-testing STATIC ${libjamsat-objects})
 if(NOT JAMSAT_BUILD_STATIC_LIB)
-  # On Windows/MSVC, clients of jamcore-testing can't use dllimport declarations to refer
-  # to dllexport symbols defined within jamcore-testing. Thus a workaround: make sure
-  # jamcore-testing clients see the JamSAT API functions as dllexport declarations, not
+  # On Windows/MSVC, clients of libjamsat-testing can't use dllimport declarations to refer
+  # to dllexport symbols defined within libjamsat-testing. Thus a workaround: make sure
+  # libjamsat-testing clients see the JamSAT API functions as dllexport declarations, not
   # as dllimport declarations
-  target_compile_definitions(jamcore-testing INTERFACE -DBUILDING_JAMSAT_SHARED_LIB)
+  target_compile_definitions(libjamsat-testing INTERFACE -DBUILDING_JAMSAT_SHARED_LIB)
 endif()
-target_include_directories(jamcore-testing INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${NM_CONF_LIB_DIR}>)
+target_include_directories(libjamsat-testing INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${NM_CONF_LIB_DIR}>)
+set_property(TARGET libjamsat-testing PROPERTY OUTPUT_NAME ${JAMSAT_LIB_ARTIFACT_NAME}_objs)
 
 
 ### Installation
 
 # Automatically add the directory containing the jamsat header directory
-# to clients linking against jamcore
-target_include_directories(jamcore INTERFACE $<INSTALL_INTERFACE:include>)
+# to clients linking against libjamsat
+target_include_directories(libjamsat INTERFACE $<INSTALL_INTERFACE:include>)
 
 # Install API headers
 install(FILES ${PROJECT_SOURCE_DIR}/${NM_CONF_INCLUDE_DIR}/libjamsat/JamSatIpasir.h
@@ -95,7 +96,7 @@ install(FILES ${PROJECT_SOURCE_DIR}/${NM_CONF_INCLUDE_DIR}/libjamsat/JamSatIpasi
 
 # Install JamSAT libraries
 install(
-  TARGETS jamcore
+  TARGETS libjamsat
   EXPORT ${JAMSAT_LIB_PACKAGE_NAME}
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib

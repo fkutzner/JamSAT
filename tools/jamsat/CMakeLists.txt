@@ -23,7 +23,7 @@
 # other dealings in this Software without prior written authorization.
 
 nm_add_tool(jamsat Main.cpp)
-target_link_libraries(jamsat PUBLIC libjamfrontend jamcore)
+target_link_libraries(jamsat PUBLIC libjamfrontend libjamsat)
 
 install(TARGETS jamsat
         RUNTIME DESTINATION bin
