@@ -355,7 +355,7 @@ inline Clause::iterator Clause::erase(const_iterator begin, const_iterator end) 
         ++replacement;
     }
 
-    m_size -= eraseDist;
+    m_size -= static_checked_cast<size_type>(eraseDist);
     return result;
 }
 
