@@ -100,7 +100,7 @@ elseif(NM_COMPILING_WITH_MSVC)
 
   # Disable warnings about missed opportunities for using constexpr if (enable
   # this when moving to C++17)
-  nm_add_compile_options(/wd4127)
+  nm_add_compile_options(PRIVATE /wd4127)
 
   nm_add_compile_options(PRIVATE /W4)
 endif()
