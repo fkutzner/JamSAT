@@ -526,7 +526,8 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit>& assumption
                            boost::make_iterator_range(toDeleteBegin, m_lemmas.end()),
                            m_problemClauses,
                            m_lemmas);
-            m_statistics.registerLemmaDeletion(oldLemmasSize - m_lemmas.size());
+            m_statistics.registerLemmaDeletion(
+                static_checked_cast<uint32_t>(oldLemmasSize - m_lemmas.size()));
         }
     }
 

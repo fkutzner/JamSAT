@@ -34,6 +34,7 @@
 #include "libjamsat/utils/BoundedMap.h"
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/BoundedStack.h>
+#include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -59,8 +60,10 @@ namespace jamsat {
 template <typename ClauseT>
 class Trail {
 private:
+    using TrailLimit = uint32_t;
+
     BoundedStack<CNFLit> m_trail;
-    std::vector<uint32_t> m_trailLimits;
+    std::vector<TrailLimit> m_trailLimits;
     BoundedMap<CNFVar, TBool> m_assignments;
     BoundedMap<CNFVar, TBool> m_phases;
     uint32_t m_currentDecisionLevel;
@@ -284,7 +287,7 @@ Trail<ClauseT>::Trail(CNFVar maxVar)
 
 template <typename ClauseT>
 void Trail<ClauseT>::newDecisionLevel() noexcept {
-    m_trailLimits.push_back(m_trail.size());
+    m_trailLimits.push_back(static_checked_cast<TrailLimit>(m_trail.size()));
     ++m_currentDecisionLevel;
 }
 

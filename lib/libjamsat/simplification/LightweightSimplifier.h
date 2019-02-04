@@ -30,6 +30,7 @@
 #include <libjamsat/simplification/SSRWithHyperBinaryResolution.h>
 #include <libjamsat/simplification/UnaryOptimizations.h>
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/OccurrenceMap.h>
 
@@ -471,7 +472,7 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     // with the new unaries:
     auto newUnariesRange = m_assignmentProvider.getAssignments(firstNewUnaryIdx);
     std::copy(newUnariesRange.begin(), newUnariesRange.end(), std::back_inserter(unaries));
-    result.amntUnariesLearnt += newUnariesRange.size();
+    result.amntUnariesLearnt += static_checked_cast<uint32_t>(newUnariesRange.size());
     JAM_LOG_LIGHTWEIGHTSIMP(
         info, "Detected new unaries " << toString(newUnariesRange.begin(), newUnariesRange.end()));
 

@@ -28,6 +28,7 @@
 
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
+#include <libjamsat/utils/Casts.h>
 
 #include <cstdint>
 #include <vector>
@@ -319,7 +320,7 @@ void BinaryMaxHeap<K, Comparator, KIndex>::insert(K element) noexcept {
     auto insertionIndex = m_size;
     ++m_size;
     m_heap[insertionIndex] = element;
-    m_indices[element] = insertionIndex;
+    m_indices[element] = static_checked_cast<Index>(insertionIndex);
 
     // The new element might be larger than its parent ~> restore
     // heap property by moving it up:
