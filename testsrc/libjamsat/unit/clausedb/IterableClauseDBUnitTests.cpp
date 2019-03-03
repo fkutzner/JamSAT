@@ -42,15 +42,27 @@ public:
     auto size() const noexcept -> std::size_t;
     auto initialSize() const noexcept -> std::size_t;
 
+    void setDestroyedFlag(char* flag) noexcept;
+
+    ~TestClause();
+
 private:
     TestClause(size_type clauseSize);
 
     std::uint64_t m_dummy;
     size_type m_size;
+    char* m_destroyedFlag;
 };
 
-TestClause::TestClause(size_type clauseSize) : m_dummy(0), m_size(clauseSize) {
+TestClause::TestClause(size_type clauseSize)
+  : m_dummy(0), m_size(clauseSize), m_destroyedFlag(nullptr) {
     (void)m_dummy;
+}
+
+TestClause::~TestClause() {
+    if (m_destroyedFlag) {
+        *m_destroyedFlag = 1;
+    }
 }
 
 auto TestClause::constructIn(void* targetMemory, size_type clauseSize) -> TestClause* {
@@ -67,6 +79,10 @@ auto TestClause::size() const noexcept -> std::size_t {
 
 auto TestClause::initialSize() const noexcept -> std::size_t {
     return m_size;
+}
+
+void TestClause::setDestroyedFlag(char* flag) noexcept {
+    m_destroyedFlag = flag;
 }
 
 
@@ -215,6 +231,50 @@ TEST(UnitClauseDB, IterableClauseDB_regionIsIterable) {
     }
 
     EXPECT_EQ(clauses, iterationResult);
+}
+
+TEST(UnitClauseDB, IterableClauseDB_regionIsEmptyAfterClear) {
+    std::size_t const regionSize = 128;
+    Region<TestClause> underTest{regionSize};
+
+    underTest.allocate(11);
+    underTest.allocate(5);
+    EXPECT_GT(underTest.getUsedSize(), 0ull);
+
+    underTest.clear();
+    EXPECT_EQ(underTest.getUsedSize(), 0ull);
+    EXPECT_EQ(underTest.getFreeSize(), regionSize);
+}
+
+TEST(UnitClauseDB, IterableClauseDB_regionCanBeReusedAfterClear) {
+    std::size_t const regionSize = 128;
+    Region<TestClause> underTest{regionSize};
+
+    underTest.allocate(20);
+    EXPECT_GT(underTest.getUsedSize(), 0ull);
+
+    underTest.clear();
+    EXPECT_EQ(underTest.getUsedSize(), 0ull);
+
+    underTest.allocate(20);
+    EXPECT_GT(underTest.getUsedSize(), 0ull);
+}
+
+TEST(UnitClauseDB, IterableClauseDB_clausesAreDestroyedDuringRegionClear) {
+    std::size_t const regionSize = 512;
+    Region<TestClause> underTest{regionSize};
+    std::vector<char> destroyedFlags{0, 0, 0, 0};
+
+    for (int i = 0, end = destroyedFlags.size(); i < end; ++i) {
+        TestClause* clause = underTest.allocate(i + 2);
+        clause->setDestroyedFlag(&(destroyedFlags[i]));
+    }
+
+    underTest.clear();
+
+    for (int i = 0, end = destroyedFlags.size(); i < end; ++i) {
+        EXPECT_GT(destroyedFlags[i], 0) << "Destructor of clause " << i << " not called";
+    }
 }
 
 

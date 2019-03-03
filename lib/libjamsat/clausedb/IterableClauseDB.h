@@ -88,6 +88,11 @@ public:
     auto clone() const noexcept -> boost::optional<Region>;
 
     /**
+     * \brief Destroys all clauses in the region.
+     */
+    void clear() noexcept;
+
+    /**
      * \brief Gets the pointer to the first clause stored in this region.
      *
      * \returns If the region contains a clause, the pointer to the first clause stored in this
@@ -206,6 +211,19 @@ auto Region<ClauseT>::clone() const noexcept -> boost::optional<Region> {
         reinterpret_cast<void*>(reinterpret_cast<char*>(result.m_memory) + getUsedSize());
     result.m_free = this->m_free;
     return result;
+}
+
+template <typename ClauseT>
+void Region<ClauseT>::clear() noexcept {
+    auto currentClause = getFirstClause();
+    while (currentClause.has_value()) {
+        ClauseT* currentClausePtr = *currentClause;
+        currentClausePtr->~ClauseT();
+        currentClause = getNextClause(currentClausePtr);
+    }
+
+    m_free = m_size;
+    m_nextFreeCell = m_memory;
 }
 
 template <typename ClauseT>
