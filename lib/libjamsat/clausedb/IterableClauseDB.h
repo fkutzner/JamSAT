@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <libjamsat/concepts/ClauseTraits.h>
 #include <libjamsat/utils/Assert.h>
 
 #include <boost/optional.hpp>
@@ -38,11 +39,16 @@ namespace jamsat {
 /**
  * \ingroup JamSAT_ClauseDB
  *
- * \brief Iterable clause-memory region
- * \tparam ClauseT TODO
+ * \brief Iterable region allocator for types satisfying the VarsizedIntoConstructible
+ *        concept
+ * 
+ * \tparam ClauseT A type satisfying the VarsizedIntoConstructible concept.
  */
 template <typename ClauseT>
 class Region {
+    static_assert(is_varsized_into_constructible<ClauseT>::value,
+                  "ClauseT must satisfy the VarsizedIntoConstructible concept, but does not");
+
 public:
     /**
      * \brief Initializes the region.

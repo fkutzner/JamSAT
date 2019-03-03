@@ -431,4 +431,76 @@ struct is_clause<
 
         // end requirements
         >> : public std::true_type {};
+
+
+/**
+ * \ingroup JamSAT_Concepts
+ *
+ * \brief Checks whether a type is variable-sized into-constructible
+ *
+ * \tparam T    A type.
+ *
+ * `is_varsized_into_constructible<T>::value` is `true` if `T` satisfies the
+ * VarsizedIntoConstructible concept. Otherwise, `is_varsized_into_constructible<T>::value` is
+ * `false`.
+ *
+ * In the context of JamSAT, a type is called "variable-sized into-constructible" if
+ * the size of the objects is variable and the type affords methods for constructing
+ * objects in a given memory region.
+ *
+ * Example: a clause type might be constructed such that the structure can directly contain an
+ * arbitrary, but bounded amount of literals, with the bound being set at construction
+ * time.
+ *
+ * A type satisfies the VarsizedIntoConstructible concept iff it satisfies the following
+ * concepts, member type requirements and expression requirements:
+ *
+ * \par Member Types
+ *
+ * <table>
+ *  <tr><th>Member Type</th><th>Definition</th></tr>
+ *  <tr>
+ *    <td> `size_type` </td>
+ *    <td> An integral type </td>
+ *  </tr>
+ * </table>
+ *
+ * \par Expressions
+ * Given
+ * - `s`, an object of type `T::size_type`,
+ * - `m`, an object of type `void*`
+ *
+ * the following expressions must be well-formed:
+ * <table>
+ *  <tr><th>Expression</th><th>Requirements</th><th>Return value</th></tr>
+ *  <tr>
+ *   <td>`T::getAllocationSize(s)`</td>
+ *   <td>Returns the amount of bytes required for representing an instance of T with size bound
+ * s.</td> <td>`std::size_t`</td>
+ *  </tr>
+ *  <tr>
+ *   <td>`T::constructIn(m, s)`</td>
+ *   <td>Constructs an object of type `T` at memory location `m`, with size bound `s`.
+ *       A pointer to the constructed object is returned.</td>
+ *   <td>T*</td>
+ *  </tr>
+ * </table>
+ */
+template <typename, typename = void>
+struct is_varsized_into_constructible : public std::false_type {};
+
+template <typename T>
+struct is_varsized_into_constructible<
+    T,
+    j_void_t<
+        // Require the existence of the T::constructIn function:
+        JAM_REQUIRE_EXPR(
+            T::constructIn(std::declval<void*>(), std::declval<typename T::size_type>()), T*),
+
+        // Require the existence of the T::getAllocationSize function:
+        JAM_REQUIRE_EXPR(T::getAllocationSize(std::declval<typename T::size_type>()), std::size_t)
+
+        // end requirements
+        >> : public std::true_type {};
+
 }
