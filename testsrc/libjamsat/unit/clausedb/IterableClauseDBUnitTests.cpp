@@ -71,24 +71,27 @@ auto TestClause::initialSize() const noexcept -> std::size_t {
 
 
 TEST(UnitClauseDB, IterableClauseDB_allocateClauseInRegion) {
-    Region<TestClause> underTest{1024};
+    std::size_t const regionSize = 1024;
+    Region<TestClause> underTest{regionSize};
     TestClause* c = underTest.allocate(2);
     EXPECT_EQ(c->size(), 2ull);
 }
 
 TEST(UnitClauseDB, IterableClauseDB_sizesAreUpdatedAfterAllocationInRegion) {
-    Region<TestClause> underTest{1024};
+    std::size_t const regionSize = 1024;
+    Region<TestClause> underTest{regionSize};
     ASSERT_EQ(underTest.getFreeSize(), 1024);
     ASSERT_EQ(underTest.getUsedSize(), 0);
 
     underTest.allocate(2);
 
     EXPECT_GE(underTest.getUsedSize(), TestClause::getAllocationSize(2));
-    EXPECT_EQ(underTest.getUsedSize() + underTest.getFreeSize(), 1024ull);
+    EXPECT_EQ(underTest.getUsedSize() + underTest.getFreeSize(), regionSize);
 }
 
 TEST(UnitClauseDB, IterableClauseDB_allocationsInRegionDontOverlap) {
-    Region<TestClause> underTest{1024};
+    std::size_t const regionSize = 1024;
+    Region<TestClause> underTest{regionSize};
     TestClause* c1 = underTest.allocate(2);
     TestClause* c2 = underTest.allocate(5);
     EXPECT_GE(underTest.getUsedSize(),
@@ -102,7 +105,8 @@ TEST(UnitClauseDB, IterableClauseDB_allocationsInRegionDontOverlap) {
 }
 
 TEST(UnitClauseDB, IterableClauseDB_allocationFailsForFullRegion) {
-    Region<TestClause> underTest{128};
+    std::size_t const regionSize = 128;
+    Region<TestClause> underTest{regionSize};
     TestClause* c1 = underTest.allocate(10);
     EXPECT_NE(c1, nullptr);
     TestClause* c2 = underTest.allocate(64);
@@ -110,7 +114,8 @@ TEST(UnitClauseDB, IterableClauseDB_allocationFailsForFullRegion) {
 }
 
 TEST(UnitClauseDB, IterableClauseDB_furtherAllocationInRegionPossibleAfterFailure) {
-    Region<TestClause> underTest{128};
+    std::size_t const regionSize = 128;
+    Region<TestClause> underTest{regionSize};
     TestClause* c1 = underTest.allocate(10);
     ASSERT_NE(c1, nullptr);
     EXPECT_EQ(c1->size(), 10);
@@ -119,6 +124,39 @@ TEST(UnitClauseDB, IterableClauseDB_furtherAllocationInRegionPossibleAfterFailur
     TestClause* c3 = underTest.allocate(11);
     ASSERT_NE(c3, nullptr);
     EXPECT_EQ(c3->size(), 11);
+}
+
+TEST(UnitClauseDB, IterableClauseDB_cloneEmptyRegionYieldsEmptyNewAllocator) {
+    std::size_t const regionSize = 128;
+    Region<TestClause> underTest{regionSize};
+
+    auto cloningResult = underTest.clone();
+    ASSERT_TRUE(cloningResult.has_value());
+    Region<TestClause> clone = std::move(*cloningResult);
+
+    EXPECT_EQ(underTest.getFreeSize(), regionSize);
+    EXPECT_EQ(clone.getFreeSize(), regionSize);
+}
+
+TEST(UnitClauseDB, IterableClauseDB_allocationsInClonedRegionDoNotAffectOriginal) {
+    std::size_t const regionSize = 128;
+    Region<TestClause> underTest{regionSize};
+
+    TestClause* orig1 = underTest.allocate(10);
+    auto usedInOriginal = underTest.getUsedSize();
+
+    auto cloningResult = underTest.clone();
+    ASSERT_TRUE(cloningResult.has_value());
+    Region<TestClause> clone = std::move(*cloningResult);
+
+    TestClause* clone1 = clone.allocate(11);
+    EXPECT_EQ(underTest.getUsedSize(), usedInOriginal);
+
+    std::uintptr_t origRegionBegin = reinterpret_cast<std::uintptr_t>(orig1);
+    std::uintptr_t clonedClauseLoc = reinterpret_cast<std::uintptr_t>(clone1);
+
+    EXPECT_FALSE(clonedClauseLoc >= origRegionBegin &&
+                 clonedClauseLoc < origRegionBegin + regionSize);
 }
 
 }

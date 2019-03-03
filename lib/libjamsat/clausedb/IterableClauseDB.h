@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
+
 #include <cstdint>
 #include <stdexcept>
 
@@ -47,7 +49,7 @@ public:
      *
      * \param size      The region's size, in bytes.
      */
-    Region(std::size_t size) noexcept;
+    explicit Region(std::size_t size) noexcept;
 
     /**
      * \brief Destroys the region and releases its associated memory.
@@ -76,6 +78,21 @@ public:
      */
     auto getFreeSize() const noexcept -> std::size_t;
 
+    /**
+     * \brief Clones the region.
+     *
+     * \returns a bitwise clone of this region if allocation succeeded, otherwise nothing.
+     */
+    auto clone() const noexcept -> boost::optional<Region>;
+
+    auto operator=(Region&& rhs) noexcept -> Region&;
+    Region(Region&& rhs) noexcept;
+
+    // Deleting copy operations to guard against programming errors
+    // See clone()
+    auto operator=(Region const& rhs) -> Region& = delete;
+    Region(Region const& rhs) = delete;
+
 private:
     void* m_memory;
     void* m_nextFreeCell;
@@ -89,7 +106,10 @@ private:
 template <typename ClauseT>
 Region<ClauseT>::Region(std::size_t size) noexcept
   : m_memory(nullptr), m_nextFreeCell(nullptr), m_size(size), m_free(size) {
-    m_memory = std::malloc(size);
+    if (m_size > 0) {
+        m_memory = std::malloc(size);
+    }
+
     if (m_memory == nullptr) {
         m_size = 0;
         m_free = 0;
@@ -99,8 +119,10 @@ Region<ClauseT>::Region(std::size_t size) noexcept
 
 template <typename ClauseT>
 Region<ClauseT>::~Region() {
-    std::free(m_memory);
-    m_memory = nullptr;
+    if (m_memory != nullptr) {
+        std::free(m_memory);
+        m_memory = nullptr;
+    }
     m_nextFreeCell = nullptr;
 }
 
@@ -131,6 +153,41 @@ auto Region<ClauseT>::getUsedSize() const noexcept -> std::size_t {
 template <typename ClauseT>
 auto Region<ClauseT>::getFreeSize() const noexcept -> std::size_t {
     return m_free;
+}
+
+template <typename ClauseT>
+auto Region<ClauseT>::clone() const noexcept -> boost::optional<Region> {
+    Region<ClauseT> result{m_size};
+    if (result.getFreeSize() == 0) {
+        // Allocation failed, or cloning a size-0 region
+        return {};
+    }
+    std::memcpy(result.m_memory, this->m_memory, getUsedSize());
+    result.m_nextFreeCell =
+        reinterpret_cast<void*>(reinterpret_cast<char*>(result.m_memory) + getUsedSize());
+    result.m_free = this->m_free;
+    return result;
+}
+
+template <typename ClauseT>
+auto Region<ClauseT>::operator=(Region&& rhs) noexcept -> Region& {
+    std::swap(this->m_memory, rhs.m_memory);
+    std::swap(this->m_nextFreeCell, rhs.m_nextFreeCell);
+    std::swap(this->m_size, rhs.m_size);
+    std::swap(this->m_free, rhs.m_free);
+}
+
+template <typename ClauseT>
+Region<ClauseT>::Region(Region&& rhs) noexcept {
+    this->m_memory = rhs.m_memory;
+    this->m_nextFreeCell = rhs.m_nextFreeCell;
+    this->m_free = rhs.m_free;
+    this->m_size = rhs.m_size;
+
+    rhs.m_memory = nullptr;
+    rhs.m_nextFreeCell = nullptr;
+    rhs.m_size = 0;
+    rhs.m_free = 0;
 }
 
 }
