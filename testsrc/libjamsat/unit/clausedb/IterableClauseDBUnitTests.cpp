@@ -159,4 +159,63 @@ TEST(UnitClauseDB, IterableClauseDB_allocationsInClonedRegionDoNotAffectOriginal
                  clonedClauseLoc < origRegionBegin + regionSize);
 }
 
+TEST(UnitClauseDB, IterableClauseDB_emptyRegionHasNoClauses) {
+    std::size_t const regionSize = 1024;
+    Region<TestClause> underTest{regionSize};
+
+    auto result = underTest.getFirstClause();
+    EXPECT_FALSE(result.has_value());
+}
+
+TEST(UnitClauseDB, IterableClauseDB_firstClauseCanBeRetrievedFromRegion) {
+    std::size_t const regionSize = 1024;
+    Region<TestClause> underTest{regionSize};
+
+    TestClause* clause1 = underTest.allocate(10);
+    underTest.allocate(5);
+    auto result = underTest.getFirstClause();
+    auto constResult = static_cast<Region<TestClause> const*>(&underTest)->getFirstClause();
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, clause1);
+    ASSERT_TRUE(constResult.has_value());
+    EXPECT_EQ(*constResult, static_cast<TestClause const*>(clause1));
+}
+
+TEST(UnitClauseDB, IterableClauseDB_secondClauseCanBeRetrievedFromRegion) {
+    std::size_t const regionSize = 1024;
+    Region<TestClause> underTest{regionSize};
+
+    TestClause* clause1 = underTest.allocate(10);
+    TestClause* clause2 = underTest.allocate(5);
+
+    auto result = underTest.getNextClause(clause1);
+    auto constResult = static_cast<Region<TestClause> const*>(&underTest)->getNextClause(clause1);
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, clause2);
+    ASSERT_TRUE(constResult.has_value());
+    EXPECT_EQ(*constResult, static_cast<TestClause const*>(clause2));
+}
+
+TEST(UnitClauseDB, IterableClauseDB_regionIsIterable) {
+    std::size_t const regionSize = 2048;
+    Region<TestClause> underTest{regionSize};
+
+    std::vector<TestClause*> clauses;
+    for (int i = 0; i < 16; ++i) {
+        clauses.push_back(underTest.allocate(10 + i));
+    }
+
+    std::vector<TestClause*> iterationResult;
+    auto currentClause = underTest.getFirstClause();
+    while (currentClause.has_value()) {
+        iterationResult.push_back(*currentClause);
+        currentClause = underTest.getNextClause(*currentClause);
+    }
+
+    EXPECT_EQ(clauses, iterationResult);
+}
+
+
 }
