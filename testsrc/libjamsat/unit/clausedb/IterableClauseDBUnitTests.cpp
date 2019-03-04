@@ -156,7 +156,7 @@ TEST(UnitClauseDB, IterableClauseDB_cloneEmptyRegionYieldsEmptyNewAllocator) {
     Region<TestClause> underTest{regionSize};
 
     auto cloningResult = underTest.clone();
-    ASSERT_TRUE(cloningResult.has_value());
+    ASSERT_TRUE(cloningResult);
     Region<TestClause> clone = std::move(*cloningResult);
 
     EXPECT_EQ(underTest.getFreeSize(), regionSize);
@@ -171,7 +171,7 @@ TEST(UnitClauseDB, IterableClauseDB_allocationsInClonedRegionDoNotAffectOriginal
     auto usedInOriginal = underTest.getUsedSize();
 
     auto cloningResult = underTest.clone();
-    ASSERT_TRUE(cloningResult.has_value());
+    ASSERT_TRUE(cloningResult);
     Region<TestClause> clone = std::move(*cloningResult);
 
     TestClause* clone1 = clone.allocate(11);
@@ -280,7 +280,7 @@ TEST(UnitClauseDB, IterableClauseDB_allocateClauseInSingleRegion) {
     IterableClauseDB<TestClause> underTest{regionSize};
     auto clause = underTest.createClause(10);
 
-    ASSERT_TRUE(clause.has_value());
+    ASSERT_TRUE(clause);
     EXPECT_EQ((*clause)->size(), 10ull);
 }
 
@@ -289,16 +289,16 @@ TEST(UnitClauseDB, IterableClauseDB_allocateClauseLargerThanRegionSizeFails) {
     IterableClauseDB<TestClause> underTest{regionSize};
     auto clause = underTest.createClause(1025);
 
-    ASSERT_FALSE(clause.has_value());
+    ASSERT_FALSE(clause);
 }
 
 TEST(UnitClauseDB, IterableClauseDB_allocateClauseAfterFaultSucceeds) {
     std::size_t const regionSize = 1024;
     IterableClauseDB<TestClause> underTest{regionSize};
     auto clauseA = underTest.createClause(1025);
-    EXPECT_FALSE(clauseA.has_value());
+    EXPECT_FALSE(clauseA);
     auto clauseB = underTest.createClause(13);
-    ASSERT_TRUE(clauseB.has_value());
+    ASSERT_TRUE(clauseB);
     EXPECT_EQ((*clauseB)->size(), 13ull);
 }
 
