@@ -32,7 +32,9 @@
 #include <boost/optional.hpp>
 
 #include <cstdint>
+#include <cstring>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
