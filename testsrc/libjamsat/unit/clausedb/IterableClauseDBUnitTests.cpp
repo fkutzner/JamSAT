@@ -197,12 +197,9 @@ TEST(UnitClauseDB, IterableClauseDB_firstClauseCanBeRetrievedFromRegion) {
     TestClause* clause1 = underTest.allocate(10);
     underTest.allocate(5);
     auto result = underTest.getFirstClause();
-    auto constResult = static_cast<Region<TestClause> const*>(&underTest)->getFirstClause();
 
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(*result, clause1);
-    ASSERT_TRUE(constResult.has_value());
-    EXPECT_EQ(*constResult, static_cast<TestClause const*>(clause1));
 }
 
 TEST(UnitClauseDB, IterableClauseDB_secondClauseCanBeRetrievedFromRegion) {
@@ -213,12 +210,9 @@ TEST(UnitClauseDB, IterableClauseDB_secondClauseCanBeRetrievedFromRegion) {
     TestClause* clause2 = underTest.allocate(5);
 
     auto result = underTest.getNextClause(clause1);
-    auto constResult = static_cast<Region<TestClause> const*>(&underTest)->getNextClause(clause1);
 
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(*result, clause2);
-    ASSERT_TRUE(constResult.has_value());
-    EXPECT_EQ(*constResult, static_cast<TestClause const*>(clause2));
 }
 
 TEST(UnitClauseDB, IterableClauseDB_regionIsIterable) {

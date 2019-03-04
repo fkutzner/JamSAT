@@ -107,14 +107,6 @@ public:
     auto getFirstClause() noexcept -> boost::optional<ClauseT*>;
 
     /**
-     * \brief Gets the pointer to the first clause stored in this region (const version).
-     *
-     * \returns If the region contains a clause, the pointer to the first clause stored in this
-     *          region is returned. Otherwise, nothing is returned.
-     */
-    auto getFirstClause() const noexcept -> boost::optional<ClauseT const*>;
-
-    /**
      * \brief Gets the pointer to the clause physically succeeding the given clause in this region.
      *
      * \param clause  Pointer to a clause allocated in this region.
@@ -124,16 +116,8 @@ public:
      */
     auto getNextClause(ClauseT const* clause) noexcept -> boost::optional<ClauseT*>;
 
-    /**
-     * \brief Gets the pointer to the clause physically succeeding the given clause in this region
-     *        (const version).
-     *
-     * \param clause  Pointer to a clause allocated in this region.
-     *
-     * \returns If the given clause is succeeded by a clause within this region, the pointer to the
-     *          succeeding clause is returned. Otherwise, nothing is returned.
-     */
-    auto getNextClause(ClauseT const* clause) const noexcept -> boost::optional<ClauseT const*>;
+    // NB: const versions of getFirstClause() and getNextClause omitted until there
+    // is an actual use case for them.
 
     auto operator=(Region&& rhs) noexcept -> Region&;
     Region(Region&& rhs) noexcept;
@@ -309,19 +293,6 @@ Region<ClauseT>::Region(Region&& rhs) noexcept {
 
 template <typename ClauseT>
 auto Region<ClauseT>::getFirstClause() noexcept -> boost::optional<ClauseT*> {
-    // Delegating to the const version of this method:
-    auto result = static_cast<Region<ClauseT> const*>(this)->getFirstClause();
-    if (!result.has_value()) {
-        return {};
-    }
-
-    ClauseT const* firstClause = *result;
-    // This is OK since clause points to memory that is not actually constant:
-    return const_cast<ClauseT*>(firstClause);
-}
-
-template <typename ClauseT>
-auto Region<ClauseT>::getFirstClause() const noexcept -> boost::optional<ClauseT const*> {
     // The following code contains dangerous casts, which are required for computing offsets
     // and using std::align. The dubious pointers are only used for pointer computations:
     // They do not escape this method, and neither the state of the given clause nor the state
@@ -331,31 +302,15 @@ auto Region<ClauseT>::getFirstClause() const noexcept -> boost::optional<ClauseT
         return {};
     }
 
-    // Unfortunately, there is no const version of std::align :(
-    // The following is OK since std::align does not write to the pointed-to memory:
-    void* memory = const_cast<void*>(m_memory);
     std::size_t dummy_free_size = m_size;
+    void* memory = m_memory;
     void* firstClause = std::align(alignof(ClauseT), sizeof(ClauseT), memory, dummy_free_size);
     JAM_ASSERT(firstClause != nullptr, "An alignment operation failed which previously succeeded");
-    return reinterpret_cast<ClauseT const*>(firstClause);
+    return reinterpret_cast<ClauseT*>(firstClause);
 }
 
 template <typename ClauseT>
 auto Region<ClauseT>::getNextClause(ClauseT const* clause) noexcept -> boost::optional<ClauseT*> {
-    // Delegating to the const version of this method:
-    auto result = static_cast<Region<ClauseT> const*>(this)->getNextClause(clause);
-    if (!result.has_value()) {
-        return {};
-    }
-
-    ClauseT const* resultClause = *result;
-    // This is OK since clause points to memory that is not actually constant:
-    return const_cast<ClauseT*>(resultClause);
-}
-
-template <typename ClauseT>
-auto Region<ClauseT>::getNextClause(ClauseT const* clause) const noexcept
-    -> boost::optional<ClauseT const*> {
     // The following code contains dangerous casts, which are required for computing offsets
     // and using std::align. The dubious pointers are only used for pointer computations:
     // They do not escape this method, and neither the state of the given clause nor the state
@@ -379,7 +334,7 @@ auto Region<ClauseT>::getNextClause(ClauseT const* clause) const noexcept
     void* nextClause =
         std::align(alignof(ClauseT), sizeof(ClauseT), candidatePtrAsVoid, dummy_free_size);
     JAM_ASSERT(nextClause != nullptr, "An alignment operation failed which previously succeeded");
-    return reinterpret_cast<ClauseT const*>(nextClause);
+    return reinterpret_cast<ClauseT*>(nextClause);
 }
 
 
