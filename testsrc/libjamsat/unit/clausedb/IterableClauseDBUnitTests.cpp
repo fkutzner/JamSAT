@@ -129,6 +129,13 @@ TEST(UnitClauseDB, IterableClauseDB_allocationFailsForFullRegion) {
     EXPECT_EQ(c2, nullptr);
 }
 
+TEST(UnitClauseDB, IterableClauseDB_allocationFailsForOversizedClause) {
+    std::size_t const regionSize = 128;
+    Region<TestClause> underTest{regionSize};
+    TestClause* c1 = underTest.allocate(128);
+    EXPECT_EQ(c1, nullptr);
+}
+
 TEST(UnitClauseDB, IterableClauseDB_furtherAllocationInRegionPossibleAfterFailure) {
     std::size_t const regionSize = 128;
     Region<TestClause> underTest{regionSize};
@@ -277,5 +284,31 @@ TEST(UnitClauseDB, IterableClauseDB_clausesAreDestroyedDuringRegionClear) {
     }
 }
 
+TEST(UnitClauseDB, IterableClauseDB_allocateClauseInSingleRegion) {
+    std::size_t const regionSize = 1024;
+    IterableClauseDB<TestClause> underTest{regionSize};
+    auto clause = underTest.createClause(10);
+
+    ASSERT_TRUE(clause.has_value());
+    EXPECT_EQ((*clause)->size(), 10ull);
+}
+
+TEST(UnitClauseDB, IterableClauseDB_allocateClauseLargerThanRegionSizeFails) {
+    std::size_t const regionSize = 1024;
+    IterableClauseDB<TestClause> underTest{regionSize};
+    auto clause = underTest.createClause(1025);
+
+    ASSERT_FALSE(clause.has_value());
+}
+
+TEST(UnitClauseDB, IterableClauseDB_allocateClauseAfterFaultSucceeds) {
+    std::size_t const regionSize = 1024;
+    IterableClauseDB<TestClause> underTest{regionSize};
+    auto clauseA = underTest.createClause(1025);
+    EXPECT_FALSE(clauseA.has_value());
+    auto clauseB = underTest.createClause(13);
+    ASSERT_TRUE(clauseB.has_value());
+    EXPECT_EQ((*clauseB)->size(), 13ull);
+}
 
 }

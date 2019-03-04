@@ -33,6 +33,7 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <vector>
 
 namespace jamsat {
 
@@ -41,7 +42,7 @@ namespace jamsat {
  *
  * \brief Iterable region allocator for types satisfying the VarsizedIntoConstructible
  *        concept
- * 
+ *
  * \tparam ClauseT A type satisfying the VarsizedIntoConstructible concept.
  */
 template <typename ClauseT>
@@ -53,11 +54,10 @@ public:
     /**
      * \brief Initializes the region.
      *
-     * If the allocation of the region's memory fails, the region is initialized with size 0.
-     *
-     * \param size      The region's size, in bytes.
+     * \param size          The region's size, in bytes. `size` must be greater than 0.
+     * \throws bad_alloc    The allocation of the region's memory failed.
      */
-    explicit Region(std::size_t size) noexcept;
+    explicit Region(std::size_t size);
 
     /**
      * \brief Destroys the region and releases its associated memory.
@@ -151,20 +151,73 @@ private:
     std::size_t m_free;
 };
 
+
+/**
+ * \ingroup JamSAT_ClauseDB
+ *
+ * \brief Iterable clause database
+ *
+ * \tparam ClauseT A type satisfying the VarsizedIntoConstructible concept.
+ */
+template <typename ClauseT>
+class IterableClauseDB {
+public:
+    using size_type = std::size_t;
+
+    /**
+     * \brief Constructs an IterableClauseDB instance.
+     *
+     * \param regionSize    The size of the memory chunks allocated by this clause database.
+     */
+    explicit IterableClauseDB(size_type regionSize) noexcept;
+
+    /**
+     * \brief Creates a new clause.
+     *
+     * \param size      The clause's size, in literals.
+     *
+     * Creating a new clause may fail due to allocation errors, which may occur when the
+     * clause is too large to be stored in a single memory chunk or when no memory could be
+     * allocated.
+     *
+     * NB: Allocation failures due to clauses could be avoided by not allocating such large
+     * clauses using the `Region<T>` data structure. However, this is a remote pathological
+     * case, as region sizes will be in the range of dozens of megabytes, and current SAT
+     * problems have few enough variables such that clauses not fitting in a Region<T> would
+     * need to contain duplicate literals, which are however eliminated by the solver.
+     *
+     * \returns A pointer to the new clause. If allocation failed, nothing is returned.
+     */
+    auto createClause(typename ClauseT::size_type size) noexcept -> boost::optional<ClauseT*>;
+
+    /**
+     * \brief Compresses the database by rearranging the clauses.
+     *
+     * This operation invalidates all pointers to clauses stored in this database.
+     */
+    void compress() noexcept;
+
+private:
+    auto createActiveRegion() -> Region<ClauseT>&;
+
+    size_type m_regionSize;
+    std::vector<Region<ClauseT>> m_activeRegions;
+    std::vector<Region<ClauseT>> m_spareRegions;
+};
+
+
 /********** Implementation ****************************** */
 
 template <typename ClauseT>
-Region<ClauseT>::Region(std::size_t size) noexcept
+Region<ClauseT>::Region(std::size_t size)
   : m_memory(nullptr), m_nextFreeCell(nullptr), m_size(size), m_free(size) {
-    if (m_size > 0) {
-        m_memory = std::malloc(size);
-    }
+    JAM_ASSERT(size > 0, "Region<T> must be initialized with a size greater than 0");
+    m_memory = std::malloc(size);
+    m_nextFreeCell = m_memory;
 
     if (m_memory == nullptr) {
-        m_size = 0;
-        m_free = 0;
+        throw std::bad_alloc{};
     }
-    m_nextFreeCell = m_memory;
 }
 
 template <typename ClauseT>
@@ -327,6 +380,53 @@ auto Region<ClauseT>::getNextClause(ClauseT const* clause) const noexcept
         std::align(alignof(ClauseT), sizeof(ClauseT), candidatePtrAsVoid, dummy_free_size);
     JAM_ASSERT(nextClause != nullptr, "An alignment operation failed which previously succeeded");
     return reinterpret_cast<ClauseT const*>(nextClause);
+}
+
+
+template <typename ClauseT>
+IterableClauseDB<ClauseT>::IterableClauseDB(size_type regionSize) noexcept
+  : m_regionSize(regionSize), m_activeRegions(), m_spareRegions() {}
+
+template <typename ClauseT>
+auto IterableClauseDB<ClauseT>::createClause(typename ClauseT::size_type size) noexcept
+    -> boost::optional<ClauseT*> {
+    try {
+        Region<ClauseT>* targetRegion =
+            m_activeRegions.empty() ? &createActiveRegion() : &(m_activeRegions.back());
+        ClauseT* clause = targetRegion->allocate(size);
+        if (clause) {
+            return clause;
+        }
+
+        // Allocation failed, create new region and retry:
+        clause = createActiveRegion().allocate(size);
+        return clause != nullptr ? clause : boost::optional<ClauseT*>{};
+    } catch (std::bad_alloc&) {
+        return {};
+    }
+}
+
+template <typename ClauseT>
+void IterableClauseDB<ClauseT>::compress() noexcept {}
+
+template <typename ClauseT>
+auto IterableClauseDB<ClauseT>::createActiveRegion() -> Region<ClauseT>& {
+    // Make sure that at least two regions are in the list of spares
+    // (One for immediate use as an active region, one as a spare for compress())
+    for (auto i = m_spareRegions.size(); i <= 2; ++i) {
+        m_spareRegions.push_back(Region<ClauseT>{m_regionSize});
+    }
+
+    m_activeRegions.push_back(std::move(m_spareRegions.back()));
+    m_spareRegions.pop_back();
+
+    // Throwing bad_alloc exceptions only here, to keep compress() exception-safe.
+    // Note that region objects are small objects pointing to large regions, so this isn't
+    // very expensive:
+    m_spareRegions.reserve(m_spareRegions.size() + m_activeRegions.size());
+    m_activeRegions.reserve(m_spareRegions.size() + m_activeRegions.size());
+
+    return m_activeRegions.back();
 }
 
 }
