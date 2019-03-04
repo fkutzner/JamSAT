@@ -37,6 +37,8 @@ struct TestClause {
 public:
     using size_type = std::size_t;
 
+    enum class Flag { TEST_FLAG };
+
     static auto constructIn(void* targetMemory, size_type clauseSize) -> TestClause*;
     static auto getAllocationSize(size_type clauseSize) -> std::size_t;
     auto size() const noexcept -> std::size_t;
@@ -182,37 +184,34 @@ TEST(UnitClauseDB, IterableClauseDB_allocationsInClonedRegionDoNotAffectOriginal
                  clonedClauseLoc < origRegionBegin + regionSize);
 }
 
+
 TEST(UnitClauseDB, IterableClauseDB_emptyRegionHasNoClauses) {
     std::size_t const regionSize = 1024;
     Region<TestClause> underTest{regionSize};
-
-    auto result = underTest.getFirstClause();
-    EXPECT_FALSE(result.has_value());
+    EXPECT_EQ(underTest.begin(), underTest.end());
 }
 
-TEST(UnitClauseDB, IterableClauseDB_firstClauseCanBeRetrievedFromRegion) {
+TEST(UnitClauseDB, IterableClauseDB_firstClauseCanBeRetrievedFromRegionViaIteration) {
     std::size_t const regionSize = 1024;
     Region<TestClause> underTest{regionSize};
 
     TestClause* clause1 = underTest.allocate(10);
     underTest.allocate(5);
-    auto result = underTest.getFirstClause();
+    auto regionIter = underTest.begin();
 
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(*result, clause1);
+    ASSERT_NE(regionIter, underTest.end());
+    EXPECT_EQ(*regionIter, clause1);
 }
 
-TEST(UnitClauseDB, IterableClauseDB_secondClauseCanBeRetrievedFromRegion) {
+TEST(UnitClauseDB, IterableClauseDB_regionIteratorReachesEnd) {
     std::size_t const regionSize = 1024;
     Region<TestClause> underTest{regionSize};
 
-    TestClause* clause1 = underTest.allocate(10);
-    TestClause* clause2 = underTest.allocate(5);
-
-    auto result = underTest.getNextClause(clause1);
-
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(*result, clause2);
+    underTest.allocate(10);
+    auto regionIter = underTest.begin();
+    ASSERT_NE(regionIter++, underTest.end());
+    EXPECT_EQ(regionIter, underTest.end());
+    EXPECT_EQ(++underTest.begin(), underTest.end());
 }
 
 TEST(UnitClauseDB, IterableClauseDB_regionIsIterable) {
@@ -225,10 +224,8 @@ TEST(UnitClauseDB, IterableClauseDB_regionIsIterable) {
     }
 
     std::vector<TestClause*> iterationResult;
-    auto currentClause = underTest.getFirstClause();
-    while (currentClause.has_value()) {
-        iterationResult.push_back(*currentClause);
-        currentClause = underTest.getNextClause(*currentClause);
+    for (TestClause* currentClause : underTest) {
+        iterationResult.push_back(currentClause);
     }
 
     EXPECT_EQ(clauses, iterationResult);

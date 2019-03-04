@@ -32,10 +32,62 @@
 #include <boost/optional.hpp>
 
 #include <cstdint>
+#include <iterator>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 namespace jamsat {
+
+/**
+ * \brief Iterator type for Region<T>
+ *
+ * This iterator satisfies the ForwardIterator concept.
+ */
+template <typename RegionT>
+class RegionIterator {
+public:
+    using value_type = typename RegionT::item_type* const;
+    using difference_type = std::size_t;
+    using reference = typename RegionT::item_type* const&;
+    using pointer = typename RegionT::item_type**;
+    using iterator_category = std::forward_iterator_tag;
+
+    /**
+     * Constructs the default RegionIterator, which is typically used
+     * as the "end" iterator.
+     */
+    RegionIterator() noexcept;
+
+    /**
+     * Constructs a RegionIterator.
+     *
+     * \param region    The region object to traverse. Traversal starts at the first item in
+     *                  the region and ends with the last item in the region. Once the last
+     *                  item of the region object has been traversed, the iterator becomes
+     *                  equal to the default-constructed RegionIterator.
+     */
+    explicit RegionIterator(RegionT& region) noexcept;
+
+    RegionIterator(RegionIterator const& rhs) = default;
+    RegionIterator(RegionIterator&& rhs) = default;
+
+    auto operator=(RegionIterator const& rhs) -> RegionIterator& = default;
+    auto operator=(RegionIterator&& rhs) -> RegionIterator& = default;
+
+    auto operator++() noexcept -> RegionIterator&;
+    auto operator++(int) noexcept -> RegionIterator;
+
+    auto operator*() const noexcept -> reference;
+    auto operator-> () const noexcept -> reference;
+
+    auto operator==(RegionIterator const& rhs) const noexcept -> bool;
+    auto operator!=(RegionIterator const& rhs) const noexcept -> bool;
+
+private:
+    typename RegionT::item_type* m_currentItem;
+    RegionT* m_region;
+};
 
 /**
  * \ingroup JamSAT_ClauseDB
@@ -51,6 +103,8 @@ class Region {
                   "ClauseT must satisfy the VarsizedIntoConstructible concept, but does not");
 
 public:
+    using item_type = std::remove_reference_t<ClauseT>;
+
     /**
      * \brief Initializes the region.
      *
@@ -99,25 +153,30 @@ public:
     void clear() noexcept;
 
     /**
-     * \brief Gets the pointer to the first clause stored in this region.
+     * \brief Returns a "begin" iterator of the region.
      *
-     * \returns If the region contains a clause, the pointer to the first clause stored in this
-     *          region is returned. Otherwise, nothing is returned.
+     * If the region is not empty, the returned iterator points to the first item of the region.
+     * Otherwise, an iterator is returned that may not be dereferenced and is equal to all
+     * iterators returned by `end()`.
+     *
+     * After finitely many calls to operator++(), the returned iterator is equal to all
+     * iterators returned by `end()`.
+     *
+     * \returns a RegionIterator as described above.
      */
-    auto getFirstClause() noexcept -> boost::optional<ClauseT*>;
+    auto begin() noexcept -> RegionIterator<Region<ClauseT>>;
 
     /**
-     * \brief Gets the pointer to the clause physically succeeding the given clause in this region.
+     * \brief Returns the "end" iterator of the region.
      *
-     * \param clause  Pointer to a clause allocated in this region.
+     * See `begin()`.
      *
-     * \returns If the given clause is succeeded by a clause within this region, the pointer to
-     *          the succeeding clause is returned. Otherwise, nothing is returned.
+     * \returns the "end" iterator of the region, which may not be dereferenced.
      */
-    auto getNextClause(ClauseT const* clause) noexcept -> boost::optional<ClauseT*>;
+    auto end() noexcept -> RegionIterator<Region<ClauseT>>;
 
-    // NB: const versions of getFirstClause() and getNextClause omitted until there
-    // is an actual use case for them.
+    // NB: const versions of begin(), end() omitted until there is an actual use case for them
+    // within JamSAT.
 
     auto operator=(Region&& rhs) noexcept -> Region&;
     Region(Region&& rhs) noexcept;
@@ -128,6 +187,26 @@ public:
     Region(Region const& rhs) = delete;
 
 private:
+    friend class RegionIterator<Region<ClauseT>>;
+
+    /**
+     * \brief Gets the pointer to the first clause stored in this region.
+     *
+     * \returns If the region contains a clause, the pointer to the first clause stored in this
+     *          region is returned. Otherwise, nothing is returned.
+     */
+    auto getFirstClause() noexcept -> ClauseT*;
+
+    /**
+     * \brief Gets the pointer to the clause physically succeeding the given clause in this region.
+     *
+     * \param clause  Pointer to a clause allocated in this region.
+     *
+     * \returns If the given clause is succeeded by a clause within this region, the pointer to
+     *          the succeeding clause is returned. Otherwise, nothing is returned.
+     */
+    auto getNextClause(ClauseT const* clause) noexcept -> ClauseT*;
+
     void* m_memory;
     void* m_nextFreeCell;
 
@@ -188,9 +267,23 @@ private:
     std::vector<Region<ClauseT>> m_activeRegions;
     std::vector<Region<ClauseT>> m_spareRegions;
 };
+}
+
+namespace std {
+template <typename T>
+struct iterator_traits<typename jamsat::RegionIterator<T>> {
+    using value_type = typename jamsat::RegionIterator<T>::value_type;
+    using difference_type = typename jamsat::RegionIterator<T>::difference_type;
+    using reference = typename jamsat::RegionIterator<T>::reference;
+    using pointer = typename jamsat::RegionIterator<T>::pointer;
+    using iterator_category = typename jamsat::RegionIterator<T>::iterator_category;
+};
+}
 
 
 /********** Implementation ****************************** */
+
+namespace jamsat {
 
 template <typename ClauseT>
 Region<ClauseT>::Region(std::size_t size)
@@ -259,14 +352,23 @@ auto Region<ClauseT>::clone() const noexcept -> boost::optional<Region> {
 template <typename ClauseT>
 void Region<ClauseT>::clear() noexcept {
     auto currentClause = getFirstClause();
-    while (currentClause.has_value()) {
-        ClauseT* currentClausePtr = *currentClause;
-        currentClausePtr->~ClauseT();
-        currentClause = getNextClause(currentClausePtr);
+    while (currentClause != nullptr) {
+        currentClause->~ClauseT();
+        currentClause = getNextClause(currentClause);
     }
 
     m_free = m_size;
     m_nextFreeCell = m_memory;
+}
+
+template <typename ClauseT>
+auto Region<ClauseT>::begin() noexcept -> RegionIterator<Region<ClauseT>> {
+    return RegionIterator<Region<ClauseT>>{*this};
+}
+
+template <typename ClauseT>
+auto Region<ClauseT>::end() noexcept -> RegionIterator<Region<ClauseT>> {
+    return RegionIterator<Region<ClauseT>>{};
 }
 
 template <typename ClauseT>
@@ -292,14 +394,14 @@ Region<ClauseT>::Region(Region&& rhs) noexcept {
 
 
 template <typename ClauseT>
-auto Region<ClauseT>::getFirstClause() noexcept -> boost::optional<ClauseT*> {
+auto Region<ClauseT>::getFirstClause() noexcept -> ClauseT* {
     // The following code contains dangerous casts, which are required for computing offsets
     // and using std::align. The dubious pointers are only used for pointer computations:
     // They do not escape this method, and neither the state of the given clause nor the state
     // of the Region is modified in this method.
 
     if (getUsedSize() == 0) {
-        return {};
+        return nullptr;
     }
 
     std::size_t dummy_free_size = m_size;
@@ -310,7 +412,7 @@ auto Region<ClauseT>::getFirstClause() noexcept -> boost::optional<ClauseT*> {
 }
 
 template <typename ClauseT>
-auto Region<ClauseT>::getNextClause(ClauseT const* clause) noexcept -> boost::optional<ClauseT*> {
+auto Region<ClauseT>::getNextClause(ClauseT const* clause) noexcept -> ClauseT* {
     // The following code contains dangerous casts, which are required for computing offsets
     // and using std::align. The dubious pointers are only used for pointer computations:
     // They do not escape this method, and neither the state of the given clause nor the state
@@ -322,7 +424,7 @@ auto Region<ClauseT>::getNextClause(ClauseT const* clause) noexcept -> boost::op
 
     // Check if the clause is the last one in this region:
     if (std::distance(regionBytes, clauseBytes) == static_cast<long>(getUsedSize() - clauseSize)) {
-        return {};
+        return nullptr;
     }
 
     // Unfortunately, there is no const version of std::align :(
@@ -335,6 +437,52 @@ auto Region<ClauseT>::getNextClause(ClauseT const* clause) noexcept -> boost::op
         std::align(alignof(ClauseT), sizeof(ClauseT), candidatePtrAsVoid, dummy_free_size);
     JAM_ASSERT(nextClause != nullptr, "An alignment operation failed which previously succeeded");
     return reinterpret_cast<ClauseT*>(nextClause);
+}
+
+
+template <typename RegionT>
+RegionIterator<RegionT>::RegionIterator() noexcept : m_currentItem(nullptr), m_region(nullptr) {}
+
+template <typename RegionT>
+RegionIterator<RegionT>::RegionIterator(RegionT& region) noexcept
+  : m_currentItem(region.getFirstClause()), m_region(&region) {}
+
+template <typename RegionT>
+auto RegionIterator<RegionT>::operator++() noexcept -> RegionIterator& {
+    if (m_currentItem != nullptr) {
+        m_currentItem = m_region->getNextClause(m_currentItem);
+    }
+    return *this;
+}
+
+template <typename RegionT>
+auto RegionIterator<RegionT>::operator++(int) noexcept -> RegionIterator {
+    RegionIterator result = *this;
+    operator++();
+    return result;
+}
+
+template <typename RegionT>
+auto RegionIterator<RegionT>::operator*() const noexcept -> reference {
+    JAM_ASSERT(m_currentItem != nullptr, "Illegally dereferencing RegionIterator");
+    return m_currentItem;
+}
+
+template <typename RegionT>
+auto RegionIterator<RegionT>::operator-> () const noexcept -> reference {
+    JAM_ASSERT(m_currentItem != nullptr, "Illegally dereferencing RegionIterator");
+    return m_currentItem;
+}
+
+template <typename RegionT>
+auto RegionIterator<RegionT>::operator==(RegionIterator const& rhs) const noexcept -> bool {
+    return (this == &rhs) || (this->m_currentItem == nullptr && rhs.m_currentItem == nullptr) ||
+           (this->m_currentItem == rhs.m_currentItem && this->m_region == rhs.m_region);
+}
+
+template <typename RegionT>
+auto RegionIterator<RegionT>::operator!=(RegionIterator const& rhs) const noexcept -> bool {
+    return !(*this == rhs);
 }
 
 
