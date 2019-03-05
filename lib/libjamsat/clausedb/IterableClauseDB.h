@@ -28,8 +28,10 @@
 
 #include <libjamsat/concepts/ClauseTraits.h>
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/FlatteningIterator.h>
 
 #include <boost/optional.hpp>
+#include <boost/range.hpp>
 
 #include <cstdint>
 #include <cstring>
@@ -42,6 +44,8 @@
 namespace jamsat {
 
 /**
+ * \ingroup JamSAT_ClauseDB
+ *
  * \brief Iterator type for Region<T>
  *
  * This iterator satisfies the ForwardIterator concept.
@@ -49,10 +53,10 @@ namespace jamsat {
 template <typename RegionT>
 class RegionIterator {
 public:
-    using value_type = typename RegionT::item_type* const;
+    using value_type = std::remove_reference_t<typename RegionT::item_type>;
     using difference_type = std::size_t;
-    using reference = typename RegionT::item_type* const&;
-    using pointer = typename RegionT::item_type**;
+    using reference = std::add_lvalue_reference_t<typename RegionT::item_type>;
+    using pointer = std::add_pointer_t<value_type>;
     using iterator_category = std::forward_iterator_tag;
 
     /**
@@ -141,6 +145,11 @@ public:
      * \returns the amount of bytes available for allocations.
      */
     auto getFreeSize() const noexcept -> std::size_t;
+
+    /**
+     * \brief Returns `true` iff the region is empty.
+     */
+    auto empty() const noexcept -> bool;
 
     /**
      * \brief Clones the region.
@@ -256,11 +265,26 @@ public:
     auto createClause(typename ClauseT::size_type size) noexcept -> boost::optional<ClauseT*>;
 
     /**
-     * \brief Compresses the database by rearranging the clauses.
+     * \brief Compresses the database by removing all clauses scheduled for deletion.
+     *
+     * A clause is scheduled for deletion iff its SCHEDULED_FOR_DELETION is set.
      *
      * This operation invalidates all pointers to clauses stored in this database.
      */
     void compress() noexcept;
+
+    /** Iterator type for iterating over the database's clauses */
+    using iterator = FlatteningIterator<typename std::vector<Region<ClauseT>>::iterator>;
+
+    /**
+     * \brief Gets a range of clauses stored in this database.
+     *
+     * The returned range is invalidated by any call to `compress()`.
+     *
+     * \returns a range of clauses stored in this database, referencing the clauses in the
+     *          order of addition.
+     */
+    auto getClauses() noexcept -> boost::iterator_range<iterator>;
 
 private:
     auto createActiveRegion() -> Region<ClauseT>&;
@@ -335,6 +359,11 @@ auto Region<ClauseT>::getUsedSize() const noexcept -> std::size_t {
 template <typename ClauseT>
 auto Region<ClauseT>::getFreeSize() const noexcept -> std::size_t {
     return m_free;
+}
+
+template <typename ClauseT>
+auto Region<ClauseT>::empty() const noexcept -> bool {
+    return m_free == m_size;
 }
 
 template <typename ClauseT>
@@ -467,13 +496,13 @@ auto RegionIterator<RegionT>::operator++(int) noexcept -> RegionIterator {
 template <typename RegionT>
 auto RegionIterator<RegionT>::operator*() const noexcept -> reference {
     JAM_ASSERT(m_currentItem != nullptr, "Illegally dereferencing RegionIterator");
-    return m_currentItem;
+    return *m_currentItem;
 }
 
 template <typename RegionT>
 auto RegionIterator<RegionT>::operator-> () const noexcept -> reference {
     JAM_ASSERT(m_currentItem != nullptr, "Illegally dereferencing RegionIterator");
-    return m_currentItem;
+    return *m_currentItem;
 }
 
 template <typename RegionT>
@@ -532,6 +561,12 @@ auto IterableClauseDB<ClauseT>::createActiveRegion() -> Region<ClauseT>& {
     m_activeRegions.reserve(m_spareRegions.size() + m_activeRegions.size());
 
     return m_activeRegions.back();
+}
+
+template <typename ClauseT>
+auto IterableClauseDB<ClauseT>::getClauses() noexcept -> boost::iterator_range<iterator> {
+    return boost::make_iterator_range(iterator{m_activeRegions.begin(), m_activeRegions.end()},
+                                      iterator{});
 }
 
 }

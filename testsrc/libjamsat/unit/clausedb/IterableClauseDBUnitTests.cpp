@@ -28,8 +28,12 @@
 
 #include <libjamsat/clausedb/IterableClauseDB.h>
 
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
 namespace jamsat {
 
@@ -200,7 +204,7 @@ TEST(UnitClauseDB, IterableClauseDB_firstClauseCanBeRetrievedFromRegionViaIterat
     auto regionIter = underTest.begin();
 
     ASSERT_NE(regionIter, underTest.end());
-    EXPECT_EQ(*regionIter, clause1);
+    EXPECT_EQ(&(*regionIter), clause1);
 }
 
 TEST(UnitClauseDB, IterableClauseDB_regionIteratorReachesEnd) {
@@ -224,8 +228,8 @@ TEST(UnitClauseDB, IterableClauseDB_regionIsIterable) {
     }
 
     std::vector<TestClause*> iterationResult;
-    for (TestClause* currentClause : underTest) {
-        iterationResult.push_back(currentClause);
+    for (TestClause& currentClause : underTest) {
+        iterationResult.push_back(&currentClause);
     }
 
     EXPECT_EQ(clauses, iterationResult);
@@ -302,4 +306,57 @@ TEST(UnitClauseDB, IterableClauseDB_allocateClauseAfterFaultSucceeds) {
     EXPECT_EQ((*clauseB)->size(), 13ull);
 }
 
+TEST(UnitClauseDB, IterableClauseDB_emptyDBHasEmptyClauseRange) {
+    std::size_t const regionSize = 1024;
+    IterableClauseDB<TestClause> underTest{regionSize};
+    auto clauseRange = underTest.getClauses();
+    EXPECT_EQ(clauseRange.begin(), clauseRange.end());
+}
+
+namespace {
+template <typename RefRng, typename PtrRng>
+auto refRangeIsEqualToPtrRange(RefRng refRange, PtrRng ptrRange) noexcept -> bool {
+    auto ptrAdder = [](typename boost::range_value<RefRng>::type& t) { return &t; };
+    return boost::equal(ptrRange, refRange | boost::adaptors::transformed(ptrAdder));
+}
+}
+
+TEST(UnitClauseDB, IterableClauseDB_clauseDBWithSingleClauseHasSingleClauseRange) {
+    std::size_t const regionSize = 1024;
+    IterableClauseDB<TestClause> underTest{regionSize};
+
+    auto clause1 = underTest.createClause(5);
+    ASSERT_TRUE(clause1);
+    std::vector<TestClause*> expectedClauses{*clause1};
+
+    EXPECT_TRUE(refRangeIsEqualToPtrRange(underTest.getClauses(), expectedClauses));
+}
+
+TEST(UnitClauseDB, IterableClauseDB_clauseDBWithMultipleClausesHasMatchingClauseRange) {
+    std::size_t const regionSize = 2048;
+    IterableClauseDB<TestClause> underTest{regionSize};
+
+    std::vector<TestClause*> expectedClauses;
+    for (int i = 0; i < 10; ++i) {
+        auto clause = underTest.createClause(5);
+        ASSERT_TRUE(clause);
+        expectedClauses.push_back(*clause);
+    }
+
+    EXPECT_TRUE(refRangeIsEqualToPtrRange(underTest.getClauses(), expectedClauses));
+}
+
+TEST(UnitClauseDB, IterableClauseDB_clauseDBWithMultipleRegionsHasMatchingClauseRange) {
+    std::size_t const regionSize = 128;
+    IterableClauseDB<TestClause> underTest{regionSize};
+
+    std::vector<TestClause*> expectedClauses;
+    for (int i = 0; i < 128; ++i) {
+        auto clause = underTest.createClause(i % 20);
+        ASSERT_TRUE(clause);
+        expectedClauses.push_back(*clause);
+    }
+
+    EXPECT_TRUE(refRangeIsEqualToPtrRange(underTest.getClauses(), expectedClauses));
+}
 }
