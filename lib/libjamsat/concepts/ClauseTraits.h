@@ -316,6 +316,70 @@ struct is_clause_flag<T, j_void_t<decltype(T::SCHEDULED_FOR_DELETION), decltype(
 /**
  * \ingroup JamSAT_Concepts
  *
+ * \brief Checks whether a type supports flagging with clause flags
+ *
+ * \tparam T    A type.
+ *
+ * `is_clause_flaggabale<T>::value` is `true` if `T` satisfies the ClauseFlaggable concept.
+ * Otherwise, `is_clause_flag<T>::value` is `false`.
+ *
+ * A type `T` satisfies the ClauseFlaggable concept iff `T::Flag` satisfies ClauseFlag and
+ * `T` satisfies the following expression requirements:
+ *
+ * \par Expressions
+ * Given
+ * - `c`, an object of type `T` with const qualifiers removed,
+ * - `cc`, an object of type `T` with const qualifier added,
+ * - `f`, an object of type `T::Flag`,
+ *
+ * the following expressions must be well-formed:
+ * <table>
+ *  <tr><th>Expression</th><th>Requirements</th><th>Return value</th></tr>
+ *  <tr>
+ *   <td>`cc.getFlag(f)`</td>
+ *   <td>Returns `true` iff the flag `f` is set for `cc`.</td>
+ *   <td>`bool`</td>
+ *  </tr>
+ *  <tr>
+ *   <td>`c.setFlag(f)`</td>
+ *   <td>Sets the flag `f` for `c`. Afterwards, `c.getFlag(f)` must be `true`.</td>
+ *   <td></td>
+ *  </tr>
+ *  <tr>
+ *   <td>`c.clearFlag(f)`</td>
+ *   <td>Clears the flag `f` for `c`. Afterwards, `c.getFlag(f)` must be `false`.</td>
+ *   <td></td>
+ *  </tr>
+ * </table>
+ */
+template <typename, typename = j_void_t<>>
+struct is_clause_flaggable : public std::false_type {};
+
+template <typename T>
+struct is_clause_flaggable<
+    T,
+    j_void_t<
+        // Require that T::Flag is a clause flag type:
+        std::enable_if_t<is_clause_flag<typename T::Flag>::value, void>,
+
+        // For t of type T, require that t.getFlag() has type T::Flag:
+        JAM_REQUIRE_EXPR(std::declval<T>().getFlag(std::declval<typename T::Flag>()), bool),
+
+        // For t of type non-const type T and f of type T::Flag, require that t.setFlag(f) is a
+        // valid expression:
+        JAM_REQUIRE_EXPR(
+            std::declval<std::remove_const_t<T>>().setFlag(std::declval<typename T::Flag>()), void),
+
+        // For t of type non-const type T and f of type T::Flag, require that t.clearFlag(f) is a
+        // valid expression:
+        JAM_REQUIRE_EXPR(
+            std::declval<std::remove_const_t<T>>().clearFlag(std::declval<typename T::Flag>()),
+            void)>> : public std::true_type {};
+
+
+/**
+ * \ingroup JamSAT_Concepts
+ *
  * \brief Checks whether a type is a clause type
  *
  * \tparam T    A type.
@@ -328,6 +392,7 @@ struct is_clause_flag<T, j_void_t<decltype(T::SCHEDULED_FOR_DELETION), decltype(
  *
  * \par Named Requirements
  * - `LiteralContainer` (i.e. `is_literal_container<T>::value` is `true`)
+ * - `ClauseFlaggable` (i.e. `is_clause_flaggable<T>::value` is `true`)
  *
  * \par Member Types
  *
@@ -398,22 +463,8 @@ struct is_clause<
         // Require that T is an LBD carrier:
         std::enable_if_t<is_lbd_carrier<T>::value, void>,
 
-        // Require that T::Flag is a clause flag type:
-        std::enable_if_t<is_clause_flag<typename T::Flag>::value, void>,
-
-        // For t of type T, require that t.getFlag() has type T::Flag:
-        JAM_REQUIRE_EXPR(std::declval<T>().getFlag(std::declval<typename T::Flag>()), bool),
-
-        // For t of type non-const type T and f of type T::Flag, require that t.setFlag(f) is a
-        // valid expression:
-        JAM_REQUIRE_EXPR(
-            std::declval<std::remove_const_t<T>>().setFlag(std::declval<typename T::Flag>()), void),
-
-        // For t of type non-const type T and f of type T::Flag, require that t.clearFlag(f) is a
-        // valid expression:
-        JAM_REQUIRE_EXPR(
-            std::declval<std::remove_const_t<T>>().clearFlag(std::declval<typename T::Flag>()),
-            void),
+        // Require that clause flags can be maintained for objects of type T:
+        std::enable_if_t<is_clause_flaggable<T>::value, void>,
 
         // For t of type const T and l of type CNFLit, require that `t.mightContain(l)` is a valid
         // expression of type `bool`:

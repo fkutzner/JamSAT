@@ -249,8 +249,12 @@ template <typename ClauseT>
 class IterableClauseDB {
     static_assert(is_varsized_into_constructible<ClauseT>::value,
                   "ClauseT must satisfy the VarsizedIntoConstructible concept, but does not");
-    // static_assert(is_clause<ClauseT>::value,
-    //            "ClauseT must satisfy the Clause concept, but does not");
+
+    static_assert(std::is_copy_assignable<ClauseT>::value,
+                  "ClauseT must be copy-assignable, but is not");
+
+    static_assert(is_clause_flaggable<ClauseT>::value,
+                  "ClauseT must satisfy the ClauseFlaggable concept, but does not");
 
 public:
     using size_type = std::size_t;

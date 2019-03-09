@@ -40,7 +40,7 @@ struct TestClause {
 public:
     using size_type = std::size_t;
 
-    enum class Flag { SCHEDULED_FOR_DELETION };
+    enum class Flag { SCHEDULED_FOR_DELETION, REDUNDANT };
 
     static auto constructIn(void* targetMemory, size_type clauseSize) -> TestClause*;
     static auto getAllocationSize(size_type clauseSize) -> std::size_t;
@@ -49,6 +49,7 @@ public:
 
     void setFlag(Flag f) noexcept;
     auto getFlag(Flag f) const noexcept -> bool;
+    void clearFlag(Flag f) noexcept;
 
     void setDestroyedFlag(char* flag) noexcept;
 
@@ -106,6 +107,12 @@ auto TestClause::getFlag(Flag f) const noexcept -> bool {
         return m_isScheduledForDeletion;
     }
     return false;
+}
+
+void TestClause::clearFlag(Flag f) noexcept {
+    if (f == Flag::SCHEDULED_FOR_DELETION) {
+        m_isScheduledForDeletion = false;
+    }
 }
 
 auto TestClause::operator==(TestClause const& rhs) const noexcept -> bool {
