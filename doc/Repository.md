@@ -12,8 +12,8 @@
   - `libjamsat/`
   - `libjamfrontend/`
 - `lib/` - library implementations
- - `libjamsat/` - the JamSAT library, exporting an IPASIR interface
- - `libjamfrontend/` - the (static) JamSAT frontend library, implementing the standalone JamSAT frontend functionality
+  - `libjamsat/` - the JamSAT library, implementing the IPASIR interface
+  - `libjamfrontend/` - the (static) JamSAT frontend library, implementing the standalone JamSAT frontend functionality
 - `testsrc/`
   - `libjamsat/` - tests for `libjamsat`
   - `libjamfrontend/` - tests for `libjamfrontend`
