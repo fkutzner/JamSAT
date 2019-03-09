@@ -32,7 +32,6 @@
 #include <boost/range/algorithm.hpp>
 
 #include <cstdint>
-#include <iostream>
 #include <vector>
 
 namespace jamsat {
@@ -41,14 +40,20 @@ struct TestClause {
 public:
     using size_type = std::size_t;
 
-    enum class Flag { TEST_FLAG };
+    enum class Flag { SCHEDULED_FOR_DELETION };
 
     static auto constructIn(void* targetMemory, size_type clauseSize) -> TestClause*;
     static auto getAllocationSize(size_type clauseSize) -> std::size_t;
     auto size() const noexcept -> std::size_t;
     auto initialSize() const noexcept -> std::size_t;
 
+    void setFlag(Flag f) noexcept;
+    auto getFlag(Flag f) const noexcept -> bool;
+
     void setDestroyedFlag(char* flag) noexcept;
+
+    auto operator==(TestClause const& rhs) const noexcept -> bool;
+    auto operator!=(TestClause const& rhs) const noexcept -> bool;
 
     ~TestClause();
 
@@ -58,10 +63,11 @@ private:
     std::uint64_t m_dummy;
     size_type m_size;
     char* m_destroyedFlag;
+    bool m_isScheduledForDeletion;
 };
 
 TestClause::TestClause(size_type clauseSize)
-  : m_dummy(0), m_size(clauseSize), m_destroyedFlag(nullptr) {
+  : m_dummy(0), m_size(clauseSize), m_destroyedFlag(nullptr), m_isScheduledForDeletion(false) {
     (void)m_dummy;
 }
 
@@ -76,7 +82,7 @@ auto TestClause::constructIn(void* targetMemory, size_type clauseSize) -> TestCl
 }
 
 auto TestClause::getAllocationSize(size_type clauseSize) -> std::size_t {
-    return 16 + 4 * clauseSize;
+    return sizeof(TestClause) + 4 * clauseSize;
 }
 
 auto TestClause::size() const noexcept -> std::size_t {
@@ -89,6 +95,30 @@ auto TestClause::initialSize() const noexcept -> std::size_t {
 
 void TestClause::setDestroyedFlag(char* flag) noexcept {
     m_destroyedFlag = flag;
+}
+
+void TestClause::setFlag(Flag f) noexcept {
+    m_isScheduledForDeletion = (f == Flag::SCHEDULED_FOR_DELETION);
+}
+
+auto TestClause::getFlag(Flag f) const noexcept -> bool {
+    if (f == Flag::SCHEDULED_FOR_DELETION) {
+        return m_isScheduledForDeletion;
+    }
+    return false;
+}
+
+auto TestClause::operator==(TestClause const& rhs) const noexcept -> bool {
+    if (this == &rhs) {
+        return true;
+    }
+    return this->m_destroyedFlag == rhs.m_destroyedFlag && this->m_dummy == rhs.m_dummy &&
+           this->m_isScheduledForDeletion == rhs.m_isScheduledForDeletion &&
+           this->m_size == rhs.m_size;
+}
+
+auto TestClause::operator!=(TestClause const& rhs) const noexcept -> bool {
+    return !(*this == rhs);
 }
 
 
@@ -143,7 +173,7 @@ TEST(UnitClauseDB, IterableClauseDB_allocationFailsForOversizedClause) {
 }
 
 TEST(UnitClauseDB, IterableClauseDB_furtherAllocationInRegionPossibleAfterFailure) {
-    std::size_t const regionSize = 128;
+    std::size_t const regionSize = 192;
     Region<TestClause> underTest{regionSize};
     TestClause* c1 = underTest.allocate(10);
     ASSERT_NE(c1, nullptr);
@@ -358,5 +388,81 @@ TEST(UnitClauseDB, IterableClauseDB_clauseDBWithMultipleRegionsHasMatchingClause
     }
 
     EXPECT_TRUE(refRangeIsEqualToPtrRange(underTest.getClauses(), expectedClauses));
+}
+
+namespace {
+template <typename RefRng, typename PtrRng>
+auto refRangeIsEqualToDerefPtrRange(RefRng refRange, PtrRng ptrRange) noexcept -> bool {
+    auto ptrAdder = [](typename boost::range_value<RefRng>::type& t) { return &t; };
+    return boost::equal(
+        ptrRange,
+        refRange | boost::adaptors::transformed(ptrAdder),
+        [](typename std::remove_reference_t<typename boost::range_value<RefRng>::type>* t1,
+           typename boost::range_value<PtrRng>::type t2) { return *t1 == *t2; });
+}
+}
+
+TEST(UnitClauseDB, IterableClauseDB_compressEmptyClauseDB) {
+    std::size_t const regionSize = 128;
+    IterableClauseDB<TestClause> underTest{regionSize};
+    underTest.compress();
+
+    auto clauses = underTest.getClauses();
+    EXPECT_EQ(clauses.begin(), clauses.end());
+}
+
+TEST(UnitClauseDB, IterableClauseDB_compressSingleElementClauseDBWithoutDelete) {
+    std::size_t const regionSize = 1024;
+    IterableClauseDB<TestClause> underTest{regionSize};
+
+    auto clause1 = underTest.createClause(5);
+    ASSERT_TRUE(clause1);
+    std::vector<TestClause*> expectedClauses{*clause1};
+
+
+    underTest.compress();
+
+    EXPECT_TRUE(refRangeIsEqualToDerefPtrRange(underTest.getClauses(), expectedClauses));
+}
+
+TEST(UnitClauseDB, IterableClauseDB_compressSingleElementClauseDBWithDelete) {
+    std::size_t const regionSize = 1024;
+    IterableClauseDB<TestClause> underTest{regionSize};
+
+    auto clause1 = underTest.createClause(5);
+    ASSERT_TRUE(clause1);
+    std::vector<TestClause*> expectedClauses{*clause1};
+
+    (*clause1)->setFlag(TestClause::Flag::SCHEDULED_FOR_DELETION);
+    underTest.compress();
+
+    auto clauses = underTest.getClauses();
+    EXPECT_EQ(clauses.begin(), clauses.end());
+}
+
+TEST(UnitClauseDB, IterableClauseDB_compressMultiRegionClauseDBWithDelete) {
+    std::size_t const regionSize = 1024;
+    IterableClauseDB<TestClause> underTest{regionSize};
+
+    std::vector<int> clauseIDs{};
+    for (int i = 0; i < 256; ++i) {
+        auto clause = underTest.createClause(i % 20);
+        ASSERT_TRUE(clause);
+        if (i % 13 == 0 || i % 4 == 0) {
+            (*clause)->setFlag(TestClause::Flag::SCHEDULED_FOR_DELETION);
+        } else {
+            clauseIDs.push_back((*clause)->size());
+        }
+
+        if (i % 61 == 0) {
+            underTest.compress();
+        }
+    }
+
+    underTest.compress();
+
+    EXPECT_TRUE(boost::equal(clauseIDs,
+                             underTest.getClauses() | boost::adaptors::transformed(
+                                                          [](TestClause& t) { return t.size(); })));
 }
 }

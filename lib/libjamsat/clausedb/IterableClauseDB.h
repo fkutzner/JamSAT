@@ -28,7 +28,9 @@
 
 #include <libjamsat/concepts/ClauseTraits.h>
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/FlatteningIterator.h>
+#include <libjamsat/utils/Logger.h>
 
 #include <boost/optional.hpp>
 #include <boost/range.hpp>
@@ -40,6 +42,13 @@
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
+
+
+#if defined(JAM_ENABLE_CLAUSEDB_LOGGING)
+#define JAM_LOG_ICDB(x, y) JAM_LOG(x, " icdb ", y)
+#else
+#define JAM_LOG_ICDB(x, y)
+#endif
 
 namespace jamsat {
 
@@ -231,10 +240,18 @@ private:
  *
  * \brief Iterable clause database
  *
- * \tparam ClauseT A type satisfying the VarsizedIntoConstructible concept.
+ * This data structure affords fast allocation of clauses and iteration over all allocated
+ * clauses.
+ *
+ * \tparam ClauseT A type satisfying the VarsizedIntoConstructible concept and the Clause concept.
  */
 template <typename ClauseT>
 class IterableClauseDB {
+    static_assert(is_varsized_into_constructible<ClauseT>::value,
+                  "ClauseT must satisfy the VarsizedIntoConstructible concept, but does not");
+    // static_assert(is_clause<ClauseT>::value,
+    //            "ClauseT must satisfy the Clause concept, but does not");
+
 public:
     using size_type = std::size_t;
 
@@ -267,7 +284,7 @@ public:
     /**
      * \brief Compresses the database by removing all clauses scheduled for deletion.
      *
-     * A clause is scheduled for deletion iff its SCHEDULED_FOR_DELETION is set.
+     * A clause is scheduled for deletion iff its SCHEDULED_FOR_DELETION flag is set.
      *
      * This operation invalidates all pointers to clauses stored in this database.
      */
@@ -408,6 +425,7 @@ auto Region<ClauseT>::operator=(Region&& rhs) noexcept -> Region& {
     std::swap(this->m_nextFreeCell, rhs.m_nextFreeCell);
     std::swap(this->m_size, rhs.m_size);
     std::swap(this->m_free, rhs.m_free);
+    return *this;
 }
 
 template <typename ClauseT>
@@ -540,8 +558,70 @@ auto IterableClauseDB<ClauseT>::createClause(typename ClauseT::size_type size) n
     }
 }
 
+
 template <typename ClauseT>
-void IterableClauseDB<ClauseT>::compress() noexcept {}
+void IterableClauseDB<ClauseT>::compress() noexcept {
+    JAM_LOG_ICDB(info,
+                 "Compressing the clause DB (" << m_activeRegions.size() << " active regions, "
+                                               << m_spareRegions.size() << " spare regions)");
+    OnExitScope printInfo{[this]() {
+        JAM_LOG_ICDB(info,
+                     "Finished compressing the clause DB ("
+                         << m_activeRegions.size() << " active regions, " << m_spareRegions.size()
+                         << " spare regions)");
+    }};
+
+    if (m_activeRegions.empty()) {
+        return;
+    }
+
+    JAM_ASSERT(!m_spareRegions.empty(), "There must be at least 1 spare region");
+
+    Region<ClauseT> currentSpare = std::move(m_spareRegions.back());
+    m_spareRegions.pop_back();
+    JAM_ASSERT(currentSpare.empty(), "Spare regions must be empty");
+
+    std::size_t swapInIndex = 0;
+    for (auto& region : m_activeRegions) {
+        // Let idx be the index of `region` in `m_activeRegions`.
+        // Loop invariant A: (swapInIndex < idx) || (currentSpare.getFreeSize() >=
+        // region.getUsedSize())
+        JAM_ASSERT(&region != &m_activeRegions[swapInIndex] ||
+                       (currentSpare.getFreeSize() >= region.getUsedSize()),
+                   "Loop invariant A violated");
+
+        for (ClauseT& clause : region) {
+            if (clause.getFlag(ClauseT::Flag::SCHEDULED_FOR_DELETION)) {
+                continue;
+            }
+
+            ClauseT* copy = currentSpare.allocate(clause.size());
+            if (copy == nullptr) {
+                // currentSpare is full.
+                // Invariant: all clauses in m_activeRegions[swapInIndex] have already been copied
+                // either to currentSpare or to m_activeRegions[i] for some 0 <= i < swapInIndex.
+
+                JAM_ASSERT(&region != &m_activeRegions[swapInIndex], "Loop invariant A violated");
+                std::swap(currentSpare, m_activeRegions[swapInIndex]);
+                swapInIndex += 1;
+                JAM_ASSERT(currentSpare.getUsedSize() == 0, "Spare regions must be empty");
+                copy = currentSpare.allocate(clause.size());
+            }
+            *copy = clause;
+        }
+
+        region.clear();
+    }
+    std::swap(currentSpare, m_activeRegions[swapInIndex]);
+
+    // Collect "retired" regions for reuse
+    currentSpare.clear();
+    m_spareRegions.push_back(std::move(currentSpare));
+    while (m_activeRegions.size() > 1 && m_activeRegions.back().getUsedSize() == 0) {
+        m_spareRegions.push_back(std::move(m_activeRegions.back()));
+        m_activeRegions.pop_back();
+    }
+}
 
 template <typename ClauseT>
 auto IterableClauseDB<ClauseT>::createActiveRegion() -> Region<ClauseT>& {
