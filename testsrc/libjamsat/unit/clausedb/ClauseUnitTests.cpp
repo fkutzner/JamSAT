@@ -421,4 +421,32 @@ TEST(UnitClauseDB, mightBeSubsetOfIsOverapproximationInClause) {
     notSuperset->clauseUpdated();
     EXPECT_FALSE(underTest->mightBeSubsetOf(*notSuperset));
 }
+
+TEST(UnitClauseDB, clausePreservesInitialSizeOnShrink) {
+    auto underTest = createHeapClause(4);
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = 27_Lit;
+    (*underTest)[2] = 13_Lit;
+    (*underTest)[3] = ~11_Lit;
+
+    ASSERT_EQ(underTest->initialSize(), 4ull);
+    underTest->resize(3);
+    ASSERT_EQ(underTest->initialSize(), 4ull);
+}
+
+TEST(UnitClauseDB, clausePreservesInitialSizeOnAssignment) {
+    auto underTest = createHeapClause(4);
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = 27_Lit;
+    (*underTest)[2] = 13_Lit;
+    (*underTest)[3] = ~11_Lit;
+
+    auto rhs = createHeapClause(2);
+    (*rhs)[0] = 3_Lit;
+    (*rhs)[1] = 27_Lit;
+
+    ASSERT_EQ(underTest->initialSize(), 4ull);
+    *underTest = *rhs;
+    ASSERT_EQ(underTest->initialSize(), 4ull);
+}
 }

@@ -77,6 +77,13 @@ public:
     size_type size() const noexcept;
 
     /**
+     * \brief Returns the size the clause had at its time of allocation.
+     *
+     * \returns The size the clause had at its time of allocation.
+     */
+    size_type initialSize() const noexcept;
+
+    /**
      * \brief Returns the clause's LBD value.
      *
      * Note: if the clause's LBD value is larger than the maximum value
@@ -160,6 +167,9 @@ public:
 
     /**
      * \brief Assignment operator
+     *
+     * This operation preserves the clause's initial size (i.e., the value of
+     * initialSize() does not change due assignments).
      *
      * \param other     The clause to be copied. \p other must not be larger than this clause.
      * \returns Reference to this clause
@@ -255,7 +265,16 @@ private:
 
     size_type m_size;
     lbd_type m_lbd;
-    flag_type m_flags;
+    flag_type m_flags : 15;
+
+    /**
+     * m_resized is 1 iff the clause has been shrinked. If the clause has been shrinked,
+     * its original size is stored as the variable of the clause's past-the-end literal.
+     * (Rationale: the original size only needs to be stored when the clause has been
+     * shrinked, and the clause header needs to be kept as small as feasible.)
+     */
+    uint8_t m_resized : 1;
+
     OverApproximatingSet<64, CNFLit::Index> m_approximatedClause;
     CNFLit m_anchor;
 };
@@ -293,7 +312,7 @@ void Clause::setLBD(LBDType LBD) noexcept {
 }
 
 inline Clause::Clause(size_type size) noexcept
-  : m_size(size), m_lbd(0), m_flags(0), m_anchor(CNFLit::getUndefinedLiteral()) {}
+  : m_size(size), m_lbd(0), m_flags(0), m_resized(0), m_anchor(CNFLit::getUndefinedLiteral()) {}
 
 inline CNFLit& Clause::operator[](size_type index) noexcept {
     JAM_ASSERT(index < m_size, "Index out of bounds");
@@ -309,9 +328,25 @@ inline Clause::size_type Clause::size() const noexcept {
     return m_size;
 }
 
+inline Clause::size_type Clause::initialSize() const noexcept {
+    if (!m_resized) {
+        return m_size;
+    }
+    CNFLit pastEnd = *(&m_anchor + m_size);
+    return pastEnd.getVariable().getRawValue();
+}
+
 inline void Clause::resize(size_type newSize) noexcept {
     JAM_ASSERT(newSize <= m_size, "newSize may not be larger than the current size");
+    if (newSize == m_size) {
+        return;
+    }
+
+    size_type initSize = initialSize();
     m_size = newSize;
+    CNFLit& pastEnd = *(&m_anchor + m_size);
+    pastEnd = CNFLit{CNFVar{initSize}, CNFSign::POSITIVE};
+    m_resized = 1;
 }
 
 inline Clause::iterator Clause::begin() noexcept {
@@ -369,7 +404,7 @@ inline Clause& Clause::operator=(const Clause& other) noexcept {
 
     this->m_lbd = other.m_lbd;
     this->m_flags = other.m_flags;
-    this->m_size = other.m_size;
+    resize(other.m_size); // to update m_resized if necessary
     std::copy(other.begin(), other.end(), this->begin());
     return *this;
 }
