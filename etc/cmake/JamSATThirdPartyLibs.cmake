@@ -39,7 +39,7 @@ find_package(Boost
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-if(${Boost_LIBRARIES})
+if(Boost_LIBRARIES)
   nm_add_thirdparty_libs(LIBS ${Boost_LIBRARIES})
 endif()
 
