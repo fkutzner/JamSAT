@@ -49,8 +49,8 @@ install:
   - cmake -G %CMAKE_GENERATOR% -DJAMSAT_ENABLE_TESTING=ON -DJAMSAT_LINK_VERBOSE=ON -DCMAKE_INSTALL_PREFIX=%INSTALLATION_DIR% -DCMAKE_PREFIX_PATH=%INSTALLATION_DIR% ..\JamSAT
   - cmake --build . --config %CONFIGURATION%
 
-  - ctest -R testsuite -V -C %CONFIGURATION%
-  - ctest -E testsuite -C %CONFIGURATION%
+  - ctest -V -R testsuite -V -C %CONFIGURATION%
+  - ctest -V -E testsuite -C %CONFIGURATION%
 
 build: false
 
