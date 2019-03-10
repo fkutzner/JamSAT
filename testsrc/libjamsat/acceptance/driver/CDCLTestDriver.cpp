@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 
-using SolverType = jamsat::CDCLSatSolver<>;
+using SolverType = jamsat::LegacyCDCLSatSolver<>;
 
 namespace {
 void printUsage() {

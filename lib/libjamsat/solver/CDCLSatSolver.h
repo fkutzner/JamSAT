@@ -74,10 +74,10 @@
 
 namespace jamsat {
 
-struct CDCLSatSolverDefaultTypes {
+struct LegacyCDCLSatSolverDefaultTypes {
     using Clause = jamsat::Clause;
-    using ClauseDB = jamsat::HeapletClauseDB<CDCLSatSolverDefaultTypes::Clause>;
-    using Trail = jamsat::Trail<CDCLSatSolverDefaultTypes::Clause>;
+    using ClauseDB = jamsat::HeapletClauseDB<LegacyCDCLSatSolverDefaultTypes::Clause>;
+    using Trail = jamsat::Trail<LegacyCDCLSatSolverDefaultTypes::Clause>;
     using Propagation = jamsat::Propagation<Trail>;
     using ConflictAnalyzer = FirstUIPLearning<Trail, Propagation>;
     using BranchingHeuristic = VSIDSBranchingHeuristic<Trail>;
@@ -95,8 +95,8 @@ struct CDCLSatSolverDefaultTypes {
  *
  * \tparam ST   TODO: document SAT solver subsystem type concept
  */
-template <typename ST = CDCLSatSolverDefaultTypes>
-class CDCLSatSolver {
+template <typename ST = LegacyCDCLSatSolverDefaultTypes>
+class LegacyCDCLSatSolver {
 public:
     struct SolvingResult {
         TBool isSatisfiable;
@@ -105,7 +105,7 @@ public:
     };
 
     /**
-     * \brief The configuration structure for CDCLSatSolver.
+     * \brief The configuration structure for LegacyCDCLSatSolver.
      */
     struct Configuration {
         /**
@@ -122,11 +122,11 @@ public:
     };
 
     /**
-     * \brief Constructs a CDCLSatSolver instance.
+     * \brief Constructs a LegacyCDCLSatSolver instance.
      *
      * \param config    The configuration for the constructed instance.
      */
-    CDCLSatSolver(Configuration config);
+    LegacyCDCLSatSolver(Configuration config);
 
     /**
      * \brief Adds the clauses of the given CNF problem instance to be solved to the
@@ -242,7 +242,7 @@ private:
 /********** Implementation ****************************** */
 
 template <typename ST>
-CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
+LegacyCDCLSatSolver<ST>::LegacyCDCLSatSolver(Configuration config)
   : m_trail(CNFVar{0})
   , m_propagation(CNFVar{0}, m_trail)
   , m_branchingHeuristic(CNFVar{0}, m_trail)
@@ -269,12 +269,12 @@ CDCLSatSolver<ST>::CDCLSatSolver(Configuration config)
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::stop() noexcept {
+void LegacyCDCLSatSolver<ST>::stop() noexcept {
     m_stopRequested.store(true);
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::addClause(const CNFClause& clause) {
+void LegacyCDCLSatSolver<ST>::addClause(const CNFClause& clause) {
     if (clause.empty()) {
         m_detectedUNSAT = true;
         return;
@@ -308,15 +308,16 @@ void CDCLSatSolver<ST>::addClause(const CNFClause& clause) {
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::addProblem(const CNFProblem& problem) {
+void LegacyCDCLSatSolver<ST>::addProblem(const CNFProblem& problem) {
     for (auto& clause : problem.getClauses()) {
         addClause(clause);
     }
 }
 
 template <typename ST>
-typename CDCLSatSolver<ST>::SolvingResult
-CDCLSatSolver<ST>::createSolvingResult(TBool result, std::vector<CNFLit> const& failedAssumptions) {
+typename LegacyCDCLSatSolver<ST>::SolvingResult
+LegacyCDCLSatSolver<ST>::createSolvingResult(TBool result,
+                                             std::vector<CNFLit> const& failedAssumptions) {
     std::unique_ptr<Model> model{nullptr};
 
     if (isTrue(result)) {
@@ -332,9 +333,9 @@ CDCLSatSolver<ST>::createSolvingResult(TBool result, std::vector<CNFLit> const& 
 }
 
 template <typename ST>
-typename CDCLSatSolver<ST>::UnitClausePropagationResult
-CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const& toPropagate,
-                                           std::vector<CNFLit>* failedAssumptions) {
+typename LegacyCDCLSatSolver<ST>::UnitClausePropagationResult
+LegacyCDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const& toPropagate,
+                                                 std::vector<CNFLit>* failedAssumptions) {
     JAM_LOG_SOLVER(info,
                    "Propagating system-level assignments on level "
                        << m_trail.getCurrentDecisionLevel());
@@ -377,8 +378,8 @@ CDCLSatSolver<ST>::propagateOnSystemLevels(std::vector<CNFLit> const& toPropagat
 }
 
 template <typename ST>
-typename CDCLSatSolver<ST>::UnitClausePropagationResult
-CDCLSatSolver<ST>::propagateUnitClauses(std::vector<CNFLit>& units) {
+typename LegacyCDCLSatSolver<ST>::UnitClausePropagationResult
+LegacyCDCLSatSolver<ST>::propagateUnitClauses(std::vector<CNFLit>& units) {
     auto amntUnits = units.size();
     auto result = propagateOnSystemLevels(units, nullptr);
     if (result != UnitClausePropagationResult::CONFLICTING &&
@@ -395,15 +396,15 @@ CDCLSatSolver<ST>::propagateUnitClauses(std::vector<CNFLit>& units) {
 }
 
 template <typename ST>
-typename CDCLSatSolver<ST>::UnitClausePropagationResult
-CDCLSatSolver<ST>::propagateAssumptions(std::vector<CNFLit> const& assumptions,
-                                        std::vector<CNFLit>& failedAssumptions) {
+typename LegacyCDCLSatSolver<ST>::UnitClausePropagationResult
+LegacyCDCLSatSolver<ST>::propagateAssumptions(std::vector<CNFLit> const& assumptions,
+                                              std::vector<CNFLit>& failedAssumptions) {
     return propagateOnSystemLevels(assumptions, &failedAssumptions);
 }
 
 template <typename ST>
-TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit>& assumptions,
-                                           std::vector<CNFLit>& failedAssumptions) {
+TBool LegacyCDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit>& assumptions,
+                                                 std::vector<CNFLit>& failedAssumptions) {
     m_statistics.registerRestart();
     JAM_LOG_SOLVER(info, "Restarting the solver, backtracking to decision level 0.");
     backtrackAll();
@@ -535,7 +536,7 @@ TBool CDCLSatSolver<ST>::solveUntilRestart(const std::vector<CNFLit>& assumption
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::optimizeLemma(std::vector<CNFLit>& lemma) {
+void LegacyCDCLSatSolver<ST>::optimizeLemma(std::vector<CNFLit>& lemma) {
     eraseRedundantLiterals(lemma, m_propagation, m_trail, m_stamps);
     JAM_LOG_SOLVER(info,
                    "  After redundant literal removal: (" << toString(lemma.begin(), lemma.end())
@@ -553,9 +554,9 @@ void CDCLSatSolver<ST>::optimizeLemma(std::vector<CNFLit>& lemma) {
 }
 
 template <typename ST>
-typename CDCLSatSolver<ST>::ConflictHandlingResult
-CDCLSatSolver<ST>::deriveLemma(typename ST::Clause& conflicting,
-                               typename ST::Clause** newLemmaOut) {
+typename LegacyCDCLSatSolver<ST>::ConflictHandlingResult
+LegacyCDCLSatSolver<ST>::deriveLemma(typename ST::Clause& conflicting,
+                                     typename ST::Clause** newLemmaOut) {
     /* TODO: bad_alloc handling... */
 
     typename ST::Trail::DecisionLevel backtrackLevel = 0;
@@ -620,7 +621,7 @@ CDCLSatSolver<ST>::deriveLemma(typename ST::Clause& conflicting,
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::prepareBacktrack(typename ST::Trail::DecisionLevel level) {
+void LegacyCDCLSatSolver<ST>::prepareBacktrack(typename ST::Trail::DecisionLevel level) {
     for (auto currentDL = m_trail.getCurrentDecisionLevel(); currentDL >= level; --currentDL) {
         for (auto lit : m_trail.getDecisionLevelAssignments(currentDL)) {
             m_branchingHeuristic.reset(lit.getVariable());
@@ -632,21 +633,21 @@ void CDCLSatSolver<ST>::prepareBacktrack(typename ST::Trail::DecisionLevel level
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::backtrackToLevel(typename ST::Trail::DecisionLevel level) {
+void LegacyCDCLSatSolver<ST>::backtrackToLevel(typename ST::Trail::DecisionLevel level) {
     JAM_ASSERT(level < m_trail.getCurrentDecisionLevel(), "Cannot backtrack to current level");
     prepareBacktrack(level + 1);
     m_trail.revisitDecisionLevel(level);
 }
 
 template <typename ST>
-void CDCLSatSolver<ST>::backtrackAll() {
+void LegacyCDCLSatSolver<ST>::backtrackAll() {
     prepareBacktrack(0);
     m_trail.shrinkToDecisionLevel(0);
 }
 
 template <typename ST>
-typename CDCLSatSolver<ST>::SolvingResult
-CDCLSatSolver<ST>::solve(const std::vector<CNFLit>& assumptions) {
+typename LegacyCDCLSatSolver<ST>::SolvingResult
+LegacyCDCLSatSolver<ST>::solve(const std::vector<CNFLit>& assumptions) {
     m_statistics.printStatisticsDescription(std::cout);
     m_statistics.registerSolvingStart();
     OnExitScope updateStatsOnExit{[this]() {

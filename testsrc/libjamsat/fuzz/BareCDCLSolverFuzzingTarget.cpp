@@ -36,7 +36,7 @@
 
 namespace jamsat {
 
-using FuzzedSolver = CDCLSatSolver<>;
+using FuzzedSolver = LegacyCDCLSatSolver<>;
 
 void JamSATFuzzingEntryPoint(std::istream& fuzzerInput) {
     CNFProblem problem;

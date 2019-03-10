@@ -33,35 +33,35 @@
 namespace jamsat {
 
 TEST(SolverIntegration, CDCLSatSolver_problemWithEmptyClauseIsUnsatisfiable) {
-    CDCLSatSolver<>::Configuration testConfig;
+    LegacyCDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
-    CDCLSatSolver<> underTest{testConfig};
+    LegacyCDCLSatSolver<> underTest{testConfig};
 
     underTest.addClause({});
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::FALSE);
 }
 
 TEST(SolverIntegration, CDCLSatSolver_problemWithNoClausesIsTriviallySatisfiable) {
-    CDCLSatSolver<>::Configuration testConfig;
+    LegacyCDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
-    CDCLSatSolver<> underTest{testConfig};
+    LegacyCDCLSatSolver<> underTest{testConfig};
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::TRUE);
 }
 
 TEST(SolverIntegration, CDCLSatSolver_problemConsistingOfUnitClauseIsSatisfiable) {
-    CDCLSatSolver<>::Configuration testConfig;
+    LegacyCDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
 
-    CDCLSatSolver<> underTest{testConfig};
+    LegacyCDCLSatSolver<> underTest{testConfig};
     underTest.addClause({1_Lit});
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::TRUE);
 }
 
 TEST(SolverIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsatisfiable) {
-    CDCLSatSolver<>::Configuration testConfig;
+    LegacyCDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
 
-    CDCLSatSolver<> underTest{testConfig};
+    LegacyCDCLSatSolver<> underTest{testConfig};
     underTest.addClause({1_Lit});
     underTest.addClause({~1_Lit});
     EXPECT_EQ(underTest.solve({}).isSatisfiable, TBools::FALSE);
@@ -71,9 +71,9 @@ TEST(SolverIntegration, CDCLSatSolver_rule110_reachable) {
     Rule110PredecessorStateProblem problem{"xx1xx", "x1xxx", 7};
     auto rule110Encoding = problem.getCNFEncoding();
 
-    CDCLSatSolver<>::Configuration testConfig;
+    LegacyCDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
-    CDCLSatSolver<> underTest{testConfig};
+    LegacyCDCLSatSolver<> underTest{testConfig};
 
     for (auto& clause : rule110Encoding.cnfProblem.getClauses()) {
         underTest.addClause(clause);
@@ -90,9 +90,9 @@ TEST(SolverIntegration, CDCLSatSolver_rule110_unreachable) {
     Rule110PredecessorStateProblem problem{"1x1x1", "01010", 7};
     auto rule110Encoding = problem.getCNFEncoding();
 
-    CDCLSatSolver<>::Configuration testConfig;
+    LegacyCDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
-    CDCLSatSolver<> underTest{testConfig};
+    LegacyCDCLSatSolver<> underTest{testConfig};
 
     for (auto& clause : rule110Encoding.cnfProblem.getClauses()) {
         underTest.addClause(clause);
@@ -106,9 +106,9 @@ TEST(SolverIntegration, CDCLSatSolver_rule110_incremental) {
     Rule110PredecessorStateProblem problem{"xxxxxxxx", "11010111", 6};
     auto rule110Encoding = problem.getCNFEncoding();
 
-    CDCLSatSolver<>::Configuration testConfig;
+    LegacyCDCLSatSolver<>::Configuration testConfig;
     testConfig.clauseMemoryLimit = 1048576ULL;
-    CDCLSatSolver<> underTest{testConfig};
+    LegacyCDCLSatSolver<> underTest{testConfig};
     underTest.addProblem(rule110Encoding.cnfProblem);
 
     auto& inputs = rule110Encoding.freeInputs;

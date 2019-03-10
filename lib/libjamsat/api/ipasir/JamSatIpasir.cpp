@@ -54,7 +54,7 @@ CNFLit ipasirLitToCNFLit(int ipasirLit) noexcept {
 
 class IPASIRContext {
 public:
-    using SolverType = CDCLSatSolver<>;
+    using SolverType = LegacyCDCLSatSolver<>;
 
     struct IPASIRKillThreadContext {
         std::mutex m_lock;
@@ -247,7 +247,7 @@ public:
 private:
     // Shutdown flag for defensive programming:
     typename SolverType::Configuration m_config;
-    std::unique_ptr<CDCLSatSolver<>> m_solver;
+    std::unique_ptr<LegacyCDCLSatSolver<>> m_solver;
     CNFClause m_clauseAddBuffer;
     std::vector<CNFLit> m_assumptionBuffer;
     typename SolverType::SolvingResult m_result;
