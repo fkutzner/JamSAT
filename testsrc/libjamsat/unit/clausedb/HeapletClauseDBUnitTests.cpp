@@ -290,7 +290,7 @@ TEST(UnitClauseDB, HeapletClauseDBThrowsBadAllocWhenRetainIsOutOfMemory) {
 }
 
 TEST(UnitClauseDB, HeapletClauseDBContainsCorrectClausesAfterRetain) {
-    HeapletClauseDB<Clause> underTest{64ull, 8192ull};
+    HeapletClauseDB<Clause> underTest{96ull, 8192ull};
     std::vector<Clause*> clauses{&underTest.allocate(4),
                                  &underTest.allocate(3),
                                  &underTest.allocate(10),
