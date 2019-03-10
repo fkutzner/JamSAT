@@ -1,4 +1,4 @@
-/* Copyright (c) 2017,2018 Felix Kutzner (github.com/fkutzner)
+/* Copyright (c) 2017, 2018, 2019 Felix Kutzner (github.com/fkutzner)
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,8 @@
  other dealings in this Software without prior written authorization.
 
 */
+
+// Note: This CDCL solver will be replaced by a new CDCL implementation.
 
 #pragma once
 

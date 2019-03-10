@@ -26,7 +26,7 @@
 
 #include <gtest/gtest.h>
 
-#include <libjamsat/solver/CDCLSatSolver.h>
+#include <libjamsat/solver/LegacyCDCLSatSolver.h>
 #include <toolbox/cnfgenerators/Rule110.h>
 #include <toolbox/testutils/Minisat.h>
 

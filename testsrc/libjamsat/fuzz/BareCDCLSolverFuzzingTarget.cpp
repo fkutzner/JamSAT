@@ -25,7 +25,7 @@
 */
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
-#include <libjamsat/solver/CDCLSatSolver.h>
+#include <libjamsat/solver/LegacyCDCLSatSolver.h>
 
 #include <toolbox/fuzz/FuzzingEntryPoint.h>
 #include <toolbox/testutils/Minisat.h>

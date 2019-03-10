@@ -26,7 +26,7 @@
 
 #include <libjamsat/JamSatIpasir.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
-#include <libjamsat/solver/CDCLSatSolver.h>
+#include <libjamsat/solver/LegacyCDCLSatSolver.h>
 #include <libjamsat/utils/Assert.h>
 
 #include <cmath>
