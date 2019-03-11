@@ -28,6 +28,4 @@ add_jamsat_core_integrationtest_library(jstest.libjamsat.integration.solver
   CDCLSatSolverIntegrationTests.cpp
   HeapClauseDB.h
   HeapClauseDBTests.cpp
-  HeapletClauseDBIntegrationTests.cpp
-  ClauseDBReductionIntegrationTests.cpp
 )

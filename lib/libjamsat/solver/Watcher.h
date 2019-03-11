@@ -180,10 +180,6 @@ private:
 public:
     using WatcherT = Watcher<ClauseT>;
 
-    using WatcherIterator =
-        FlatteningIterator<typename BoundedMap<CNFLit, WatcherList>::const_iterator>;
-    using AllWatchersRange = boost::iterator_range<WatcherIterator>;
-
     using BlockerMapT = BlockerMap<ClauseT>;
 
     explicit Watchers(CNFVar maxVar) : m_maxVar(maxVar), m_watchers(getMaxLit(maxVar)) {}
@@ -206,11 +202,6 @@ public:
             m_watchers[CNFLit{CNFVar{i}, CNFSign::NEGATIVE}].clear();
             m_watchers[CNFLit{CNFVar{i}, CNFSign::POSITIVE}].clear();
         }
-    }
-
-    AllWatchersRange getWatchersInTraversalOrder() const noexcept {
-        auto watcherLists = m_watchers.values();
-        return {WatcherIterator{watcherLists.begin(), watcherLists.end()}, WatcherIterator{}};
     }
 
     BlockerMapT getBlockerMap() const noexcept { return BlockerMap<ClauseT>{m_watchers}; }

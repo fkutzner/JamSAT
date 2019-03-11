@@ -26,5 +26,4 @@ add_jamsat_core_library(libjamsat.clausedb
   Clause.cpp
   Clause.h
   IterableClauseDB.h
-  HeapletClauseDB.h
 )

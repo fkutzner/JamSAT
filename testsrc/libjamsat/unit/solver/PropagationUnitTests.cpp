@@ -306,54 +306,6 @@ TEST(UnitSolver, propagateAfterIncreasingMaximumVariable) {
     EXPECT_EQ(assignments.getAssignment(CNFVar{6}), TBools::TRUE);
 }
 
-TEST(UnitSolver, propagationClauseRangeEmptyWhenNoClausesAdded) {
-    TestAssignmentProvider assignments;
-    Propagation<TestAssignmentProvider> underTest(CNFVar{5}, assignments);
-    auto clauses = underTest.getClausesInPropagationOrder();
-    EXPECT_TRUE(clauses.begin() == clauses.end());
-}
-
-TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForNonBinaryClauses) {
-    TrivialClause c1{2_Lit, 10_Lit, 5_Lit};
-    TrivialClause c2{~0_Lit, ~10_Lit, 5_Lit};
-    TrivialClause c3{1_Lit, ~11_Lit, 5_Lit};
-
-    TestAssignmentProvider assignments;
-    Propagation<TestAssignmentProvider> underTest(CNFVar{15}, assignments);
-    underTest.registerClause(c1);
-    underTest.registerClause(c2);
-    underTest.registerClause(c3);
-
-    auto clauses = underTest.getClausesInPropagationOrder();
-    // Note: the concrete ordering of clauses is a "hidden" implementation detail because
-    // it depends on implementation details of the Watcher implementation.
-    expectRangeElementsSequencedEqual(clauses,
-                                      std::vector<TrivialClause*>{&c2, &c3, &c1, &c2, &c1, &c3});
-}
-
-TEST(UnitSolver, propagationClauseRangeHasCorrectOrderForMixedNonBinaryAndBinaryClauses) {
-    TrivialClause c1{2_Lit, 10_Lit, 5_Lit};
-    TrivialClause c2{~0_Lit, ~10_Lit, 5_Lit};
-    TrivialClause c3{1_Lit, ~11_Lit, 5_Lit};
-
-    TrivialClause c4{1_Lit, ~11_Lit};
-    TrivialClause c5{2_Lit, ~10_Lit};
-
-    TestAssignmentProvider assignments;
-    Propagation<TestAssignmentProvider> underTest(CNFVar{15}, assignments);
-    underTest.registerClause(c1);
-    underTest.registerClause(c2);
-    underTest.registerClause(c3);
-    underTest.registerClause(c4);
-    underTest.registerClause(c5);
-
-    auto clauses = underTest.getClausesInPropagationOrder();
-    // Note: the concrete ordering of clauses is a "hidden" implementation detail because
-    // it depends on implementation details of the Watcher implementation.
-    expectRangeElementsSequencedEqual(
-        clauses, std::vector<TrivialClause*>{&c2, &c3, &c1, &c2, &c1, &c3, &c4, &c5, &c5, &c4});
-}
-
 TEST(UnitSolver, propagationDetectsAssignmentReasonClause) {
     CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
     CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
@@ -383,27 +335,6 @@ TEST(UnitSolver, propagationDetectsAssignmentReasonClause) {
     EXPECT_FALSE(underTest.isAssignmentReason(clause2, assignments));
 }
 
-TEST(UnitSolver, replacementOfReasonClauseInPropagationSucceeds) {
-    CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
-    CNFLit lit2{CNFVar{2}, CNFSign::NEGATIVE};
-    CNFLit lit3{CNFVar{3}, CNFSign::POSITIVE};
-    TrivialClause clause1{lit1, lit2, lit3};
-
-    TestAssignmentProvider assignments;
-
-    CNFVar maxVar{5};
-    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
-    underTest.registerClause(clause1);
-
-    assignments.addAssignment(~lit2);
-    underTest.propagateUntilFixpoint(~lit2);
-    assignments.addAssignment(~lit1);
-    underTest.propagateUntilFixpoint(~lit1);
-
-    TrivialClause clause1Replacement = clause1;
-    underTest.updateAssignmentReason(clause1, clause1Replacement);
-    EXPECT_EQ(underTest.getAssignmentReason(CNFVar{3}), &clause1Replacement);
-}
 
 namespace {
 void test_clearClausesInPropagation() {
@@ -450,56 +381,6 @@ TEST(UnitSolver, clearClausesInPropagation_withReasonsKept) {
     test_clearClausesInPropagation();
 }
 
-namespace {
-enum class SubstitutionClauseReinsertionTestMode { TEST_NO_PROPAGATION, TEST_PRESENCE };
-
-void substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode mode) {
-    using PropagationTy = Propagation<TestAssignmentProvider>;
-
-    CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};
-    CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};
-    CNFLit lit3{CNFVar{3}, CNFSign::NEGATIVE};
-    CNFLit lit4{CNFVar{4}, CNFSign::POSITIVE};
-    TrivialClause clause1{lit2, lit1, lit3, lit4};
-    TrivialClause clause2{lit1, lit2, ~lit4};
-
-    TestAssignmentProvider assignments;
-    CNFVar maxVar{6};
-    PropagationTy underTest(maxVar, assignments);
-
-    assignments.addAssignment(lit4);
-    assignments.addAssignment(~lit2);
-    underTest.registerClause(clause1);
-    underTest.registerClause(clause2);
-
-    // clause2 should have forced the assignment of lit1:
-    ASSERT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBools::TRUE);
-
-    // Simulate backtracking. Later, it is checked that lit1 has no forced assignment.
-    assignments.popLiteral();
-    underTest.clear();
-    underTest.registerEquivalentSubstitutingClause(clause2);
-
-    if (mode == SubstitutionClauseReinsertionTestMode::TEST_NO_PROPAGATION) {
-        EXPECT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBools::INDETERMINATE);
-        return;
-    }
-
-    ASSERT_EQ(assignments.getAssignment(CNFVar{lit1.getVariable()}), TBools::INDETERMINATE);
-    // Test that the clause is present: provoke a conflict
-    assignments.addAssignment(~lit1);
-    auto result = underTest.propagateUntilFixpoint(~lit1);
-    EXPECT_EQ(result, &clause2);
-}
-}
-
-TEST(UnitSolver, reregisteringEquivalentClauseDoesNotCausePropagation) {
-    substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode::TEST_NO_PROPAGATION);
-}
-
-TEST(UnitSolver, clausesArePresentAfterReregistration) {
-    substitutionClauseReinsertionTest(SubstitutionClauseReinsertionTestMode::TEST_PRESENCE);
-}
 
 TEST(UnitSolver, binaryClausesCanBeQueriedInPropagation) {
     CNFLit lit1{CNFVar{1}, CNFSign::POSITIVE};

@@ -82,17 +82,8 @@ public:
 private:
     using WatcherType = detail_propagation::Watcher<Clause>;
     using WatchersType = detail_propagation::Watchers<Clause>;
-    using WatchersRangeType = typename WatchersType::AllWatchersRange;
-
-    using PartialClauseRangeType = decltype(boost::adaptors::transform(
-        std::declval<WatchersRangeType>(),
-        std::declval<std::function<const Clause*(const WatcherType&)>>()));
-
-    using ClauseRangeType = decltype(boost::range::join(std::declval<PartialClauseRangeType>(),
-                                                        std::declval<PartialClauseRangeType>()));
 
 public:
-    using ClauseRange = ClauseRangeType;
     using BinariesMap = typename WatchersType::BlockerMapT;
 
     /**
@@ -124,26 +115,6 @@ public:
      */
     auto registerClause(Clause& clause) -> Clause*;
 
-
-    /**
-     * \brief Re-registers a clause with the propagation system.
-     *
-     * This method may only be called if the following conditions are met:
-     *
-     * (1) `clear()` has been invoked
-     * (2) Neither `propagate()` nor `propagateToFixpoint()` has been invoked since the
-     *     last invocation of `clear()`
-     * (3) During the last call to `clear()`, a clause `C` has been removed from
-     *     the propagation system with `C` containing exactly the literals contained
-     *     in `clause`, in the same order.
-     *
-     * No assignments are propagated.
-     *
-     * Typical usage: re-register clauses after relocation during clause database cleanup.
-     *
-     * \param clause    The clause to be inserted.
-     */
-    void registerEquivalentSubstitutingClause(Clause& clause);
 
     /**
      * \brief Unregisters all clauses from the propagation system.
@@ -224,16 +195,6 @@ public:
 
 
     /**
-     * \brief Returns a range of clause pointers in order of propagation.
-     *
-     * For pointers c1, c2 in the returned range, it holds that during the next propagation of a
-     * fact, if both *c1 and *c2 are accessed, *c1 is accessed before *c2.
-     *
-     * \returns A range of clause pointers as described above.
-     */
-    auto getClausesInPropagationOrder() const noexcept -> ClauseRange;
-
-    /**
      * \brief Returns a map representing the binary clauses registered with the
      * propagation system.
      *
@@ -260,18 +221,6 @@ public:
     auto isAssignmentReason(const Clause& clause, const DecisionLevelProvider& dlProvider) const
         noexcept -> bool;
 
-    /**
-     * \brief Updates the location of an assignment reason clause.
-     *
-     * This method replaces the assignment reason clause for the variable assignment forced by
-     * \p oldClause by the clause \p newClause. \p newClause must be equal to \p oldClause
-     * (including the ordering of the literals within the clauses). After completion of this
-     * method, \p oldClause is no longer referenced by the propagation system.
-     *
-     * \param oldClause     An assignment reason clause.
-     * \param newClause     The replacement for \p oldClause, with oldClause == newClause.
-     */
-    void updateAssignmentReason(const Clause& oldClause, const Clause& newClause) noexcept;
 
     /**
      * \brief Returns the amount of assignments which have been placed on
@@ -400,11 +349,6 @@ auto Propagation<AssignmentProvider>::registerClause(Clause& clause) -> Clause* 
     return registerClause(clause, true);
 }
 
-template <class AssignmentProvider>
-void Propagation<AssignmentProvider>::registerEquivalentSubstitutingClause(Clause& clause) {
-    // Register with auto-propagation disabled
-    registerClause(clause, false);
-}
 
 template <class AssignmentProvider>
 auto Propagation<AssignmentProvider>::getAssignmentReason(CNFVar variable) const noexcept
@@ -627,20 +571,6 @@ void Propagation<AssignmentProvider>::increaseMaxVarTo(CNFVar newMaxVar) {
 }
 
 template <class AssignmentProvider>
-auto Propagation<AssignmentProvider>::getClausesInPropagationOrder() const noexcept -> ClauseRange {
-    std::function<const Clause*(const WatcherType&)> trans = [](const WatcherType& w) {
-        return &w.getClause();
-    };
-
-    const auto regularClauses =
-        boost::adaptors::transform(m_watchers.getWatchersInTraversalOrder(), trans);
-    const auto binaryClauses =
-        boost::adaptors::transform(m_binaryWatchers.getWatchersInTraversalOrder(), trans);
-
-    return boost::range::join(regularClauses, binaryClauses);
-}
-
-template <class AssignmentProvider>
 template <typename DecisionLevelProvider>
 auto Propagation<AssignmentProvider>::isAssignmentReason(
     const Clause& clause, const DecisionLevelProvider& dlProvider) const noexcept -> bool {
@@ -659,17 +589,6 @@ auto Propagation<AssignmentProvider>::isAssignmentReason(
     return false;
 }
 
-template <class AssignmentProvider>
-void Propagation<AssignmentProvider>::updateAssignmentReason(const Clause& oldClause,
-                                                             const Clause& newClause) noexcept {
-    // JAM_EXPENSIVE_ASSERT(oldClause == newClause, "Arguments oldClause and newClause must be
-    // equal");
-    for (auto var : {newClause[0].getVariable(), newClause[1].getVariable()}) {
-        if (m_assignmentProvider.getAssignmentReason(var) == &oldClause) {
-            m_assignmentProvider.setAssignmentReason(var, &newClause);
-        }
-    }
-}
 
 template <class AssignmentProvider>
 auto Propagation<AssignmentProvider>::getBinariesMap() const noexcept -> BinariesMap {

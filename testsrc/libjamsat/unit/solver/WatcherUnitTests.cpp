@@ -267,49 +267,6 @@ TEST(UnitSolver, watchersMaxVarCanBeIncreased) {
     EXPECT_TRUE(postAddWatchersFor20.hasFinishedTraversal());
 }
 
-TEST(UnitSolver, completeWatchersTraversalEmptyWhenNoWatchersExist) {
-    TestWatchers underTest{CNFVar{4}};
-    auto watcherRange = underTest.getWatchersInTraversalOrder();
-    EXPECT_TRUE(watcherRange.begin() == watcherRange.end());
-}
-
-TEST(UnitSolver, watchersAllOccurInCompleteWatchersTraversal) {
-    std::vector<TrivialClause> clauses = {
-        {0_Lit, 1_Lit},
-        {0_Lit, 2_Lit},
-        {1_Lit, 3_Lit},
-        {2_Lit, 1_Lit},
-    };
-
-    std::vector<TestWatcher> watchers;
-    for (auto& clause : clauses) {
-        watchers.emplace_back(clause, clause[1]);
-        watchers.emplace_back(clause, clause[0]);
-    }
-
-    TestWatchers underTest{CNFVar{10}};
-    for (decltype(watchers)::size_type i = 0; i < watchers.size(); i += 2) {
-        underTest.addWatcher(clauses[i / 2][0], watchers[i]);
-        underTest.addWatcher(clauses[i / 2][1], watchers[i + 1]);
-    }
-
-    std::vector<TestWatcher> expected;
-    // The concrete ordering of the watcher sequences is deliberately omitted from the Watcher
-    // interface's documentation. Thus, this test depends on a "deeper" implementation detail and
-    // will need to be adjusted if the ordering mechanism of the watchers is changed.
-    for (CNFVar i = CNFVar{0}; i <= CNFVar{10}; i = nextCNFVar(i)) {
-        for (CNFSign s : {CNFSign::NEGATIVE, CNFSign::POSITIVE}) {
-            auto traversal = underTest.getWatchers(CNFLit{i, s});
-            while (!traversal.hasFinishedTraversal()) {
-                expected.push_back(*traversal);
-                ++traversal;
-            }
-        }
-    }
-
-    auto watcherRange = underTest.getWatchersInTraversalOrder();
-    expectRangeElementsSequencedEqual(watcherRange, expected);
-}
 
 TEST(UnitSolver, binaryWatchersOccurInBlockerMap) {
     std::vector<TrivialClause> clauses = {

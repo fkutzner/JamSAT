@@ -32,9 +32,7 @@ add_jamsat_core_library(libjamsat.solver
   LiteralBlockDistance.h
   RestartPolicies.h
   RestartPolicies.cpp
-  ClauseDBReduction.h
   ClauseDBReductionPolicies.h
-  LegacyCDCLSatSolver.h
   Statistics.h
   CDCLSatSolver.h
   CDCLSatSolver.cpp
