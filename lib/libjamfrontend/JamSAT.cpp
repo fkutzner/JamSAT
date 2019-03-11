@@ -77,6 +77,11 @@ public:
 
     auto getSolver() noexcept -> void* { return m_solver; }
 
+    IpasirRAII(IpasirRAII const& rhs) = delete;
+    auto operator=(IpasirRAII const& rhs) -> IpasirRAII& = delete;
+    IpasirRAII(IpasirRAII&& rhs) = default;
+    auto operator=(IpasirRAII&& rhs) -> IpasirRAII& = default;
+
 private:
     void* m_solver;
 };

@@ -65,6 +65,11 @@ public:
 
     auto getFile() noexcept -> gzFile { return m_file; }
 
+    GZFileResource(GZFileResource const& rhs) = delete;
+    auto operator=(GZFileResource const& rhs) -> GZFileResource& = delete;
+    GZFileResource(GZFileResource&& rhs) = default;
+    auto operator=(GZFileResource&& rhs) -> GZFileResource& = default;
+
 private:
     gzFile m_file;
 };

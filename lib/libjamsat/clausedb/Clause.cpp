@@ -55,4 +55,5 @@ std::unique_ptr<Clause> createHeapClause(Clause::size_type size) {
 
     return std::unique_ptr<Clause>(result);
 }
+
 }

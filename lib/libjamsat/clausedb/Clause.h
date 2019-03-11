@@ -252,6 +252,8 @@ public:
     bool operator==(Clause const& rhs) const noexcept;
     bool operator!=(Clause const& rhs) const noexcept;
 
+    ~Clause() = default;
+
 private:
     /**
      * \brief Constructs a clause object of the given size.

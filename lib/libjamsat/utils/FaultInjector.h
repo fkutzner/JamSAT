@@ -130,6 +130,11 @@ public:
      */
     ~FaultInjectorResetRAII() noexcept;
 
+    FaultInjectorResetRAII(FaultInjectorResetRAII const& rhs) = delete;
+    auto operator=(FaultInjectorResetRAII const& rhs) -> FaultInjectorResetRAII& = delete;
+    FaultInjectorResetRAII(FaultInjectorResetRAII&& rhs) = default;
+    auto operator=(FaultInjectorResetRAII&& rhs) -> FaultInjectorResetRAII& = default;
+
 private:
     std::unordered_set<std::string> m_enabledFaults;
 };
