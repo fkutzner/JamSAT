@@ -26,8 +26,6 @@
 
 #include "Timeout.h"
 
-#include <libjamsat/JamSatIpasir.h>
-
 namespace jamsat {
 
 namespace {
@@ -58,9 +56,8 @@ auto ipasirTimeoutCallback(void* cookie) -> int {
 }
 }
 
-void configureTimeout(void* ipasirSolver, std::chrono::seconds timeout) noexcept {
+void configureTimeout(IpasirSolver& ipasirSolver, std::chrono::seconds timeout) noexcept {
     timeoutContext = TimeoutContext{timeout};
-    ipasir_set_terminate(
-        ipasirSolver, reinterpret_cast<void*>(&timeoutContext), ipasirTimeoutCallback);
+    ipasirSolver.setTerminateFn(reinterpret_cast<void*>(&timeoutContext), ipasirTimeoutCallback);
 }
 }

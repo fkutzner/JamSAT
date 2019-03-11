@@ -26,14 +26,15 @@
 
 #include <gtest/gtest.h>
 
+#include <libjamfrontend/IpasirSolver.h>
 #include <libjamfrontend/Parser.h>
-#include <libjamfrontend/ipasirmock/IpasirMock.h>
-#include <libjamsat/JamSatIpasir.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 // TODO: test the parser more thoroughly, esp. chunking
 
@@ -45,16 +46,37 @@ auto fileExists(std::string const& file) -> bool {
     return static_cast<bool>(stream);
 }
 
-class TestIpasirRAII {
+/**
+ * \brief An IpasirSolver implementation recording added clauses
+ */
+class ClauseRecordingIpasirSolver : public IpasirSolver {
 public:
-    TestIpasirRAII() { m_solver = ipasir_init(); }
+    ClauseRecordingIpasirSolver() {}
 
-    ~TestIpasirRAII() { ipasir_release(m_solver); }
+    virtual ~ClauseRecordingIpasirSolver() {}
 
-    auto getSolver() noexcept -> void* { return m_solver; }
+    void addClause(std::vector<int> const& literals) noexcept override {
+        m_addedClauses.push_back(literals);
+    }
+
+    auto getClauses() const noexcept -> std::vector<std::vector<int>> const& {
+        return m_addedClauses;
+    }
+
+    auto solve(std::vector<int> const&) noexcept -> Result override {
+        return Result::INDETERMINATE;
+    }
+
+    auto getValue(int) noexcept -> Value override { return Value::DONTCARE; }
+
+    auto isFailed(int) noexcept -> bool override { return false; }
+
+    void setTerminateFn(void*, int (*)(void* state)) noexcept override {}
+
+    void setLearnFn(void*, int, void (*)(void* state, int* clause)) noexcept override {}
 
 private:
-    void* m_solver;
+    std::vector<std::vector<int>> m_addedClauses;
 };
 }
 
@@ -65,98 +87,94 @@ TEST(UnitFrontendParsing, ParsingTestIsExecutedInCorrectDirectory) {
         << "BadLiteral.cnf?";
 }
 
-TEST(UnitFrontendParsing, ParsingTestIsLinkedToMockIPASIR) {
-    ASSERT_TRUE(ipasir_signature() == IPASIRTestMockSignature);
-}
-
 TEST(UnitFrontendParsing, FileContainingBadLiteralIsRejected) {
-    TestIpasirRAII mockSolver;
+    ClauseRecordingIpasirSolver recorder;
     ASSERT_TRUE(fileExists("BadLiteral.cnf"));
-    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "BadLiteral.cnf", std::cout),
-                 std::runtime_error);
+    EXPECT_THROW(jamsat::readProblem(recorder, "BadLiteral.cnf", std::cout), std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileContainingTooFewClausesIsRejected) {
-    TestIpasirRAII mockSolver;
+    ClauseRecordingIpasirSolver recorder;
     ASSERT_TRUE(fileExists("TooFewClauses.cnf"));
-    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "TooFewClauses.cnf", std::cout),
-                 std::runtime_error);
+    EXPECT_THROW(jamsat::readProblem(recorder, "TooFewClauses.cnf", std::cout), std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileContainingTooManyClausesIsRejected) {
-    TestIpasirRAII mockSolver;
+    ClauseRecordingIpasirSolver recorder;
     ASSERT_TRUE(fileExists("TooManyClauses.cnf"));
-    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "TooManyClauses.cnf", std::cout),
+    EXPECT_THROW(jamsat::readProblem(recorder, "TooManyClauses.cnf", std::cout),
                  std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileWithMissingHeaderIsRejected) {
-    TestIpasirRAII mockSolver;
+    ClauseRecordingIpasirSolver recorder;
     ASSERT_TRUE(fileExists("MissingHeader.cnf"));
-    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "MissingHeader.cnf", std::cout),
-                 std::runtime_error);
+    EXPECT_THROW(jamsat::readProblem(recorder, "MissingHeader.cnf", std::cout), std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileWithInvalidStringInHeaderIsRejected) {
-    TestIpasirRAII mockSolver;
+    ClauseRecordingIpasirSolver recorder;
     ASSERT_TRUE(fileExists("InvalidStringInHeader.cnf"));
-    EXPECT_THROW(
-        jamsat::readProblem(mockSolver.getSolver(), "InvalidStringInHeader.cnf", std::cout),
-        std::runtime_error);
+    EXPECT_THROW(jamsat::readProblem(recorder, "InvalidStringInHeader.cnf", std::cout),
+                 std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileWithLiteralOutOfRangeNegIsRejected) {
-    TestIpasirRAII mockSolver;
+    ClauseRecordingIpasirSolver recorder;
     ASSERT_TRUE(fileExists("LiteralOutOfRangeNeg.cnf"));
-    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "LiteralOutOfRangeNeg.cnf", std::cout),
+    EXPECT_THROW(jamsat::readProblem(recorder, "LiteralOutOfRangeNeg.cnf", std::cout),
                  std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileWithLiteralOutOfRangePosIsRejected) {
-    TestIpasirRAII mockSolver;
+    ClauseRecordingIpasirSolver recorder;
     ASSERT_TRUE(fileExists("LiteralOutOfRangePos.cnf"));
-    EXPECT_THROW(jamsat::readProblem(mockSolver.getSolver(), "LiteralOutOfRangePos.cnf", std::cout),
+    EXPECT_THROW(jamsat::readProblem(recorder, "LiteralOutOfRangePos.cnf", std::cout),
                  std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileWithMissingClauseCountIsRejected) {
-    TestIpasirRAII mockSolver;
+    ClauseRecordingIpasirSolver recorder;
     ASSERT_TRUE(fileExists("MissingClauseCountInHeader.cnf"));
-    EXPECT_THROW(
-        jamsat::readProblem(mockSolver.getSolver(), "MissingClauseCountInHeader.cnf", std::cout),
-        std::runtime_error);
+    EXPECT_THROW(jamsat::readProblem(recorder, "MissingClauseCountInHeader.cnf", std::cout),
+                 std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, FileWithMissingCountsInHeaderIsRejected) {
     ASSERT_TRUE(fileExists("MissingCountsInHeader.cnf"));
-    TestIpasirRAII mockSolver;
-    EXPECT_THROW(
-        jamsat::readProblem(mockSolver.getSolver(), "MissingCountsInHeader.cnf", std::cout),
-        std::runtime_error);
+    ClauseRecordingIpasirSolver recorder;
+    EXPECT_THROW(jamsat::readProblem(recorder, "MissingCountsInHeader.cnf", std::cout),
+                 std::runtime_error);
 }
 
 TEST(UnitFrontendParsing, ValidFileIsParsedCorrectly) {
-    TestIpasirRAII mockSolver;
-    jamsat::readProblem(mockSolver.getSolver(), "SmallValidProblem.cnf", std::cout);
-    std::vector<int> expected = {1, 2, 3, 0, 3, 4, 0, 1, 0};
-    EXPECT_EQ(getIPASIRMockContext(mockSolver.getSolver())->m_literals, expected);
+    ClauseRecordingIpasirSolver recorder;
+    jamsat::readProblem(recorder, "SmallValidProblem.cnf", std::cout);
+    std::vector<std::vector<int>> expected = {{1, 2, 3}, {3, 4}, {1}};
+    EXPECT_EQ(recorder.getClauses(), expected);
 }
 
 TEST(UnitFrontendParsing, ValidCompressedFileIsParsedCorrectly) {
-    TestIpasirRAII mockSolver;
-    jamsat::readProblem(mockSolver.getSolver(), "CompressedSmallValidProblem.cnf.gz", std::cout);
-    std::vector<int> expected = {1, 2, 3, 0, 3, 4, 0, 1, 0};
-    EXPECT_EQ(getIPASIRMockContext(mockSolver.getSolver())->m_literals, expected);
+    ClauseRecordingIpasirSolver recorder;
+    jamsat::readProblem(recorder, "CompressedSmallValidProblem.cnf.gz", std::cout);
+    std::vector<std::vector<int>> expected = {{1, 2, 3}, {3, 4}, {1}};
+    EXPECT_EQ(recorder.getClauses(), expected);
 }
 
 TEST(UnitFrontendParsing, ValidHugeFileIsParsedCorrectly) {
-    TestIpasirRAII mockSolver;
-    jamsat::readProblem(mockSolver.getSolver(), "LargeProblem.cnf.gz", std::cout);
+    ClauseRecordingIpasirSolver recorder;
+    jamsat::readProblem(recorder, "LargeProblem.cnf.gz", std::cout);
+
+    std::vector<int> clausesFlat;
+    for (std::vector<int> const& clause : recorder.getClauses()) {
+        std::copy(clause.begin(), clause.end(), std::back_inserter(clausesFlat));
+        clausesFlat.push_back(0);
+    }
 
     // Compare via precomputed hash value:
     int hash = 0;
     int clauseCount = 0;
-    for (auto lit : getIPASIRMockContext(mockSolver.getSolver())->m_literals) {
+    for (auto lit : clausesFlat) {
         if (lit == 0) {
             ++clauseCount;
             hash += 27;

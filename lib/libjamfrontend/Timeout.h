@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include "IpasirSolver.h"
+
 #include <chrono>
 
 namespace jamsat {
@@ -38,5 +40,5 @@ namespace jamsat {
  *                          after \p timeout seconds.
  * \param timeout           The timeout.
  */
-void configureTimeout(void* ipasirSolver, std::chrono::seconds timeout) noexcept;
+void configureTimeout(IpasirSolver& ipasirSolver, std::chrono::seconds timeout) noexcept;
 }

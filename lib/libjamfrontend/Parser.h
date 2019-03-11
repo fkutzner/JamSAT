@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include "IpasirSolver.h"
+
 #include <stdexcept>
 #include <string>
 
@@ -42,7 +44,7 @@ public:
  *
  * \ingroup JamSAT_Frontend
  *
- * \param[in] solver                The IPASIR solver receiving the problem.
+ * \param[in,out] solver            The IPASIR solver receiving the problem.
  * \param[in] location              The location of the problem instance file.
  *                                  If \p location equals "-", the problem instance
  *                                  is read from the standard input.
@@ -52,5 +54,5 @@ public:
  * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file.
  */
-void readProblem(void* solver, std::string const& location, std::ostream& msgStream);
+void readProblem(IpasirSolver& solver, std::string const& location, std::ostream& msgStream);
 }

@@ -24,10 +24,10 @@
 
 */
 
+#include "IpasirSolver.h"
 #include "Options.h"
 #include "Parser.h"
 #include "Timeout.h"
-#include <libjamsat/JamSatIpasir.h>
 
 #include <cassert>
 #include <cstdio>
@@ -56,35 +56,21 @@ void printErrorMessage(std::string const& message, std::ostream& errStream) noex
     errStream << "Error: " << message << "\n";
 }
 
-auto solve(void* solver, std::ostream& outStream) noexcept -> int {
-    int result = ipasir_solve(solver);
-    assert(result == 0 || result == 10 || result == 20);
-    if (result == 0) {
-        outStream << "INDETERMINATE\n";
-    } else if (result == 10) {
+auto solve(IpasirSolver& solver, std::ostream& outStream) noexcept -> int {
+    IpasirSolver::Result result = solver.solve({});
+    switch (result) {
+    case IpasirSolver::Result::SATISFIABLE:
         outStream << "SATISFIABLE\n";
-    } else if (result == 20) {
+        return 10;
+    case IpasirSolver::Result::UNSATISFIABLE:
         outStream << "UNSATISFIABLE\n";
+        return 20;
+    default:
+    case IpasirSolver::Result::INDETERMINATE:
+        outStream << "INDETERMINATE\n";
+        return 0;
     }
-    return result;
 }
-
-class IpasirRAII {
-public:
-    IpasirRAII() { m_solver = ipasir_init(); }
-
-    ~IpasirRAII() { ipasir_release(m_solver); }
-
-    auto getSolver() noexcept -> void* { return m_solver; }
-
-    IpasirRAII(IpasirRAII const& rhs) = delete;
-    auto operator=(IpasirRAII const& rhs) -> IpasirRAII& = delete;
-    IpasirRAII(IpasirRAII&& rhs) = default;
-    auto operator=(IpasirRAII&& rhs) -> IpasirRAII& = default;
-
-private:
-    void* m_solver;
-};
 }
 
 auto jamsatMain(int argc, char** argv, std::ostream& outStream, std::ostream& errStream) noexcept
@@ -114,12 +100,12 @@ auto jamsatMain(int argc, char** argv, std::ostream& outStream, std::ostream& er
     }
 
     try {
-        IpasirRAII wrappedSolver;
+        std::unique_ptr<IpasirSolver> wrappedSolver = createIpasirSolver();
         if (options.m_timeout) {
-            configureTimeout(wrappedSolver.getSolver(), options.m_timeout.get());
+            configureTimeout(*wrappedSolver, options.m_timeout.get());
         }
-        readProblem(wrappedSolver.getSolver(), options.m_problemFilename, outStream);
-        return solve(wrappedSolver.getSolver(), outStream);
+        readProblem(*wrappedSolver, options.m_problemFilename, outStream);
+        return solve(*wrappedSolver, outStream);
     } catch (std::exception& e) {
         printErrorMessage(e.what(), errStream);
         return EXIT_FAILURE;

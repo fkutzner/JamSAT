@@ -25,7 +25,6 @@
 */
 
 #include "Parser.h"
-#include <libjamsat/JamSatIpasir.h>
 
 #include <cctype>
 #include <cerrno>
@@ -286,8 +285,9 @@ auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char>& 
  * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file.
  */
-void readClauses(void* solver, gzFile file, DIMACSHeader problemHeader) {
+void readClauses(IpasirSolver& solver, gzFile file, DIMACSHeader problemHeader) {
     std::vector<char> buffer;
+    std::vector<int> clauseBuffer;
 
     uint32_t effectiveClauses = 0;
 
@@ -328,9 +328,12 @@ void readClauses(void* solver, gzFile file, DIMACSHeader problemHeader) {
 
             if (literal == 0) {
                 ++effectiveClauses;
+                solver.addClause(clauseBuffer);
+                clauseBuffer.clear();
+            } else {
+                clauseBuffer.push_back(literal);
             }
 
-            ipasir_add(solver, static_cast<int>(literal));
             cursor = endCursor;
         }
     }
@@ -343,7 +346,7 @@ void readClauses(void* solver, gzFile file, DIMACSHeader problemHeader) {
 }
 }
 
-void readProblem(void* solver, std::string const& location, std::ostream& msgStream) {
+void readProblem(IpasirSolver& solver, std::string const& location, std::ostream& msgStream) {
     GZFileResource fileRAII{location.c_str()};
     gzFile file = fileRAII.getFile();
     DIMACSHeader problemHeader = readHeader(file);
