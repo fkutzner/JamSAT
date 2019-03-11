@@ -71,7 +71,7 @@ public:
      *
      * \param size    The stack's maximum size.
      */
-    BoundedStack(size_type size) : m_stack(size), m_currentSize(0) {}
+    explicit BoundedStack(size_type size) : m_stack(size), m_currentSize(0) {}
 
     /**
      * \brief Returns the topmost element of the stack.
@@ -123,7 +123,8 @@ public:
      */
     void push_back(const_reference item) noexcept {
         JAM_ASSERT(m_currentSize != m_stack.size(), "Exceeded stack bound");
-        m_stack[m_currentSize++] = item;
+        m_stack[m_currentSize] = item;
+        m_currentSize += 1;
     }
 
     /**

@@ -77,7 +77,7 @@ public:
      * \par Complexity
      * Worst case: `O(KIndex::getIndex(maxElement))`
      */
-    BinaryMaxHeap(K maxElement);
+    explicit BinaryMaxHeap(K maxElement);
 
     /**
      * \brief Inserts an element into the heap.

@@ -707,7 +707,6 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
 }
 
 auto CDCLSatSolverImpl::deriveLemma(ClauseT& conflictingClause) -> LemmaDerivationResult {
-    std::vector<CNFLit> m_lemmaBuffer;
     m_conflictAnalyzer.computeConflictClause(conflictingClause, m_lemmaBuffer);
     JAM_LOG_SOLVER(info, "Derived lemma " << toString(m_lemmaBuffer.begin(), m_lemmaBuffer.end()));
     optimizeLemma(m_lemmaBuffer);

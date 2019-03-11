@@ -90,9 +90,9 @@ public:
     /**
      * \brief StampMap key for Trail::DecisionLevel
      */
-    struct DecisionLevelKey {
+    class DecisionLevelKey {
+    public:
         using Type = DecisionLevel;
-
         static size_t getIndex(DecisionLevel variable) { return static_cast<size_t>(variable); }
     };
 

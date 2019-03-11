@@ -317,7 +317,8 @@ auto FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(Clause const& re
             if (m_dlProvider.getAssignmentDecisionLevel(reasonLit.getVariable()) == currentLevel) {
                 ++unresolvedCount;
             } else {
-                result[effectiveResultSize++] = reasonLit;
+                result[effectiveResultSize] = reasonLit;
+                ++effectiveResultSize;
             }
         }
     }
