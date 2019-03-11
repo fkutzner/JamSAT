@@ -26,7 +26,7 @@
 
 #include <libjamsat/JamSatIpasir.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
-#include <libjamsat/solver/LegacyCDCLSatSolver.h>
+#include <libjamsat/solver/CDCLSatSolver.h>
 #include <libjamsat/utils/Assert.h>
 
 #include <cmath>
@@ -54,11 +54,9 @@ CNFLit ipasirLitToCNFLit(int ipasirLit) noexcept {
 
 class IPASIRContext {
 public:
-    using SolverType = LegacyCDCLSatSolver<>;
-
     struct IPASIRKillThreadContext {
         std::mutex m_lock;
-        SolverType* m_solver;
+        CDCLSatSolver* m_solver;
         std::function<bool()> m_userKillCallback;
         bool m_parentIpasirContextExists;
     };
@@ -72,11 +70,10 @@ public:
             defaultMemLimit = std::numeric_limits<uintptr_t>::max();
         }
 
-        m_config.clauseMemoryLimit = defaultMemLimit;
         m_solver.reset(nullptr);
         m_clauseAddBuffer = CNFClause{};
         m_assumptionBuffer = std::vector<CNFLit>{};
-        m_result = typename SolverType::SolvingResult{};
+        m_result.reset(nullptr);
         m_killThreadContext = nullptr;
         m_failed = false;
     }
@@ -84,7 +81,7 @@ public:
     // TODO: Add a reconfigure method to the solver
     void ensureSolverExists() {
         if (!m_solver) {
-            m_solver = std::make_unique<SolverType>(m_config);
+            m_solver = createCDCLSatSolver();
             if (m_killThreadContext != nullptr) {
                 std::lock_guard<std::mutex> lock(m_killThreadContext->m_lock);
                 m_killThreadContext->m_solver = m_solver.get();
@@ -134,15 +131,15 @@ public:
             m_assumptionBuffer.clear();
             m_failedAssumptions.clear();
 
-            if (isTrue(m_result.isSatisfiable)) {
+            if (isTrue(m_result->isProblemSatisfiable())) {
                 return 10;
             }
-            if (isFalse(m_result.isSatisfiable)) {
+            if (isFalse(m_result->isProblemSatisfiable())) {
                 // Eagerly copying the failed assumptions because
                 // exceptions can't be handled in the failed() method
-                if (!m_result.failedAssumptions.empty()) {
-                    m_failedAssumptions.insert(m_result.failedAssumptions.begin(),
-                                               m_result.failedAssumptions.end());
+                if (!m_result->getFailedAssumptions().empty()) {
+                    m_failedAssumptions.insert(m_result->getFailedAssumptions().begin(),
+                                               m_result->getFailedAssumptions().end());
                 }
                 return 20;
             }
@@ -157,14 +154,15 @@ public:
         // The client may call this function only in the SAT case
         // and no function called by val() may throw ~> ignore m_failed
 
-        if (!isTrue(m_result.isSatisfiable)) {
+        if (!isTrue(m_result->isProblemSatisfiable())) {
             return 0;
         }
 
-        JAM_ASSERT(m_result.model.get() != nullptr,
-                   "Obtained SAT result, but did not produce a model");
+        JAM_ASSERT(m_result->getModel(), "Obtained SAT result, but did not produce a model");
         CNFLit internalLit = ipasirLitToCNFLit(lit);
-        TBool varAssignment = m_result.model->getAssignment(internalLit.getVariable());
+
+        auto& model = (m_result->getModel())->get();
+        TBool varAssignment = model.getAssignment(internalLit.getVariable());
 
         if (!isDeterminate(varAssignment)) {
             // "unimportant" case
@@ -245,12 +243,10 @@ public:
     }
 
 private:
-    // Shutdown flag for defensive programming:
-    typename SolverType::Configuration m_config;
-    std::unique_ptr<LegacyCDCLSatSolver<>> m_solver;
+    std::unique_ptr<CDCLSatSolver> m_solver;
     CNFClause m_clauseAddBuffer;
     std::vector<CNFLit> m_assumptionBuffer;
-    typename SolverType::SolvingResult m_result;
+    std::unique_ptr<SolvingResult> m_result;
     std::unordered_set<CNFLit> m_failedAssumptions;
 
     // If the killThreadContext object exists, it is owned by the kill-thread

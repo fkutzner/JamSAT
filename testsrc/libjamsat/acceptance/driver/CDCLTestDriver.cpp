@@ -1,5 +1,5 @@
 #include <libjamsat/cnfproblem/CNFProblem.h>
-#include <libjamsat/solver/LegacyCDCLSatSolver.h>
+#include <libjamsat/solver/CDCLSatSolver.h>
 #include <libjamsat/utils/Assert.h>
 
 #include <toolbox/testutils/Minisat.h>
@@ -7,8 +7,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-
-using SolverType = jamsat::LegacyCDCLSatSolver<>;
 
 namespace {
 void printUsage() {
@@ -82,19 +80,18 @@ int main(int argc, char** argv) {
         return getParseErrorExitValue(argv[1]);
     }
 
-    typename SolverType::Configuration config;
-    config.clauseMemoryLimit = 1048576ull * 1024ull;
-
-
-    SolverType solver{config};
-    solver.addProblem(problem);
-    auto result = solver.solve({});
+    std::unique_ptr<jamsat::CDCLSatSolver> solver = jamsat::createCDCLSatSolver();
+    solver->addProblem(problem);
+    auto result = solver->solve({});
 
     bool checkResultEnabled = isCheckingResultEnabled(argv[2]);
     if (checkResultEnabled) {
         bool verified = false;
-        if (jamsat::isTrue(result.isSatisfiable)) {
-            bool problemSatisfied = jamsat::isTrue(result.model->check(problem));
+        if (jamsat::isTrue(result->isProblemSatisfiable())) {
+            auto optModelRef = result->getModel();
+            auto& model = (*optModelRef).get();
+
+            bool problemSatisfied = jamsat::isTrue(model.check(problem));
             JAM_ASSERT(problemSatisfied,
                        "The assignment produced by the solver does not satisfy the formula");
             if (!problemSatisfied) {
@@ -104,15 +101,15 @@ int main(int argc, char** argv) {
             // satisfied => don't check again with minisat
             verified = true;
         }
-        if (!verified &&
-            checkResultWithMinisat(problem, result.isSatisfiable) == CheckMinisatResult::NO_MATCH) {
+        if (!verified && checkResultWithMinisat(problem, result->isProblemSatisfiable()) ==
+                             CheckMinisatResult::NO_MATCH) {
             return EXIT_FAILURE;
         }
     }
 
-    if (result.isSatisfiable == jamsat::TBools::TRUE) {
+    if (result->isProblemSatisfiable() == jamsat::TBools::TRUE) {
         std::cout << "Satisfiable:1" << std::endl;
-    } else if (result.isSatisfiable == jamsat::TBools::FALSE) {
+    } else if (result->isProblemSatisfiable() == jamsat::TBools::FALSE) {
         std::cout << "Satisfiable:0" << std::endl;
     } else {
         std::cout << "Satisfiable:-1" << std::endl;

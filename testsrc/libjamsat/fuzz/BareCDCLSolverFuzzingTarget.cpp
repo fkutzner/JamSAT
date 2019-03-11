@@ -25,7 +25,7 @@
 */
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
-#include <libjamsat/solver/LegacyCDCLSatSolver.h>
+#include <libjamsat/solver/CDCLSatSolver.h>
 
 #include <toolbox/fuzz/FuzzingEntryPoint.h>
 #include <toolbox/testutils/Minisat.h>
@@ -35,8 +35,6 @@
 // This file contains a fuzzing target for CNF problem parsing.
 
 namespace jamsat {
-
-using FuzzedSolver = LegacyCDCLSatSolver<>;
 
 void JamSATFuzzingEntryPoint(std::istream& fuzzerInput) {
     CNFProblem problem;
@@ -52,15 +50,13 @@ void JamSATFuzzingEntryPoint(std::istream& fuzzerInput) {
         return;
     }
 
-    FuzzedSolver::Configuration config;
-    config.clauseMemoryLimit = 1048576 * 100;
-    FuzzedSolver solver{config};
-    solver.addProblem(problem);
-    auto result = solver.solve({});
-    std::cout << (isTrue(result.isSatisfiable) ? "SAT" : "INDET-OR-UNSAT");
+    auto solver = createCDCLSatSolver();
+    solver->addProblem(problem);
+    auto result = solver->solve({});
+    std::cout << (isTrue(result->isProblemSatisfiable()) ? "SAT" : "INDET-OR-UNSAT");
 
     auto minisatResult = isSatisfiableViaMinisat(problem);
     (void)minisatResult;
-    assert(result.isSatisfiable == minisatResult);
+    assert(result->isProblemSatisfiable() == minisatResult);
 }
 }
