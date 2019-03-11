@@ -5,9 +5,11 @@ init:
 
 clone_folder: C:\projects\repos\JamSAT
 
+# Add "- x86" to the platform section to enable testing with x86.
+# Testing on x86 is currently disabled to reduce the time needed for testing on AppVeyor.
 platform:
   - x64
-  - x86
+
 
 environment:
   global:
