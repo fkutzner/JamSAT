@@ -29,6 +29,7 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <vector>
 
+#include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/OverApproximatingSet.h>
