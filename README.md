@@ -77,9 +77,9 @@ is planned, but not yet implemented.
 ## Building JamSAT
 
 The following prerequisites must be present on your system:
-* CMake (at least version 3.2.2)
+* CMake (at least version 3.12)
 * a C++ compiler with C++14 support
-* [Boost](https://www.boost.org) (at least version 1.57)
+* [Boost](https://www.boost.org) (at least version 1.59)
 * [zlib](https://github.com/madler/zlib)
 
 ### Building without tests
