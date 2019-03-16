@@ -27,6 +27,7 @@
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/simplification/SimplificationStats.h>
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/Printers.h>
 
@@ -41,33 +42,6 @@
 #endif
 
 namespace jamsat {
-/**
- * \defgroup JamSAT_Simplification_Unary  Unary-based Optimizations
- * \ingroup JamSAT_Simplification
- *
- * This submodule contains functions for strengthening or deleting
- * clauses containing literals with a fixed value.
- */
-
-/**
- * \brief Simplification statistics
- *
- * \ingroup JamSAT_Simplification
- *
- * TODO: move to extra header
- */
-struct SimplificationStats {
-    uint32_t amntClausesRemovedBySubsumption = 0;
-    uint32_t amntClausesStrengthened = 0;
-    uint32_t amntLiteralsRemovedByStrengthening = 0;
-    uint32_t amntUnariesLearnt = 0;
-};
-
-auto operator+(SimplificationStats const& lhs, SimplificationStats const& rhs) noexcept
-    -> SimplificationStats;
-auto operator+=(SimplificationStats& lhs, SimplificationStats const& rhs) noexcept
-    -> SimplificationStats&;
-
 
 /**
  * \brief Schedules all clauses subsumed by a unary clause for deletion.
@@ -161,23 +135,5 @@ auto strengthenClausesWithUnaries(OccurrenceMap& occMap,
     }
 
     return result;
-}
-
-inline auto operator+(SimplificationStats const& lhs, SimplificationStats const& rhs) noexcept
-    -> SimplificationStats {
-    SimplificationStats result;
-    result.amntClausesRemovedBySubsumption =
-        lhs.amntClausesRemovedBySubsumption + rhs.amntClausesRemovedBySubsumption;
-    result.amntClausesStrengthened = lhs.amntClausesStrengthened + rhs.amntClausesStrengthened;
-    result.amntLiteralsRemovedByStrengthening =
-        lhs.amntLiteralsRemovedByStrengthening + rhs.amntLiteralsRemovedByStrengthening;
-    result.amntUnariesLearnt = lhs.amntUnariesLearnt + rhs.amntUnariesLearnt;
-    return result;
-}
-
-inline auto operator+=(SimplificationStats& lhs, SimplificationStats const& rhs) noexcept
-    -> SimplificationStats& {
-    lhs = lhs + rhs;
-    return lhs;
 }
 }

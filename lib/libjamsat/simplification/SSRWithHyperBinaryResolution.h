@@ -26,8 +26,9 @@
 
 #pragma once
 
-#include <libjamsat/simplification/UnaryOptimizations.h>
+#include <libjamsat/simplification/SimplificationStats.h>
 #include <libjamsat/utils/ControlFlow.h>
+#include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/Printers.h>
 #include <libjamsat/utils/Truth.h>
 

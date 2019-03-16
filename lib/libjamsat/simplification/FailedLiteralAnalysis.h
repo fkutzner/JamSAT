@@ -27,7 +27,7 @@
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
-#include <libjamsat/simplification/UnaryOptimizations.h>
+#include <libjamsat/simplification/SimplificationStats.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/utils/ControlFlow.h>
@@ -127,6 +127,8 @@ private:
     typename DLProviderT::DecisionLevel m_factLevel;
     FirstUIPLearning<DLProviderT, PropagationT> m_conflictAnalyzer;
 };
+
+/********** Implementation ****************************** */
 
 template <typename DLProviderT, typename PropagationT>
 FailedLiteralAnalyzer<DLProviderT, PropagationT>::FailedLiteralAnalyzer(

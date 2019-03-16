@@ -29,6 +29,7 @@
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/simplification/FailedLiteralAnalysis.h>
 #include <libjamsat/simplification/SSRWithHyperBinaryResolution.h>
+#include <libjamsat/simplification/SimplificationStats.h>
 #include <libjamsat/simplification/UnaryOptimizations.h>
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/Casts.h>
