@@ -28,7 +28,6 @@
 
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/simplification/LightweightSimplifier.h>
-#include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/StampMap.h>
@@ -43,8 +42,7 @@
 namespace jamsat {
 using TrailT = Trail<Clause>;
 using PropagationT = Propagation<TrailT>;
-using ConflictAnalyzerT = FirstUIPLearning<TrailT, PropagationT>;
-using LightweightSimplifierT = LightweightSimplifier<PropagationT, TrailT, ConflictAnalyzerT>;
+using LightweightSimplifierT = LightweightSimplifier<PropagationT, TrailT>;
 
 class IntegrationLightweightSimplifier : public ::testing::Test {
 protected:

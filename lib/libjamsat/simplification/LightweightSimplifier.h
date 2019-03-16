@@ -71,23 +71,17 @@ namespace jamsat {
  * \tparam PropagationT         A type that is a model of the Propagation concept
  * \tparam AssignmentProviderT  A type that is a model of the AssignmentProvider
  *                              concept
- * \tparam ConflictAnalyzerT    TODO
  */
-template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+template <typename PropagationT, typename AssignmentProviderT>
 class LightweightSimplifier {
 public:
     static_assert(
         std::is_same<typename PropagationT::Clause, typename AssignmentProviderT::Clause>::value,
         "PropagationT and AssignmentProviderT must have the same Clause type");
 
-    static_assert(
-        std::is_same<typename PropagationT::Clause, typename ConflictAnalyzerT::Clause>::value,
-        "PropagationT and ConflictAnalyzerT must have the same Clause type");
-
 
     using Propagation = PropagationT;
-    using AssignmentProvider = AssignmentProviderT;
-    using ConflictAnalyzer = ConflictAnalyzerT;
+    using AssignmentProvider = typename Propagation::AssignmentProvider;
     using Clause = typename Propagation::Clause;
 
     /**
@@ -259,8 +253,8 @@ private:
     FailedLiteralAnalyzerT m_failedLitAnalyzer;
 };
 
-template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
-LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::LightweightSimplifier(
+template <typename PropagationT, typename AssignmentProviderT>
+LightweightSimplifier<PropagationT, AssignmentProviderT>::LightweightSimplifier(
     CNFVar maxVar, PropagationT& propagation, AssignmentProviderT& assignmentProvider) noexcept
   : m_propagation{propagation}
   , m_assignmentProvider{assignmentProvider}
@@ -269,9 +263,9 @@ LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::Lig
   , m_occurrenceMap{getMaxLit(m_maxVar)}
   , m_failedLitAnalyzer{m_maxVar, m_propagation, m_assignmentProvider, m_assignmentProvider, 0} {}
 
-template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+template <typename PropagationT, typename AssignmentProviderT>
 template <typename StampMapT>
-auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::simplify(
+auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
     std::vector<CNFLit>& unaryClauses,
     std::vector<Clause*> const& possiblyIrredundantClauses,
     std::vector<Clause*> const& redundantClauses,
@@ -301,9 +295,9 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     return result;
 }
 
-template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
-auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
-    eliminateFailedLiterals(std::vector<CNFLit>& unaryClauses) -> SimplificationStats {
+template <typename PropagationT, typename AssignmentProviderT>
+auto LightweightSimplifier<PropagationT, AssignmentProviderT>::eliminateFailedLiterals(
+    std::vector<CNFLit>& unaryClauses) -> SimplificationStats {
     JAM_LOG_LIGHTWEIGHTSIMP(info, "Performing full failed literal elimination");
 
     SimplificationStats result;
@@ -343,9 +337,8 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     return result;
 }
 
-template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
-void LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::increaseMaxVarTo(
-    CNFVar newMaxVar) {
+template <typename PropagationT, typename AssignmentProviderT>
+void LightweightSimplifier<PropagationT, AssignmentProviderT>::increaseMaxVarTo(CNFVar newMaxVar) {
     JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
     JAM_ASSERT(newMaxVar >= m_maxVar,
                "Argument newMaxVar must not be smaller than the current maximum variable");
@@ -354,18 +347,18 @@ void LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     m_failedLitAnalyzer.increaseMaxVarTo(newMaxVar);
 }
 
-template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
-void LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
-    updateOccurrenceMap(std::vector<Clause*> const& possiblyIrredundantClauses,
-                        std::vector<Clause*> const& redundantClauses) {
+template <typename PropagationT, typename AssignmentProviderT>
+void LightweightSimplifier<PropagationT, AssignmentProviderT>::updateOccurrenceMap(
+    std::vector<Clause*> const& possiblyIrredundantClauses,
+    std::vector<Clause*> const& redundantClauses) {
     m_occurrenceMap.clear();
     m_occurrenceMap.insert(possiblyIrredundantClauses.begin(), possiblyIrredundantClauses.end());
     m_occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
 }
 
-template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
-auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
-    runUnaryOptimizations(std::vector<CNFLit> const& unaryClauses) -> SimplificationStats {
+template <typename PropagationT, typename AssignmentProviderT>
+auto LightweightSimplifier<PropagationT, AssignmentProviderT>::runUnaryOptimizations(
+    std::vector<CNFLit> const& unaryClauses) -> SimplificationStats {
 
     SimplificationStats result;
     auto delMarker = [this](Clause* cla) { m_propagation.notifyClauseModificationAhead(*cla); };
@@ -374,9 +367,9 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     return result;
 }
 
-template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
+template <typename PropagationT, typename AssignmentProviderT>
 template <typename StampMapT>
-auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::runSSRWithHBR(
+auto LightweightSimplifier<PropagationT, AssignmentProviderT>::runSSRWithHBR(
     StampMapT& tempStamps, std::vector<CNFLit>& unaryClauses) -> SimplificationStats {
 
     SimplificationStats result;
@@ -409,12 +402,12 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
 }
 
 
-template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
-auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::
-    eliminateFailedLiteral(CNFLit failedLiteral,
-                           Clause* conflictingClause,
-                           std::vector<CNFLit>& unaries,
-                           FLEPostProcessing postProcMode) -> SimplificationStats {
+template <typename PropagationT, typename AssignmentProviderT>
+auto LightweightSimplifier<PropagationT, AssignmentProviderT>::eliminateFailedLiteral(
+    CNFLit failedLiteral,
+    Clause* conflictingClause,
+    std::vector<CNFLit>& unaries,
+    FLEPostProcessing postProcMode) -> SimplificationStats {
     auto analysis = m_failedLitAnalyzer.analyze(failedLiteral, conflictingClause);
 
     // Add the newly found unary to the unaries vector and perform subsumption/strengthening
