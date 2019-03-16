@@ -342,7 +342,10 @@ CDCLSatSolverImpl::CDCLSatSolverImpl()
   , m_statistics{}
   , m_stopRequested{false}
   , m_lemmaBuffer{}
-  , m_stamps{getMaxLit(CNFVar{0}).getRawValue()} {}
+  , m_stamps{getMaxLit(CNFVar{0}).getRawValue()} {
+    m_conflictAnalyzer.setOnSeenVariableCallback(
+        [this](CNFVar var) { m_branchingHeuristic.seenInConflict(var); });
+}
 
 CDCLSatSolverImpl::~CDCLSatSolverImpl() {}
 
