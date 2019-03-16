@@ -31,6 +31,7 @@
 #include <libjamsat/clausedb/IterableClauseDB.h>
 #include <libjamsat/proof/Model.h>
 #include <libjamsat/simplification/ClauseMinimization.h>
+#include <libjamsat/simplification/LightweightSimplifier.h>
 #include <libjamsat/solver/AssignmentAnalysis.h>
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
@@ -44,6 +45,7 @@
 #include <libjamsat/utils/StampMap.h>
 
 #include <boost/optional.hpp>
+#include <boost/range/adaptors.hpp>
 #include <boost/variant.hpp>
 
 #include <algorithm>
@@ -268,6 +270,7 @@ private:
     Propagation<Trail<ClauseT>> m_propagator;
     VSIDSBranchingHeuristic<Trail<ClauseT>> m_branchingHeuristic;
     FirstUIPLearning<Trail<ClauseT>, Trail<ClauseT>> m_conflictAnalyzer;
+    LightweightSimplifier<Propagation<Trail<ClauseT>>, Trail<ClauseT>> m_simplifier;
 
     // Clause storage
     IterableClauseDB<ClauseT> m_clauseDB;
@@ -326,6 +329,7 @@ CDCLSatSolverImpl::CDCLSatSolverImpl()
   , m_propagator{CNFVar{0}, m_trail}
   , m_branchingHeuristic{CNFVar{0}, m_trail}
   , m_conflictAnalyzer{CNFVar{0}, m_trail, m_trail}
+  , m_simplifier{CNFVar{0}, m_propagator, m_trail}
   , m_clauseDB{1048576}
   , m_facts{}
   , m_lemmas{}
@@ -466,6 +470,7 @@ void CDCLSatSolverImpl::resizeSubsystems() {
     m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
     m_stamps.increaseSizeTo(getMaxLit(m_maxVar).getRawValue());
     m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
+    m_simplifier.increaseMaxVarTo(m_maxVar);
 }
 
 
@@ -495,7 +500,26 @@ void CDCLSatSolverImpl::initializeBranchingHeuristic(std::vector<CNFLit> const& 
 
 
 void CDCLSatSolverImpl::trySimplify() {
-    // TODO: simplify problem here
+    JAM_ASSERT(m_trail.getNumberOfAssignments() == 0,
+               "Illegally attempted to simplify the problem in-flight");
+
+    if (m_statistics.getCurrentEra().m_restartCount % 1000 != 0) {
+        return;
+    }
+
+    JAM_LOG_SOLVER(info, "Starting simplification");
+
+    auto problemClausePtrs =
+        boost::adaptors::transform(m_clauseDB.getClauses(), [](Clause& c) { return &c; });
+    SimplificationStats simpStats = m_simplifier.simplify(m_facts, problemClausePtrs, m_stamps);
+
+    if (simpStats.amntClausesStrengthened != 0 || simpStats.amntClausesRemovedBySubsumption != 0) {
+        m_clauseDB.compress();
+        synchronizeSubsystemsWithClauseDB();
+    }
+
+    m_statistics.registerSimplification(simpStats);
+    JAM_LOG_SOLVER(info, "Finished simplification");
 }
 
 
@@ -506,6 +530,8 @@ void CDCLSatSolverImpl::tryReduceClauseDB() {
         return;
     }
 
+    JAM_LOG_SOLVER(info, "Starting clause database reduction");
+
     size_t knownGood = m_amntBinariesLearnt;
     auto beginDel = m_clauseDBReductionPolicy.getClausesMarkedForDeletion(knownGood);
     m_statistics.registerLemmaDeletion(std::distance(beginDel, m_lemmas.end()));
@@ -515,6 +541,8 @@ void CDCLSatSolverImpl::tryReduceClauseDB() {
 
     m_clauseDB.compress();
     synchronizeSubsystemsWithClauseDB();
+
+    JAM_LOG_SOLVER(info, "Finished clause database reduction");
 }
 
 
