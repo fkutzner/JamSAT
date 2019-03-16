@@ -24,7 +24,7 @@
 
 */
 
-#include <libjamsat/solver/CDCLSatSolver.h>
+#include <libjamsat/drivers/CDCLSatSolver.h>
 
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/clausedb/Clause.h>

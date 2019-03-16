@@ -54,6 +54,7 @@ endfunction()
 
 add_subdirectory(concepts)
 add_subdirectory(cnfproblem)
+add_subdirectory(drivers)
 add_subdirectory(utils)
 add_subdirectory(clausedb)
 add_subdirectory(solver)

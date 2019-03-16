@@ -38,9 +38,10 @@ function(add_jamsat_core_integrationtest_library TARGET)
   target_include_directories(${TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/testsrc)
 endfunction()
 
-add_subdirectory(solver)
 add_subdirectory(api)
+add_subdirectory(drivers)
 add_subdirectory(simplification)
+add_subdirectory(solver)
 
 # Collect the jstest.libjamsat.integration.* object libraries defined in "our" subdirectories:
 nm_collect_objs_from_subdirectories(COLLECT_IN libjamsat-integrationtest-objects

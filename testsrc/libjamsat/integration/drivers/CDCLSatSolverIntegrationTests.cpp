@@ -26,37 +26,37 @@
 
 #include <gtest/gtest.h>
 
-#include <libjamsat/solver/CDCLSatSolver.h>
+#include <libjamsat/drivers/CDCLSatSolver.h>
 #include <toolbox/cnfgenerators/Rule110.h>
 #include <toolbox/testutils/Minisat.h>
 
 namespace jamsat {
 
-TEST(SolverIntegration, CDCLSatSolver_problemWithEmptyClauseIsUnsatisfiable) {
+TEST(DriversIntegration, CDCLSatSolver_problemWithEmptyClauseIsUnsatisfiable) {
     std::unique_ptr<CDCLSatSolver> underTest = createCDCLSatSolver();
     underTest->addClause({});
     EXPECT_EQ(underTest->solve({})->isProblemSatisfiable(), TBools::FALSE);
 }
 
-TEST(SolverIntegration, CDCLSatSolver_problemWithNoClausesIsTriviallySatisfiable) {
+TEST(DriversIntegration, CDCLSatSolver_problemWithNoClausesIsTriviallySatisfiable) {
     std::unique_ptr<CDCLSatSolver> underTest = createCDCLSatSolver();
     EXPECT_EQ(underTest->solve({})->isProblemSatisfiable(), TBools::TRUE);
 }
 
-TEST(SolverIntegration, CDCLSatSolver_problemConsistingOfUnitClauseIsSatisfiable) {
+TEST(DriversIntegration, CDCLSatSolver_problemConsistingOfUnitClauseIsSatisfiable) {
     std::unique_ptr<CDCLSatSolver> underTest = createCDCLSatSolver();
     underTest->addClause({1_Lit});
     EXPECT_EQ(underTest->solve({})->isProblemSatisfiable(), TBools::TRUE);
 }
 
-TEST(SolverIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsatisfiable) {
+TEST(DriversIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsatisfiable) {
     std::unique_ptr<CDCLSatSolver> underTest = createCDCLSatSolver();
     underTest->addClause({1_Lit});
     underTest->addClause({~1_Lit});
     EXPECT_EQ(underTest->solve({})->isProblemSatisfiable(), TBools::FALSE);
 }
 
-TEST(SolverIntegration, CDCLSatSolver_rule110_reachable) {
+TEST(DriversIntegration, CDCLSatSolver_rule110_reachable) {
     Rule110PredecessorStateProblem problem{"xx1xx", "x1xxx", 7};
     auto rule110Encoding = problem.getCNFEncoding();
 
@@ -73,7 +73,7 @@ TEST(SolverIntegration, CDCLSatSolver_rule110_reachable) {
     // EXPECT_TRUE(isTrue(solvingResult.model->check(rule110Encoding.cnfProblem)));
 }
 
-TEST(SolverIntegration, CDCLSatSolver_rule110_unreachable) {
+TEST(DriversIntegration, CDCLSatSolver_rule110_unreachable) {
     Rule110PredecessorStateProblem problem{"1x1x1", "01010", 7};
     auto rule110Encoding = problem.getCNFEncoding();
 
@@ -87,7 +87,7 @@ TEST(SolverIntegration, CDCLSatSolver_rule110_unreachable) {
     EXPECT_EQ(underTest->solve({})->isProblemSatisfiable(), TBools::FALSE);
 }
 
-TEST(SolverIntegration, CDCLSatSolver_rule110_incremental) {
+TEST(DriversIntegration, CDCLSatSolver_rule110_incremental) {
     Rule110PredecessorStateProblem problem{"xxxxxxxx", "11010111", 6};
     auto rule110Encoding = problem.getCNFEncoding();
 
