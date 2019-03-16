@@ -27,6 +27,7 @@
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/simplification/FailedLiteralAnalysis.h>
 #include <libjamsat/simplification/SSRWithHyperBinaryResolution.h>
 #include <libjamsat/simplification/UnaryOptimizations.h>
 #include <libjamsat/utils/Assert.h>
@@ -245,7 +246,6 @@ private:
     auto eliminateFailedLiteral(CNFLit failedLiteral,
                                 Clause* conflictingClause,
                                 std::vector<CNFLit>& unaries,
-                                typename AssignmentProviderT::DecisionLevel unaryLevel,
                                 FLEPostProcessing postProcMode) -> SimplificationStats;
 
     PropagationT& m_propagation;
@@ -254,9 +254,8 @@ private:
     size_t m_lastSeenAmntUnaries;
     OccurrenceMap<Clause, ClauseDeletedQuery> m_occurrenceMap;
 
-    // Keeping a separate conflict analyzer here to avoid disturbing
-    // heuristics
-    ConflictAnalyzerT m_firstUIPAnalyzer;
+    using FailedLiteralAnalyzerT = FailedLiteralAnalyzer<AssignmentProviderT, PropagationT>;
+    FailedLiteralAnalyzerT m_failedLitAnalyzer;
 };
 
 template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
@@ -267,7 +266,7 @@ LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>::Lig
   , m_maxVar{maxVar}
   , m_lastSeenAmntUnaries{0}
   , m_occurrenceMap{getMaxLit(m_maxVar)}
-  , m_firstUIPAnalyzer{m_maxVar, m_assignmentProvider, m_propagation} {}
+  , m_failedLitAnalyzer{m_maxVar, m_propagation, m_assignmentProvider, m_assignmentProvider, 0} {}
 
 template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
 template <typename StampMapT>
@@ -325,8 +324,9 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
             }
 
             try {
+                JAM_ASSERT(currentDL == 0, "Must perform FLE on level 0");
                 result += eliminateFailedLiteral(
-                    candidate, conflictingClause, unaryClauses, currentDL, FLEPostProcessing::NONE);
+                    candidate, conflictingClause, unaryClauses, FLEPostProcessing::NONE);
                 JAM_ASSERT(
                     m_assignmentProvider.getCurrentDecisionLevel() == currentDL,
                     "eliminateFailedLiteral() should have returned to currentDL, but didn't");
@@ -350,7 +350,7 @@ void LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
                "Argument newMaxVar must not be smaller than the current maximum variable");
     m_maxVar = newMaxVar;
     m_occurrenceMap.increaseMaxElementTo(getMaxLit(newMaxVar));
-    m_firstUIPAnalyzer.increaseMaxVarTo(newMaxVar);
+    m_failedLitAnalyzer.increaseMaxVarTo(newMaxVar);
 }
 
 template <typename PropagationT, typename AssignmentProviderT, typename ConflictAnalyzerT>
@@ -390,10 +390,10 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
                 result += ssrWithHyperBinaryResolution(ssrWithHBRParams, resolveAt);
             } catch (FailedLiteralException<Clause>& e) {
                 try {
+                    JAM_ASSERT(e.getDecisionLevelToRevisit() == 0, "Must revisit level 0");
                     result += eliminateFailedLiteral(~resolveAt,
                                                      e.getConflictingClause(),
                                                      unaryClauses,
-                                                     e.getDecisionLevelToRevisit(),
                                                      FLEPostProcessing::FULL);
                 } catch (DetectedUNSATException& e) {
                     // The unaries are contradictory now, so simplifying the problem
@@ -413,77 +413,32 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT, ConflictAnalyzerT>
     eliminateFailedLiteral(CNFLit failedLiteral,
                            Clause* conflictingClause,
                            std::vector<CNFLit>& unaries,
-                           typename AssignmentProviderT::DecisionLevel unaryLevel,
                            FLEPostProcessing postProcMode) -> SimplificationStats {
-    JAM_LOG_LIGHTWEIGHTSIMP(
-        info, "Performing failed literal elimination for failed literal " << failedLiteral);
-    SimplificationStats result;
-
-    // The propagation of the assignment represented by failedLiteral resulted in a conflict.
-    // Suppose there are clauses encoding the implications failedLiteral -> x, x -> y,
-    // y -> z, y -> ~z. The solver should not only learn ~failedLiteral, but in this case
-    // also ~x - more generally, the negation of the asserting literal obtained by resolution
-    // until the first UIP.
-    //
-    // Thus:
-    std::vector<CNFLit> pseudoLemma;
-    m_firstUIPAnalyzer.computeConflictClause(*conflictingClause, pseudoLemma);
-    JAM_LOG_LIGHTWEIGHTSIMP(
-        info, "FLE pseudolemma: " << toString(pseudoLemma.begin(), pseudoLemma.end()));
-    CNFLit assertingLit = pseudoLemma[0];
-    JAM_LOG_LIGHTWEIGHTSIMP(
-        info, "Negate of asserting literal " << assertingLit << " is also a failed literal.");
-
-    // Now learn assertingLit and all its consequences:
-    m_assignmentProvider.revisitDecisionLevel(unaryLevel);
-    auto firstNewUnaryIdx = m_assignmentProvider.getNumberOfAssignments();
-    m_assignmentProvider.addAssignment(assertingLit);
-    auto newConflict = m_propagation.propagateUntilFixpoint(assertingLit);
-
-    if (newConflict) {
-        JAM_LOG_LIGHTWEIGHTSIMP(info,
-                                "Both " << assertingLit << " and " << ~assertingLit
-                                        << " are failed literals. Detected UNSAT");
-        unaries.push_back(assertingLit);
-        unaries.push_back(~assertingLit);
-        throw DetectedUNSATException{};
-    }
-
-    // If propagating assertingLit did not imply an assignment for the failed
-    // literal's variable, propagate ~failedLiteral, too - at this point, it
-    // is known that ~failedLiteral is unary.
-    if (m_assignmentProvider.getAssignment(failedLiteral) == TBools::INDETERMINATE) {
-        JAM_LOG_LIGHTWEIGHTSIMP(info,
-                                "Propagating the asserting lit did not imply an assignment "
-                                "for the failed literal's variable");
-        m_assignmentProvider.addAssignment(~failedLiteral);
-        newConflict = m_propagation.propagateUntilFixpoint(~failedLiteral);
-        if (newConflict) {
-            JAM_LOG_LIGHTWEIGHTSIMP(info,
-                                    "Both " << failedLiteral << " and " << ~failedLiteral
-                                            << " are failed literals. Detected UNSAT");
-            unaries.push_back(failedLiteral);
-            unaries.push_back(~failedLiteral);
-            throw DetectedUNSATException{};
-        }
-    }
+    auto analysis = m_failedLitAnalyzer.analyze(failedLiteral, conflictingClause);
 
     // Add the newly found unary to the unaries vector and perform subsumption/strengthening
     // with the new unaries:
-    auto newUnariesRange = m_assignmentProvider.getAssignments(firstNewUnaryIdx);
-    std::copy(newUnariesRange.begin(), newUnariesRange.end(), std::back_inserter(unaries));
-    result.amntUnariesLearnt += static_checked_cast<uint32_t>(newUnariesRange.size());
-    JAM_LOG_LIGHTWEIGHTSIMP(
-        info, "Detected new unaries " << toString(newUnariesRange.begin(), newUnariesRange.end()));
+    std::copy(analysis.newFacts.begin(), analysis.newFacts.end(), std::back_inserter(unaries));
+    if (analysis.detectedUnsat) {
+        throw DetectedUNSATException{};
+    }
 
+    SimplificationStats result = analysis.stats;
     if (postProcMode == FLEPostProcessing::FULL) {
         auto delMarker = [this](Clause* cla) { m_propagation.notifyClauseModificationAhead(*cla); };
         result += scheduleClausesSubsumedByUnariesForDeletion(
-            m_occurrenceMap, delMarker, newUnariesRange);
-        result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, newUnariesRange);
+            m_occurrenceMap, delMarker, analysis.newFacts);
+        result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, analysis.newFacts);
+    } else {
+        // Propagate the facts to keep the propagator in a consistent state:
+        for (CNFLit fact : analysis.newFacts) {
+            if (!isDeterminate(m_assignmentProvider.getAssignment(fact))) {
+                m_assignmentProvider.addAssignment(fact);
+                m_propagation.propagateUntilFixpoint(fact);
+            }
+        }
     }
-    JAM_LOG_LIGHTWEIGHTSIMP(
-        info, "Finished failed literal elimination for failed literal " << failedLiteral);
+
     return result;
 }
 }

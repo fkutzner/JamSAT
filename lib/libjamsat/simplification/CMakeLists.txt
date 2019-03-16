@@ -24,6 +24,7 @@
 
 add_jamsat_core_library(libjamsat.simplification
   Dummy.cpp
+  FailedLiteralAnalysis.h
   UnaryOptimizations.h
   ClauseMinimization.h
   SSRWithHyperBinaryResolution.h

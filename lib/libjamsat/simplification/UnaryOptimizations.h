@@ -88,7 +88,7 @@ auto operator+=(SimplificationStats& lhs, SimplificationStats const& rhs) noexce
  *                            about to be scheduled for deletion.
  * \param unaries             The list of literals contained in unary clauses.
  *
- * Before a clause `c` is deleted, `occMap(&c)` is called.
+ * Before a clause `c` is deleted, `notifyDeletionAhead(&c)` is called.
  */
 template <typename OccurrenceMap, typename ModFn, typename CNFLitRange>
 auto scheduleClausesSubsumedByUnariesForDeletion(OccurrenceMap& occMap,
