@@ -359,7 +359,7 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::eliminateFailedLi
                 JAM_ASSERT(
                     m_assignmentProvider.getCurrentDecisionLevel() == currentDL,
                     "eliminateFailedLiteral() should have returned to currentDL, but didn't");
-            } catch (DetectedUNSATException& e) {
+            } catch (DetectedUNSATException&) {
                 // The unaries are contradictory now, so simplifying the problem
                 // further would be redundant
                 return result;
@@ -415,7 +415,7 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::runSSRWithHBR(
                                                      e.getConflictingClause(),
                                                      unaryClauses,
                                                      FLEPostProcessing::FULL);
-                } catch (DetectedUNSATException& e) {
+                } catch (DetectedUNSATException&) {
                     // The unaries are contradictory now, so simplifying the problem
                     // further would be redundant
                     return result;

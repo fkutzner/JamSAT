@@ -22,6 +22,11 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
+if (NM_COMPILING_WITH_GNULIKE)
+  # To keep StatisticsUnitTests.cpp simple:
+  nm_add_compile_options(PRIVATE -Wno-unused-local-typedefs)
+endif()
+
 add_jamsat_core_unittest_library(jstest.libjamsat.unit.solver
   TrailUnitTests.cpp
   PropagationUnitTests.cpp
