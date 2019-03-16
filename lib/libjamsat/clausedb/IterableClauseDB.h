@@ -119,6 +119,7 @@ class Region {
 
 public:
     using item_type = std::remove_reference_t<ClauseT>;
+    using size_type = typename ClauseT::size_type;
 
     /**
      * \brief Initializes the region.
@@ -139,7 +140,7 @@ public:
      * \param numLiterals       The size of the clause to be allocated, in literals.
      * \returns The allocated clause, or nullptr in case the allocation failed.
      */
-    auto allocate(typename ClauseT::size_type numLiterals) noexcept -> ClauseT*;
+    auto allocate(size_type numLiterals) noexcept -> ClauseT*;
 
     /**
      * \brief Returns the amount of bytes used up by allocations.
@@ -283,7 +284,7 @@ public:
      *
      * \returns A pointer to the new clause. If allocation failed, nothing is returned.
      */
-    auto createClause(typename ClauseT::size_type size) noexcept -> boost::optional<ClauseT*>;
+    auto createClause(size_type size) noexcept -> boost::optional<ClauseT*>;
 
     /**
      * \brief Compresses the database by removing all clauses scheduled for deletion.
@@ -354,7 +355,7 @@ Region<ClauseT>::~Region() {
 }
 
 template <typename ClauseT>
-auto Region<ClauseT>::allocate(typename ClauseT::size_type numLiterals) noexcept -> ClauseT* {
+auto Region<ClauseT>::allocate(size_type numLiterals) noexcept -> ClauseT* {
     auto size_in_bytes = ClauseT::getAllocationSize(numLiterals);
 
     if (getFreeSize() < size_in_bytes) {
@@ -544,18 +545,26 @@ IterableClauseDB<ClauseT>::IterableClauseDB(size_type regionSize) noexcept
   : m_regionSize(regionSize), m_activeRegions(), m_spareRegions() {}
 
 template <typename ClauseT>
-auto IterableClauseDB<ClauseT>::createClause(typename ClauseT::size_type size) noexcept
-    -> boost::optional<ClauseT*> {
+auto IterableClauseDB<ClauseT>::createClause(size_type size) noexcept -> boost::optional<ClauseT*> {
+
+    // Check if a clause of the requested size can be constructed:
+    uintmax_t maxClauseSize = std::numeric_limits<typename ClauseT::size_type>::max();
+    auto newClauseSize = static_cast<typename ClauseT::size_type>(size);
+    if (static_cast<uintmax_t>(size) > static_cast<uintmax_t>(maxClauseSize) ||
+        ClauseT::getAllocationSize(newClauseSize) > m_regionSize) {
+        return {};
+    }
+
     try {
         Region<ClauseT>* targetRegion =
             m_activeRegions.empty() ? &createActiveRegion() : &(m_activeRegions.back());
-        ClauseT* clause = targetRegion->allocate(size);
+        ClauseT* clause = targetRegion->allocate(newClauseSize);
         if (clause) {
             return clause;
         }
 
         // Allocation failed, create new region and retry:
-        clause = createActiveRegion().allocate(size);
+        clause = createActiveRegion().allocate(newClauseSize);
         return clause != nullptr ? clause : boost::optional<ClauseT*>{};
     } catch (std::bad_alloc&) {
         return {};
