@@ -24,6 +24,14 @@
 
 */
 
+/**
+ * \file Propagation.h
+ * \brief Data structure allowing fast computation of variable assignment consequences.
+ *
+ * Caution: this code is used in the most performance-critical parts of CDCL
+ * search.
+ */
+
 #pragma once
 
 #include <boost/range.hpp>
@@ -450,6 +458,8 @@ template <class AssignmentProvider>
 template <bool propagateRedundantClauses>
 auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t& amountOfNewFacts)
     -> Clause* {
+    // Caution: this method is on the solver's hottest path.
+
     JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
     amountOfNewFacts = 0;
 

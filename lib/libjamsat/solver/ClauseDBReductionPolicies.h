@@ -24,6 +24,15 @@
 
 */
 
+/**
+ * \file ClauseDBReductionPolicies.h
+ *
+ * \brief Lemma-deletion policies for CDCL search
+ *
+ * Clause DB reduction policies are used to control the elimination of derived
+ * lemmas which are not deemed valuable enough for advancing the search.
+ */
+
 #pragma once
 
 #include <algorithm>

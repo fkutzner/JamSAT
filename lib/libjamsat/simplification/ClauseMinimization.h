@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file ClauseMinimization.h
+ * \brief Lightweight lemma minimization routines
+ */
+
 #pragma once
 
 #include <boost/range/algorithm_ext/erase.hpp>

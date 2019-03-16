@@ -37,11 +37,22 @@
 #include <memory>
 #include <vector>
 
+/**
+ * \file CDCLSatSolver.h
+ * \brief Generic interface and factories for SAT solvers using CDCL search
+ */
+
 
 namespace jamsat {
 
 /**
- * \ingroup JamSAT_Solver
+ * \defgroup JamSAT_Drivers  JamSAT CDCL drivers
+ *
+ * This module contains CDCL SAT solver classes.
+ */
+
+/**
+ * \ingroup JamSAT_Drivers
  *
  * \brief Representation of a SAT solving result
  */
@@ -86,7 +97,7 @@ public:
 };
 
 /**
- * \ingroup JamSAT_Solver
+ * \ingroup JamSAT_Drivers
  *
  * \brief CDCL-based SAT solver
  */

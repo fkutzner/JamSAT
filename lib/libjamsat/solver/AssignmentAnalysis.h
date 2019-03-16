@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file AssignmentAnalysis.h
+ * \brief Assignment analysis routines
+ */
+
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>

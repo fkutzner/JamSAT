@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file SimplificationStats.h
+ * \brief Simplification statistics collector
+ */
+
 #pragma once
 
 #include <cstdint>

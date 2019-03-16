@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file UnaryOptimizations.h
+ * \brief Routines for eliminating known facts from problems
+ */
+
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>

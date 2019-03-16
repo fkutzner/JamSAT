@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file SSRWithHyperBinaryResolution.h
+ * \brief Self-subsuming resolution and subsumption checks using virtual binary clauses
+ */
+
 #pragma once
 
 #include <libjamsat/simplification/SimplificationStats.h>

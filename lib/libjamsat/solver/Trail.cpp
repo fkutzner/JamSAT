@@ -24,4 +24,6 @@
 
 */
 
+/** \file */
+
 #include "Trail.h"

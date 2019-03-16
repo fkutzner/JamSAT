@@ -24,6 +24,8 @@
 
 */
 
+/** \file */
+
 #include "RestartPolicies.h"
 #include <libjamsat/utils/Assert.h>
 

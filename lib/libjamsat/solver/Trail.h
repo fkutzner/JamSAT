@@ -24,6 +24,15 @@
 
 */
 
+/**
+ * \file Trail.h
+ * \brief Data structure for keeping variable assignments, partitioned in
+ *        decision levels
+ *
+ * Restart policies are used to control when to restart the CDCL search
+ * keeping derived lemmas and heuristic state.
+ */
+
 #pragma once
 
 #include <cstdint>
@@ -40,8 +49,10 @@
 namespace jamsat {
 
 /**
- * \defgroup JamSAT_Solver  JamSAT core solver classes
- * This module contains the core classes of the JamSAT solver.
+ * \defgroup JamSAT_Solver  Core data structures and algorithms
+ *
+ * This module contains data structures and algorithms specifically useful
+ * for implementing CDCL SAT Solvers and related systems such as simplifiers.
  */
 
 /**
@@ -55,7 +66,8 @@ namespace jamsat {
  * individually accessible decision levels. The assignment sequence is kept as a sequence of
  * literals.
  *
- * \concept{AssignmentProvider, DecisionLevelProvider}
+ * This type satisfies the AssignmentProvider, ReasonProvider and DecisionLevelProvider
+ * concepts.
  */
 template <typename ClauseT>
 class Trail {

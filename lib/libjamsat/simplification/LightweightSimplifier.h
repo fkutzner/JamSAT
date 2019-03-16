@@ -24,6 +24,12 @@
 
 */
 
+/**
+ * \file LightweightSimplifier.h
+ * \brief A CNF problem simiplifier that can be used in CDCL search for
+ *        preprocessing as well as inprocessing.
+ */
+
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
@@ -62,7 +68,7 @@ namespace jamsat {
  *
  * \brief A problem simplifier for performing lightweight simplifications.
  *
- * Intended usage: simplify a problem during search
+ * Intended usage: simplify a problem before and during search
  *
  * If `F` is a SAT problem instance and `G` is a SAT problem
  * instance derived from `F` by applying methods of `LightweightSimplifier`,

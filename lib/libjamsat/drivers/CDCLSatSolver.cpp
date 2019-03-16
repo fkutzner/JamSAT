@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file CDCLSatSolver.cpp
+ * \brief Default CDCL search implementation
+ */
+
 #include <libjamsat/drivers/CDCLSatSolver.h>
 
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
@@ -65,7 +70,7 @@ CDCLSatSolver::~CDCLSatSolver() {}
 namespace {
 
 /**
- * \ingroup JamSAT_Solver
+ * \ingroup JamSAT_Drivers
  *
  * \brief Solving result implementation for CDCLSatSolverImpl
  */
@@ -88,7 +93,7 @@ private:
 };
 
 /**
- * \ingroup JamSAT_Solver
+ * \ingroup JamSAT_Drivers
  *
  * \brief CDCL-based SAT solver implementation
  */

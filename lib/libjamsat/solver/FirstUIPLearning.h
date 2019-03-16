@@ -24,6 +24,13 @@
 
 */
 
+/**
+ * \file FirstUIPLearning.h
+ * \brief A lemma derivation ("clause learning") implementation using First-UIP learning.
+ *
+ * Caution: lemma derivation is a performance-critical part of CDCL search.
+ */
+
 #pragma once
 
 #include <algorithm>

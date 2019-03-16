@@ -24,6 +24,14 @@
 
  */
 
+/**
+ * \file Watcher.h
+ * \brief Data structure for quickly determining whether a clause is satisfied.
+ *
+ * Caution: this code is used in the most performance-critical parts of CDCL
+ * search.
+ */
+
 #pragma once
 
 #include <algorithm>

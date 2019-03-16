@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file LiteralBlockDistance.h
+ * \brief LBD-related utilities.
+ */
+
 #pragma once
 
 #include <cstdint>
@@ -40,6 +45,8 @@ using LBD = uint32_t;
  *
  * Given a set L of literals, the LBD of L is defined as the number of distinct
  * decision levels of variables occuring in L.
+ *
+ * Usage example: determine the value of a derived lemma by the LBD value of its literals.
  *
  * \param literals                a forward range of literals.
  * \param decisionLevelProvider   a decision level provider.

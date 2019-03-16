@@ -24,6 +24,14 @@
 
 */
 
+/**
+ * \file RestartPolicies.h
+ * \brief Restart policies for CDCL search
+ *
+ * Restart policies are used to control when to restart the CDCL search
+ * keeping derived lemmas and heuristic state.
+ */
+
 #pragma once
 
 #include <cstdint>
@@ -34,6 +42,16 @@
 
 namespace jamsat {
 
+/**
+ * \ingroup JamSAT_Solver
+ *
+ * \brief A restart policy similar to the one used in the Glucose solver.
+ *
+ * This restart policy triggers a restart when `(AverageLBD * K) > (SumLBD / TotalConflictCount)`
+ * with `AverageLBD` being the average LBD of the past 50 derived lemmas, K is a constant
+ * (by default 0.8), SumLBD being the total sum of LBD values of derived lemmas and
+ * TotalConflictCount being the total amount of lemmas derived.
+ */
 class GlucoseRestartPolicy {
 public:
     struct Options {

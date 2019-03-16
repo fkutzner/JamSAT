@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file FailedLiteralAnalysis.h
+ * \brief Failed literal analysis functions
+ */
+
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>

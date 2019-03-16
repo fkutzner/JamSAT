@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file Statistics.h
+ * \brief Statistics collector for CDCL search
+ */
+
 #pragma once
 
 #include <chrono>
@@ -57,15 +62,20 @@ struct AllEnabledStatisticsConfig {
  * \brief A class for accumulating solver statistics
  *
  * \tparam StatisticsConfig A type controlling what statistics shall be kept. \p StatisticsConfig
- * must have the following member typedefs:
+ * must have the following member types:
  *  - CountConflicts
  *  - CountPropagations
  *  - CountDecisions
  *  - CountRestarts
  *  - MeasureLemmaSize
+ *  - CountLemmaDeletions
+ *  - CountSimplificationStats
  * Each of these member types must be either std::true_type or std::false_type. Their meaning
  * directly follows from their name: the value of CountConflicts::value determines whether
  * conflicts shall be counted, etc.
+ *
+ * Usage example: collection of statistics in a SAT solver, with an "era" being the duration
+ * of one solver invocation.
  *
  * \ingroup JamSAT_Solver
  */
