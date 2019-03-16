@@ -59,7 +59,7 @@ namespace jamsat {
  * DLProvider and Propagation as a ReasonProvider to compute conflict clauses
  * after a conflict occurred.
  *
- * \tparam DLProvider           A type that is a model of the \ref DecisionLevelProvider concept.
+ * \tparam DLProvider           A type that is a model of the DecisionLevelProvider concept.
  * \tparam ReasonProvider       A type that is a model of the ReasonProvider concept, with the
  *                              reason type satisfying the LiteralContainer concept.
  *

@@ -56,11 +56,12 @@ namespace jamsat {
  * \brief A CDCL fact propagation implementation.
  *
  * Usage example: Use Propagation with a Trail implementation as an assignment
- * provider to compute all forced assignments after a CDCL branching decision.
+ * provider to compute all forced assignments after a CDCL branching decision,
+ * e.g. if there are clauses (a b -c) and (-b d) with the variable assignment
+ * "c = true" and the decision "a = false" is propagated, "b = true" and
+ * "d = true" are forced assignments.
  *
- * \tparam AssignmentProviderT   A type that is a model of the \ref AssignmentProvider concept.
- *
- * \concept{ReasonProvider}
+ * \tparam AssignmentProviderT   A type that is a model of the AssignmentProvider concept.
  */
 template <class AssignmentProviderT>
 class Propagation {

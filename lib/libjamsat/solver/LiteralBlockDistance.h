@@ -48,9 +48,9 @@ using LBD = uint32_t;
  * \returns                       the LBD of \p literals wrt. \p decisionLevelProvider .
  *
  * \tparam ForwardRange           a forward range of literals.
- * \tparam DLProvider             A type satisfying the \ref DecisionLevelProvider concept.
- * \tparam StampMapT              A StampMap specialization supporting stamping of the decision
- *                                levels.
+ * \tparam DLProvider             A type satisfying the DecisionLevelProvider concept.
+ * \tparam StampMapT              A StampMap specialization supporting stamping of
+ *                                DLProvider::DecisionLevel objects
  * \tparam LBD                    The literal block distance type, an integral type.
  */
 template <typename ForwardRange, typename DLProvider, typename StampMapT>
