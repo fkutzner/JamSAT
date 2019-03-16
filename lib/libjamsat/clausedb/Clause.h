@@ -346,9 +346,10 @@ inline void Clause::resize(size_type newSize) noexcept {
 
     size_type initSize = initialSize();
     m_size = newSize;
-    CNFLit& pastEnd = *(&m_anchor + m_size);
+    CNFLit& pastEnd = *(&m_anchor + newSize);
     pastEnd = CNFLit{CNFVar{initSize}, CNFSign::POSITIVE};
     m_resized = 1;
+    JAM_ASSERT(initSize == initialSize(), "Initial clause size not preserved");
 }
 
 inline Clause::iterator Clause::begin() noexcept {
@@ -372,7 +373,7 @@ inline Clause::iterator Clause::erase(const_iterator pos) noexcept {
     iterator writablePos = begin() + (pos - begin());
 
     *writablePos = *replacement;
-    --m_size;
+    resize(m_size - 1);
     return writablePos;
 }
 
@@ -392,7 +393,7 @@ inline Clause::iterator Clause::erase(const_iterator begin, const_iterator end) 
         ++replacement;
     }
 
-    m_size -= static_checked_cast<size_type>(eraseDist);
+    resize(m_size - static_checked_cast<size_type>(eraseDist));
     return result;
 }
 

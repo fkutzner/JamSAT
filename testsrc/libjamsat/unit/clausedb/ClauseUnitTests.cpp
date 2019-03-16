@@ -434,6 +434,20 @@ TEST(UnitClauseDB, clausePreservesInitialSizeOnShrink) {
     ASSERT_EQ(underTest->initialSize(), 4ull);
 }
 
+TEST(UnitClauseDB, clausePreservesInitialSizeOnMultipleShrink) {
+    auto underTest = createHeapClause(4);
+    (*underTest)[0] = 3_Lit;
+    (*underTest)[1] = 27_Lit;
+    (*underTest)[2] = 13_Lit;
+    (*underTest)[3] = ~11_Lit;
+
+    ASSERT_EQ(underTest->initialSize(), 4ull);
+    underTest->resize(3);
+    ASSERT_EQ(underTest->initialSize(), 4ull);
+    underTest->resize(2);
+    ASSERT_EQ(underTest->initialSize(), 4ull);
+}
+
 TEST(UnitClauseDB, clausePreservesInitialSizeOnAssignment) {
     auto underTest = createHeapClause(4);
     (*underTest)[0] = 3_Lit;
@@ -449,4 +463,37 @@ TEST(UnitClauseDB, clausePreservesInitialSizeOnAssignment) {
     *underTest = *rhs;
     ASSERT_EQ(underTest->initialSize(), 4ull);
 }
+
+TEST(UnitClauseDB, clausePreservesInitialSizeOnSingleErase) {
+    auto underTest = createHeapClause(5);
+    (*underTest)[0] = 32_Lit;
+    (*underTest)[1] = 1_Lit;
+    (*underTest)[2] = 43_Lit;
+    (*underTest)[3] = ~2_Lit;
+    (*underTest)[4] = ~5_Lit;
+
+    ASSERT_EQ(underTest->initialSize(), 5ull);
+    underTest->erase(underTest->begin() + 1);
+    EXPECT_EQ(underTest->initialSize(), 5ull);
+    underTest->erase(underTest->begin());
+    EXPECT_EQ(underTest->initialSize(), 5ull);
+}
+
+TEST(UnitClauseDB, clausePreservesInitialSizeOnMultiErase) {
+    auto underTest = createHeapClause(5);
+    (*underTest)[0] = 32_Lit;
+    (*underTest)[1] = 1_Lit;
+    (*underTest)[2] = 43_Lit;
+    (*underTest)[3] = ~2_Lit;
+    (*underTest)[4] = ~5_Lit;
+
+    ASSERT_EQ(underTest->initialSize(), 5ull);
+    auto eraseBegin = underTest->begin() + 1;
+    auto eraseEnd = underTest->begin() + 3;
+    underTest->erase(eraseBegin, eraseEnd);
+    EXPECT_EQ(underTest->initialSize(), 5ull);
+    underTest->erase(underTest->begin() + 1, underTest->end());
+    EXPECT_EQ(underTest->initialSize(), 5ull);
+}
+
 }
