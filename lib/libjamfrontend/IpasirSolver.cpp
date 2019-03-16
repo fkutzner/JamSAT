@@ -28,6 +28,8 @@
 
 #include <libjamsat/JamSatIpasir.h>
 
+#include <cassert>
+
 namespace jamsat {
 IpasirSolver::IpasirSolver() {}
 IpasirSolver::~IpasirSolver() {}
