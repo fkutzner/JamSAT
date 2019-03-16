@@ -25,21 +25,22 @@
 add_jamsat_core_library(libjamsat.utils
   Assert.h
   BinaryHeap.h
-  Truth.h
-  Truth.cpp
   BoundedMap.h
   BoundedStack.h
+  Casts.h
+  ControlFlow.h
   FaultInjector.h
   FaultInjector.cpp
-  ControlFlow.h
-  StampMap.h
-  SimpleMovingAverage.h
-  LubySequence.h
   FlatteningIterator.h
-  Casts.h
+  LubySequence.h
+  ModuleDocumentation.h
   Printers.h
   RangeUtils.h
+  SimpleMovingAverage.h
+  StampMap.h
   TraitUtils.h
+  Truth.h
+  Truth.cpp
   Logger.h
   Logger.cpp
   OverApproximatingSet.h

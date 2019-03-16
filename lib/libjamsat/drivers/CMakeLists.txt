@@ -25,4 +25,5 @@
 add_jamsat_core_library(libjamsat.drivers
   CDCLSatSolver.h
   CDCLSatSolver.cpp
+  ModuleDocumentation.h
 )

@@ -24,6 +24,15 @@
 
 */
 
+/**
+ * \file CNFProblem.h
+ * \brief Simple CNF problem representation
+ *
+ * This CNF problem representation is used in the interface of JamSAT's
+ * SAT solver classes in order to isolate the API layer from the solver's internal
+ * clause representation.
+ */
+
 #pragma once
 
 #include "libjamsat/cnfproblem/CNFLiteral.h"

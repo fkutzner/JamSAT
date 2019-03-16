@@ -36,6 +36,7 @@ nm_add_library(libjamfrontend STATIC
   IpasirSolver.cpp
   IpasirSolver.h
   ${PROJECT_SOURCE_DIR}/${NM_CONF_INCLUDE_DIR}/libjamfrontend/JamSAT.h
+  ModuleDocumentation.h
   Parser.h
   Parser.cpp
   Options.h

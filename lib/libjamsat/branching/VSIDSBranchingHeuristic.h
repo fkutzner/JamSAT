@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file VSIDSBranchingHeuristic.h
+ * \brief Variable-state-independent decaying sum branching heuristic for CDCL search
+ */
+
 #pragma once
 
 #include <algorithm>

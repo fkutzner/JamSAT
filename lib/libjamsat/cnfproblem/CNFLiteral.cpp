@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file CNFLiteral.cpp
+ * \brief Implementation file for CNFLiteral.h
+ */
+
 #include "CNFLiteral.h"
 
 #include <limits>

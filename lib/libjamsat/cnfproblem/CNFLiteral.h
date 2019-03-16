@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file CNFLiteral.h
+ * \brief Literal and variable data structures
+ */
+
 #pragma once
 
 #include <functional>
@@ -33,11 +38,6 @@
 #include <libjamsat/utils/Assert.h>
 
 namespace jamsat {
-/**
- * \defgroup JamSAT_CNFProblem  JamSAT CNF problem instance data structures
- * This module contains types and data structures for representing CNF problem instances.
- */
-
 /**
  * \ingroup JamSAT_CNFProblem
  *

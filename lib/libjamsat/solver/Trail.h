@@ -28,9 +28,6 @@
  * \file Trail.h
  * \brief Data structure for keeping variable assignments, partitioned in
  *        decision levels
- *
- * Restart policies are used to control when to restart the CDCL search
- * keeping derived lemmas and heuristic state.
  */
 
 #pragma once
@@ -47,13 +44,6 @@
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
-
-/**
- * \defgroup JamSAT_Solver  Core data structures and algorithms
- *
- * This module contains data structures and algorithms specifically useful
- * for implementing CDCL SAT Solvers and related systems such as simplifiers.
- */
 
 /**
  * \ingroup JamSAT_Solver

@@ -25,6 +25,7 @@
 add_jamsat_core_library(libjamsat.proof
   Model.h
   Model.cpp
+  ModuleDocumentation.h
   DRUPCertificate.h
   DRUPCertificate.cpp
   PlainDRUPCertificate.cpp

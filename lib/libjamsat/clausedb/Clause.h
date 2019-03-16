@@ -24,6 +24,14 @@
 
 */
 
+/**
+ * \file Clause.h
+ * \brief Variable-length clause data structure without memory indirection
+ *
+ * This is a clause data structure that is suitable for being a CDCL solver's
+ * internal clause data structure.
+ */
+
 #pragma once
 
 #include <cstdint>
@@ -34,11 +42,6 @@
 #include <libjamsat/utils/OverApproximatingSet.h>
 
 namespace jamsat {
-/**
- * \defgroup JamSAT_ClauseDB  JamSAT internal clause types and clause databases
- * This module contains data structures for representing and storing (solver-internal) CNF clauses.
- */
-
 /**
  * \ingroup JamSAT_ClauseDB
  *

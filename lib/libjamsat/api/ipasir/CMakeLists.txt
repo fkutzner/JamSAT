@@ -24,5 +24,6 @@
 
 add_jamsat_core_library(libjamsat.api.ipasir
   JamSatIpasir.cpp
+  ModuleDocumentation.h
   ${PROJECT_SOURCE_DIR}/${NM_CONF_INCLUDE_DIR}/libjamsat/JamSatIpasir.h
 )

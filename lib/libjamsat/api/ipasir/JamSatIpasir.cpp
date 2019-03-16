@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file JamSatIpasir.cpp
+ * \brief IPASIR API implementation
+ */
+
 #include <libjamsat/JamSatIpasir.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/drivers/CDCLSatSolver.h>
@@ -46,12 +51,28 @@
 
 namespace jamsat {
 namespace {
+
+/**
+ * \ingroup JamSAT_API_IPASIR
+ *
+ * \brief Converts an IPASIR literal to a CNFLit
+ *
+ * \param ipasirLit     An IPASIR literal
+ * \returns             The corresponding CNF literal
+ */
 CNFLit ipasirLitToCNFLit(int ipasirLit) noexcept {
     CNFSign sign = (ipasirLit > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE);
     CNFVar var{static_cast<CNFVar::RawVariable>(std::abs(ipasirLit))};
     return CNFLit{var, sign};
 }
 
+/**
+ * \ingroup JamSAT_API_IPASIR
+ *
+ * \brief IPASIR API SAT solver context
+ *
+ * This class is responsible for maintaining a SAT solver created via the IPASIR API.
+ */
 class IPASIRContext {
 public:
     struct IPASIRKillThreadContext {
@@ -63,13 +84,6 @@ public:
 
 
     IPASIRContext() {
-        // TODO: add a configuration function for this
-        // TODO: remove the bound in the default case?
-        uint64_t defaultMemLimit = 1024ULL * 1024ULL * 8192ULL;
-        if (defaultMemLimit > std::numeric_limits<uintptr_t>::max()) {
-            defaultMemLimit = std::numeric_limits<uintptr_t>::max();
-        }
-
         m_solver.reset(nullptr);
         m_clauseAddBuffer = CNFClause{};
         m_assumptionBuffer = std::vector<CNFLit>{};
@@ -78,7 +92,6 @@ public:
         m_failed = false;
     }
 
-    // TODO: Add a reconfigure method to the solver
     void ensureSolverExists() {
         if (!m_solver) {
             m_solver = createCDCLSatSolver();

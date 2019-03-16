@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file IterableClauseDB.h
+ * \brief A region allocator for indirectionless clauses (see e.g. Clause.h)
+ */
+
 #pragma once
 
 #include <libjamsat/concepts/ClauseTraits.h>

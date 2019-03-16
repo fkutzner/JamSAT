@@ -46,12 +46,6 @@
 namespace jamsat {
 
 /**
- * \defgroup JamSAT_Drivers  JamSAT CDCL drivers
- *
- * This module contains CDCL SAT solver classes.
- */
-
-/**
  * \ingroup JamSAT_Drivers
  *
  * \brief Representation of a SAT solving result

@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/simplification/SimplificationStats.h>
 #include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/Logger.h>
@@ -46,15 +47,6 @@
 #endif
 
 namespace jamsat {
-
-/**
- * \defgroup JamSAT_Simplification_SSRWithHBR Self-Subsuming Resolution with Hyper-Binary Resolution
- * \ingroup JamSAT_Simplification
- *
- * The main function of this submodule is ssrWithHyperBinaryResolution(), whose parameters should
- * be constructed via createSSRWithHBRParams(). For details about the optimization, see the
- * documentation of ssrWithHyperBinaryResolution().
- */
 
 /**
  *

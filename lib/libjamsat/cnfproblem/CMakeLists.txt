@@ -27,4 +27,5 @@ add_jamsat_core_library(libjamsat.cnfproblem
   CNFLiteral.cpp
   CNFProblem.h
   CNFProblem.cpp
+  ModuleDocumentation.h
 )

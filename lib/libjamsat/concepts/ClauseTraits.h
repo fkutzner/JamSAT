@@ -24,19 +24,16 @@
 
 */
 
+/**
+ * \file ClauseTraits.h
+ * \brief Concepts and concept-checking traits related to clause data types
+ */
+
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/utils/TraitUtils.h>
 #include <type_traits>
-
-/** \file */
-
-/**
- * \defgroup JamSAT_Concepts  JamSAT concept definitions
- * This module contains definitions of named requirements used in JamSAT, as well as related
- * type trait definitions.
- */
 
 namespace jamsat {
 

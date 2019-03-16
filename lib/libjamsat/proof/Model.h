@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file Model.h
+ * \brief Data structure for CNF problem satisfiability proofs
+ */
+
 #pragma once
 
 #include <memory>
@@ -33,10 +38,6 @@
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
-/**
- * \defgroup JamSAT_Proof JamSAT SAT/UNSAT proof data structures
- * This module contains data structures for CNF (un)satisfiability proofs.
- */
 
 /**
  * \ingroup JamSAT_Proof

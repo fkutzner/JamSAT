@@ -24,6 +24,12 @@
 
 */
 
+/**
+ * \file CNFProblem.cpp
+ * \brief Implementation file for CNFProblem.h
+ */
+
+
 #include "CNFProblem.h"
 #include <boost/optional.hpp>
 #include <istream>

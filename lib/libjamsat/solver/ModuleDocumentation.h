@@ -1,4 +1,4 @@
-/* Copyright (c) 2017,2018 Felix Kutzner (github.com/fkutzner)
+/* Copyright (c) 2019 Felix Kutzner (github.com/fkutzner)
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,14 @@
 
 */
 
-#pragma once
+/**
+ * \defgroup JamSAT_Solver  Core data structures and algorithms
+ *
+ * This module contains data structures and algorithms specifically useful
+ * for implementing CDCL SAT Solvers and related systems such as simplifiers.
+ */
 
-#include <cassert>
-
-#define JAM_ASSERT(x, message) assert((x) && message)
-
-#if defined(JAM_ENABLE_EXPENSIVE_ASSERTIONS)
-#define JAM_EXPENSIVE_ASSERT(x, message) JAM_ASSERT(x, message)
-#else
-#define JAM_EXPENSIVE_ASSERT(x, message)
-#endif
-
-#if !defined(NDEBUG)
-#define JAM_ASSERT_ENABLED
-#endif
+/**
+ * \dir libjamsat/solver
+ * \brief Module: \ref JamSAT_Solver
+ */

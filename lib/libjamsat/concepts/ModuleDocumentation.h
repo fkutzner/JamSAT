@@ -1,4 +1,4 @@
-/* Copyright (c) 2017,2018 Felix Kutzner (github.com/fkutzner)
+/* Copyright (c) 2019 Felix Kutzner (github.com/fkutzner)
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,13 @@
 
 */
 
-#pragma once
+/**
+ * \defgroup JamSAT_Concepts  JamSAT concept definitions
+ * This module contains definitions of named requirements used in JamSAT, as well as related
+ * type trait definitions.
+ */
 
-#include <cassert>
-
-#define JAM_ASSERT(x, message) assert((x) && message)
-
-#if defined(JAM_ENABLE_EXPENSIVE_ASSERTIONS)
-#define JAM_EXPENSIVE_ASSERT(x, message) JAM_ASSERT(x, message)
-#else
-#define JAM_EXPENSIVE_ASSERT(x, message)
-#endif
-
-#if !defined(NDEBUG)
-#define JAM_ASSERT_ENABLED
-#endif
+/**
+ * \dir libjamsat/concepts
+ * \brief Module: \ref JamSAT_Concepts
+ */

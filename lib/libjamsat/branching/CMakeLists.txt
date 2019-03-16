@@ -26,4 +26,5 @@ add_jamsat_core_library(libjamsat.branching
   BranchingHeuristicBase.h
   BranchingHeuristicBase.cpp
   VSIDSBranchingHeuristic.h
+  ModuleDocumentation.h
 )

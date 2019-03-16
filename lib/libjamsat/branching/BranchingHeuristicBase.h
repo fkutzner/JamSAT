@@ -24,6 +24,15 @@
 
 */
 
+/**
+ * \file BranchingHeuristicBase.h
+ * \brief Base class for branching heuristics
+ *
+ * Branching heuristics are used in CDCL search to branch on a literal when
+ * all current variable assignments have been propagated to fixpoint and
+ * the problem is not solved yet and the solver is not in a conflicting state.
+ */
+
 #pragma once
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
@@ -31,11 +40,6 @@
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
-/**
- * \defgroup JamSAT_Branching  JamSAT CDCL decision heuristics
- * This module contains decision heuristics for branching in JamSAT.
- */
-
 /**
  * \ingroup JamSAT_Branching
  *

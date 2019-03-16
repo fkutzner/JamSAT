@@ -1,4 +1,4 @@
-/* Copyright (c) 2017,2018 Felix Kutzner (github.com/fkutzner)
+/* Copyright (c) 2019 Felix Kutzner (github.com/fkutzner)
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,16 @@
 
 */
 
-#pragma once
+/**
+ * \defgroup JamSAT_Simplification_SSRWithHBR Self-Subsuming Resolution with Hyper-Binary Resolution
+ * \ingroup JamSAT_Simplification
+ *
+ * The main function of this submodule is ssrWithHyperBinaryResolution(), whose parameters should
+ * be constructed via createSSRWithHBRParams(). For details about the optimization, see the
+ * documentation of ssrWithHyperBinaryResolution().
+ */
 
-#include <cassert>
-
-#define JAM_ASSERT(x, message) assert((x) && message)
-
-#if defined(JAM_ENABLE_EXPENSIVE_ASSERTIONS)
-#define JAM_EXPENSIVE_ASSERT(x, message) JAM_ASSERT(x, message)
-#else
-#define JAM_EXPENSIVE_ASSERT(x, message)
-#endif
-
-#if !defined(NDEBUG)
-#define JAM_ASSERT_ENABLED
-#endif
+/**
+ * \dir libjamsat/simplification
+ * \brief Module: \ref JamSAT_Simplification
+ */

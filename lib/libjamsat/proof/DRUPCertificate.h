@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file DRUPCertificate.h
+ * \brief Data structure for CNF problem DRUP unsatisfiability proofs
+ */
+
 #pragma once
 
 #include <array>

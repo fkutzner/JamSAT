@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file Clause.cpp
+ * \brief Implementation file for Clause.h
+ */
+
 #include "Clause.h"
 #include <libjamsat/utils/Assert.h>
 

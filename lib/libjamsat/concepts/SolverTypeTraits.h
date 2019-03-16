@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file SolverTypeTraits.h
+ * \brief Concepts and concept-checking traits related to CDCL algorithms and data structures
+ */
+
 #pragma once
 
 #include <libjamsat/concepts/ClauseTraits.h>

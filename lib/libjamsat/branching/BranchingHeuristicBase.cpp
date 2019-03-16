@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file BranchingHeuristicBase.cpp
+ * \brief Implementation file for BranchingHeuristicBase.h
+ */
+
 #include "BranchingHeuristicBase.h"
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
