@@ -117,9 +117,7 @@ public:
      * function returns.
      *
      * \param unaryClauses                  The current set of unary clauses.
-     * \param possiblyIrredundantClauses    The current set of clauses that are possibly
-     *                                      not redundant.
-     * \param redundantClauses              The current set of clauses that are redundant.
+     * \param problemClauses                A range of pointers to the problem clauses.
      * \param tempStamps                    A StampMap capable of stamping any CNFLit
      *                                      object occurring in the clauses passed via
      *                                      \p unaryClauses, \p possiblyIrredundantClauses
@@ -127,10 +125,9 @@ public:
      *
      * \returns Statistics about the applied simplifications.
      */
-    template <typename StampMapT>
+    template <typename ClausePtrRange, typename StampMapT>
     auto simplify(std::vector<CNFLit>& unaryClauses,
-                  std::vector<Clause*> const& possiblyIrredundantClauses,
-                  std::vector<Clause*> const& redundantClauses,
+                  ClausePtrRange problemClauses,
                   StampMapT& tempStamps) -> SimplificationStats;
 
     /**
@@ -177,14 +174,15 @@ private:
     class DetectedUNSATException {};
 
     /**
-     * \brief Updates m_occurrenceMap to contain exactly the given clauses
+     * \brief Propagates the given facts in m_propagator
      *
-     * \param possiblyIrredundantClauses    A vector of pointers of clauses to add.
-     * \param redundantClauses              A vector of pointers of redundant clauses
-     *                                      to add.
+     * \param[in,out] the facts to propagate. All new facts found during propagation
+     *                are added to `facts`. The relative order of elements in `facts`
+     *                is not preserved.
+     *
+     * \returns SimplificationStats containing the number of learnt facts
      */
-    void updateOccurrenceMap(std::vector<Clause*> const& possiblyIrredundantClauses,
-                             std::vector<Clause*> const& redundantClauses);
+    auto propagateFacts(std::vector<CNFLit>& facts) -> SimplificationStats;
 
     /**
      * \brief Subsumption and self-subsuming resolution using unary clauses.
@@ -264,34 +262,70 @@ LightweightSimplifier<PropagationT, AssignmentProviderT>::LightweightSimplifier(
   , m_failedLitAnalyzer{m_maxVar, m_propagation, m_assignmentProvider, m_assignmentProvider, 0} {}
 
 template <typename PropagationT, typename AssignmentProviderT>
-template <typename StampMapT>
+template <typename ClausePtrRange, typename StampMapT>
 auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
-    std::vector<CNFLit>& unaryClauses,
-    std::vector<Clause*> const& possiblyIrredundantClauses,
-    std::vector<Clause*> const& redundantClauses,
-    StampMapT& tempStamps) -> SimplificationStats {
+    std::vector<CNFLit>& unaryClauses, ClausePtrRange problemClauses, StampMapT& tempStamps)
+    -> SimplificationStats {
+    JAM_LOG_LIGHTWEIGHTSIMP(info, "Starting problem simplification");
 
-    SimplificationStats result;
-    if (unaryClauses.size() <= m_lastSeenAmntUnaries) {
-        return result;
-    }
-
-    auto currentDecisionLevel = m_assignmentProvider.getCurrentDecisionLevel();
-
-    OnExitScope assertCorrectDecisionLevel{[this, currentDecisionLevel]() {
-        // The lambda captures are deliberately not used when assertions are disabled,
-        // so suppress the warnings:
-        (void)this;
-        (void)currentDecisionLevel;
-        JAM_ASSERT(m_assignmentProvider.getCurrentDecisionLevel() == currentDecisionLevel,
-                   "Illegal decision level modification");
+    JAM_ASSERT(m_assignmentProvider.getNumberOfAssignments() == 0,
+               "LightweightSimplifier may only be invoked when the solver has no assignments");
+    OnExitScope undoAllAssignments{[this]() {
+        JAM_LOG_LIGHTWEIGHTSIMP(info, "Finished problem simplification");
+        m_assignmentProvider.shrinkToDecisionLevel(0);
     }};
 
-    updateOccurrenceMap(possiblyIrredundantClauses, redundantClauses);
+    if (unaryClauses.size() <= m_lastSeenAmntUnaries) {
+        return SimplificationStats{};
+    }
+
+    SimplificationStats result;
+    try {
+        result = propagateFacts(unaryClauses);
+    } catch (DetectedUNSATException&) {
+        return SimplificationStats{};
+    }
+
+    m_occurrenceMap.clear();
+    m_occurrenceMap.insert(problemClauses.begin(), problemClauses.end());
+
     result += runUnaryOptimizations(unaryClauses);
     result += runSSRWithHBR(tempStamps, unaryClauses);
 
     m_lastSeenAmntUnaries = unaryClauses.size();
+    return result;
+}
+
+
+template <typename PropagationT, typename AssignmentProviderT>
+auto LightweightSimplifier<PropagationT, AssignmentProviderT>::propagateFacts(
+    std::vector<CNFLit>& facts) -> SimplificationStats {
+    JAM_LOG_LIGHTWEIGHTSIMP(info, "Propagating facts...");
+    SimplificationStats result;
+    auto initialFactCount = facts.size();
+
+    for (CNFLit fact : facts) {
+        TBool previousAssignment = m_assignmentProvider.getAssignment(fact);
+        if (!isDeterminate(previousAssignment)) {
+            m_assignmentProvider.addAssignment(fact);
+            if (m_propagation.propagateUntilFixpoint(fact) != nullptr) {
+                JAM_LOG_LIGHTWEIGHTSIMP(info, "Detected unsatisfiability by propagation");
+                throw DetectedUNSATException{};
+            }
+        } else if (isFalse(previousAssignment)) {
+            JAM_LOG_LIGHTWEIGHTSIMP(info, "Detected unsatisfiability by propagation");
+            throw DetectedUNSATException{};
+        }
+    }
+
+    result.amntUnariesLearnt = m_assignmentProvider.getNumberOfAssignments() - initialFactCount;
+    if (result.amntUnariesLearnt > 0) {
+        facts.clear();
+        auto newFacts = m_assignmentProvider.getDecisionLevelAssignments(0);
+        facts.insert(facts.begin(), newFacts.begin(), newFacts.end());
+    }
+
+    JAM_LOG_LIGHTWEIGHTSIMP(info, "Finished propagating facts, no conflict detected");
     return result;
 }
 
@@ -347,14 +381,6 @@ void LightweightSimplifier<PropagationT, AssignmentProviderT>::increaseMaxVarTo(
     m_failedLitAnalyzer.increaseMaxVarTo(newMaxVar);
 }
 
-template <typename PropagationT, typename AssignmentProviderT>
-void LightweightSimplifier<PropagationT, AssignmentProviderT>::updateOccurrenceMap(
-    std::vector<Clause*> const& possiblyIrredundantClauses,
-    std::vector<Clause*> const& redundantClauses) {
-    m_occurrenceMap.clear();
-    m_occurrenceMap.insert(possiblyIrredundantClauses.begin(), possiblyIrredundantClauses.end());
-    m_occurrenceMap.insert(redundantClauses.begin(), redundantClauses.end());
-}
 
 template <typename PropagationT, typename AssignmentProviderT>
 auto LightweightSimplifier<PropagationT, AssignmentProviderT>::runUnaryOptimizations(
