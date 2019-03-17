@@ -79,7 +79,7 @@ public:
      * \param maxElement    The maximum element that may occur in the containers
      *                      added to the OccurrenceMap.
      */
-    OccurrenceMap(typename Container::value_type maxElement);
+    explicit OccurrenceMap(typename Container::value_type maxElement);
 
     /**
      * \brief Constructs an OccurrenceMap, inserting a range of elements

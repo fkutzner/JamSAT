@@ -53,7 +53,8 @@ public:
      * \param callOnExit    A function which will be called when this instance is
      *                      destroyed. This function may not throw.
      */
-    explicit OnExitScope(std::function<void()> callOnExit) noexcept : m_callOnExit(callOnExit) {
+    explicit OnExitScope(std::function<void()> const& callOnExit) noexcept
+      : m_callOnExit(callOnExit) {
         JAM_ASSERT(callOnExit, "callOnExit must be a callable function, but is not");
     }
 

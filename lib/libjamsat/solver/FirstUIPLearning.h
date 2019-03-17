@@ -127,7 +127,7 @@ public:
      *
      * \param callback  The callback function to be installed (see above).
      */
-    void setOnSeenVariableCallback(std::function<void(CNFVar)> callback) noexcept;
+    void setOnSeenVariableCallback(std::function<void(CNFVar)> const& callback) noexcept;
 
     /**
      * \brief Increases the maximum variable occuring in the problem to be solved.
@@ -476,7 +476,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::computeConflictClause(
 
 template <class DLProvider, class ReasonProvider>
 void FirstUIPLearning<DLProvider, ReasonProvider>::setOnSeenVariableCallback(
-    std::function<void(CNFVar)> callback) noexcept {
+    std::function<void(CNFVar)> const& callback) noexcept {
     m_onSeenVariableCallback = callback;
 }
 

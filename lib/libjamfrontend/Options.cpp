@@ -47,8 +47,10 @@ auto parseOptions(int argc, char** argv) -> JamSATOptions {
             std::string timeoutValue{argument.begin() + timeoutArgPrefix.size(), argument.end()};
             try {
                 result.m_timeout = std::chrono::seconds{std::stoul(timeoutValue)};
-            } catch (std::exception&) {
+            } catch (std::invalid_argument&) {
                 throw std::invalid_argument{"Error: invalid timeout value"};
+            } catch (std::out_of_range&) {
+                throw std::invalid_argument{"Error: timeout value out of range"};
             }
         } else if (argument.compare(0, 2, "--") == 0) {
             // Not a frontend option ~> pass it to the backend
