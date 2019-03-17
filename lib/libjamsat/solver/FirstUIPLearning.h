@@ -64,7 +64,10 @@ namespace jamsat {
  *
  * Usage example: Use FirstUIPLearning with a Trail implementation as a
  * DLProvider and Propagation as a ReasonProvider to compute conflict clauses
- * after a conflict occurred.
+ * after a conflict occurred. The conflict clause can then be used as a lemma.
+ *
+ * This implementation closely follows Donald Knuth's prosaic description
+ * of first-UIP clause learning. See "The Art of Computer Programming", chapter 7.2.2.2.
  *
  * \tparam DLProvider           A type that is a model of the DecisionLevelProvider concept.
  * \tparam ReasonProvider       A type that is a model of the ReasonProvider concept, with the
@@ -92,12 +95,11 @@ public:
      * \brief Constructs a new FirstUIPLearning instance.
      *
      * \param maxVar      The maximum variable occuring in the problem to be
-     * solved. \p maxVar must be a regular variable.
+     *                    solved. \p maxVar must be a regular variable.
      * \param dlProvider  The decision level providing object. Needs to live as
-     * long as the constructed object.
+     *                    long as the constructed object.
      * \param reasonProvider  The assignment reason providing object. Needs to
-     * live
-     * as long as the constructed object.
+     *                        live as long as the constructed object.
      */
     FirstUIPLearning(CNFVar maxVar,
                      const DLProvider& dlProvider,
@@ -107,10 +109,10 @@ public:
      * \brief Given a conflicting clause, computes a conflict clause.
      *
      * \param[in] conflictingClause  The conflicting clause, ie. a clause being
-     * falsified through propagation under the current assignment.
-     * \param[out] result             The conflict clause determined via resolutions
-     * of the conflicting clause with reason clauses. The asserting literal is placed
-     * first in the result.
+     *                               falsified through propagation under the current assignment.
+     * \param[out] result            The conflict clause determined via resolutions
+     *                               of the conflicting clause with reason clauses. The asserting
+     *                               literal is placed first in the result.
      */
     void computeConflictClause(Clause& conflictingClause, std::vector<CNFLit>& result) const;
 
@@ -158,12 +160,12 @@ private:
      * needs to be performed.
      *
      * \param[in]  conflictingClause   A clause containing more than 1 literal of
-     * the current decision level.
+     *                                 the current decision level.
      * \param[out] result              An empty vector, in which the initial part
-     * of the conflicting clause is stored.
+     *                                 of the conflicting clause is stored.
      *
      * \returns The amount of literals on the current decision level found in
-     * \p conflictingClause.
+     *          \p conflictingClause.
      */
     auto initializeResult(Clause const& conflictingClause, std::vector<CNFLit>& result) const
         -> int;
@@ -182,9 +184,8 @@ private:
      *
      * \param[in] reason              The reason clause with which resolution
      * should be performed.
-     * \param[in] resolveAtLit        The literal at whose variable which
-     * resolution should be performed. This must be a literal contained in \p
-     * work.
+     * \param[in] resolveAtLit        The literal at whose variable which resolution should be
+     *                                performed. This must be a literal contained in \p work.
      * \param[in,out] result          The result vector as described above
      *
      * \returns The amount of literals added to \p work
@@ -199,7 +200,7 @@ private:
      *
      * \param[in, out] result          The vector in which the resolvent is stored.
      * \param[in] unresolvedCount      The amount of literals contained in \p result
-     * whose variable is on the current decision level.
+     *                                 whose variable is on the current decision level.
      */
     void resolveUntilUIP(std::vector<CNFLit>& result, int unresolvedCount) const;
 
@@ -218,6 +219,18 @@ private:
     // (and thus initialize) a vector of m_maxVar variables each time
     // a conflict clause is computed. This member variable is governed
     // by class invariant A.
+    //
+    // A variable v can be "stamped" for two reasons:
+    //  - if v has been assigned on the current decision level: when traversing down the trail,
+    //    resolution with v's reason clause needs to be performed.
+    //  - if v has not been assigned on the current decision level: v occurs in the result.
+    //
+    // Note that only one variable assigned on the current decision level can actually occur
+    // in the result: the variable of the asserting literal (UIP).
+    //
+    // Thus, m_stamps is used both for keeping track of remaining resolution work, and
+    // for quickly deciding whether a variable already occurs in the result. These two concerns
+    // are handled by the same data structure for memory efficiency.
     mutable BoundedMap<CNFVar, char> m_stamps;
 
     // Callback called once for every literal seen during conflict analysis
@@ -356,17 +369,24 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::resolveUntilUIP(std::vector<C
 
     const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
     auto trailIterators = m_dlProvider.getDecisionLevelAssignments(currentLevel);
-    auto span = trailIterators.end() - trailIterators.begin();
+    auto span = std::distance(trailIterators.begin(), trailIterators.end());
     auto cursor = trailIterators.begin() + span - 1;
 
     // Going down the trail backwards once, resolving the result with reason
     // clauses of items marked as "work" (i.e. literals occuring in the result
-    // which are on the current decision level). This suffices, since given a
-    // literal L at the i'th position of the trail whose assignment has been
-    // forced by propagation, the reason clause of L can only contain literals
-    // which occur on the trail at indices j <= i. Thus, if the reason of L
-    // contains resolution work, it's guaranteed that the algorithm will visit
-    // L later on.
+    // which are on the current decision level).
+    //
+    // Note: for efficiency, literals on the current decision level are not
+    // actually stored in the result (except for the asserting literal at the UIP),
+    // since they would be removed by resolution anyway.
+    //
+    // This suffices for first-UIP
+    // learning, since given a literal L at the i'th position of the trail whose
+    // assignment has been forced by propagation, the reason clause of L can
+    // only contain literals which occur on the trail at indices j <= i. Thus,
+    // if the reason of L contains resolution work, it's guaranteed that the
+    // algorithm will visit L later on.
+
     while (unresolvedCount > 1) {
         const CNFLit resolveAtLit = *cursor;
         const CNFVar resolveAtVar = resolveAtLit.getVariable();
@@ -395,8 +415,11 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::resolveUntilUIP(std::vector<C
         --cursor;
     }
 
-    // Collect the asserting literal (UIP)
-    // TODO: document this
+    // Collect the asserting literal (UIP). Since the unresolved-count is 1, there is exactly
+    // one literal L reachable by decrementing the cursor such that the variable of L is marked
+    // in m_stamps. This is the asserting literal: its assignment caused the assignment of all
+    // the current-decision-level literals and which ultimately caused the conflict and that have
+    // been eliminated from the result using resolution.
     while (m_stamps[cursor->getVariable()] == 0) {
         JAM_ASSERT(cursor != trailIterators.begin(), "No UIP found on current decision level");
         --cursor;
@@ -423,8 +446,6 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::clearStamps(
 template <class DLProvider, class ReasonProvider>
 void FirstUIPLearning<DLProvider, ReasonProvider>::computeConflictClause(
     Clause& conflictingClause, std::vector<CNFLit>& result) const {
-    // This implementation closely follows Donald Knuth's prosaic description
-    // of first-UIP clause learning. See TAOCP, chapter 7.2.2.2.
     JAM_LOG_CA(info, "Beginning conflict analysis.");
     JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar), "Class inv. A violated");
 
@@ -444,8 +465,7 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::computeConflictClause(
         JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
 
         JAM_LOG_CA(info, "Finished conflict resolution.");
-    } catch (std::bad_alloc& oomException) {
-        (void)oomException;
+    } catch (std::bad_alloc&) {
         // Restore class invariant A before throwing on the exception.
         for (CNFVar::RawVariable v = 0; v <= m_maxVar.getRawValue(); ++v) {
             m_stamps[CNFVar{v}] = 0;
