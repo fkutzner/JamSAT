@@ -65,8 +65,7 @@ auto solve(IpasirSolver& solver, std::ostream& outStream) noexcept -> int {
     case IpasirSolver::Result::UNSATISFIABLE:
         outStream << "UNSATISFIABLE\n";
         return 20;
-    default:
-    case IpasirSolver::Result::INDETERMINATE:
+    default: // also handles case IpasirSolver::Result::INDETERMINATE
         outStream << "INDETERMINATE\n";
         return 0;
     }

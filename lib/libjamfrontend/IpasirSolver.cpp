@@ -49,6 +49,11 @@ public:
                     int max_length,
                     void (*learn)(void* state, int* clause)) noexcept override;
 
+    IpasirAPIWrapper(IpasirAPIWrapper const& rhs) = delete;
+    IpasirAPIWrapper(IpasirAPIWrapper&& rhs) = delete;
+    auto operator=(IpasirAPIWrapper const& rhs) = delete;
+    auto operator=(IpasirAPIWrapper&& rhs) = delete;
+
 private:
     void* m_solver;
 };
