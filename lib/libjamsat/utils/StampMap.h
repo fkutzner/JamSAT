@@ -24,6 +24,12 @@
 
 */
 
+/**
+ * \file utils/StampMap.h
+ * \brief Implementation of StampMap
+ */
+
+
 #pragma once
 
 #include <libjamsat/utils/Assert.h>

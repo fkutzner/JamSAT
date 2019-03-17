@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/ControlFlow.h
+ * \brief Control-flow utilities such as OnExitScope
+ */
+
 #pragma once
 
 #include <functional>
@@ -36,9 +41,9 @@ namespace jamsat {
  * \class jamsat::OnExitScope
  *
  * \brief Executes a user-defined operation when being destructed. The main
- * application of this class is being allocated with automatic storage duration,
- * executing the user-defined operation when the program execution leaves the
- * rsp. scope.
+ *        application of this class is being allocated with automatic storage duration,
+ *        executing the user-defined operation when the program execution leaves the
+ *        rsp. scope.
  */
 class OnExitScope {
 public:
@@ -46,7 +51,7 @@ public:
      * \brief Constructs a new OnExitScope instance.
      *
      * \param callOnExit    A function which will be called when this instance is
-     * destroyed. This function may not throw.
+     *                      destroyed. This function may not throw.
      */
     explicit OnExitScope(std::function<void()> callOnExit) noexcept : m_callOnExit(callOnExit) {
         JAM_ASSERT(callOnExit, "callOnExit must be a callable function, but is not");
@@ -70,7 +75,7 @@ public:
 
     /**
      * \brief Destructs the instance, calling the \p callOnExit function which has
-     * been passed to the constructor.
+     *        been passed to the constructor.
      */
     ~OnExitScope() noexcept {
         if (m_callOnExit) {

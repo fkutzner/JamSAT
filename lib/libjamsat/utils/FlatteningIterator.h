@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/FlatteningIterator.h
+ * \brief An iterator for nested structures
+ */
+
 #pragma once
 
 #include <cstdint>

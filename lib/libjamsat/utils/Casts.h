@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/Casts.h
+ * \brief Checked integral-type casts
+ */
+
 #pragma once
 
 #include <type_traits>
@@ -41,10 +46,10 @@ namespace jamsat {
  *
  * \brief A static_cast with bounds checking when assertions are enabled.
  *
- * \param value     The value to be casted to \p ToType.
+ * \param value       The value to be casted to \p ToType.
  *
- * \tparam ToType   The target integral type.
- * \tparam FromType Any type that is integral or implicitly convertible to an integral type.
+ * \tparam ToType     The target integral type.
+ * \tparam FromType   Any type that is integral or implicitly convertible to an integral type.
  */
 template <typename ToType, typename FromType>
 auto static_checked_cast(FromType value) ->

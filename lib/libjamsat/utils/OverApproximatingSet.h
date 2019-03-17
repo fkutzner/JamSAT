@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/OverApproximatingSet.h
+ * \brief Implementation of OverApproximatingSet, a small and simple Bloom filter
+ */
+
 #pragma once
 
 #include <libjamsat/utils/Concepts.h>

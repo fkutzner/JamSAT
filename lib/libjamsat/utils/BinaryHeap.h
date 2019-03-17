@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/BinaryHeap.h
+ * \brief Fast binary heap implementations
+ */
+
 #pragma once
 
 #include <libjamsat/utils/Assert.h>

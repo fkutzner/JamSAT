@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/Logger.h
+ * \brief Logging-related functions and macros
+ */
+
 #pragma once
 
 #include <cstdint>

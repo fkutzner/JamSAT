@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/SimpleMovingAverage.h
+ * \brief Implementation of SimpleMovingAverage
+ */
+
 #pragma once
 
 #include <boost/circular_buffer.hpp>
@@ -50,16 +55,16 @@ public:
 
     /**
      * \brief Constructs a SimpleMovingAverage instance with an empty sequence of
-     * elements.
+     *        elements.
      *
      * \param horizon   The maximum of elements the constructed instance takes
-     * into account when computing mean values.
+     *                  into account when computing mean values.
      */
     explicit SimpleMovingAverage(capacity_type horizon);
 
     /**
      * \brief Adds the given value to the sequence of elements whose mean value
-     * can be computed.
+     *        can be computed.
      *
      * \param value     The value to be added.
      */
@@ -67,7 +72,7 @@ public:
 
     /**
      * \brief Computes the simple moving average of the values previously passed
-     * to \p add() .
+     *        to \p add() .
      *
      * Computes the unweighted mean of the last N elements passed to \p add() ,
      * where N is the minimum of the total number of calls to \p add() and the \p
@@ -88,10 +93,10 @@ public:
 
     /**
      * \brief Determines whether the amount of elements currently taken into
-     * account has reached the instance's horizon.
+     *        account has reached the instance's horizon.
      *
      * \returns true iff the amount of elements currently taken into account has
-     * reached the instance's horizon.
+     *          reached the instance's horizon.
      */
     bool isFull() const noexcept;
 

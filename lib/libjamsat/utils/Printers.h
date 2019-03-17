@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/Printers.h
+ * \brief Debug output, formatters etc.
+ */
+
 #pragma once
 
 #include <sstream>

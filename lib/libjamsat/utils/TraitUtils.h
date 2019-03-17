@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/TraitUtils.h
+ * \brief Utilities for creating type traits
+ */
+
 #pragma once
 
 #include <type_traits>

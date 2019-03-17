@@ -24,6 +24,11 @@
 
  */
 
+/**
+ * \file utils/Truth.h
+ * \brief Bool, TBool types and related functions
+ */
+
 #pragma once
 
 #include <libjamsat/utils/Assert.h>
@@ -134,8 +139,7 @@ struct TBools {
  *
  * \brief Converts a TBool value to a bool value.
  *
- * \param value   The value to be converted. \p value must not be
- * TBools::INDETERMINATE.
+ * \param value   The value to be converted. \p value must not be TBools::INDETERMINATE.
  * \returns       true iff \p value equals TBools::TRUE.
  */
 bool toBool(TBool value);
@@ -189,8 +193,8 @@ TBool toTBool(bool value);
  * indeterminacy.
  *
  * \param a   The value to be inverted.
- * \returns   TBools::TRUE iff \p a == TBools::FALSE; TBools::FALSE iff \p a ==
- * TBools::TRUE; TBools::INDETERMINATE otherwise.
+ * \returns   TBools::TRUE iff \p a == TBools::FALSE; TBools::FALSE iff `a == TBools::TRUE`;
+ *            `TBools::INDETERMINATE` otherwise.
  */
 TBool negate(const TBool a);
 
@@ -209,8 +213,8 @@ TBool negate(const TBool a);
  * \param lhs   The left-hand-side argument.
  * \param rhs   The right-hand-side argument.
  * \returns     TBools::TRUE if both \p lhs and \p rhs are equal to TBools::TRUE;
- * TBools::FALSE if any of \p lhs and \p rhs are equal to TBools::FALSE;
- * TBools::INDETERMINATE otherwise.
+ *              TBools::FALSE if any of \p lhs and \p rhs are equal to TBools::FALSE;
+ *              TBools::INDETERMINATE otherwise.
  */
 TBool operator*(const TBool lhs, const TBool rhs);
 
@@ -247,8 +251,8 @@ TBool& operator*=(const TBool& lhs, const TBool& rhs);
  * \param lhs   The left-hand-side argument.
  * \param rhs   The right-hand-side argument.
  * \returns     TBools::TRUE if any of \p lhs and \p rhs are equal to
- * TBools::TRUE; TBools::FALSE if both \p lhs and \p rhs are equal to
- * TBools::FALSE; TBools::INDETERMINATE otherwise.
+ *              TBools::TRUE; TBools::FALSE if both \p lhs and \p rhs are equal to
+ *              TBools::FALSE; TBools::INDETERMINATE otherwise.
  */
 TBool operator+(const TBool lhs, const TBool rhs);
 

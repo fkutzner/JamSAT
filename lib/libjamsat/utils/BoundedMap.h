@@ -24,6 +24,12 @@
 
 */
 
+/**
+ * \file utils/BoundedMap.h
+ * \brief Implementation of BoundedMap
+ */
+
+
 #pragma once
 
 #include <libjamsat/utils/Concepts.h>
@@ -78,7 +84,7 @@ public:
      * associated with an individual default-constructed value of V.
      *
      * \param maxKey    The key with the maximum index storable in the map
-     * instance. The instance will have a constant size in O(\param maxKey).
+     *                  instance. The instance will have a constant size in O(\param maxKey).
      */
     explicit BoundedMap(K maxKey) : m_values(KIndex::getIndex(maxKey) + 1), m_defaultValue(V{}) {}
 
@@ -90,7 +96,7 @@ public:
      * associated with \p defaultValue.
      *
      * \param maxKey        The key with the maximum index supported by the map
-     * instance.
+     *                      instance.
      * \param defaultValue  The default value of this map.
      */
     BoundedMap(K maxKey, V defaultValue)
@@ -100,7 +106,7 @@ public:
      * \brief Gets a reference to the specified element.
      *
      * \param index   The index of the element to be looked up. \p index must not
-     * be larger than the maximum index storable in this map.
+     *                be larger than the maximum index storable in this map.
      * \returns       A reference to the looked-up element.
      */
     V& operator[](const K& index) noexcept { return m_values[KIndex::getIndex(index)]; }
@@ -109,7 +115,7 @@ public:
      * \brief Gets a reference to the specified element (const version).
      *
      * \param index   The index of the element to be looked up. \p index must not
-     * be larger than the maximum index storable in this map.
+     *                be larger than the maximum index storable in this map.
      * \returns       A reference to the looked-up element.
      */
     const V& operator[](const K& index) const noexcept { return m_values[KIndex::getIndex(index)]; }

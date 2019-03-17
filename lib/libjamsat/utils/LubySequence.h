@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/LubySequence.h
+ * \brief Luby sequence computation
+ */
+
 #pragma once
 
 #include <cstdint>
@@ -36,7 +41,7 @@ namespace jamsat {
  * \class jamsat::LubySequence
  *
  * \brief Computes the Luby sequence and encapsulates the state of the
- * computation.
+ *        computation.
  *
  */
 class LubySequence {
@@ -52,7 +57,7 @@ public:
      * \brief Returns the next element of the Luby sequence.
      *
      * \returns the (N+1)th element of the Luby sequence iff next() has been
-     * called exactly N times (including the current call).
+     *          called exactly N times (including the current call).
      */
     Element next() noexcept;
 
@@ -60,7 +65,7 @@ public:
      * \brief Returns the current element of the Luby sequence.
      *
      * \returns the (N+1)th element of the Luby sequence iff next() has been
-     * called exactly N times before.
+     *          called exactly N times before.
      */
     Element current() const noexcept;
 

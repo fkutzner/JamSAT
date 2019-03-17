@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/OccurrenceMap.h
+ * \brief Implementation of OccurrenceMap
+ */
+
 #pragma once
 
 #include <libjamsat/utils/Assert.h>

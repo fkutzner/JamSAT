@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/BoundedStack.h
+ * \brief Implementation of BoundedStack
+ */
+
 #pragma once
 
 #include "Assert.h"
@@ -42,7 +47,7 @@ namespace jamsat {
  * affected by push operations (and neither by pop operations, as long as the
  * pointed-to element has not been removed from the stack).
  *
- * \tparam T        The element type.
+ * \tparam T          The element type.
  * \tparam Allocator  The allocator used by the backing vector.
  */
 template <typename T, typename Allocator = std::allocator<T>>
@@ -107,7 +112,7 @@ public:
      * \brief Removes multiple elements from the stack.
      *
      * \param newSize   The amount of elements remaining in the stack. \p newSize
-     * must not be larger than the current size of the stack.
+     *                  must not be larger than the current size of the stack.
      */
     void pop_to(size_type newSize) noexcept {
         JAM_ASSERT(newSize <= m_currentSize, "Cannot pop() an empty stack");
@@ -133,20 +138,18 @@ public:
      * The iterator remains valid until the stack is destroyed or its maximum
      * size is changed.
      *
-     * \returns An iterator pointing to the least recently added element of the
-     * stack.
+     * \returns An iterator pointing to the least recently added element of the stack.
      */
     iterator begin() noexcept { return m_stack.begin(); }
 
     /**
      * \brief Returns an iterator pointing to the bottom of the stack. (const
-     * version)
+     *        version)
      *
      * The iterator remains valid until the stack is destroyed or its maximum
      * size is changed.
      *
-     * \returns An iterator pointing to the least recently added element of the
-     * stack.
+     * \returns An iterator pointing to the least recently added element of the stack.
      */
     const_iterator begin() const noexcept { return m_stack.begin(); }
 
@@ -162,7 +165,7 @@ public:
 
     /**
      * \brief Returns an iterator pointing to the top of the stack. (const
-     * version)
+     *        version)
      *
      * The iterator remains valid until the stack is destroyed, its maximum
      * size is changed or the pop() method is called.

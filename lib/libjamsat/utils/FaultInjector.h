@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/FaultInjector.h
+ * \brief An exception injector for testing
+ */
+
 #pragma once
 
 #include <memory>
@@ -49,20 +54,19 @@ public:
     /**
      * \brief Enables faults matching the given name.
      *
-     * \param which   The name of the faults to be marked as enabled, e.g.
-     *   "low memory".
+     * \param which   The name of the faults to be marked as enabled, e.g. "low memory".
      */
     void enableFaults(const std::string& which);
 
     /**
      * \brief Determines whether synthetic faults matching the given name
-     * are enabled.
+     *        are enabled.
      *
      * Note: All synthetic faults are disabled by default.
      *
      * \param which   A name of faults.
-     * \returns true iff \p which denotes a class of faults which should be
-     *   synthesized for testing purposes.
+     * \returns true iff \p which denotes a class of faults which should be synthesized for
+     *          testing purposes.
      */
     bool isFaultEnabled(const std::string& which) const noexcept;
 
@@ -111,7 +115,7 @@ private:
  * \class jamsat::FaultInjectorResetRAII
  *
  * \brief An RAII object that, when destructed, restores the FaultInjector
- * singleton's state to the state it had when this object was constructed.
+ *        singleton's state to the state it had when this object was constructed.
  *
  * Usage example: Use FaultInjectorResetRAII in tests using fault injection to
  * ensure that none of the test's injected faults affect other tests.
@@ -120,13 +124,13 @@ class FaultInjectorResetRAII {
 public:
     /**
      * \brief Constructs the FaultInjectorResetRAII instance, storing a snapshot
-     * of the current FaultInjector singleton's state.
+     *        of the current FaultInjector singleton's state.
      */
     FaultInjectorResetRAII() noexcept;
 
     /**
      * \brief Destructs the FaultInjectorResetRAII instance, restoring the
-     * FaultInjector singleton's state.
+     *        FaultInjector singleton's state.
      */
     ~FaultInjectorResetRAII() noexcept;
 

@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/RangeUtils.h
+ * \brief Utility functions for iterator ranges
+ */
+
 #pragma once
 
 #include <vector>

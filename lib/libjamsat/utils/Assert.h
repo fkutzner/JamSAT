@@ -24,6 +24,11 @@
 
 */
 
+/**
+ * \file utils/Assert.h
+ * \brief Assertion-related macros
+ */
+
 #pragma once
 
 #include <cassert>
