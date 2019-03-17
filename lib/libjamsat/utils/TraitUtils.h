@@ -46,7 +46,7 @@
  */
 #define JAM_REQUIRE_EXPR(expr, ty) std::enable_if_t<std::is_same<decltype(expr), ty>::value, void>
 
-
+namespace jamsat {
 /**
  * \ingroup JamSAT_Utils
  *
@@ -57,3 +57,4 @@
  */
 template <class...>
 using j_void_t = void;
+}
