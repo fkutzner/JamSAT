@@ -40,6 +40,8 @@
 
 #include <boost/variant.hpp>
 
+#include <stdexcept>
+
 #if defined(JAM_ENABLE_INFLIGHTSIMP_LOGGING)
 #define JAM_LOG_SSRWITHHBR(x, y) JAM_LOG(x, "ssrhbr", y)
 #else
@@ -61,11 +63,11 @@ namespace jamsat {
  * \tparam ClauseType       The type of the conflicting clause
  */
 template <typename ClauseType>
-class FailedLiteralException {
+class FailedLiteralException : public std::exception {
 public:
     FailedLiteralException(ClauseType* conflictingClause, size_t decisionLevelToRevisit);
 
-    ~FailedLiteralException();
+    virtual ~FailedLiteralException();
 
     /**
      * \brief Returns the conflicting clause.
@@ -340,7 +342,9 @@ auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT& params,
 template <typename ClauseType>
 FailedLiteralException<ClauseType>::FailedLiteralException(ClauseType* conflictingClause,
                                                            size_t decisionLevelToRevisit)
-  : m_conflictingClause{conflictingClause}, m_decisionLevelToRevisit{decisionLevelToRevisit} {}
+  : std::exception()
+  , m_conflictingClause{conflictingClause}
+  , m_decisionLevelToRevisit{decisionLevelToRevisit} {}
 
 template <typename ClauseType>
 FailedLiteralException<ClauseType>::~FailedLiteralException() {}

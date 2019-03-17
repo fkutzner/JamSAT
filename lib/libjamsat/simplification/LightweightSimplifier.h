@@ -42,6 +42,8 @@
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/OccurrenceMap.h>
 
+#include <stdexcept>
+
 #if defined(JAM_ENABLE_INFLIGHTSIMP_LOGGING)
 #define JAM_LOG_LIGHTWEIGHTSIMP(x, y) JAM_LOG(x, "lwsimp", y)
 #else
@@ -177,7 +179,10 @@ private:
         }
     };
 
-    class DetectedUNSATException {};
+    class DetectedUNSATException final : public std::exception {
+    public:
+        virtual ~DetectedUNSATException(){};
+    };
 
     /**
      * \brief Propagates the given facts in m_propagator
