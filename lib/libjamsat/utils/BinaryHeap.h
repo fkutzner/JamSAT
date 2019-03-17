@@ -29,6 +29,7 @@
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/Casts.h>
+#include <libjamsat/utils/Concepts.h>
 
 #include <cstdint>
 #include <vector>
@@ -65,6 +66,8 @@ namespace jamsat {
  */
 template <typename K, typename Comparator, typename KIndex = typename K::Index>
 class BinaryMaxHeap {
+    static_assert(is_index<KIndex, K>::value, "KIndex must satisfy Index for K, but does not");
+
 public:
     using size_type = size_t;
 

@@ -60,6 +60,10 @@ template <typename ContainerT,
           typename ContainerDeletedQuery,
           typename ContainerValueIndex = typename ContainerT::value_type::Index>
 class OccurrenceMap {
+    static_assert(
+        is_index<ContainerValueIndex, typename ContainerT::value_type>::value,
+        "ContainerValueIndex must satisfy Index for ContainerT::value_type, but does not");
+
 public:
     using Container = ContainerT;
     using ContainerRange = boost::iterator_range<typename std::vector<Container*>::const_iterator>;

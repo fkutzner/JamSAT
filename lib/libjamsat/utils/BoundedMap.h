@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <libjamsat/utils/Concepts.h>
+
 #include <vector>
 
 #include <boost/range.hpp>
@@ -48,6 +50,8 @@ template <typename K,
           typename KIndex = typename K::Index,
           typename Allocator = std::allocator<V>>
 class BoundedMap {
+    static_assert(is_index<KIndex, K>::value, "KIndex must satisfy Index for K, but does not");
+
 private:
     using BackingType = std::vector<V, Allocator>;
 

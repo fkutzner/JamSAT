@@ -29,18 +29,20 @@
 #include <libjamsat/utils/BinaryHeap.h>
 
 #include <algorithm>
+#include <cstdint>
+
 
 namespace jamsat {
 
 class IntIndex {
 public:
-    using Type = uint32_t;
-    static constexpr auto getIndex(int i) -> Type {
+    using Type = int;
+    static constexpr auto getIndex(int i) -> std::size_t {
         int z = 2 * i;
         if (i < 0) {
-            return static_cast<Type>(-z);
+            return static_cast<std::size_t>(-z);
         }
-        return static_cast<Type>(z + 1);
+        return static_cast<std::size_t>(z + 1);
     }
 };
 

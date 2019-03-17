@@ -36,7 +36,8 @@ namespace jamsat {
 namespace {
 class IntIndex {
 public:
-    static uint32_t getIndex(int i) { return static_cast<uint32_t>(i); }
+    using Type = int;
+    static std::size_t getIndex(int i) { return static_cast<std::size_t>(i); }
 };
 }
 

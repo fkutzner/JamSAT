@@ -25,55 +25,74 @@
 */
 
 /**
+ * \file utils/Concepts.h
+ * \brief Concepts and concept-checking traits for the utilities package
+ */
+
+/**
  * \defgroup JamSAT_Utils_Concepts  Concepts
  * \ingroup JamSAT_Utils
  */
 
+#pragma once
+
+#include <libjamsat/utils/TraitUtils.h>
+
+#include <cstdint>
+#include <type_traits>
+
+namespace jamsat {
+
 /**
- * \defgroup Index
  * \ingroup JamSAT_Utils_Concepts
- * \{
  *
- * The `Index` describes types that can be used to associate objects with
- * integral indices.
+ * \brief Checks whether a type I is an Index type for a type T.
  *
- * \par Notation
+ * \tparam I    The index type.
+ * \tparam T    The indexed type.
  *
- * - `X`: A type that is a model of `Index`
+ * `is_index<I, T>::value` is `true` if `T` satisfies the Index concept
+ * defined below, with I as the index type and T as the indexed type. Otherwise,
+ * `is_index<I, T>::value` is `false`.
  *
- * \par Associated types
+ * Objects of types satisfying the Index concept can be used to assign unsigned integer
+ * values to other objects, e.g. to obtain the "raw" value of a CNF literal.
+ *
+ * A type satisfies the Index concept iff it satisfies the following requirements:
+ *
+ * \par Requirements
+ *
+ * Given
+ *  - `idx`, an object of type `I`
+ *  - `t`, an object of type `T const`
  *
  * <table>
+ *  <tr><th>Expression</th><th>Requirements</th><th>Return value</th></tr>
  *  <tr>
- *    <td> Indexed type </td>
- *    <td> `X::Type` </td>
- *    <td> The type of the objects to be indexed. </td>
+ *    <td> `I::Type`</td>
+ *    <td> The indexed type. Must be the same type as `T`.</td>
+ *    <td> </td>
  *  </tr>
- * </table>
- *
- * \par Valid expressions
- * <table>
- *  <tr><th>Name</th><th>Expression</th><th>Type requirements</th><th>Return type</th></tr>
  *  <tr>
- *    <td> Index </td>
- *    <td> `X::getIndex(a)` </td>
- *    <td> `a` is of type `X::Type`</td>
+ *    <td> `I::getIndex(t)`</td>
+ *    <td> Returns a unique index value for `a`. If `X::Type` is a model of `Comparable`, then for
+ *         any two objects `a,b` of type `X::Type`, the following must hold:
+ *         `a < b => X::getIndex(a) < X::getIndex(b)`. </td>
  *    <td> `std::size_t` </td>
  *  </tr>
  * </table>
- *
- * \par Expression semantics
- *
- * <table>
- *  <tr><th>Name</th><th>Expression</th><th>Precondition</th><th>Semantics</th><th>Postcondition</th></tr>
- *  <tr>
- *    <td> Index </td>
- *    <td> `X::getIndex(a)` </td>
- *    <td> </td>
- *    <td> Returns a unique index value for `a`. If `X::Type` is a model of `Comparable`, then for
- * any two objects `a,b` of type `X::Type`, the following must hold: `a < b => X::getIndex(a) <
- * X::getIndex(b)`.</td> <td> </td>
- *  </tr>
- * </table>
- * \}
  */
+
+template <typename, typename, typename = j_void_t<>>
+struct is_index : public std::false_type {};
+
+template <typename I, typename T>
+struct is_index<
+    I,
+    T,
+    j_void_t<std::enable_if_t<std::is_same<typename I::Type, T>::value, void>,
+
+             JAM_REQUIRE_EXPR(I::getIndex(std::declval<std::add_const_t<T>>()), std::size_t)>>
+  : public std::true_type {};
+
+}

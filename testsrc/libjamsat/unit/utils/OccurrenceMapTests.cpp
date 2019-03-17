@@ -35,6 +35,7 @@
 namespace jamsat {
 namespace {
 struct TestUIntIndex {
+    using Type = uint32_t;
     static size_t getIndex(uint32_t item) { return item; }
 };
 

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <libjamsat/utils/Concepts.h>
+
 #include <bitset>
 
 namespace jamsat {
@@ -42,6 +44,8 @@ namespace jamsat {
  */
 template <size_t Size, typename Key>
 class OverApproximatingSet {
+    static_assert(is_index<Key, typename Key::Type>::value, "Key must satisfy Index, but does not");
+
 public:
     static constexpr size_t size = Size;
     using Type = typename Key::Type;

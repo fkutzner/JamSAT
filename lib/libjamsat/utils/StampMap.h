@@ -27,8 +27,10 @@
 #pragma once
 
 #include <libjamsat/utils/Assert.h>
+#include <libjamsat/utils/Concepts.h>
 #include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/TraitUtils.h>
+
 #include <limits>
 #include <type_traits>
 #include <vector>
@@ -45,10 +47,10 @@ namespace jamsat {
  * are defined in this class.
  *
  * \tparam T    An integral type used as the internal index type, e.g. uint32_t.
- * Stamped elements are mapped to elements of type T, which in turn is used as
- * an internal index to the stamping data storage. Using narrower types T leads to
- * improved cache efficiency, but also requires the internal stamping data
- * storage to be cleaned completely more frequently.
+ *              Stamped elements are mapped to elements of type T, which in turn is used as
+ *              an internal index to the stamping data storage. Using narrower types T leads to
+ *              improved cache efficiency, but also requires the internal stamping data
+ *              storage to be cleaned completely more frequently.
  */
 template <typename T>
 class StampMapBase {
@@ -72,7 +74,7 @@ public:
      * \class StampingContext
      *
      * \brief RAII-style context for StampMaps, on destruction clearing the stamps
-     * made since creating the context.
+     *        made since creating the context.
      *
      * Usage example: create a stamping context before beginning to use a stamp
      * map, stamp elements using the stamp obtained from the context, and have the
@@ -153,7 +155,7 @@ public:
      * \brief Constructs a StampMap<T> instance.
      *
      * \param maxIdx    The maximum internal index which can be stored in the stamp
-     * map.
+     *                  map.
      */
     explicit StampMap<T>(typename StampMapBase<T>::size_type maxIdx) : StampMapBase<T>(maxIdx) {}
 
@@ -174,7 +176,7 @@ protected:
  * \class jamsat::StampMap<T, K...>
  *
  * \brief A map for flagging values ("stamping"), with an efficient flag
- * clearing mechanism.
+ *        clearing mechanism.
  *
  * StampMap allows type-safe stamping of objects of different type.
  *
@@ -183,15 +185,17 @@ protected:
  * allowing the StampMap to be reused later.
  *
  * \tparam T    An integral type used as the internal index type, e.g. uint32_t.
- * Stamped elements are mapped to elements of type T, which in turn is used as
- * an internal index to the stamping data storage. Using narrower types T leads to
- * improved cache efficiency, but also requires the internal stamping data
- * storage to be cleaned completely more frequently.
+ *              Stamped elements are mapped to elements of type T, which in turn is used as
+ *              an internal index to the stamping data storage. Using narrower types T leads to
+ *              improved cache efficiency, but also requires the internal stamping data
+ *              storage to be cleaned completely more frequently.
  * \tparam K    A type satisfying the concept `Index`
  * \tparam Ks   A sequence of types satisfying the concept `Index`
  */
 template <typename T, typename K, typename... Ks>
 class StampMap<T, K, Ks...> : public StampMap<T, Ks...> {
+    static_assert(is_index<K, typename K::Type>::value, "K must satisfy Index, but does not");
+
 public:
     /**
      * \brief Constructs a StampMap<T, K, Ks...> instance.
@@ -206,10 +210,9 @@ public:
      * \brief Stamps or unstamps a given object.
      *
      * \param obj       The object to be marked as stamped/not-stamped. \p
-     * K::getIndex(obj) must not be greater than the maximum index \p maxIdx
-     * passed to the constructor of the stamp map.
-     * \param stamp     The current stamp (obtained from a StampingContext
-     * instance).
+     *                  K::getIndex(obj) must not be greater than the maximum index \p maxIdx
+     *                  passed to the constructor of the stamp map.
+     * \param stamp     The current stamp (obtained from a StampingContext instance).
      * \param stamped   true iff \p obj should be marked as stamped.
      */
     void setStamped(const typename K::Type& obj,
@@ -222,9 +225,8 @@ public:
      * \brief Determines if the given object is stamped.
      *
      * \param obj       An object. \p K::getIndex(obj) must not be greater than the
-     * maximum index \p maxIdx passed to the constructor of the stamp map.
-     * \param stamp     The current stamp (obtained from a StampingContext
-     * instance).
+     *                  maximum index \p maxIdx passed to the constructor of the stamp map.
+     * \param stamp     The current stamp (obtained from a StampingContext instance).
      * \returns         true iff \p index is marked as stamped.
      */
     bool isStamped(const typename K::Type& obj, const typename StampMapBase<T>::Stamp stamp) const
