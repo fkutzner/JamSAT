@@ -87,5 +87,6 @@ function(add_fuzzing_target TARGET_NAME TARGET_FILE SEED_DIRECTORY)
 endfunction()
 
 add_subdirectory(toolbox)
+add_subdirectory(jamsat)
 add_subdirectory(libjamsat)
 add_subdirectory(libjamfrontend)
