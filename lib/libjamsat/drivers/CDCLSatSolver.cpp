@@ -99,7 +99,30 @@ private:
  */
 class CDCLSatSolverImpl : public CDCLSatSolver {
 public:
-    CDCLSatSolverImpl();
+    struct Config {
+        /** The maximum lemma size for post-learning lemma minimizaition using binary resolution */
+        std::size_t lemmaSimplificationSizeBound = 30;
+
+        /** The maximum lemma LBD for post-learning lemma minimizaition using binary resolution */
+        jamsat::LBD lemmaSimplificationLBDBound = 6;
+
+        /** The number of restarts between attempts to simplify the problem */
+        uint64_t simplificationFrequency = 1000;
+
+        /** The region allocator's region size */
+        std::size_t clauseRegionSize = 1048576;
+
+        /**
+         * The growth rate of the number of conflicts the solver waits between clause DB
+         * reductions
+         */
+        uint32_t clauseRemovalIntervalGrowthRate = 1300;
+
+        /** The restart policy configuration */
+        GlucoseRestartPolicy::Options restartPolicyOptions = GlucoseRestartPolicy::Options{};
+    };
+
+    explicit CDCLSatSolverImpl(Config const& configuration);
 
     void addProblem(CNFProblem const& problem) override;
     void addClause(CNFClause const& clause) override;
@@ -293,6 +316,7 @@ private:
     uint64_t m_amntBinariesLearnt;
     Statistics<> m_statistics;
     std::atomic<bool> m_stopRequested;
+    Config m_configuration;
 
     // Buffers
     std::vector<CNFLit> m_lemmaBuffer;
@@ -328,24 +352,25 @@ auto SolvingResultImpl::getFailedAssumptions() const noexcept -> std::vector<CNF
     return m_failedAssumptions;
 }
 
-CDCLSatSolverImpl::CDCLSatSolverImpl()
+CDCLSatSolverImpl::CDCLSatSolverImpl(Config const& configuration)
   : CDCLSatSolver()
   , m_trail{CNFVar{0}}
   , m_propagator{CNFVar{0}, m_trail}
   , m_branchingHeuristic{CNFVar{0}, m_trail}
   , m_conflictAnalyzer{CNFVar{0}, m_trail, m_trail}
   , m_simplifier{CNFVar{0}, m_propagator, m_trail}
-  , m_clauseDB{1048576}
+  , m_clauseDB{configuration.clauseRegionSize}
   , m_facts{}
   , m_lemmas{}
-  , m_clauseDBReductionPolicy{1300, m_lemmas}
-  , m_restartPolicy{GlucoseRestartPolicy::Options{}}
+  , m_clauseDBReductionPolicy{configuration.clauseRemovalIntervalGrowthRate, m_lemmas}
+  , m_restartPolicy{configuration.restartPolicyOptions}
   , m_maxVar{CNFVar{0}}
   , m_detectedUNSAT{false}
   , m_detectedOutOfMemory{false}
   , m_amntBinariesLearnt{0}
   , m_statistics{}
   , m_stopRequested{false}
+  , m_configuration{configuration}
   , m_lemmaBuffer{}
   , m_stamps{getMaxLit(CNFVar{0}).getRawValue()} {
     m_conflictAnalyzer.setOnSeenVariableCallback(
@@ -511,7 +536,8 @@ void CDCLSatSolverImpl::trySimplify() {
     JAM_ASSERT(m_trail.getNumberOfAssignments() == 0,
                "Illegally attempted to simplify the problem in-flight");
 
-    if (m_statistics.getCurrentEra().m_restartCount % 1000 != 0) {
+    if (m_statistics.getCurrentEra().m_restartCount % m_configuration.simplificationFrequency !=
+        0) {
         return;
     }
 
@@ -798,9 +824,9 @@ void CDCLSatSolverImpl::optimizeLemma(std::vector<CNFLit>& lemma) {
     JAM_LOG_SOLVER(info,
                    "  After redundant literal removal: (" << toString(lemma.begin(), lemma.end())
                                                           << ")");
-    if (lemma.size() < 30 /* TODO: make constant configurable */) {
+    if (lemma.size() <= m_configuration.lemmaSimplificationSizeBound) {
         LBD lbd = getLBD(lemma, m_trail, m_stamps);
-        if (lbd <= 6 /* TODO: make constant configurable */) {
+        if (lbd <= m_configuration.lemmaSimplificationLBDBound) {
             auto binariesMap = m_propagator.getBinariesMap();
             resolveWithBinaries(lemma, binariesMap, lemma[0], m_stamps);
             JAM_LOG_SOLVER(info,
@@ -818,6 +844,8 @@ void CDCLSatSolverImpl::stop() noexcept {
 }
 
 auto createCDCLSatSolver() -> std::unique_ptr<CDCLSatSolver> {
-    return std::make_unique<CDCLSatSolverImpl>();
+    // Currently, the solver is always instantiated with its default configuration, since the
+    // API doesn't allow configuration yet.
+    return std::make_unique<CDCLSatSolverImpl>(CDCLSatSolverImpl::Config{});
 }
 }
