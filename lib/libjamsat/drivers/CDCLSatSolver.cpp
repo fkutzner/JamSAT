@@ -257,6 +257,7 @@ private:
     struct LemmaDerivationResult {
         boost::variant<CNFLit, ClauseT*> clause;
         Trail<ClauseT>::DecisionLevel backtrackLevel;
+        bool allocationFailed;
     };
 
     /**
@@ -730,6 +731,9 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
         m_statistics.registerConflict();
         m_branchingHeuristic.beginHandlingConflict();
         LemmaDerivationResult result = deriveLemma(*conflictingClause);
+        if (result.allocationFailed) {
+            throw std::bad_alloc{};
+        }
         m_branchingHeuristic.endHandlingConflict();
 
         m_clauseDBReductionPolicy.registerConflict();
@@ -774,12 +778,16 @@ auto CDCLSatSolverImpl::deriveLemma(ClauseT& conflictingClause) -> LemmaDerivati
     optimizeLemma(m_lemmaBuffer);
 
     if (m_lemmaBuffer.size() == 1) {
-        return LemmaDerivationResult{m_lemmaBuffer[0], 0};
+        return LemmaDerivationResult{m_lemmaBuffer[0], 0, false};
     } else {
         auto newLemmaAllocation = m_clauseDB.createClause(m_lemmaBuffer.size());
 
+        if (!newLemmaAllocation) {
+            return LemmaDerivationResult{CNFLit::getUndefinedLiteral(), 0, true};
+        }
+
         ClauseT& newLemma = **newLemmaAllocation;
-        // TODO: deal with bad allocations by deleting the learned lemmas
+
         std::copy(m_lemmaBuffer.begin(), m_lemmaBuffer.end(), newLemma.begin());
         newLemma.clauseUpdated();
         newLemma.setLBD(getLBD(newLemma, m_trail, m_stamps));
@@ -814,7 +822,7 @@ auto CDCLSatSolverImpl::deriveLemma(ClauseT& conflictingClause) -> LemmaDerivati
             }
         }
         std::swap(*litWithMaxDecisionLevel, newLemma[1]);
-        return LemmaDerivationResult{&newLemma, backtrackLevel};
+        return LemmaDerivationResult{&newLemma, backtrackLevel, false};
     }
 }
 
