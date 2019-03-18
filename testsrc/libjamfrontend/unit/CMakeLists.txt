@@ -25,6 +25,7 @@
 nm_add_thirdparty_libs(LIBS libjamfrontend gtest gtest_main)
 
 nm_add_tool(jstest.libjamfrontend.unit
+  IpasirSolverTests.cpp
   OptionsTests.cpp
   ProblemParsingTests.cpp
   # From jamsat/ipasirmock:

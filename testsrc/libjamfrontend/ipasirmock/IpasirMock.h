@@ -26,14 +26,32 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <vector>
 
 extern const char* IPASIRTestMockSignature;
 
 namespace jamsat {
+/**
+ * Control structure for the IPASIR mock system
+ */
 struct IpasirMockContext {
     std::vector<int> m_literals;
+    std::vector<int> m_assumptions;
+    std::vector<int> m_assumptionsAtLastSolveCall;
+
+    // Configure these during test setup:
+    std::unordered_map<int, int> m_cfgLiteralVals;
+    std::unordered_map<int, int> m_cfgLiteralFailures;
+    int m_cfgSolveResult = 0;
 };
 
-auto getIPASIRMockContext(void* solver) noexcept -> IpasirMockContext*;
+/**
+ * Gets the current IPASIR mock system control structure.
+ *
+ * Note: The IPASIR mock system is not thread-safe, since it can safely be assumed that
+ * the JamSAT frontend test suite will remain small enough so that executing tests in
+ * parallel threads remains unwarranted. Create one mock IPASIR solver at a time.
+ */
+auto getCurrentIPASIRMockContext() noexcept -> IpasirMockContext&;
 }

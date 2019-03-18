@@ -105,7 +105,7 @@ auto IpasirAPIWrapper::getValue(int literal) noexcept -> Value {
 }
 
 auto IpasirAPIWrapper::isFailed(int literal) noexcept -> bool {
-    return ipasir_failed(m_solver, literal);
+    return ipasir_failed(m_solver, literal) == 1 ? true : false;
 }
 
 void IpasirAPIWrapper::setTerminateFn(void* state, int (*terminate)(void* state)) noexcept {
