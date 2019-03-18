@@ -26,39 +26,107 @@
 
 #include "Options.h"
 
+#include <chrono>
+#include <stdexcept>
+#include <string>
+
 namespace jamsat {
-auto parseOptions(int argc, char** argv) -> JamSATOptions {
+
+namespace {
+
+/**
+ * \brief Parses the timeout value part of a timeout argument.
+ *
+ * \param[in] timeoutValue  The timeout value, representing a nonnegative number of seconds
+ *
+ * \returns The timeout value, respresented as a std::chrono::seconds object
+ *
+ * \throws invalid_argument when `timeoutValue` does not represent an integral value,
+ *                          `timeoutValue` represents a negative value or `timeoutValue`
+ *                          can not be represented as a `long` value.
+ */
+auto parseTimeoutArgument(std::string const& timeoutValue) -> std::chrono::seconds {
+    std::chrono::seconds result;
+    try {
+        result = std::chrono::seconds{std::stoul(timeoutValue)};
+    } catch (std::invalid_argument&) {
+        throw std::invalid_argument{"Error: invalid timeout value"};
+    } catch (std::out_of_range&) {
+        throw std::invalid_argument{"Error: timeout value out of range"};
+    }
+
+    if (result.count() < 0) {
+        throw std::invalid_argument{"Error: negative timeout value"};
+    }
+    return result;
+}
+
+/**
+ * \brief Parses a single JamSAT argument
+ *
+ * \param[in] argument      The argument to be parsed
+ * \param[in,out] result    The JamSATOptions object where the result shall be stored
+ *
+ * \returns true iff the argument has been successfully parsed and registered in `result`.
+ *
+ * \throws invalid_argument when `argument` is not a valid JamSAT argument.
+ *
+ * Strong exception safety guarantee: when an exception is thrown, `result` has not been
+ * modified by this function.
+ */
+auto parseArgument(std::string const& argument, JamSATOptions& result) -> bool {
+    std::string const timeoutArgPrefix = "--timeout=";
+    if (argument == "--version") {
+        result.m_printVersion = true;
+        return true;
+    } else if (argument == "--help") {
+        result.m_printHelp = true;
+        return true;
+    } else if (argument == "--wait") {
+        result.m_waitForUserInput = true;
+        return true;
+    } else if (argument.compare(0, timeoutArgPrefix.size(), timeoutArgPrefix) == 0) {
+        std::string timeoutValue{argument.begin() + timeoutArgPrefix.size(), argument.end()};
+        result.m_timeout = parseTimeoutArgument(timeoutValue);
+        return true;
+    } else if (argument.compare(0, 2, "--") == 0) {
+        // Not a frontend option ~> pass it to the backend
+        result.m_backendOptions.push_back(argument);
+        return true;
+    }
+    return false;
+}
+}
+
+auto parseOptions(int argc, char const* const* argv) -> JamSATOptions {
     if (argc < 2) {
         throw std::invalid_argument{"<FILE> argument missing"};
     }
 
     JamSATOptions result;
+    bool lastArgIsFilename = false;
 
-    std::string timeoutArgPrefix = "--timeout=";
     for (int i = 1; i < argc; ++i) {
         std::string argument{argv[i]};
-        if (argument == "--version") {
-            result.m_printVersion = true;
-        } else if (argument == "--help") {
-            result.m_printHelp = true;
-        } else if (argument == "--wait") {
-            result.m_waitForUserInput = true;
-        } else if (argument.compare(0, timeoutArgPrefix.size(), timeoutArgPrefix) == 0) {
-            std::string timeoutValue{argument.begin() + timeoutArgPrefix.size(), argument.end()};
-            try {
-                result.m_timeout = std::chrono::seconds{std::stoul(timeoutValue)};
-            } catch (std::invalid_argument&) {
-                throw std::invalid_argument{"Error: invalid timeout value"};
-            } catch (std::out_of_range&) {
-                throw std::invalid_argument{"Error: timeout value out of range"};
+        bool parseSucceeded = parseArgument(argument, result);
+        if (!parseSucceeded) {
+            if (i != argc - 1) {
+                throw std::invalid_argument{std::string{"Error: unknown argument "} + argument};
+            } else if (i == argc - 1) {
+                lastArgIsFilename = true;
             }
-        } else if (argument.compare(0, 2, "--") == 0) {
-            // Not a frontend option ~> pass it to the backend
-            result.m_backendOptions.push_back(argument);
         }
     }
 
-    result.m_problemFilename = argv[argc - 1];
+    // Only --help and --version may be specified without a file argument:
+    if (!result.m_printHelp && !result.m_printVersion && !lastArgIsFilename) {
+        throw std::invalid_argument{"<FILE> argument missing"};
+    }
+
+    if (lastArgIsFilename) {
+        result.m_problemFilename = argv[argc - 1];
+    }
+
     return result;
 }
 

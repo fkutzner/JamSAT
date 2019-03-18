@@ -54,9 +54,9 @@ struct JamSATOptions {
  *                  argument (ie. JamSAT's binary name) getting ignored.
  * \return A representation of the options given via \p argc and \p argv.
  *
- * \throws std::invalid_argument    The arguments could not be parsed.
+ * \throws std::invalid_argument    argv represents invalid JamSAT arguments.
  */
-auto parseOptions(int argc, char** argv) -> JamSATOptions;
+auto parseOptions(int argc, char const* const* argv) -> JamSATOptions;
 
 /**
  * \brief Prints the list of available command-line options.
