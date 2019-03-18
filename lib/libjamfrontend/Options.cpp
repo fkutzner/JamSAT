@@ -46,6 +46,12 @@ namespace {
  *                          can not be represented as a `long` value.
  */
 auto parseTimeoutArgument(std::string const& timeoutValue) -> std::chrono::seconds {
+    // checking the sign early: MSVC17 doesn't seem to throw an out_of_range exception
+    // for negative stoul inputs
+    if (timeoutValue.size() >= 1 && timeoutValue[0] == '-') {
+        throw std::invalid_argument{"Error: negative timeout value"};
+    }
+
     std::chrono::seconds result;
     try {
         result = std::chrono::seconds{std::stoul(timeoutValue)};
@@ -55,9 +61,6 @@ auto parseTimeoutArgument(std::string const& timeoutValue) -> std::chrono::secon
         throw std::invalid_argument{"Error: timeout value out of range"};
     }
 
-    if (result.count() < 0) {
-        throw std::invalid_argument{"Error: negative timeout value"};
-    }
     return result;
 }
 
