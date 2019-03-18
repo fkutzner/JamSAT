@@ -13,9 +13,12 @@ This changelog's format is based on [keep a changelog 1.0.0](https://keepachange
   how to include JamSAT in client projects
 
 ### Changed
-- Simplified the build process by automatically building the Minisat
+- (internal) Simplified the build process by automatically building the Minisat
   test dependency
-- Overhauled the build system
+- (internal) Overhauled the build system
+- (internal) Overhauled named requirements by introducing concepts-like type traits
+  for JamSAT concepts
+- (internal) Simplified the CDCL driver and the simplifier implementations
 
 ## [0.1.0] - 2018-05-21
 ### Added
