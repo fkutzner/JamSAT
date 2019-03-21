@@ -120,6 +120,12 @@ public:
 
         /** The restart policy configuration */
         GlucoseRestartPolicy::Options restartPolicyOptions = GlucoseRestartPolicy::Options{};
+
+        /**
+         * The maximum amount of clauses for which LBD updates are performed during
+         * backtracking
+         */
+        std::size_t maxLBDUpdatesOnBacktrack = 32;
     };
 
     explicit CDCLSatSolverImpl(Config const& configuration);
@@ -279,6 +285,16 @@ private:
      *          to which to backtrack.
      */
     auto deriveLemma(ClauseT& conflictingClause) -> LemmaDerivationResult;
+
+
+    /**
+     * Recomputes the LBD value of the reason clauses associated with the assignments
+     * on the current decision level.
+     *
+     * Udating reason clauses on the current level is relatively cheap since those clauses
+     * have likely been used recently and thus are likely present in the L2 cache.
+     */
+    void updateReasonClauseLBDsOnCurrentLevel();
 
     enum class ResolveDecisionResult { CONTINUE, RESTART };
 
@@ -587,25 +603,46 @@ void CDCLSatSolverImpl::backtrackAll() {
     m_trail.shrinkToDecisionLevel(0);
 }
 
-
 void CDCLSatSolverImpl::backtrackToLevel(Trail<ClauseT>::DecisionLevel targetLevel) {
     JAM_LOG_SOLVER(info, "Backtracking by revisiting decision level " << targetLevel);
     prepareBacktrack(targetLevel + 1);
     m_trail.revisitDecisionLevel(targetLevel);
 }
 
-
 void CDCLSatSolverImpl::prepareBacktrack(Trail<ClauseT>::DecisionLevel level) {
-    for (auto currentDL = m_trail.getCurrentDecisionLevel(); currentDL >= level; --currentDL) {
-        for (auto lit : m_trail.getDecisionLevelAssignments(currentDL)) {
+    updateReasonClauseLBDsOnCurrentLevel();
+
+    for (auto l = m_trail.getCurrentDecisionLevel(); l >= level; --l) {
+        for (auto lit : m_trail.getDecisionLevelAssignments(l)) {
             m_branchingHeuristic.reset(lit.getVariable());
         }
-        if (currentDL == 0) {
+        if (l == 0) {
             break;
         }
     }
 }
 
+void CDCLSatSolverImpl::updateReasonClauseLBDsOnCurrentLevel() {
+    if (m_configuration.maxLBDUpdatesOnBacktrack == 0) {
+        return;
+    }
+
+    auto level = m_trail.getCurrentDecisionLevel();
+
+    std::size_t updated = 0;
+    for (auto lit : boost::adaptors::reverse(m_trail.getDecisionLevelAssignments(level))) {
+        if (m_propagator.hasForcedAssignment(lit.getVariable())) {
+            ClauseT* reason = m_propagator.getAssignmentReason(lit.getVariable());
+            LBD newLBD = getLBD(*reason, m_trail, m_stamps);
+            reason->setLBD(newLBD);
+            ++updated;
+
+            if (updated == m_configuration.maxLBDUpdatesOnBacktrack) {
+                return;
+            }
+        }
+    }
+}
 
 auto CDCLSatSolverImpl::solveUntilRestart(std::vector<CNFLit> const& assumedFacts,
                                           std::vector<CNFLit>& failedAssumptions) -> TBool {
@@ -744,12 +781,14 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
             return ResolveDecisionResult::RESTART;
         } else {
             ClauseT* newLemmaClause = boost::get<ClauseT*>(result.clause);
-            LBD newLemmaLBD = (*newLemmaClause).template getLBD<LBD>();
+
             if (newLemmaClause->size() > 2ULL) {
                 newLemmaClause->setFlag(Clause::Flag::REDUNDANT);
             }
-            m_restartPolicy.registerConflict({newLemmaLBD});
             m_statistics.registerLemma(newLemmaClause->size());
+
+            LBD newLemmaLBD = (*newLemmaClause).template getLBD<LBD>();
+            m_restartPolicy.registerConflict({newLemmaLBD});
 
             backtrackToLevel(result.backtrackLevel);
             auto amntConflAssignments = m_trail.getNumberOfAssignments();
