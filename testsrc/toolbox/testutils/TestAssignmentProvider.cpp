@@ -128,7 +128,7 @@ void TestAssignmentProvider::setCurrentDecisionLevel(
     m_currentLevel = level;
 }
 
-void TestAssignmentProvider::addAssignment(CNFLit literal, Clause const& clause) noexcept {
+void TestAssignmentProvider::addAssignment(CNFLit literal, Clause& clause) noexcept {
     addAssignment(literal);
     m_reasons[literal.getVariable()] = &clause;
 }
@@ -141,7 +141,15 @@ auto TestAssignmentProvider::getAssignmentReason(CNFVar variable) const noexcept
     return candidate->second;
 }
 
-void TestAssignmentProvider::setAssignmentReason(CNFVar variable, Clause const* reason) noexcept {
+auto TestAssignmentProvider::getAssignmentReason(CNFVar variable) noexcept -> Clause* {
+    auto candidate = m_reasons.find(variable);
+    if (candidate == m_reasons.end()) {
+        return nullptr;
+    }
+    return candidate->second;
+}
+
+void TestAssignmentProvider::setAssignmentReason(CNFVar variable, Clause* reason) noexcept {
     m_reasons[variable] = reason;
 }
 }

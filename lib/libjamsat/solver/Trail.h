@@ -71,7 +71,7 @@ private:
     uint32_t m_currentDecisionLevel;
 
     struct ReasonAndAssignmentLevel {
-        ClauseT const* m_reason;
+        ClauseT* m_reason;
         uint32_t m_assignmentLevel;
     };
 
@@ -152,7 +152,7 @@ public:
      * \param reason    The clause whose assignment has forced the addition of
      *                  \p literal to the trail.
      */
-    void addAssignment(CNFLit literal, ClauseT const& reason) noexcept;
+    void addAssignment(CNFLit literal, ClauseT& reason) noexcept;
 
     /**
      * \brief Gets the number of current variable assignments.
@@ -266,12 +266,21 @@ public:
     auto getAssignmentReason(CNFVar variable) const noexcept -> ClauseT const*;
 
     /**
+     * \brief Returns the assignment reason clause for \p variable (non-const version).
+     *
+     * \param variable      A variable with an assignment.
+     * \returns             The assignment reason clause of \p variable. If \p variable has
+     *                      no assignment reason clause, `nullptr` is returned.
+     */
+    auto getAssignmentReason(CNFVar variable) noexcept -> ClauseT*;
+
+    /**
      * \brief Sets the assignment reason clause for \p variable.
      *
      * \param variable      A variable with an assignment.
      * \param reason        The reason clause for the assignment of \p variable.
      */
-    void setAssignmentReason(CNFVar variable, ClauseT const* reason) noexcept;
+    void setAssignmentReason(CNFVar variable, ClauseT* reason) noexcept;
 };
 
 /********** Implementation ****************************** */
@@ -345,7 +354,7 @@ void Trail<ClauseT>::addAssignment(CNFLit literal) noexcept {
 }
 
 template <typename ClauseT>
-void Trail<ClauseT>::addAssignment(CNFLit literal, ClauseT const& reason) noexcept {
+void Trail<ClauseT>::addAssignment(CNFLit literal, ClauseT& reason) noexcept {
     addAssignment(literal);
     m_reasonsAndALs[literal.getVariable()].m_reason = &reason;
 }
@@ -448,7 +457,14 @@ auto Trail<ClauseT>::getAssignmentReason(CNFVar variable) const noexcept -> Reas
 }
 
 template <typename ClauseT>
-void Trail<ClauseT>::setAssignmentReason(CNFVar variable, Reason const* reason) noexcept {
+auto Trail<ClauseT>::getAssignmentReason(CNFVar variable) noexcept -> Reason* {
+    JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_assignments.size()),
+               "Variable out of bounds");
+    return m_reasonsAndALs[variable].m_reason;
+}
+
+template <typename ClauseT>
+void Trail<ClauseT>::setAssignmentReason(CNFVar variable, Reason* reason) noexcept {
     JAM_ASSERT(variable.getRawValue() < static_cast<CNFVar::RawVariable>(m_assignments.size()),
                "Variable out of bounds");
     m_reasonsAndALs[variable].m_reason = reason;

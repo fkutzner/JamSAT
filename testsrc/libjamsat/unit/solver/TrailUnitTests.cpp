@@ -176,6 +176,9 @@ TEST(UnitSolver, variablesOnTrailHaveNullReasonsByDefault) {
     Trail<TrivialClause> underTest{CNFVar{10}};
     underTest.addAssignment(~4_Lit);
     EXPECT_EQ(underTest.getAssignmentReason(CNFVar{4}), nullptr);
+
+    Trail<TrivialClause> const& constUnderTest = underTest;
+    EXPECT_EQ(constUnderTest.getAssignmentReason(CNFVar{4}), nullptr);
 }
 
 TEST(UnitSolver, variablesOnTrailHaveCorrectReasonClauses) {
@@ -184,9 +187,15 @@ TEST(UnitSolver, variablesOnTrailHaveCorrectReasonClauses) {
     underTest.addAssignment(~4_Lit, cl1);
     underTest.addAssignment(~5_Lit);
     underTest.addAssignment(~6_Lit, cl2);
+
     EXPECT_EQ(underTest.getAssignmentReason(CNFVar{4}), &cl1);
     EXPECT_EQ(underTest.getAssignmentReason(CNFVar{5}), nullptr);
     EXPECT_EQ(underTest.getAssignmentReason(CNFVar{6}), &cl2);
+
+    Trail<TrivialClause> const& constUnderTest = underTest;
+    EXPECT_EQ(constUnderTest.getAssignmentReason(CNFVar{4}), &cl1);
+    EXPECT_EQ(constUnderTest.getAssignmentReason(CNFVar{5}), nullptr);
+    EXPECT_EQ(constUnderTest.getAssignmentReason(CNFVar{6}), &cl2);
 }
 
 TEST(UnitSolver, variablesOnTrailHaveCorrectDecisionLevel) {

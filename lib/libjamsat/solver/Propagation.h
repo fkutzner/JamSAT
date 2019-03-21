@@ -195,6 +195,19 @@ public:
     auto getAssignmentReason(CNFVar variable) const noexcept -> const Clause*;
 
     /**
+     * \brief Gets the pointer to the clause which forced the assignment of the
+     * given variable (non-const version).
+     *
+     * \param variable  The target variable. Must not be greater than \p maxVar
+     * passed to the constructor. \p variable must be a variable with a
+     * determinate truth value.
+     * \returns    The clause which forced the assignment of the given variable.
+     * If the assignment was not forced due to propagation, \p nullptr is returned
+     * instead.
+     */
+    auto getAssignmentReason(CNFVar variable) noexcept -> Clause*;
+
+    /**
      * \brief Increases the maximum variable which may occur during propagation.
      *
      * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
@@ -362,6 +375,11 @@ auto Propagation<AssignmentProvider>::registerClause(Clause& clause) -> Clause* 
 template <class AssignmentProvider>
 auto Propagation<AssignmentProvider>::getAssignmentReason(CNFVar variable) const noexcept
     -> const Clause* {
+    return m_assignmentProvider.getAssignmentReason(variable);
+}
+
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::getAssignmentReason(CNFVar variable) noexcept -> Clause* {
     return m_assignmentProvider.getAssignmentReason(variable);
 }
 
