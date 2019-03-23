@@ -42,6 +42,8 @@
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/OccurrenceMap.h>
 
+#include <boost/optional.hpp>
+
 #include <stdexcept>
 
 #if defined(JAM_ENABLE_INFLIGHTSIMP_LOGGING)
@@ -255,7 +257,7 @@ private:
     PropagationT& m_propagation;
     AssignmentProviderT& m_assignmentProvider;
     CNFVar m_maxVar;
-    size_t m_lastSeenAmntUnaries;
+    boost::optional<size_t> m_lastSeenAmntUnaries;
     OccurrenceMap<Clause, ClauseDeletedQuery> m_occurrenceMap;
 
     using FailedLiteralAnalyzerT = FailedLiteralAnalyzer<AssignmentProviderT, PropagationT>;
@@ -268,7 +270,7 @@ LightweightSimplifier<PropagationT, AssignmentProviderT>::LightweightSimplifier(
   : m_propagation{propagation}
   , m_assignmentProvider{assignmentProvider}
   , m_maxVar{maxVar}
-  , m_lastSeenAmntUnaries{0}
+  , m_lastSeenAmntUnaries{}
   , m_occurrenceMap{getMaxLit(m_maxVar)}
   , m_failedLitAnalyzer{m_maxVar, m_propagation, m_assignmentProvider, m_assignmentProvider, 0} {}
 
@@ -286,7 +288,7 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
         m_assignmentProvider.shrinkToDecisionLevel(0);
     }};
 
-    if (unaryClauses.size() <= m_lastSeenAmntUnaries) {
+    if (m_lastSeenAmntUnaries && unaryClauses.size() <= *m_lastSeenAmntUnaries) {
         return SimplificationStats{};
     }
 
