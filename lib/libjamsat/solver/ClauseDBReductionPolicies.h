@@ -162,7 +162,14 @@ GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::getClausesMar
     }
 
     std::sort(m_learntClauses.begin(), m_learntClauses.end(), [](ClauseT* lhs, ClauseT* rhs) {
-        return lhs->template getLBD<LBDType>() < rhs->template getLBD<LBDType>();
+        auto lhsLBD = lhs->template getLBD<LBDType>();
+        auto rhsLBD = rhs->template getLBD<LBDType>();
+        if (lhsLBD != rhsLBD) {
+            return lhs->template getLBD<LBDType>() < rhs->template getLBD<LBDType>();
+        }
+
+        // Use the clause size for tie-breaking, since smaller clauses are likely propagated faster:
+        return lhs->size() < rhs->size();
     });
 
     if (m_learntClauses[midIndex]->template getLBD<LBDType>() <= static_cast<LBDType>(3)) {

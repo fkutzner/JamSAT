@@ -33,6 +33,8 @@
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
 
+#include <cstdint>
+
 namespace jamsat {
 
 // In many tests, no actual clauses are needed, just pointers to clauses.
@@ -45,6 +47,8 @@ public:
 
     template <typename LBDType>
     void setLBD(LBDType) {}
+
+    auto size() const noexcept -> std::size_t { return 2; }
 };
 
 using TrivialClauseSeq = std::vector<TrivialClause*>;
