@@ -55,6 +55,8 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
+#include <iostream>
 
 #if defined(JAM_ENABLE_SOLVER_LOGGING)
 #define JAM_LOG_SOLVER(x, y) JAM_LOG(x, "solver", y)
@@ -126,6 +128,10 @@ public:
          * backtracking
          */
         std::size_t maxLBDUpdatesOnBacktrack = 32;
+
+
+        /** Iff `true`, the solver regularly prints statistics */
+        bool printStatistics = true;
     };
 
     explicit CDCLSatSolverImpl(Config const& configuration);
@@ -339,6 +345,8 @@ private:
     std::vector<CNFLit> m_lemmaBuffer;
     StampMap<uint16_t, CNFVar::Index, CNFLit::Index, typename Trail<ClauseT>::DecisionLevelKey>
         m_stamps;
+
+    static constexpr uint32_t m_printStatsInterval = 16384;
 };
 
 
@@ -458,6 +466,10 @@ auto CDCLSatSolverImpl::solve(std::vector<CNFLit> const& assumedFacts)
     try {
         m_statistics.registerSolvingStart();
         m_stopRequested.store(false);
+
+        if (m_configuration.printStatistics) {
+            m_statistics.printStatisticsDescription(std::cout);
+        }
 
         if (m_detectedOutOfMemory) {
             m_statistics.registerSolvingStop();
@@ -805,6 +817,11 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
                 // conflict analysis:
                 return ResolveDecisionResult::RESTART;
             }
+        }
+
+        if (m_configuration.printStatistics &&
+            m_statistics.getCurrentEra().m_conflictCount % m_printStatsInterval == 0) {
+            std::cout << m_statistics;
         }
     }
 
