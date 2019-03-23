@@ -201,7 +201,14 @@ namespace simp_ssrhbr_detail {
 enum ClauseOptimizationResult { UNCHANGED, STRENGTHENED, SCHEDULED_FOR_DELETION };
 
 // Removes stamped literals from a clause and marks the clause as scheduled for deletion
-// if it contains some literal L such that ~L is stamped.
+// if it contains some literal L such that ~L is stamped. To prevent the clause to shrink
+// to unary size, the size is not reduced further than to 2. This is relevant for a
+// special case: when all literals in the clause except for resolveAt are implied by
+// ~resolveAt, and this didn't cause a conflict during propagation since clause is
+// redundant and thus excluded from this propagation, the clause is actually a conflicting
+// clause. However, this seems to be quite a rare case, and to keep the code simple, the
+// binary form of the clause is kept instead - the corresponding fact will then soon be
+// learnt via CDCL.
 template <typename SSRWithHBRParamsT, typename Clause>
 auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT& params,
                                 Clause& clause,
@@ -316,6 +323,12 @@ auto ssrWithHBRMinimizeOrDelete(SSRWithHBRParamsT& params,
             // strengthen the clause: the clause contains some
             // literal b such that (resolveAt ~b) is a "virtual" binary,
             // therefore b can be removed via resolution:
+
+            if (clause.size() == 2) {
+                JAM_ASSERT(clause.getFlag(Clause::Flag::REDUNDANT), "Illegal non-redundant clause");
+                break;
+            }
+
             if (!clauseModified) {
                 notifyModificationAheadFn(&clause);
                 clauseModified = true;
