@@ -493,6 +493,24 @@ TEST(UnitSolver,
     test_shortenedClausesArePropagatedCorrectly(true, true);
 }
 
+TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_withBothWatchedLitsRemoved) {
+    TrivialClause testData{1_Lit, 2_Lit, 3_Lit, 4_Lit};
+
+    TestAssignmentProvider assignments;
+    CNFVar maxVar{4};
+    Propagation<TestAssignmentProvider> underTest(maxVar, assignments);
+
+    underTest.registerClause(testData);
+    underTest.notifyClauseModificationAhead(testData);
+    testData = TrivialClause{3_Lit, 4_Lit};
+
+    assignments.addAssignment(~3_Lit);
+    auto conflict = underTest.propagateUntilFixpoint(~3_Lit);
+    ASSERT_EQ(conflict, nullptr);
+
+    EXPECT_EQ(assignments.getAssignment(4_Lit), TBools::TRUE);
+}
+
 TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary) {
     CNFLit lit1{CNFVar{1}, CNFSign::NEGATIVE};
     CNFLit lit2{CNFVar{2}, CNFSign::POSITIVE};

@@ -154,6 +154,9 @@ public:
      * \brief Propagates the given fact wrt. the clauses registered in the
      * propagation object.
      *
+     * Note: This method is only exposed for testing purposes and may only
+     * be used in unit tests.
+     *
      * As soon as a new fact has been deduced, the assignment provider's
      * addAssignment(l) method is called with l encoding the new fact. If the
      * propagation leads to a conflict, a pointer to the clause falsified under
@@ -277,6 +280,8 @@ private:
     Clause* propagateBinaries(CNFLit toPropagate, size_t& amountOfNewFacts);
     Clause* registerClause(Clause& clause, bool autoPropagate);
     void cleanupWatchers(CNFLit lit);
+    void cleanupWatchers();
+    auto isWatcherCleanupRequired() const noexcept -> bool;
 
     AssignmentProviderT& m_assignmentProvider;
     detail_propagation::Watchers<Clause> m_binaryWatchers;
@@ -311,6 +316,14 @@ private:
      * or second literal has been changed)
      */
     BoundedMap<CNFLit, char> m_watcherUpdateRequired;
+
+    /**
+     * \internal
+     *
+     * A collection of elements marked in m_watcherUpdateRequired, for fast
+     * iteration.
+     */
+    std::vector<CNFLit> m_watcherUpdateRequiredAsVec;
 };
 
 /********** Implementation ****************************** */
@@ -321,7 +334,8 @@ Propagation<AssignmentProvider>::Propagation(CNFVar maxVar, AssignmentProvider& 
   , m_binaryWatchers(maxVar)
   , m_unpropagatedStats(0ULL)
   , m_watchers(maxVar)
-  , m_watcherUpdateRequired(getMaxLit(maxVar)) {
+  , m_watcherUpdateRequired(getMaxLit(maxVar))
+  , m_watcherUpdateRequiredAsVec() {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
 }
 
@@ -392,8 +406,12 @@ template <class AssignmentProvider>
 auto Propagation<AssignmentProvider>::propagateUntilFixpoint(CNFLit toPropagate,
                                                              PropagationMode mode) -> Clause* {
     JAM_LOG_PROPAGATION(info, "Propagating assignment until fixpoint: " << toPropagate);
-    auto trailEndIndex = m_assignmentProvider.getNumberOfAssignments();
 
+    if (isWatcherCleanupRequired()) {
+        cleanupWatchers();
+    }
+
+    auto trailEndIndex = m_assignmentProvider.getNumberOfAssignments();
     // Using the space on the trail beyond its current last literal as a
     // propagation queue.
     auto propagationQueue = m_assignmentProvider.getAssignments(trailEndIndex);
@@ -480,10 +498,6 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t& amou
 
     JAM_LOG_PROPAGATION(info, "  Propagating assignment: " << toPropagate);
     amountOfNewFacts = 0;
-
-    if (m_watcherUpdateRequired[~toPropagate] != 0) {
-        cleanupWatchers(~toPropagate);
-    }
 
     if (Clause* conflict = propagateBinaries(toPropagate, amountOfNewFacts)) {
         return conflict;
@@ -632,9 +646,19 @@ auto Propagation<AssignmentProvider>::getCurrentAmountOfUnpropagatedAssignments(
 
 template <class AssignmentProvider>
 void Propagation<AssignmentProvider>::notifyClauseModificationAhead(Clause const& clause) noexcept {
+    JAM_LOG_PROPAGATION(info,
+                        "About to modify clause: " << std::addressof(clause) << " ("
+                                                   << toString(clause.begin(), clause.end())
+                                                   << ")");
     JAM_ASSERT(clause.size() >= 2, "Can't modify clauses with size <= 1");
-    m_watcherUpdateRequired[clause[0]] = 1;
-    m_watcherUpdateRequired[clause[1]] = 1;
+    if (m_watcherUpdateRequired[clause[0]] != 1) {
+        m_watcherUpdateRequired[clause[0]] = 1;
+        m_watcherUpdateRequiredAsVec.push_back(clause[0]);
+    }
+    if (m_watcherUpdateRequired[clause[1]] != 1) {
+        m_watcherUpdateRequired[clause[1]] = 1;
+        m_watcherUpdateRequiredAsVec.push_back(clause[1]);
+    }
 }
 
 template <class AssignmentProvider>
@@ -701,4 +725,18 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
     binaryWatcherListTraversal.finishedTraversal();
     m_watcherUpdateRequired[lit] = 0;
 }
+
+template <class AssignmentProvider>
+void Propagation<AssignmentProvider>::cleanupWatchers() {
+    for (CNFLit dirtyLit : m_watcherUpdateRequiredAsVec) {
+        cleanupWatchers(dirtyLit);
+    }
+    m_watcherUpdateRequiredAsVec.clear();
+}
+
+template <class AssignmentProvider>
+auto Propagation<AssignmentProvider>::isWatcherCleanupRequired() const noexcept -> bool {
+    return !m_watcherUpdateRequiredAsVec.empty();
+}
+
 }
