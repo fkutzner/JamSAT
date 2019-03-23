@@ -347,6 +347,7 @@ private:
         m_stamps;
 
     static constexpr uint32_t m_printStatsInterval = 16384;
+    static constexpr uint32_t m_checkStopInterval = 8192;
 };
 
 
@@ -689,7 +690,8 @@ auto CDCLSatSolverImpl::solveUntilRestart(std::vector<CNFLit> const& assumedFact
             return TBools::INDETERMINATE;
         }
 
-        if (m_statistics.getCurrentEra().m_conflictCount % 8192 == 0 && m_stopRequested.load()) {
+        if (m_statistics.getCurrentEra().m_conflictCount % m_checkStopInterval == 0 &&
+            m_stopRequested.load()) {
             return TBools::INDETERMINATE;
         }
     }
