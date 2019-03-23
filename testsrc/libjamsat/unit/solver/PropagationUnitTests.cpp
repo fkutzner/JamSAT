@@ -336,6 +336,30 @@ TEST(UnitSolver, propagationDetectsAssignmentReasonClause) {
 }
 
 
+TEST(UnitSolver, propagationDoesNotDetectImpliedFactAssignmentReasonClauseAfterBacktrack) {
+    TrivialClause testData{1_Lit, 2_Lit, 3_Lit};
+
+    TestAssignmentProvider assignments;
+    Propagation<TestAssignmentProvider> underTest(CNFVar{3}, assignments);
+    underTest.registerClause(testData);
+
+    assignments.setCurrentDecisionLevel(0);
+    assignments.addAssignment(~1_Lit);
+    underTest.propagateUntilFixpoint(~1_Lit);
+    assignments.addAssignment(~2_Lit);
+    underTest.propagateUntilFixpoint(~2_Lit);
+
+    ASSERT_EQ(assignments.getAssignment(3_Lit), TBools::TRUE);
+    EXPECT_EQ(underTest.getAssignmentReason(CNFVar{3}), &testData);
+    EXPECT_TRUE(underTest.isAssignmentReason(testData, assignments));
+
+    assignments.popLiteral();
+    assignments.popLiteral();
+    assignments.popLiteral();
+
+    EXPECT_FALSE(underTest.isAssignmentReason(testData, assignments));
+}
+
 namespace {
 void test_clearClausesInPropagation() {
     using PropagationTy = Propagation<TestAssignmentProvider>;

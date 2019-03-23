@@ -618,6 +618,14 @@ template <typename DecisionLevelProvider>
 auto Propagation<AssignmentProvider>::isAssignmentReason(
     const Clause& clause, const DecisionLevelProvider& dlProvider) const noexcept -> bool {
     JAM_ASSERT(clause.size() >= 2, "Argument clause must at have a size of 2");
+
+    if (m_assignmentProvider.getNumberOfAssignments() == 0) {
+        // Special case for decision level 0, to avoid erroneously marking
+        // clauses having been reasons for implied facts as reasons even
+        // after backtracking:
+        return false;
+    }
+
     for (auto var : {clause[0].getVariable(), clause[1].getVariable()}) {
         if (m_assignmentProvider.getAssignmentReason(var) != &clause) {
             continue;
@@ -651,6 +659,7 @@ void Propagation<AssignmentProvider>::notifyClauseModificationAhead(Clause const
                                                    << toString(clause.begin(), clause.end())
                                                    << ")");
     JAM_ASSERT(clause.size() >= 2, "Can't modify clauses with size <= 1");
+    JAM_ASSERT(!isAssignmentReason(clause, m_assignmentProvider), "Can't modify reason clauses");
     if (m_watcherUpdateRequired[clause[0]] != 1) {
         m_watcherUpdateRequired[clause[0]] = 1;
         m_watcherUpdateRequiredAsVec.push_back(clause[0]);
