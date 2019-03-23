@@ -46,6 +46,7 @@
 
 #include <stdexcept>
 
+
 #if defined(JAM_ENABLE_INFLIGHTSIMP_LOGGING)
 #define JAM_LOG_LIGHTWEIGHTSIMP(x, y) JAM_LOG(x, "lwsimp", y)
 #else
@@ -201,6 +202,8 @@ private:
      * \brief Subsumption and self-subsuming resolution using unary clauses.
      *
      * \param unaryClauses  A vector of literals representing unary clauses.
+     * 
+     * Precondition: m_assignmentProvider must have no assignments.
      *
      * \returns Simplification statistics
      */
@@ -288,10 +291,6 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
         m_assignmentProvider.shrinkToDecisionLevel(0);
     }};
 
-    if (m_lastSeenAmntUnaries && unaryClauses.size() <= *m_lastSeenAmntUnaries) {
-        return SimplificationStats{};
-    }
-
     SimplificationStats result;
     try {
         result = propagateFacts(unaryClauses);
@@ -299,10 +298,17 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
         return SimplificationStats{};
     }
 
+    if (m_lastSeenAmntUnaries && unaryClauses.size() <= *m_lastSeenAmntUnaries) {
+        return result;
+    }
+
     m_occurrenceMap.clear();
     m_occurrenceMap.insert(problemClauses.begin(), problemClauses.end());
 
+    m_assignmentProvider.shrinkToDecisionLevel(0);
     result += runUnaryOptimizations(unaryClauses);
+
+    propagateFacts(unaryClauses);
     result += runSSRWithHBR(tempStamps, unaryClauses);
 
     m_lastSeenAmntUnaries = unaryClauses.size();
@@ -314,6 +320,7 @@ template <typename PropagationT, typename AssignmentProviderT>
 auto LightweightSimplifier<PropagationT, AssignmentProviderT>::propagateFacts(
     std::vector<CNFLit>& facts) -> SimplificationStats {
     JAM_LOG_LIGHTWEIGHTSIMP(info, "Propagating facts...");
+
     SimplificationStats result;
     auto initialFactCount = facts.size();
 
@@ -332,11 +339,9 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::propagateFacts(
     }
 
     result.amntUnariesLearnt = m_assignmentProvider.getNumberOfAssignments() - initialFactCount;
-    if (result.amntUnariesLearnt > 0) {
-        facts.clear();
-        auto newFacts = m_assignmentProvider.getDecisionLevelAssignments(0);
-        facts.insert(facts.begin(), newFacts.begin(), newFacts.end());
-    }
+    facts.clear();
+    auto newFacts = m_assignmentProvider.getDecisionLevelAssignments(0);
+    facts.insert(facts.begin(), newFacts.begin(), newFacts.end());
 
     JAM_LOG_LIGHTWEIGHTSIMP(info, "Finished propagating facts, no conflict detected");
     return result;
@@ -458,10 +463,9 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::eliminateFailedLi
 
     SimplificationStats result = analysis.stats;
     if (postProcMode == FLEPostProcessing::FULL) {
-        auto delMarker = [this](Clause* cla) { m_propagation.notifyClauseModificationAhead(*cla); };
-        result += scheduleClausesSubsumedByUnariesForDeletion(
-            m_occurrenceMap, delMarker, analysis.newFacts);
-        result += strengthenClausesWithUnaries(m_occurrenceMap, delMarker, analysis.newFacts);
+        m_assignmentProvider.shrinkToDecisionLevel(0);
+        result += runUnaryOptimizations(analysis.newFacts);
+        propagateFacts(unaries);
     } else {
         // Propagate the facts to keep the propagator in a consistent state:
         for (CNFLit fact : analysis.newFacts) {
