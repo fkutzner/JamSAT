@@ -673,7 +673,6 @@ auto CDCLSatSolverImpl::solveUntilRestart(std::vector<CNFLit> const& assumedFact
     }
 
     while (!m_trail.isVariableAssignmentComplete()) {
-        loggingEpochElapsed();
         m_trail.newDecisionLevel();
         auto decision = m_branchingHeuristic.pickBranchLiteral();
         JAM_ASSERT(decision != CNFLit::getUndefinedLiteral(),
@@ -778,6 +777,7 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
                                       amntAssignments);
 
     while (conflictingClause != nullptr) {
+        loggingEpochElapsed();
         JAM_LOG_SOLVER(info, "Handling a conflict at clause " << conflictingClause);
         m_statistics.registerConflict();
         m_branchingHeuristic.beginHandlingConflict();
