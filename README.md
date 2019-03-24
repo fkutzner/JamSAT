@@ -1,6 +1,6 @@
-|        Linux        |       Windows       |      Test Coverage       |     SonarSource        |        Codacy             |      Size         |
-|:-------------------:|:-------------------:|:------------------------:|:----------------------:|:-------------------------:|:-----------------:|
-| [![travisCI][1]][2] | [![appveyor][3]][4] | [![coveralls][5]][6]     | [![sonarsource][7]][8] | [![Codacy Badge][11]][12] | [![tokei][9]][10] |
+|        Linux        |       Windows       |      Test Coverage       |     SonarSource        |        Codacy             |
+|:-------------------:|:-------------------:|:------------------------:|:----------------------:|:-------------------------:|
+| [![travisCI][1]][2] | [![appveyor][3]][4] | [![coveralls][5]][6]     | [![sonarsource][7]][8] | [![Codacy Badge][9]][10] |
 
 [1]: https://travis-ci.org/fkutzner/JamSAT.svg?branch=master
 [2]: https://travis-ci.org/fkutzner/JamSAT
@@ -10,10 +10,8 @@
 [6]: https://coveralls.io/github/fkutzner/JamSAT?branch=master
 [7]: https://sonarcloud.io/api/project_badges/measure?project=jamsat&metric=alert_status
 [8]: https://sonarcloud.io/dashboard?id=jamsat
-[9]: https://tokei.rs/b1/github/fkutzner/JamSAT?category=code
-[10]: https://github.com/Aaronepower/tokei#badges
-[11]: https://api.codacy.com/project/badge/Grade/9e68cb1a29c94839a5456c6d75d6b6b0
-[12]: https://app.codacy.com/app/fkutzner/JamSAT?utm_source=github.com&utm_medium=referral&utm_content=fkutzner/JamSAT&utm_campaign=badger
+[9]: https://api.codacy.com/project/badge/Grade/9e68cb1a29c94839a5456c6d75d6b6b0
+[10]: https://app.codacy.com/app/fkutzner/JamSAT?utm_source=github.com&utm_medium=referral&utm_content=fkutzner/JamSAT&utm_campaign=badger
 
 # JamSAT
 
