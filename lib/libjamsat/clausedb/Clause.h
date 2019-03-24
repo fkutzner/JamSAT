@@ -278,7 +278,7 @@ private:
      * (Rationale: the original size only needs to be stored when the clause has been
      * shrinked, and the clause header needs to be kept as small as feasible.)
      */
-    uint8_t m_resized : 1;
+    flag_type m_resized : 1;
 
     OverApproximatingSet<64, CNFLit::Index> m_approximatedClause;
     CNFLit m_anchor;
