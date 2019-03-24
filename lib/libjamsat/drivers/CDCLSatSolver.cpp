@@ -109,7 +109,7 @@ public:
         jamsat::LBD lemmaSimplificationLBDBound = 6;
 
         /** The number of restarts between attempts to simplify the problem */
-        uint64_t simplificationFrequency = 1000;
+        uint64_t simplificationFrequency = 5000;
 
         /** The region allocator's region size */
         std::size_t clauseRegionSize = 1048576;
