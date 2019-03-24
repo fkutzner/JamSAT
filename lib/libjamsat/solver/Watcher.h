@@ -59,7 +59,8 @@ public:
             unsigned int index = 0,
             bool isRedundant = false) noexcept
       : m_clause(&watchedClause, index | (isRedundant ? 2ULL : 0ULL))
-      , m_otherWatchedLiteral(otherWatchedLiteral) {}
+      , m_otherWatchedLiteral(otherWatchedLiteral)
+      , m_originalLitIndex(0) {}
 
     ClauseT& getClause() noexcept { return *m_clause; }
 
@@ -67,10 +68,7 @@ public:
 
     CNFLit getOtherWatchedLiteral() const noexcept { return m_otherWatchedLiteral; }
 
-    unsigned int getIndex() const noexcept {
-        // Only using 1 bit of state so far, so no masking is required yet
-        return m_clause.get_state() & 1ULL;
-    }
+    unsigned int getIndex() const noexcept { return m_clause.get_state() & 1ULL; }
 
     void setOtherWatchedLiteral(CNFLit literal) noexcept { m_otherWatchedLiteral = literal; }
 
@@ -92,6 +90,14 @@ public:
 
     bool isClauseRedundant() const noexcept { return (m_clause.get_state() & 2ULL) != 0; }
 
+    auto getOriginalLitIndex() const noexcept -> typename ClauseT::size_type {
+        return m_originalLitIndex;
+    }
+
+    void setOriginalLitIndex(typename ClauseT::size_type index) noexcept {
+        m_originalLitIndex = index;
+    }
+
 private:
     // m_clause is a state pointer with at least one bit of state.
     // Its least significant state bit contains the watcher's index
@@ -99,6 +105,10 @@ private:
     // the rsp. clause).
     putl::state_ptr<ClauseT, uint32_t, 2> m_clause;
     CNFLit m_otherWatchedLiteral;
+
+    // The original index of the watched literal, before moving it to
+    // the front of the clause.
+    typename ClauseT::size_type m_originalLitIndex;
 };
 
 template <class WatcherT>

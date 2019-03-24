@@ -337,6 +337,7 @@ Propagation<AssignmentProvider>::Propagation(CNFVar maxVar, AssignmentProvider& 
   , m_watcherUpdateRequired(getMaxLit(maxVar))
   , m_watcherUpdateRequiredAsVec() {
     JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
+    JAM_LOG_PROPAGATION(info, "Watcher size (bytes): " << sizeof(WatcherType));
 }
 
 template <class AssignmentProvider>
@@ -541,8 +542,14 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t& amou
         // literal pointing either to clause[0] or clause[1], but not to the literal
         // which is their index in m_watchers.
 
-        for (typename Clause::size_type i = 2; i < clause.size(); ++i) {
-            CNFLit currentLiteral = clause[i];
+        typename Clause::size_type const startScanIdx = currentWatcher.getOriginalLitIndex();
+        for (typename Clause::size_type i = 0, end = clause.size() - 2; i < end; ++i) {
+            // startScanIdx is offset by -2 to make this computation faster. actualIdx
+            // must range from 2 to clause.size()-1, so that the two watched literals
+            // at the front of the clause are not scanned here:
+            typename Clause::size_type actualIdx = ((i + startScanIdx) % end) + 2;
+
+            CNFLit currentLiteral = clause[actualIdx];
             if (!isFalse(m_assignmentProvider.getAssignment(currentLiteral))) {
                 // The FALSE literal is moved into the unwatched of the clause here,
                 // such that an INDETERMINATE or TRUE literal gets watched.
@@ -555,7 +562,8 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t& amou
                 // a forced assignment which has not been propagated yet (but will
                 // still be propagated in the future, causing a possible conflict
                 // or propagation to be detected).
-                std::swap(clause[currentWatcher.getIndex()], clause[i]); // (*, see above)
+                std::swap(clause[currentWatcher.getIndex()], clause[actualIdx]); // (*, see above)
+                currentWatcher.setOriginalLitIndex(actualIdx - 2); // see computation of actualIdx
                 m_watchers.addWatcher(currentLiteral, currentWatcher);
                 watcherListTraversal.removeCurrent();
 
@@ -689,6 +697,9 @@ void Propagation<AssignmentProvider>::cleanupWatchers(CNFLit lit) {
         }
         JAM_ASSERT(clause.size() >= 2,
                    "Clauses shrinked to size 1 must be removed from propagation");
+
+        // The clause might have been shrinked, so to prevent out-of-bounds accesses:
+        currentWatcher.setOriginalLitIndex(0);
 
         if (clause.size() == 2) {
             // The clause has become a binary clause ~> move to binary watchers
