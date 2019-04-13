@@ -43,7 +43,7 @@ namespace jamsat {
 
 CNFParserError::CNFParserError(std::string const& what) : std::runtime_error(what) {}
 
-CNFParserError::~CNFParserError() {}
+CNFParserError::~CNFParserError() = default;
 
 namespace {
 class GZFileResource {
@@ -78,6 +78,9 @@ struct DIMACSHeader {
     uint32_t m_numClauses;
 };
 
+namespace {
+constexpr int preferredChunkReadSize = 1048576;
+}
 
 // General TODO: when using gzgetc(), the compiler warns about disabled recursive
 // macro expansion. Look into whether gzgetc is usable here instead of gzread.
@@ -96,13 +99,13 @@ auto readCharFromGzFile(gzFile file) -> char {
     char character = 0;
     int charsRead = gzread(file, &character, 1);
     if (charsRead <= 0) {
-        if (gzeof(file)) {
+        if (gzeof(file) != 0) {
             throw CNFParserError{"Syntax error: unexpected end of input file"};
-        } else {
-            int errnum = 0;
-            char const* message = gzerror(file, &errnum);
-            throw CNFParserError{message};
         }
+
+        int errnum = 0;
+        char const* message = gzerror(file, &errnum);
+        throw CNFParserError{message};
     }
     return character;
 }
@@ -119,8 +122,8 @@ auto readCharFromGzFile(gzFile file) -> char {
  *                                  a newline symbol has been read.
  */
 void skipLine(gzFile file) {
-    while (readCharFromGzFile(file) != '\n')
-        ;
+    while (readCharFromGzFile(file) != '\n') {
+    }
 }
 
 /**
@@ -136,7 +139,8 @@ void skipLine(gzFile file) {
  */
 auto readLine(gzFile file) -> std::string {
     std::string result;
-    result.reserve(512);
+    constexpr std::string::size_type initialLineBufferSize = 512;
+    result.reserve(initialLineBufferSize);
     char character;
     while ((character = readCharFromGzFile(file)) != '\n') {
         result += character;
@@ -231,7 +235,7 @@ auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char>& 
         buffer.resize(static_cast<std::vector<char>::size_type>(bytesRead));
     }
 
-    if (gzeof(file) && bytesRead >= 0) {
+    if (gzeof(file) != 0 && bytesRead >= 0) {
         buffer.push_back(0);
         return bytesRead;
     }
@@ -251,14 +255,14 @@ auto readChunk(gzFile file, unsigned int preferredChunkSize, std::vector<char>& 
             int charsRead = gzread(file, &character, 1);
 
             if (charsRead <= 0) {
-                if (gzeof(file)) {
+                if (gzeof(file) != 0) {
                     buffer.push_back(0);
                     return buffer.size() - 1;
-                } else {
-                    int errnum = 0;
-                    char const* message = gzerror(file, &errnum);
-                    throw CNFParserError{message};
                 }
+
+                int errnum = 0;
+                char const* message = gzerror(file, &errnum);
+                throw CNFParserError{message};
             }
 
             buffer.push_back(character);
@@ -292,13 +296,14 @@ void readClauses(IpasirSolver& solver, gzFile file, DIMACSHeader problemHeader) 
     uint32_t effectiveClauses = 0;
 
     int bytesRead = 1;
-    while ((bytesRead = readChunk(file, 1048576, buffer)) != 0) {
+    while ((bytesRead = readChunk(file, preferredChunkReadSize, buffer)) != 0) {
         char* cursor = buffer.data();
         char* endCursor = cursor;
         char* end = buffer.data() + buffer.size();
 
         while (cursor != end) {
-            long literal = strtol(cursor, &endCursor, 10);
+            constexpr int ipasirLiteralRadix = 10;
+            long literal = strtol(cursor, &endCursor, ipasirLiteralRadix);
 
             if (errno == ERANGE && (literal == std::numeric_limits<long>::min() ||
                                     literal == std::numeric_limits<long>::max())) {
