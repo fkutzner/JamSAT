@@ -48,7 +48,7 @@ namespace {
 auto parseTimeoutArgument(std::string const& timeoutValue) -> std::chrono::seconds {
     // checking the sign early: MSVC17 doesn't seem to throw an out_of_range exception
     // for negative stoul inputs
-    if (timeoutValue.size() >= 1 && timeoutValue[0] == '-') {
+    if (!timeoutValue.empty() && timeoutValue[0] == '-') {
         throw std::invalid_argument{"Error: negative timeout value"};
     }
 
@@ -82,17 +82,21 @@ auto parseArgument(std::string const& argument, JamSATOptions& result) -> bool {
     if (argument == "--version") {
         result.m_printVersion = true;
         return true;
-    } else if (argument == "--help") {
+    }
+	if (argument == "--help") {
         result.m_printHelp = true;
         return true;
-    } else if (argument == "--wait") {
+    }
+	if (argument == "--wait") {
         result.m_waitForUserInput = true;
         return true;
-    } else if (argument.compare(0, timeoutArgPrefix.size(), timeoutArgPrefix) == 0) {
+    }
+	if (argument.compare(0, timeoutArgPrefix.size(), timeoutArgPrefix) == 0) {
         std::string timeoutValue{argument.begin() + timeoutArgPrefix.size(), argument.end()};
         result.m_timeout = parseTimeoutArgument(timeoutValue);
         return true;
-    } else if (argument.compare(0, 2, "--") == 0) {
+    }
+	if (argument.compare(0, 2, "--") == 0) {
         // Not a frontend option ~> pass it to the backend
         result.m_backendOptions.push_back(argument);
         return true;
@@ -115,9 +119,9 @@ auto parseOptions(int argc, char const* const* argv) -> JamSATOptions {
         if (!parseSucceeded) {
             if (i != argc - 1) {
                 throw std::invalid_argument{std::string{"Error: unknown argument "} + argument};
-            } else if (i == argc - 1) {
-                lastArgIsFilename = true;
             }
+
+            lastArgIsFilename = true;
         }
     }
 
