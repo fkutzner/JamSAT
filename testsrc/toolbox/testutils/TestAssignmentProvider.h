@@ -60,9 +60,9 @@ public:
 
     bool mightContain(CNFLit lit) const noexcept { return std::find(begin(), end(), lit) != end(); }
 
-    bool mightBeSubsetOf(TestAssignmentProviderClause const& rhs) const noexcept {
+    bool mightShareAllVarsWith(TestAssignmentProviderClause const& rhs) const noexcept {
         for (auto lit : *this) {
-            if (!rhs.mightContain(lit)) {
+            if (!rhs.mightContain(lit) && !rhs.mightContain(~lit)) {
                 return false;
             }
         }

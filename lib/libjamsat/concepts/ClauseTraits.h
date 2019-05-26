@@ -435,9 +435,10 @@ struct is_clause_flaggable<
  *   <td>`bool`</td>
  *  </tr>
  *  <tr>
- *   <td>`cc.mightBeSubsetOf(cc2)`</td>
- *   <td>If `cc.mightContain(cc2)` returns `false`, `cc` is not a subset of `cc2`. If
- *       `cc.mightBeSubsetOf(cc2)` returns true, `cc` might be a subset of `cc2`.</td>
+ *   <td>`cc.mightShareAllVarsWith(cc2)`</td>
+ *   <td>If `cc.mightShareAllVarsWith(cc2)` returns `false`, `cc` contains a variable that
+ *       is not contained in `cc2`. If `cc.mightShareAllVarsWith(cc2)` returns true, all
+ *       variables occuring in `cc` might also occur in `cc2`.</td>
  *   <td>`bool`</td>
  *  </tr>
  *  <tr>
@@ -468,9 +469,9 @@ struct is_clause<
         JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().mightContain(std::declval<CNFLit>()),
                          bool),
 
-        // For t of type const T and t2 of type T const&, require that `t.mightBeSubsetOf(t2)`
+        // For t of type const T and t2 of type T const&, require that `t.mightShareAllVarsWith(t2)`
         // is a valid expression of type `bool`:
-        JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().mightBeSubsetOf(
+        JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().mightShareAllVarsWith(
                              std::declval<std::add_lvalue_reference_t<std::add_const_t<T>>>()),
                          bool),
 

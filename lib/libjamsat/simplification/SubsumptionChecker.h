@@ -152,7 +152,7 @@ auto isSubsumedBy(ClauseT const& subsumeeCandidate,
 
     bool isSubsumed = false;
     for (ClauseT const* potentialSubsumer : subsumerCandidates) {
-        if (potentialSubsumer->mightBeSubsetOf(subsumeeCandidate)) {
+        if (potentialSubsumer->mightShareAllVarsWith(subsumeeCandidate)) {
             SSROpportunity<ClauseT> ssrOpportunity;
             isSubsumed |= subsumption_checker_detail::compareClauses(
                 subsumeeCandidate, *potentialSubsumer, stampMap, stamp, ssrOpportunity);

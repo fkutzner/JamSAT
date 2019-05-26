@@ -398,7 +398,7 @@ TEST(UnitClauseDB, mightContainIsOverapproximationInClause) {
     EXPECT_FALSE(underTest->mightContain(~13_Lit));
 }
 
-TEST(UnitClauseDB, mightBeSubsetOfIsOverapproximationInClause) {
+TEST(UnitClauseDB, mightShareAllVarsWithIsOverapproximationInClause) {
     auto underTest = createHeapClause(3);
     (*underTest)[0] = 3_Lit;
     (*underTest)[1] = 27_Lit;
@@ -412,14 +412,14 @@ TEST(UnitClauseDB, mightBeSubsetOfIsOverapproximationInClause) {
     (*superset)[3] = ~23_Lit;
     (*superset)[4] = ~1000_Lit;
     superset->clauseUpdated();
-    EXPECT_TRUE(underTest->mightBeSubsetOf(*superset));
+    EXPECT_TRUE(underTest->mightShareAllVarsWith(*superset));
 
     auto notSuperset = createHeapClause(5);
     (*notSuperset)[0] = 3_Lit;
     (*notSuperset)[1] = 1024_Lit;
     (*notSuperset)[2] = ~23_Lit;
     notSuperset->clauseUpdated();
-    EXPECT_FALSE(underTest->mightBeSubsetOf(*notSuperset));
+    EXPECT_FALSE(underTest->mightShareAllVarsWith(*notSuperset));
 }
 
 TEST(UnitClauseDB, clausePreservesInitialSizeOnShrink) {

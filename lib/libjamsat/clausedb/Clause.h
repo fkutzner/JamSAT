@@ -236,14 +236,15 @@ public:
     bool mightContain(CNFLit lit) const noexcept;
 
     /**
-     * \brief Fast over-approximating check if the clause is a subset of another clause.
+     * \brief Fast over-approximating check if the set `V` of variables occurring in this clause
+     *  is a subset of the set `V'` of variables occurring in the argument.
      *
      * \param other   An arbitrary clause.
      *
-     * \return        If `false` is returned, the clause is definitely not a subset of `other`.
-     *                If `true` is returned, the clause might be a subset of `other`.
+     * \return        If `false` is returned,`V` is definitely not a subset of `V'`.
+     *                If `true` is returned, `V` might be a subset of `V'`.
      */
-    bool mightBeSubsetOf(Clause const& other) const noexcept;
+    bool mightShareAllVarsWith(Clause const& other) const noexcept;
 
     /**
      * \brief Notifies the clause that its contents have been updated.
@@ -280,7 +281,7 @@ private:
      */
     flag_type m_resized : 1;
 
-    OverApproximatingSet<64, CNFLit::Index> m_approximatedClause;
+    OverApproximatingSet<64, CNFVar::Index> m_approximatedClause;
     CNFLit m_anchor;
 };
 
@@ -457,17 +458,17 @@ inline bool Clause::getFlag(Flag flag) const noexcept {
 }
 
 inline bool Clause::mightContain(CNFLit lit) const noexcept {
-    return m_approximatedClause.mightContain(lit);
+    return m_approximatedClause.mightContain(lit.getVariable());
 }
 
-inline bool Clause::mightBeSubsetOf(Clause const& other) const noexcept {
+inline bool Clause::mightShareAllVarsWith(Clause const& other) const noexcept {
     return m_approximatedClause.mightBeSubsetOf(other.m_approximatedClause);
 }
 
 inline void Clause::clauseUpdated() noexcept {
     m_approximatedClause.clear();
     for (auto lit : *this) {
-        m_approximatedClause.insert(lit);
+        m_approximatedClause.insert(lit.getVariable());
     }
 }
 }
