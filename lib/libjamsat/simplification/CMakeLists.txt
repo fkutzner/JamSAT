@@ -28,6 +28,7 @@ add_jamsat_core_library(libjamsat.simplification
   UnaryOptimizations.h
   ClauseMinimization.h
   SSRWithHyperBinaryResolution.h
+  SubsumptionChecker.h
   LightweightSimplifier.h
   ModuleDocumentation.h
 )

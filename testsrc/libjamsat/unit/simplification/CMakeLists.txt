@@ -25,4 +25,5 @@
 add_jamsat_core_unittest_library(jstest.libjamsat.unit.simplification
   UnaryOptimizationsTests.cpp
   ClauseMinimizationUnitTests.cpp
+  SubsumptionCheckerTests.cpp
 )
