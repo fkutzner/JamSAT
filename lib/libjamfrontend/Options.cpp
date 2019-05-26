@@ -83,20 +83,20 @@ auto parseArgument(std::string const& argument, JamSATOptions& result) -> bool {
         result.m_printVersion = true;
         return true;
     }
-	if (argument == "--help") {
+    if (argument == "--help") {
         result.m_printHelp = true;
         return true;
     }
-	if (argument == "--wait") {
+    if (argument == "--wait") {
         result.m_waitForUserInput = true;
         return true;
     }
-	if (argument.compare(0, timeoutArgPrefix.size(), timeoutArgPrefix) == 0) {
+    if (argument.compare(0, timeoutArgPrefix.size(), timeoutArgPrefix) == 0) {
         std::string timeoutValue{argument.begin() + timeoutArgPrefix.size(), argument.end()};
         result.m_timeout = parseTimeoutArgument(timeoutValue);
         return true;
     }
-	if (argument.compare(0, 2, "--") == 0) {
+    if (argument.compare(0, 2, "--") == 0) {
         // Not a frontend option ~> pass it to the backend
         result.m_backendOptions.push_back(argument);
         return true;

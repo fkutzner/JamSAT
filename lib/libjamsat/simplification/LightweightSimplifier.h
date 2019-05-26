@@ -202,7 +202,7 @@ private:
      * \brief Subsumption and self-subsuming resolution using unary clauses.
      *
      * \param unaryClauses  A vector of literals representing unary clauses.
-     * 
+     *
      * Precondition: m_assignmentProvider must have no assignments.
      *
      * \returns Simplification statistics
