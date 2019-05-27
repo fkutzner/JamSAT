@@ -41,9 +41,17 @@
 
 namespace jamsat {
 
+/**
+ * \brief Representation of an optimization opportunity using self-subsuming resolution
+ *
+ * \ingroup JamSAT_Simplification
+ */
 template <typename ClauseT>
 struct SSROpportunity {
+    /** The literal with which to resolve (contained in this object's `*clause`) */
     CNFLit resolveAt = CNFLit::getUndefinedLiteral();
+
+    /** The clause with which to resolve */
     ClauseT const* clause = nullptr;
 };
 
@@ -130,6 +138,30 @@ auto compareClauses(ClauseT const& subsumeeCandidate,
 }
 }
 
+/**
+ * \brief Checks whether a given clause can be optimized via subsumption or self-subsuming resolution.
+ *
+ * \ingroup JamSAT_Simplification
+ *
+ * \tparam ClauseT                      The clause type
+ * \tparam ClausePtrRng                 An iterator range type with values convertible to `ClauseT const*`
+ * \tparam StampMapT                    A StampMap type that supports stamping `CNFLit` objects
+ * \tparam SSROpportunityOutputIter     A type satisfying OutputIterator for `SSROpportunity<ClauseT>`
+ *
+ * \param subsumeeCandidate     The candidate for removal via subsumption or self-subsuming resolution (SSR)
+ * \param subsumerCandidates    The range of potential clauses which might subsume `subsumeeCandidate`
+ *                              or might be used for SSR with `subsumeeCandidate`
+ * \param stampMap              A stamp map
+ * \param ssrOpportunityBegin   An output iterator receiving `SSROpportunity<ClauseT>` objects with clauses
+ *                              `c` of `subsumerCandidates` such that SSR can be performed with `c` and
+ *                              `subsumeeCandidate`
+ *
+ * \par Exception safety
+ *
+ * This function may throw only exceptions that can be thrown by any parameter's methods. If an exception
+ * is thrown, `stampMap` is restored to a valid state. However, SSR opportunities may have been passed
+ * to the SSR opportunity output iterator.
+ */
 template <typename ClauseT,
           typename ClausePtrRng,
           typename StampMapT,
@@ -141,7 +173,7 @@ auto isSubsumedBy(ClauseT const& subsumeeCandidate,
     static_assert(is_clause<ClauseT>::value, "ClauseT must satisfy the Clause concept");
     static_assert(is_stamp_map<StampMapT, CNFLit>::value,
                   "StampMapT must be a StampMap supporting CNFLit");
-    // todo: add missing assertions about ranges and iterators
+    // TODO: add missing assertions about ranges and iterators
 
     auto stampingContext = stampMap.createContext();
     auto stamp = stampingContext.getStamp();
