@@ -13,3 +13,4 @@ AccessModifierOffset: -4
 FixNamespaceComments: false
 DerivePointerAlignment: false
 PointerAlignment: Left
+ReflowComments: false
