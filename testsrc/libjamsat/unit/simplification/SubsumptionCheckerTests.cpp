@@ -24,6 +24,7 @@
 
 */
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
@@ -33,6 +34,7 @@
 #include <toolbox/testutils/TestAssignmentProvider.h>
 
 #include <iterator>
+#include <ostream>
 #include <vector>
 
 namespace jamsat {
@@ -54,6 +56,17 @@ SSRResult applySubsumptionCheck(TestClause const& subsumeeCandidate,
 
     return SSRResult{ssrOpportunities, subsumed};
 }
+}
+
+template <typename Clause>
+auto operator==(SSROpportunity<Clause> const& lhs, SSROpportunity<Clause> const& rhs) -> bool {
+    return lhs.resolveAt == rhs.resolveAt && lhs.clause == rhs.clause;
+}
+
+template <typename Clause>
+auto operator<<(std::ostream& stream, SSROpportunity<Clause> const& toPrint) -> std::ostream& {
+    stream << "(" << toPrint.resolveAt << ", " << std::addressof(*toPrint.clause) << ")";
+    return stream;
 }
 
 TEST(UnitSimplification, SubsumptionCheckWithEmptySubsumerCandidateRange) {
@@ -87,7 +100,9 @@ TEST(UnitSimplification, SubsumptionCheckWithSmallSSRClause) {
     TestClause subsumerCandidate1{1_Lit, ~2_Lit, 3_Lit};
     SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit, 3_Lit}, {&subsumerCandidate1});
     EXPECT_FALSE(result.subsumed);
-    EXPECT_FALSE(result.ssrOpportunities.empty());
+    EXPECT_THAT(
+        result.ssrOpportunities,
+        testing::UnorderedElementsAre(SSROpportunity<TestClause>{~2_Lit, &subsumerCandidate1}));
 }
 
 
@@ -123,6 +138,25 @@ TEST(UnitSimplification, SubsumptionCheckWithLargeSSRClause) {
 
     SSRResult result = applySubsumptionCheck(createLargeClause(), {&subsumerCandidate1});
     EXPECT_FALSE(result.subsumed);
-    EXPECT_FALSE(result.ssrOpportunities.empty());
+    EXPECT_THAT(result.ssrOpportunities,
+                testing::UnorderedElementsAre(
+                    SSROpportunity<TestClause>{subsumerCandidate1[8], &subsumerCandidate1}));
+}
+
+TEST(UnitSimplification, SubsumptionCheckWithMultiplePotentialSubsumers) {
+    TestClause subsumerCandidate1{1_Lit, 2_Lit};
+    TestClause subsumerCandidate2{5_Lit, 6_Lit};
+    TestClause subsumerCandidate3{1_Lit, 2_Lit, ~3_Lit};
+    TestClause subsumerCandidate4{1_Lit, ~2_Lit, 3_Lit};
+
+
+    SSRResult result = applySubsumptionCheck(
+        {1_Lit, 2_Lit, 3_Lit},
+        {&subsumerCandidate1, &subsumerCandidate2, &subsumerCandidate3, &subsumerCandidate4});
+    EXPECT_TRUE(result.subsumed);
+    EXPECT_THAT(
+        result.ssrOpportunities,
+        testing::UnorderedElementsAre(SSROpportunity<TestClause>{~3_Lit, &subsumerCandidate3},
+                                      SSROpportunity<TestClause>{~2_Lit, &subsumerCandidate4}));
 }
 }

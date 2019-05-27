@@ -22,7 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-nm_add_thirdparty_libs(LIBS gtest gtest_main libjamsat-testing jstest.toolbox.testutils)
+nm_add_thirdparty_libs(LIBS gtest gmock gtest_main libjamsat-testing jstest.toolbox.testutils)
 
 #
 # Adds a JamSAT unit test library library.
