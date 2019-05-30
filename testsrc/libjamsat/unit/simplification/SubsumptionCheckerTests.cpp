@@ -1,4 +1,4 @@
-/* Copyright (c) 2017,2018 Felix Kutzner (github.com/fkutzner)
+/* Copyright (c) 2019 Felix Kutzner (github.com/fkutzner)
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,6 @@
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/simplification/SubsumptionChecker.h>
-#include <libjamsat/utils/StampMap.h>
 
 #include <toolbox/testutils/TestAssignmentProvider.h>
 
@@ -42,121 +41,118 @@ using TestClause = TestAssignmentProviderClause;
 
 namespace {
 struct SSRResult {
+    std::vector<TestClause const*> subsumedClauses;
     std::vector<SSROpportunity<TestClause>> ssrOpportunities;
-    bool subsumed;
 };
 
-SSRResult applySubsumptionCheck(TestClause const& subsumeeCandidate,
-                                std::vector<TestClause const*> const& subsumerCandidates) {
-    StampMap<std::uint8_t, CNFLit::Index> stampMap{CNFLit::Index::getIndex(getMaxLit(CNFVar{20}))};
-    std::vector<SSROpportunity<TestClause>> ssrOpportunities;
+constexpr TestClause::size_type maxTestSubsumeeSize = 6;
 
-    bool subsumed = isSubsumedBy(
-        subsumeeCandidate, subsumerCandidates, stampMap, std::back_inserter(ssrOpportunities));
+SSRResult applySubsumptionCheck(TestClause const& subsumerCandidate,
+                                std::vector<TestClause const*> const& subsumeeCandidates) {
+    SSRResult result;
+    getSubsumedClauses(subsumerCandidate,
+                       subsumeeCandidates,
+                       maxTestSubsumeeSize,
+                       std::back_inserter(result.subsumedClauses),
+                       std::back_inserter(result.ssrOpportunities));
 
-    return SSRResult{ssrOpportunities, subsumed};
+    return result;
 }
 }
 
 template <typename Clause>
 auto operator==(SSROpportunity<Clause> const& lhs, SSROpportunity<Clause> const& rhs) -> bool {
-    return lhs.resolveAt == rhs.resolveAt && lhs.clause == rhs.clause;
+    return lhs.resolveAtIdx == rhs.resolveAtIdx && lhs.clause == rhs.clause;
 }
 
 template <typename Clause>
 auto operator<<(std::ostream& stream, SSROpportunity<Clause> const& toPrint) -> std::ostream& {
-    stream << "(" << toPrint.resolveAt << ", " << std::addressof(*toPrint.clause) << ")";
+    stream << "(" << toPrint.resolveAtIdx << ", " << std::addressof(*toPrint.clause) << ")";
     return stream;
 }
 
-TEST(UnitSimplification, SubsumptionCheckWithEmptySubsumerCandidateRange) {
+TEST(UnitSimplification, SubsumptionCheckWithEmptySubsumeeCandidateRange) {
     SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit, 3_Lit}, {});
-    EXPECT_FALSE(result.subsumed);
+    EXPECT_TRUE(result.subsumedClauses.empty());
     EXPECT_TRUE(result.ssrOpportunities.empty());
 }
 
 TEST(UnitSimplification, SubsumptionCheckWithTooLargeSubsumerClause) {
-    TestClause subsumerCandidate1{1_Lit, 2_Lit, 3_Lit};
-    SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit}, {&subsumerCandidate1});
-    EXPECT_FALSE(result.subsumed);
+    TestClause subsumeeCandidate1{1_Lit, 2_Lit};
+    SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit, 3_Lit}, {&subsumeeCandidate1});
+    EXPECT_TRUE(result.subsumedClauses.empty());
     EXPECT_TRUE(result.ssrOpportunities.empty());
 }
 
 TEST(UnitSimplification, SubsumptionCheckWithSmallIrrelevantClause) {
-    TestClause subsumerCandidate1{1_Lit, 4_Lit};
-    SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit, 3_Lit}, {&subsumerCandidate1});
-    EXPECT_FALSE(result.subsumed);
+    TestClause subsumeeCandidate1{1_Lit, 2_Lit, 3_Lit};
+    SSRResult result = applySubsumptionCheck({1_Lit, 4_Lit}, {&subsumeeCandidate1});
+    EXPECT_TRUE(result.subsumedClauses.empty());
     EXPECT_TRUE(result.ssrOpportunities.empty());
 }
 
 TEST(UnitSimplification, SubsumptionCheckWithSmallSubsumingClause) {
-    TestClause subsumerCandidate1{1_Lit, 3_Lit};
-    SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit, 3_Lit}, {&subsumerCandidate1});
-    EXPECT_TRUE(result.subsumed);
+    TestClause subsumeeCandidate1{1_Lit, 2_Lit, 3_Lit};
+    SSRResult result = applySubsumptionCheck({1_Lit, 3_Lit}, {&subsumeeCandidate1});
+    EXPECT_THAT(result.subsumedClauses, testing::UnorderedElementsAre(&subsumeeCandidate1));
     EXPECT_TRUE(result.ssrOpportunities.empty());
 }
 
 TEST(UnitSimplification, SubsumptionCheckWithSmallSSRClause) {
-    TestClause subsumerCandidate1{1_Lit, ~2_Lit, 3_Lit};
-    SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit, 3_Lit}, {&subsumerCandidate1});
-    EXPECT_FALSE(result.subsumed);
+    TestClause subsumeeCandidate1{1_Lit, 2_Lit, 3_Lit};
+    SSRResult result = applySubsumptionCheck({1_Lit, ~2_Lit, 3_Lit}, {&subsumeeCandidate1});
+    EXPECT_TRUE(result.subsumedClauses.empty());
     EXPECT_THAT(
         result.ssrOpportunities,
-        testing::UnorderedElementsAre(SSROpportunity<TestClause>{~2_Lit, &subsumerCandidate1}));
+        testing::UnorderedElementsAre(SSROpportunity<TestClause>{1ull, &subsumeeCandidate1}));
 }
 
+TEST(UnitSimplification, SubsumptionCheckIgnoresOversizedClauses) {
+    TestClause subsumeeCandidateTooLarge;
 
-namespace {
-auto createLargeClause() -> TestClause {
-    return {1_Lit, 2_Lit, 3_Lit, 4_Lit, 5_Lit, 6_Lit, 7_Lit, 8_Lit, 9_Lit, 10_Lit, 11_Lit};
-}
-}
+    for (CNFVar v{1}; v <= CNFVar{maxTestSubsumeeSize}; v = nextCNFVar(v)) {
+        subsumeeCandidateTooLarge.push_back(CNFLit{v, CNFSign::POSITIVE});
+    }
+    subsumeeCandidateTooLarge.clauseUpdated();
 
-TEST(UnitSimplification, SubsumptionCheckWithLargeIrrelevantClause) {
-    TestClause subsumerCandidate1 = createLargeClause();
-    subsumerCandidate1.resize(10);
-    subsumerCandidate1[2] = ~subsumerCandidate1[2];
-    subsumerCandidate1[4] = CNFLit{CNFVar{19}, CNFSign::POSITIVE};
-
-    SSRResult result = applySubsumptionCheck(createLargeClause(), {&subsumerCandidate1});
-    EXPECT_FALSE(result.subsumed);
+    SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit, 3_Lit}, {&subsumeeCandidateTooLarge});
+    EXPECT_TRUE(result.subsumedClauses.empty());
     EXPECT_TRUE(result.ssrOpportunities.empty());
 }
 
-TEST(UnitSimplification, SubsumptionCheckWithLargeSubsumingClause) {
-    TestClause subsumerCandidate1 = createLargeClause();
-    subsumerCandidate1.resize(10);
+TEST(UnitSimplification, SubsumptionCheckDetectsMaximumSizeSubsumeeCandidates) {
+    TestClause subsumeeCandidate;
 
-    SSRResult result = applySubsumptionCheck(createLargeClause(), {&subsumerCandidate1});
-    EXPECT_TRUE(result.subsumed);
+    for (CNFVar v{1}; v < CNFVar{maxTestSubsumeeSize}; v = nextCNFVar(v)) {
+        subsumeeCandidate.push_back(CNFLit{v, CNFSign::POSITIVE});
+    }
+    subsumeeCandidate.clauseUpdated();
+
+    SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit, 3_Lit}, {&subsumeeCandidate});
+    EXPECT_THAT(result.subsumedClauses, testing::UnorderedElementsAre(&subsumeeCandidate));
     EXPECT_TRUE(result.ssrOpportunities.empty());
-}
-
-TEST(UnitSimplification, SubsumptionCheckWithLargeSSRClause) {
-    TestClause subsumerCandidate1 = createLargeClause();
-    subsumerCandidate1[8] = ~subsumerCandidate1[8];
-
-    SSRResult result = applySubsumptionCheck(createLargeClause(), {&subsumerCandidate1});
-    EXPECT_FALSE(result.subsumed);
-    EXPECT_THAT(result.ssrOpportunities,
-                testing::UnorderedElementsAre(
-                    SSROpportunity<TestClause>{subsumerCandidate1[8], &subsumerCandidate1}));
 }
 
 TEST(UnitSimplification, SubsumptionCheckWithMultiplePotentialSubsumers) {
-    TestClause subsumerCandidate1{1_Lit, 2_Lit};
-    TestClause subsumerCandidate2{5_Lit, 6_Lit};
-    TestClause subsumerCandidate3{1_Lit, 2_Lit, ~3_Lit};
-    TestClause subsumerCandidate4{1_Lit, ~2_Lit, 3_Lit};
+    TestClause subsumeeCandidate1{1_Lit, 2_Lit, 3_Lit, 4_Lit};
+    TestClause subsumeeCandidate2{5_Lit, 6_Lit};
+    TestClause subsumeeCandidate3{1_Lit, 2_Lit, ~3_Lit};
+    TestClause subsumeeCandidate4{1_Lit, ~2_Lit, 3_Lit};
+    TestClause subsumeeCandidate5{1_Lit, 5_Lit, 3_Lit, 2_Lit};
 
 
-    SSRResult result = applySubsumptionCheck(
-        {1_Lit, 2_Lit, 3_Lit},
-        {&subsumerCandidate1, &subsumerCandidate2, &subsumerCandidate3, &subsumerCandidate4});
-    EXPECT_TRUE(result.subsumed);
-    EXPECT_THAT(
-        result.ssrOpportunities,
-        testing::UnorderedElementsAre(SSROpportunity<TestClause>{~3_Lit, &subsumerCandidate3},
-                                      SSROpportunity<TestClause>{~2_Lit, &subsumerCandidate4}));
+    SSRResult result = applySubsumptionCheck({1_Lit, 2_Lit, 3_Lit},
+                                             {&subsumeeCandidate1,
+                                              &subsumeeCandidate2,
+                                              &subsumeeCandidate3,
+                                              &subsumeeCandidate4,
+                                              &subsumeeCandidate5});
+
+    EXPECT_THAT(result.subsumedClauses,
+                testing::UnorderedElementsAre(&subsumeeCandidate1, &subsumeeCandidate5));
+    EXPECT_THAT(result.ssrOpportunities,
+                testing::UnorderedElementsAre(SSROpportunity<TestClause>{2, &subsumeeCandidate3},
+                                              SSROpportunity<TestClause>{1, &subsumeeCandidate4}));
 }
+
 }

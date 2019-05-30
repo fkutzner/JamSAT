@@ -33,11 +33,6 @@
 
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/concepts/ClauseTraits.h>
-#include <libjamsat/utils/Concepts.h>
-#include <libjamsat/utils/StampMap.h>
-
-#include <iterator>
-#include <type_traits>
 
 namespace jamsat {
 
@@ -48,30 +43,35 @@ namespace jamsat {
  */
 template <typename ClauseT>
 struct SSROpportunity {
-    /** The literal with which to resolve (contained in this object's `*clause`) */
-    CNFLit resolveAt = CNFLit::getUndefinedLiteral();
+    /** The index of the literal in `*clause` with which to resolve (contained in this object's `*clause`) */
+    typename ClauseT::size_type resolveAtIdx = 0;
 
     /** The clause with which to resolve */
     ClauseT const* clause = nullptr;
 };
 
 /**
- * \brief Checks whether a given clause can be optimized via subsumption or self-subsuming resolution.
+ * \brief Given a clause C, computes the set of clauses which are subsumed by C or can be strengthened
+ *        by applying self-subsuming resolution with C.
  *
  * \ingroup JamSAT_Simplification
  *
  * \tparam ClauseT                      The clause type
  * \tparam ClausePtrRng                 An iterator range type with values convertible to `ClauseT const*`
- * \tparam StampMapT                    A StampMap type that supports stamping `CNFLit` objects
+ * \tparam ClausePtrOutputIter          A type satisfying OutputIterator for `ClauseT const*`
  * \tparam SSROpportunityOutputIter     A type satisfying OutputIterator for `SSROpportunity<ClauseT>`
  *
- * \param subsumeeCandidate     The candidate for removal via subsumption or self-subsuming resolution (SSR)
- * \param subsumerCandidates    The range of potential clauses which might subsume `subsumeeCandidate`
- *                              or might be used for SSR with `subsumeeCandidate`
- * \param stampMap              A stamp map
- * \param ssrOpportunityBegin   An output iterator receiving `SSROpportunity<ClauseT>` objects with clauses
- *                              `c` of `subsumerCandidates` such that SSR can be performed with `c` and
- *                              `subsumeeCandidate`
+ * \param subsumer              The subsumer clause
+ * \param subsumeeCandidates    The candidates for removal via subsumption or self-subsuming resolution (SSR)
+ * \param maxSubsumeeSize       The maximum size of clauses in `subsumeeCandidates` to take into account. Clauses
+ *                              larger than `maxSubsumeeSize` are not subsumption-/SSR-checked.
+ * \param subsumedClauseOutputBegin An output iterator receiving `ClauseT const*` pointers `c` to clauses which
+ *                              are subsumed by `subsumer`, with `c` obtained from iterating over
+ *                              `subsumeeCandidates`.
+ * \param ssrOpportunityBegin   An output iterator receiving `SSROpportunity<ClauseT>` objects o with clauses
+ *                              `o.clause` of `subsumerCandidates` such that SSR can be performed with `c` and
+ *                              `subsumeeCandidate`; `o.resolveAt` is the literal contained in `o.clause` which
+ *                              can be removed via SSR while preserving satisfiability.
  *
  * \par Exception safety
  *
@@ -81,32 +81,36 @@ struct SSROpportunity {
  */
 template <typename ClauseT,
           typename ClausePtrRng,
-          typename StampMapT,
+          typename ClausePtrOutputIter,
           typename SSROpportunityOutputIter>
-auto isSubsumedBy(ClauseT const& subsumeeCandidate,
-                  ClausePtrRng subsumerCandidates,
-                  StampMapT& stampMap,
-                  SSROpportunityOutputIter ssrOpportunityBegin) -> bool;
+void getSubsumedClauses(ClauseT const& subsumerCandidate,
+                        ClausePtrRng subsumeeCandidates,
+                        typename ClauseT::size_type maxSubsumeeSize,
+                        ClausePtrOutputIter subsumedClauseOutputBegin,
+                        SSROpportunityOutputIter ssrOpportunityBegin);
 
 /********** Implementation ****************************** */
 
 namespace subsumption_checker_detail {
 template <typename ClauseT>
-auto compareClausesQuadratic(ClauseT const& subsumeeCandidate,
-                             ClauseT const& subsumerCandidate,
+auto compareClausesQuadratic(ClauseT const& subsumerCandidate,
+                             ClauseT const& subsumeeCandidate,
                              SSROpportunity<ClauseT>& ssrOpportunity) -> bool {
 
-    CNFLit ssrOpportunityResolveAt = CNFLit::getUndefinedLiteral();
+    bool foundSSROpportunity = false;
+    typename ClauseT::size_type ssrOpportunityResolveAtIdx = 0;
 
     for (CNFLit x : subsumerCandidate) {
         bool found = false;
 
-        for (CNFLit y : subsumeeCandidate) {
+        for (typename ClauseT::size_type yIdx = 0; yIdx < subsumeeCandidate.size(); ++yIdx) {
+            CNFLit y = subsumeeCandidate[yIdx];
             if (x == y) {
                 found = true;
                 break;
-            } else if (x == ~y && ssrOpportunityResolveAt == CNFLit::getUndefinedLiteral()) {
-                ssrOpportunityResolveAt = x;
+            } else if (x == ~y && !foundSSROpportunity) {
+                foundSSROpportunity = true;
+                ssrOpportunityResolveAtIdx = yIdx;
                 found = true;
                 break;
             }
@@ -117,94 +121,41 @@ auto compareClausesQuadratic(ClauseT const& subsumeeCandidate,
         }
     }
 
-    if (ssrOpportunityResolveAt != CNFLit::getUndefinedLiteral()) {
-        ssrOpportunity.clause = &subsumerCandidate;
-        ssrOpportunity.resolveAt = ssrOpportunityResolveAt;
+    if (foundSSROpportunity) {
+        ssrOpportunity.clause = &subsumeeCandidate;
+        ssrOpportunity.resolveAtIdx = ssrOpportunityResolveAtIdx;
         return false;
     }
     return true;
-}
-
-
-template <typename ClauseT, typename StampMapT>
-auto compareClausesLinear(StampMapT const& subsumeeCandidateLits,
-                          typename StampMapT::Stamp stamp,
-                          ClauseT const& subsumerCandidate,
-                          SSROpportunity<ClauseT>& ssrOpportunity) -> bool {
-    CNFLit ssrOpportunityResolveAt = CNFLit::getUndefinedLiteral();
-
-    // Linear, but cache-unfriendly comparison for large clauses:
-    for (CNFLit l : subsumerCandidate) {
-        if (subsumeeCandidateLits.isStamped(l, stamp)) {
-            continue;
-        }
-
-        if (ssrOpportunityResolveAt == CNFLit::getUndefinedLiteral() &&
-            subsumeeCandidateLits.isStamped(~l, stamp)) {
-            ssrOpportunityResolveAt = l;
-        } else {
-            return false;
-        }
-    }
-
-    if (ssrOpportunityResolveAt != CNFLit::getUndefinedLiteral()) {
-        ssrOpportunity.clause = &subsumerCandidate;
-        ssrOpportunity.resolveAt = ssrOpportunityResolveAt;
-        return false;
-    }
-    return true;
-}
-
-
-template <typename ClauseT, typename StampMapT>
-auto compareClauses(ClauseT const& subsumeeCandidate,
-                    ClauseT const& subsumerCandidate,
-                    StampMapT& stampMap,
-                    typename StampMapT::Stamp stamp,
-                    SSROpportunity<ClauseT>& ssrOpportunity) -> bool {
-    if (subsumerCandidate.size() > subsumeeCandidate.size()) {
-        return false;
-    }
-
-    if (subsumerCandidate.size() < 10) {
-        return compareClausesQuadratic(subsumeeCandidate, subsumerCandidate, ssrOpportunity);
-    }
-    return compareClausesLinear(stampMap, stamp, subsumerCandidate, ssrOpportunity);
 }
 }
 
 template <typename ClauseT,
           typename ClausePtrRng,
-          typename StampMapT,
+          typename ClausePtrOutputIter,
           typename SSROpportunityOutputIter>
-auto isSubsumedBy(ClauseT const& subsumeeCandidate,
-                  ClausePtrRng subsumerCandidates,
-                  StampMapT& stampMap,
-                  SSROpportunityOutputIter ssrOpportunityBegin) -> bool {
+void getSubsumedClauses(ClauseT const& subsumerCandidate,
+                        ClausePtrRng subsumeeCandidates,
+                        typename ClauseT::size_type maxSubsumeeSize,
+                        ClausePtrOutputIter subsumedClauseOutputBegin,
+                        SSROpportunityOutputIter ssrOpportunityBegin) {
     static_assert(is_clause<ClauseT>::value, "ClauseT must satisfy the Clause concept");
-    static_assert(is_stamp_map<StampMapT, CNFLit>::value,
-                  "StampMapT must be a StampMap supporting CNFLit");
 
-    auto stampingContext = stampMap.createContext();
-    auto stamp = stampingContext.getStamp();
-
-    for (auto lit : subsumeeCandidate) {
-        stampMap.setStamped(lit, stamp, true);
-    }
-
-    bool isSubsumed = false;
-    for (ClauseT const* potentialSubsumer : subsumerCandidates) {
-        if (potentialSubsumer->mightShareAllVarsWith(subsumeeCandidate)) {
+    for (ClauseT const* subsumeeCandidate : subsumeeCandidates) {
+        if (subsumeeCandidate->size() < maxSubsumeeSize &&
+            subsumerCandidate.mightShareAllVarsWith(*subsumeeCandidate)) {
             SSROpportunity<ClauseT> ssrOpportunity;
-            isSubsumed |= subsumption_checker_detail::compareClauses(
-                subsumeeCandidate, *potentialSubsumer, stampMap, stamp, ssrOpportunity);
-            if (ssrOpportunity.resolveAt != CNFLit::getUndefinedLiteral()) {
+            bool isSubsumed = subsumption_checker_detail::compareClausesQuadratic(
+                subsumerCandidate, *subsumeeCandidate, ssrOpportunity);
+
+            if (isSubsumed) {
+                *subsumedClauseOutputBegin = subsumeeCandidate;
+                ++subsumedClauseOutputBegin;
+            } else if (ssrOpportunity.clause != nullptr) {
                 *ssrOpportunityBegin = ssrOpportunity;
                 ++ssrOpportunityBegin;
             }
         }
     }
-
-    return isSubsumed;
 }
 }
