@@ -38,6 +38,16 @@
 #include <vector>
 
 namespace jamsat {
+/**
+ * \brief Variable elimination by distribution
+ * 
+ * For a description of elimination via distribution, see:
+ * Een, Niklas; Biere, Armin. Effective preprocessing in SAT through variable and
+ * clause elimination. In: International conference on theory and applications of
+ * satisfiability testing. Springer, Berlin, Heidelberg, 2005. S. 61-75. 
+ * 
+ * \ingroup JamSAT_Simplification
+ */
 class ClauseDistribution {
 private:
     constexpr static std::size_t databaseRegionSize = 1048576;
@@ -47,14 +57,73 @@ public:
     using size_type = std::size_t;
     enum class DistributionResult { OK, OK_DETECTED_UNSATISFIABILITY, FAILED };
 
+    /**
+     * Constructs a ClauseDistribution object.
+     * 
+     * \param maxVar        The maximum variable occurring in clauses passed to the
+     *                      constructed object.
+     * 
+     * \throws std::bad_alloc
+     */
     explicit ClauseDistribution(CNFVar maxVar);
 
-    auto getDistributedClauses() noexcept -> boost::iterator_range<iterator>;
-    auto size() const noexcept -> size_type;
-
+    /**
+     * \brief Clears any previously computed distributed clauses and computes the set of clauses
+     * and computes result of performing clause distribution at a given literal.
+     * 
+     * The set `R` of resulting clauses can be obtained via `getDistributedClauses()`. `R`
+     * contains no trivially satisfied clauses The clauses in the union of 
+     * `litOccurrences[distributeAt]` and `litOccurrences[~distributeAt]` may be replaced by adding
+     * the clauses contained in `R` to the problem.
+     * 
+     * \tparam OccurrenceMapT       An occurrence map for CNFLit objects, with arbitrary container
+     *                              type
+     * 
+     * \param litOccurrences        The problem to be simplified, in form of a literal occurrence map.
+     * \param distributeAt          The variable which shall be eliminated, with `distributeAt`,
+     *                              `~distributeAt` being contained in the domain of `litOccurrences`.
+     * 
+     * \returns `OK_DETECTED_UNSATISFIABILITY` when the problem has been detected to be unsatisfiable
+     *          (i.e. the empty clause has been obtained via resolution); `FAILED` if the operation
+     *          could not be completed; `OK` otherwise.
+     */
     template <typename OccurrenceMapT>
     auto reset(OccurrenceMapT& litOccurrences, CNFVar distributeAt) noexcept -> DistributionResult;
 
+    /**
+     * \brief Returns the result of the previous `reset` operation.
+     * 
+     * If `reset()` has not been invoked yet, an empty range is returned. Otherwise, if
+     * the return value of the previous invocation of `reset()` had been `OK`, the range of
+     * clauses produced by the previous elimination-by-distribution operation is returned. The
+     * returned iterators and iterated objects are valid until `reset` is called or this object
+     * is destroyed.
+     * 
+     * \returns A range of references to CNFLit ranges as described above.
+     */
+    auto getDistributedClauses() noexcept -> boost::iterator_range<iterator>;
+
+    /**
+     * \brief Returns the amount of clauses referenced by `getDistributedClauses()`.
+     * 
+     * \returns the amount of clauses referenced by `getDistributedClauses()`.
+     */
+    auto size() const noexcept -> size_type;
+
+
+    /**
+     * \brief Checks whether variable elimination via distribution is worthwile
+     * 
+     * \tparam OccurrenceMapT       An occurrence map for CNFLit objects, with arbitrary container
+     *                              type
+     * 
+     * \param litOccurrences        The problem to be simplified, in form of a literal occurrence map.
+     * \param distributeAt          A variable with `distributeAt`, `~distributeAt` being contained in
+     *                              the domain of `litOccurrences`.
+     * 
+     * \returns `true` iff eliminating `distributeAt` via distribution would reduce the
+     *          amount of problem clauses.
+     */
     template <typename OccurrenceMapT>
     auto isDistributionWorthwile(OccurrenceMapT& litOccurrences, CNFVar distributeAt) noexcept
         -> bool;
