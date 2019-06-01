@@ -55,6 +55,10 @@ public:
     template <typename OccurrenceMapT>
     auto reset(OccurrenceMapT& litOccurrences, CNFVar distributeAt) noexcept -> DistributionResult;
 
+    template <typename OccurrenceMapT>
+    auto isDistributionWorthwile(OccurrenceMapT& litOccurrences, CNFVar distributeAt) noexcept
+        -> bool;
+
 private:
     void clearDistributedClauses() noexcept;
 
@@ -147,5 +151,43 @@ auto ClauseDistribution::computeDistributedClauses(OccurrenceMapT& litOccurrence
     }
 
     return DistributionResult::OK;
+}
+
+
+template <typename OccurrenceMapT>
+auto ClauseDistribution::isDistributionWorthwile(OccurrenceMapT& litOccurrences,
+                                                 CNFVar distributeAt) noexcept -> bool {
+    CNFLit distributeAtPos = CNFLit{distributeAt, CNFSign::POSITIVE};
+    auto posClausesRange = litOccurrences[distributeAtPos];
+    auto negClausesRange = litOccurrences[~distributeAtPos];
+
+    std::size_t numTriviallySatResolvents = 0;
+
+    for (auto const* lClause : posClausesRange) {
+        auto stampingContext = m_seenLits.createContext();
+        auto stamp = stampingContext.getStamp();
+
+        for (CNFLit lit : *lClause) {
+            m_seenLits.setStamped(lit, stamp, true);
+        }
+
+        for (auto const* rClause : negClausesRange) {
+            bool isResolventTriviallySatisfied = false;
+            for (CNFLit lit : *rClause) {
+                if (lit.getVariable() != distributeAt && m_seenLits.isStamped(~lit, stamp)) {
+                    ++numTriviallySatResolvents;
+                    isResolventTriviallySatisfied = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    std::uint64_t numClPos = std::distance(posClausesRange.begin(), posClausesRange.end());
+    std::uint64_t numClNeg = std::distance(negClausesRange.begin(), negClausesRange.end());
+    std::uint64_t numClTotal = numClPos + numClNeg;
+    std::uint64_t numDistCl = (numClPos * numClNeg) - numTriviallySatResolvents;
+
+    return numDistCl < numClTotal;
 }
 }
