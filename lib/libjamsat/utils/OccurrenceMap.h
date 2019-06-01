@@ -33,6 +33,7 @@
 
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/BoundedMap.h>
+#include <libjamsat/utils/TraitUtils.h>
 
 #include <boost/range.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
@@ -70,8 +71,11 @@ class OccurrenceMap {
         "ContainerValueIndex must satisfy Index for ContainerT::value_type, but does not");
 
 public:
+    struct OccurrenceMapTypeMarker {};
+
     using Container = ContainerT;
     using ContainerRange = boost::iterator_range<typename std::vector<Container*>::const_iterator>;
+    using value_type = typename ContainerT::value_type;
 
     /**
      * \brief Constructs an OccurrenceMap
@@ -79,7 +83,7 @@ public:
      * \param maxElement    The maximum element that may occur in the containers
      *                      added to the OccurrenceMap.
      */
-    explicit OccurrenceMap(typename Container::value_type maxElement);
+    explicit OccurrenceMap(value_type maxElement);
 
     /**
      * \brief Constructs an OccurrenceMap, inserting a range of elements
@@ -93,9 +97,7 @@ public:
      * \param end           The end of the range of pointers to containers to be added.
      */
     template <typename ContainerPtrIt>
-    OccurrenceMap(typename Container::value_type maxElement,
-                  ContainerPtrIt begin,
-                  ContainerPtrIt end);
+    OccurrenceMap(value_type maxElement, ContainerPtrIt begin, ContainerPtrIt end);
 
     /**
      * \brief Increases the maximum element that may occur in the containers added
@@ -104,7 +106,7 @@ public:
      * \param maxElement    The maximum element that may occur in the containers
      *                      added to the OccurrenceMap.
      */
-    void increaseMaxElementTo(typename Container::value_type maxElement);
+    void increaseMaxElementTo(value_type maxElement);
 
     /**
      * \brief Adds a container to the occurrence map.
@@ -131,7 +133,7 @@ public:
      * \returns             A range of pointers to the containers in which \p index
      *                      occurs.
      */
-    auto operator[](typename Container::value_type value) noexcept -> ContainerRange;
+    auto operator[](value_type value) noexcept -> ContainerRange;
 
     /**
      * \brief Marks a container as to-be-deleted from the occurrence map.
@@ -159,36 +161,60 @@ public:
     auto operator=(OccurrenceMap&& rhs) noexcept -> OccurrenceMap& = default;
 
 private:
-    using value_type = typename Container::value_type;
     struct OccurrenceListWithFlags {
         bool m_requiresUpdate;
         std::vector<Container*> m_occList;
     };
 
-    BoundedMap<typename Container::value_type, OccurrenceListWithFlags, ContainerValueIndex>
-        m_occurrences;
+    BoundedMap<value_type, OccurrenceListWithFlags, ContainerValueIndex> m_occurrences;
     ContainerDeletedQuery m_deletedQuery;
 };
+
+
+/**
+ * \brief Metafunction checking whether a given type is a OccurrenceMap<...> specialization supporting
+ *        looking up objects of a given type.
+ *
+ * \ingroup JamSAT_Utils
+ *
+ * \tparam OccMapT      An arbitrary type.
+ * \tparam OccT         An arbitrary type.
+ *
+ * `is_occurrence_map<OccMapT, OccT>::value` is a `constexpr bool` value which is `true`
+ * iff \p OccMapT is a \p OccurrenceMap specialization supporting looking up objects of type `OccT`.
+ */
+template <typename OccMapT, typename OccT, typename = void>
+struct is_occurrence_map : public std::false_type {};
+
+
+// clang-format off
+template<typename OccMapT, typename OccT>
+struct is_occurrence_map<OccMapT,
+                         OccT,
+                         j_void_t<typename OccMapT::OccurrenceMapTypeMarker,
+                                  std::enable_if_t<std::is_same<typename OccMapT::value_type, OccT>::value, void>>>
+  : public std::true_type {};
+// clang-format on
 
 /********** Implementation ****************************** */
 
 template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
 OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::OccurrenceMap(
-    typename Container::value_type maxElement)
+    value_type maxElement)
   : m_occurrences(maxElement), m_deletedQuery() {}
 
 
 template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
 template <typename ContainerPtrIt>
 OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::OccurrenceMap(
-    typename Container::value_type maxElement, ContainerPtrIt begin, ContainerPtrIt end)
+    value_type maxElement, ContainerPtrIt begin, ContainerPtrIt end)
   : m_occurrences(maxElement), m_deletedQuery() {
     insert(begin, end);
 }
 
 template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
 void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::increaseMaxElementTo(
-    typename Container::value_type maxElement) {
+    value_type maxElement) {
     m_occurrences.increaseSizeTo(maxElement);
 }
 
@@ -225,7 +251,7 @@ void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::remov
 
 template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
 auto OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::
-operator[](typename Container::value_type value) noexcept -> ContainerRange {
+operator[](value_type value) noexcept -> ContainerRange {
     auto& occList = m_occurrences[value].m_occList;
     if (m_occurrences[value].m_requiresUpdate) {
         boost::remove_erase_if(occList, m_deletedQuery);
