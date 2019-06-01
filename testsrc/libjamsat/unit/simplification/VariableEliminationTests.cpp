@@ -82,7 +82,7 @@ auto toString(CNFLitContainers const& litContainers) {
 
 void testDistribution(std::vector<TestClause> input,
                       CNFVar distributeAt,
-                      ClauseDistribution::DistributionResult expectedResult,
+                      ClauseDistribution::DistributionStatus expectedStatus,
                       std::vector<TestClause> expectedDistributionClauses) {
     constexpr static CNFLit maxLit = 1024_Lit;
 
@@ -92,22 +92,23 @@ void testDistribution(std::vector<TestClause> input,
     }
 
     ClauseDistribution underTest{maxLit.getVariable()};
-    ClauseDistribution::DistributionResult result = underTest.reset(litOccurrences, distributeAt);
-    ASSERT_EQ(result, expectedResult);
-    ASSERT_EQ(underTest.size(), expectedDistributionClauses.size())
+    ClauseDistribution::DistributionResult result =
+        underTest.distribute(litOccurrences, distributeAt);
+
+    ASSERT_EQ(result.status, expectedStatus);
+    ASSERT_EQ(result.numClauses, expectedDistributionClauses.size())
         << "Expected clauses:\n"
         << toString(expectedDistributionClauses) << "But got:\n"
-        << toString(underTest.getDistributedClauses());
+        << toString(result.clauses);
 
-    if (result == ClauseDistribution::DistributionResult::OK) {
-        EXPECT_TRUE(isPermutationOfPermutations(underTest.getDistributedClauses(),
-                                                expectedDistributionClauses))
+    if (result.status == ClauseDistribution::DistributionStatus::OK) {
+        EXPECT_TRUE(isPermutationOfPermutations(result.clauses, expectedDistributionClauses))
             << "Expected clauses:\n"
             << toString(expectedDistributionClauses) << "But got:\n"
-            << toString(underTest.getDistributedClauses());
+            << toString(result.clauses);
     } else {
-        EXPECT_EQ(underTest.size(), 0);
-        auto distClauses = underTest.getDistributedClauses();
+        EXPECT_EQ(result.numClauses, 0);
+        auto distClauses = result.clauses;
         EXPECT_EQ(distClauses.begin(), distClauses.end());
     }
 }
@@ -128,32 +129,32 @@ void testDistributionWorthwileCheck(std::vector<TestClause> input,
 }
 
 TEST(UnitSimplification, ClauseDistributionProducesNoClausesForEmptyInput) {
-    testDistribution({}, 1_Var, ClauseDistribution::DistributionResult::OK, {});
+    testDistribution({}, 1_Var, ClauseDistribution::DistributionStatus::OK, {});
 }
 
 TEST(UnitSimplification, ClauseDistributionProducesNoClausesForIrrelevantInput) {
     testDistribution(
-        {{2_Lit, 3_Lit}, {5_Lit, ~7_Lit}}, 1_Var, ClauseDistribution::DistributionResult::OK, {});
+        {{2_Lit, 3_Lit}, {5_Lit, ~7_Lit}}, 1_Var, ClauseDistribution::DistributionStatus::OK, {});
 }
 
 TEST(UnitSimplification, ClauseDistributionEliminatesPureLiteralClauses) {
     testDistribution({{1_Lit, 3_Lit, 10_Lit}, {5_Lit, 1_Lit, 20_Lit}},
                      1_Var,
-                     ClauseDistribution::DistributionResult::OK,
+                     ClauseDistribution::DistributionStatus::OK,
                      {});
 }
 
 TEST(UnitSimplification, ClauseDistributionCanProduceUnaryClauses) {
     testDistribution({{1_Lit, 20_Lit}, {~1_Lit, 20_Lit}},
                      1_Var,
-                     ClauseDistribution::DistributionResult::OK,
+                     ClauseDistribution::DistributionStatus::OK,
                      {{20_Lit}});
 }
 
 TEST(UnitSimplification, ClauseDistributionEliminatesRedundantClauses) {
     testDistribution({{1_Lit, 2_Lit, 20_Lit}, {~1_Lit, ~2_Lit, ~20_Lit}},
                      1_Var,
-                     ClauseDistribution::DistributionResult::OK,
+                     ClauseDistribution::DistributionStatus::OK,
                      {});
 }
 
@@ -164,7 +165,7 @@ TEST(UnitSimplification, ClauseDistributionComputesAllResolvents) {
                       {~7_Lit, ~4_Lit, 8_Lit},
                       {9_Lit, ~4_Lit, ~10_Lit}},
                      4_Var,
-                     ClauseDistribution::DistributionResult::OK,
+                     ClauseDistribution::DistributionStatus::OK,
                      {
                          {2_Lit, 3_Lit, ~7_Lit, 8_Lit},
                          {2_Lit, 3_Lit, 9_Lit, ~10_Lit},

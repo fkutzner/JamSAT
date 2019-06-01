@@ -34,7 +34,7 @@ ClauseDistribution::ClauseDistribution(CNFVar maxVar)
 
 void ClauseDistribution::clearDistributedClauses() noexcept {
     // TODO: implement clear() for IterableClauseDB
-    for (Clause& clause : getDistributedClauses()) {
+    for (Clause& clause : m_clauses.getClauses()) {
         clause.setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
     }
     m_clauses.compress();

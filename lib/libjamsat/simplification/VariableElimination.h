@@ -55,7 +55,19 @@ private:
 public:
     using iterator = IterableClauseDB<Clause>::iterator;
     using size_type = std::size_t;
-    enum class DistributionResult { OK, OK_DETECTED_UNSATISFIABILITY, FAILED };
+
+    enum class DistributionStatus { OK, OK_DETECTED_UNSATISFIABILITY, FAILED };
+
+    struct DistributionResult {
+    public:
+        DistributionStatus status;
+
+        /** If `status` is `OK`, `clauses` is the range of clauses produced by variable elimination. */
+        boost::iterator_range<iterator> clauses;
+
+        /** If `status` is `OK`, `clauses` is the number of clauses produced by variable elimination. */
+        size_type numClauses;
+    };
 
     /**
      * Constructs a ClauseDistribution object.
@@ -72,9 +84,10 @@ public:
      * and computes result of performing clause distribution at a given literal.
      * 
      * The set `R` of resulting clauses can be obtained via `getDistributedClauses()`. `R`
-     * contains no trivially satisfied clauses The clauses in the union of 
+     * contains no trivially satisfied clauses. The clauses in the union of 
      * `litOccurrences[distributeAt]` and `litOccurrences[~distributeAt]` may be replaced by adding
-     * the clauses contained in `R` to the problem.
+     * the clauses contained in `R` to the SAT problem instance represented by `litOccurrences`,
+     * preserving equisatisfiability (but not equivalence).
      * 
      * \tparam OccurrenceMapT       An occurrence map for CNFLit objects, with arbitrary container
      *                              type
@@ -83,32 +96,15 @@ public:
      * \param distributeAt          The variable which shall be eliminated, with `distributeAt`,
      *                              `~distributeAt` being contained in the domain of `litOccurrences`.
      * 
-     * \returns `OK_DETECTED_UNSATISFIABILITY` when the problem has been detected to be unsatisfiable
-     *          (i.e. the empty clause has been obtained via resolution); `FAILED` if the operation
-     *          could not be completed; `OK` otherwise.
+     * \returns A DistributionResult whose status is `OK_DETECTED_UNSATISFIABILITY` when the problem
+     *          has been detected to be unsatisfiable (i.e. the empty clause has been obtained via
+     *          resolution); `FAILED` if the operation could not be completed; `OK` otherwise.
+     *          The result's `clauses` range remains valid until `distribute` is called again or the
+     *          corresponding ClauseDistribution object is destroyed.
      */
     template <typename OccurrenceMapT>
-    auto reset(OccurrenceMapT& litOccurrences, CNFVar distributeAt) noexcept -> DistributionResult;
-
-    /**
-     * \brief Returns the result of the previous `reset` operation.
-     * 
-     * If `reset()` has not been invoked yet, an empty range is returned. Otherwise, if
-     * the return value of the previous invocation of `reset()` had been `OK`, the range of
-     * clauses produced by the previous elimination-by-distribution operation is returned. The
-     * returned iterators and iterated objects are valid until `reset` is called or this object
-     * is destroyed.
-     * 
-     * \returns A range of references to CNFLit ranges as described above.
-     */
-    auto getDistributedClauses() noexcept -> boost::iterator_range<iterator>;
-
-    /**
-     * \brief Returns the amount of clauses referenced by `getDistributedClauses()`.
-     * 
-     * \returns the amount of clauses referenced by `getDistributedClauses()`.
-     */
-    auto size() const noexcept -> size_type;
+    auto distribute(OccurrenceMapT& litOccurrences, CNFVar distributeAt) noexcept
+        -> DistributionResult;
 
 
     /**
@@ -142,17 +138,8 @@ private:
 
 /********** Implementation ****************************** */
 
-inline auto ClauseDistribution::getDistributedClauses() noexcept
-    -> boost::iterator_range<iterator> {
-    return m_clauses.getClauses();
-}
-
-inline auto ClauseDistribution::size() const noexcept -> size_type {
-    return m_numDistributedClauses;
-}
-
 template <typename OccurrenceMapT>
-auto ClauseDistribution::reset(OccurrenceMapT& litOccurrences, CNFVar distributeAt) noexcept
+auto ClauseDistribution::distribute(OccurrenceMapT& litOccurrences, CNFVar distributeAt) noexcept
     -> DistributionResult {
     static_assert(is_occurrence_map<OccurrenceMapT, CNFLit>::value,
                   "OccurrenceMapT must be an occurrence map for CNFLit objects");
@@ -178,7 +165,7 @@ auto ClauseDistribution::computeDistributedClauses(OccurrenceMapT& litOccurrence
                 try {
                     partialDistributedClause.push_back(lit);
                 } catch (std::bad_alloc& e) {
-                    return DistributionResult::FAILED;
+                    return {DistributionStatus::FAILED, {}, 0};
                 }
             }
         }
@@ -197,12 +184,12 @@ auto ClauseDistribution::computeDistributedClauses(OccurrenceMapT& litOccurrence
                 try {
                     partialDistributedClause.push_back(lit);
                 } catch (std::bad_alloc& e) {
-                    return DistributionResult::FAILED;
+                    return {DistributionStatus::FAILED, {}, 0};
                 }
             }
 
             if (partialDistributedClause.empty()) {
-                return DistributionResult::OK_DETECTED_UNSATISFIABILITY;
+                return {DistributionStatus::OK_DETECTED_UNSATISFIABILITY, {}, 0};
             }
 
             if (auto distClauseOpt = m_clauses.createClause(partialDistributedClause.size())) {
@@ -211,7 +198,7 @@ auto ClauseDistribution::computeDistributedClauses(OccurrenceMapT& litOccurrence
                           (*distClauseOpt)->begin());
                 ++m_numDistributedClauses;
             } else {
-                return DistributionResult::FAILED;
+                return {DistributionStatus::FAILED, {}, 0};
             }
 
         outer_continue:
@@ -219,7 +206,7 @@ auto ClauseDistribution::computeDistributedClauses(OccurrenceMapT& litOccurrence
         }
     }
 
-    return DistributionResult::OK;
+    return {DistributionStatus::OK, m_clauses.getClauses(), m_numDistributedClauses};
 }
 
 
