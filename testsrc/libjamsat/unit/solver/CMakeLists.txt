@@ -28,6 +28,7 @@ if (NM_COMPILING_WITH_GNULIKE)
 endif()
 
 add_jamsat_core_unittest_library(jstest.libjamsat.unit.solver
+  AssignmentTests.cpp
   TrailUnitTests.cpp
   PropagationUnitTests.cpp
   WatcherUnitTests.cpp
