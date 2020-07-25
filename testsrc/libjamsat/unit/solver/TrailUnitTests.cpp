@@ -23,7 +23,7 @@
  other dealings in this Software without prior written authorization.
 
  */
-
+/*
 #include <gtest/gtest.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/concepts/SolverTypeTraits.h>
@@ -381,3 +381,4 @@ TEST(UnitSolver, trailMaxVariableCanBeIncreased) {
     EXPECT_EQ(underTest.getPhase(CNFVar{7}), TBools::FALSE);
 }
 }
+*/

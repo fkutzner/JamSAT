@@ -26,13 +26,15 @@
 
 #pragma once
 
+#include <vector>
+
 #include <boost/range.hpp>
 
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/solver/Watcher.h>
 #include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/BoundedStack.h>
-#include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/Truth.h>
 
 namespace jamsat {
@@ -44,7 +46,8 @@ namespace jamsat {
  * 
  * This class is responsible for maintaining a consistent variable assignment.
  */
-class assignment {
+class assignment final {
+public:
     using const_iterator = BoundedStack<CNFLit>::const_iterator;
 
     /** Assignment level index */
@@ -56,6 +59,15 @@ class assignment {
     using size_type = BoundedStack<CNFLit>::size_type;
 
     /**
+     * \brief Constructs an assignment object.
+     * 
+     * \param max_var The maximum variable occurring in the problem instance.
+     * 
+     * \throw std::bad_alloc on memory allocation failure.
+     */
+    explicit assignment(CNFVar max_var);
+
+    /**
      * \brief Undos all assignments and removes all clauses.
      */
     void clear() noexcept;
@@ -63,7 +75,9 @@ class assignment {
     /**
      * \brief Increases the maximum variable occurring in the problem instance.
      * 
-     * \pram var    A variable; must not be smaller than the previous maximum variable.
+     * \param var    A variable; must not be smaller than the previous maximum variable.
+     * 
+     * \throw std::bad_alloc on memory allocation failure.
      */
     void inc_max_var(CNFVar var);
 
@@ -79,7 +93,7 @@ class assignment {
      *   is returned, ie. a clause that is falsified under the new assignment. Otherwise,
      *   `nullptr` is returned.
      * 
-     * \throws std::bad_alloc on memory allocation failure.
+     * \throw std::bad_alloc on memory allocation failure.
      */
     auto append(CNFLit l) -> Clause*;
 
@@ -104,6 +118,11 @@ class assignment {
     auto is_complete() const noexcept -> bool;
 
     /**
+     * \brief Returns the number of current variable assignments.
+     */
+    auto get_num_assignments() const noexcept -> size_type;
+
+    /**
      * \brief Registers a clause (without assignments) for participating in consequence
      *   computation.
      * 
@@ -112,11 +131,16 @@ class assignment {
      *   object is destroyed. If the clause is modified (except by this object),
      *   `register_clause_modification()` must be called accordingly. No literal in \p clause
      *   must have an assignment yet.
+     * 
+     * \throw std::bad_alloc on memory allocation failure.
      */
     void register_new_clause(Clause& clause);
 
     /**
-     * \brief Registers a new clause for participating in consequence computation.
+     * \brief Registers a clause currently forcing an assignment for participating in
+     *   consequence computation.
+     * 
+     * The forced assignment and all its consequences are added to the assignment.
      * 
      * \param clause   A clause that is not yet participating in consequence computation.
      *   \p clause must reference a valid object until `clear()` is called or the assignment
@@ -125,16 +149,22 @@ class assignment {
      *   the first one must have a `false` assignment; the first literal of the clause must
      *   be unassigned.
      * 
-     *  \param asserting_lit The first literal of \p{clause}.
+     * \param asserting_lit The first literal of \p{clause}.
+     * 
+     * \returns If any consequence causes the assignment to become inconsistent, a clause
+     *   which is unsatisfied under the current assignment is returned. Otherwise, nullptr
+     *   is returned.
+     * 
+     * \throw std::bad_alloc on memory allocation failure.
      */
-    void register_new_clause(Clause& clause, CNFLit asserting_lit);
+    auto register_new_clause(Clause& clause, CNFLit asserting_lit) -> Clause*;
 
     /**
      * \brief Registers a clause modification.
      * 
      * \param clause   The modified clause.
      */
-    void register_clause_modification(Clause& clause);
+    void register_clause_modification(Clause& clause) noexcept;
 
     /**
      * \brief Returns the clause having forced the assignment of the given variable.
@@ -185,6 +215,107 @@ class assignment {
     auto get_level_assignments(level level) const noexcept -> assignment_range;
 
 private:
+    using level_limit = uint32_t;
+
+    /** \internal Variable assignments, in order of assignment */
+    BoundedStack<CNFLit> m_trail;
+
+    /** \internal m_level_limits[i] is the index in m_trail where level i begins */
+    std::vector<level_limit> m_level_limits;
+
+    /** \internal Map of variable assignments */
+    BoundedMap<CNFVar, TBool> m_assignments;
+
+    /** \internal Map of variable phases; updated during undo_to_level */
+    BoundedMap<CNFVar, TBool> m_phases;
+
+    /** \internal The current assignment level */
+    level m_current_level;
+
+    /** \internal Variable data grouped for cache-efficiency */
+    struct reason_and_al {
+        Clause* m_reason;
+        level m_level;
+    };
+
+    /** \internal Reason and assignment level for each assigned variable */
+    BoundedMap<CNFVar, reason_and_al> m_reasons_and_als;
+
+    /**
+     * \internal
+     * 
+     * Watchers for binary clauses. These are kept separately from watchers on
+     * longer clauses to save clause accesses.
+     */
+    detail_propagation::Watchers<Clause> m_binaryWatchers;
+
+    /**
+     * \internal
+     *
+     * Invariants for m_watchers: for each registered clause C,
+     *  - \p m_watchers contains exactly two different watchers pointing to C.
+     *  - the lists \p m_watchers.getWatchers(C[0]) and \p
+     * m_watchers.getWatchers(C[1]) each contain a watcher pointing to C.
+     */
+    detail_propagation::Watchers<Clause> m_watchers;
+
+    /**
+     * \internal
+     *
+     * A flag-map for CNFLit marking literals for which the corresponding
+     * watch-lists must be updated, i.e remove clauses scheduled for
+     * deletion, rewrite watchers out of sync with their clause (i.e. first
+     * or second literal has been changed)
+     */
+    BoundedMap<CNFLit, char> m_lits_with_required_watcher_update;
+
+    /**
+     * \internal
+     *
+     * A collection of elements marked in m_lits_with_required_watcher_update, for fast
+     * iteration.
+     */
+    std::vector<CNFLit> m_lits_with_required_watcher_update_as_vec;
 };
+
+
+inline auto assignment::get(CNFLit lit) const noexcept -> TBool {
+    TBool var_assignment = get(lit.getVariable());
+    TBool::UnderlyingType sign = static_cast<TBool::UnderlyingType>(lit.getSign());
+    // TODO: further optimize if neccessary: flip CNFSign constants to get rid of the subtraction
+    return TBool::fromUnderlyingValue(var_assignment.getUnderlyingValue() ^ (1 - sign));
+}
+
+inline auto assignment::get(CNFVar var) const noexcept -> TBool {
+    return m_assignments[var];
+}
+
+inline auto assignment::get_phase(CNFVar var) const noexcept -> TBool {
+    return m_phases[var];
+}
+
+inline auto assignment::get_current_level() const noexcept {
+    return m_current_level;
+}
+
+inline auto assignment::get_level(CNFVar var) const noexcept -> level {
+    return m_reasons_and_als[var].m_level;
+}
+
+inline auto assignment::get_reason(CNFVar var) const noexcept -> Clause* {
+    return m_reasons_and_als[var].m_reason;
+}
+
+inline auto assignment::is_forced(CNFVar var) const noexcept {
+    return m_reasons_and_als[var].m_reason != nullptr;
+}
+
+inline auto assignment::is_complete() const noexcept -> bool {
+    return m_trail.size() == m_assignments.size();
+}
+
+inline auto assignment::get_num_assignments() const noexcept -> size_type {
+    return m_trail.size();
+}
 
 }
