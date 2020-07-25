@@ -297,14 +297,16 @@ constexpr auto BinaryMaxHeap<K, Comparator, KIndex>::getParentIdx(StorageIdx ind
 }
 
 template <typename K, typename Comparator, typename KIndex>
-constexpr auto BinaryMaxHeap<K, Comparator, KIndex>::getLeftChildIdx(StorageIdx index) const
-    noexcept -> StorageIdx {
+constexpr auto
+BinaryMaxHeap<K, Comparator, KIndex>::getLeftChildIdx(StorageIdx index) const noexcept
+    -> StorageIdx {
     return 2 * index + 1;
 }
 
 template <typename K, typename Comparator, typename KIndex>
-constexpr auto BinaryMaxHeap<K, Comparator, KIndex>::getRightChildIdx(StorageIdx index) const
-    noexcept -> StorageIdx {
+constexpr auto
+BinaryMaxHeap<K, Comparator, KIndex>::getRightChildIdx(StorageIdx index) const noexcept
+    -> StorageIdx {
     return 2 * index + 2;
 }
 

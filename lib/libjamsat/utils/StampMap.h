@@ -235,8 +235,8 @@ public:
      * \param stamp     The current stamp (obtained from a StampingContext instance).
      * \returns         true iff \p index is marked as stamped.
      */
-    bool isStamped(const typename K::Type& obj, const typename StampMapBase<T>::Stamp stamp) const
-        noexcept;
+    bool isStamped(const typename K::Type& obj,
+                   const typename StampMapBase<T>::Stamp stamp) const noexcept;
 
     using StampMap<T, Ks...>::isStamped;
 };

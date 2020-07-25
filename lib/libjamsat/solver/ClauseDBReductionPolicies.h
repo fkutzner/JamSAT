@@ -137,8 +137,8 @@ void GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::
 }
 
 template <class ClauseT, class LearntClauseSeq, typename LBDType>
-bool GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::shouldReduceDB() const
-    noexcept {
+bool GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::shouldReduceDB()
+    const noexcept {
     return m_conflictsRemaining == 0 && !m_learntClauses.empty();
 }
 

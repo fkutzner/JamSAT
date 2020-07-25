@@ -102,8 +102,8 @@ public:
     void popLiteral() noexcept;
     size_t getNumberOfAssignments() const noexcept;
 
-    boost::iterator_range<std::vector<CNFLit>::const_iterator> getAssignments(size_t index) const
-        noexcept;
+    boost::iterator_range<std::vector<CNFLit>::const_iterator>
+    getAssignments(size_t index) const noexcept;
 
     boost::iterator_range<std::vector<CNFLit>::const_iterator>
     getDecisionLevelAssignments(DecisionLevel level) const noexcept;

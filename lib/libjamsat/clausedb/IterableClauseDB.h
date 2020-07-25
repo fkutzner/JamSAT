@@ -99,7 +99,7 @@ public:
     auto operator++(int) noexcept -> RegionIterator;
 
     auto operator*() const noexcept -> reference;
-    auto operator-> () const noexcept -> reference;
+    auto operator->() const noexcept -> reference;
 
     auto operator==(RegionIterator const& rhs) const noexcept -> bool;
     auto operator!=(RegionIterator const& rhs) const noexcept -> bool;
@@ -528,7 +528,7 @@ auto RegionIterator<RegionT>::operator*() const noexcept -> reference {
 }
 
 template <typename RegionT>
-auto RegionIterator<RegionT>::operator-> () const noexcept -> reference {
+auto RegionIterator<RegionT>::operator->() const noexcept -> reference {
     JAM_ASSERT(m_currentItem != nullptr, "Illegally dereferencing RegionIterator");
     return *m_currentItem;
 }

@@ -118,8 +118,8 @@ void TestAssignmentProvider::setAssignmentDecisionLevel(CNFVar variable,
     m_decisionLevels[variable] = level;
 }
 
-TestAssignmentProvider::DecisionLevel TestAssignmentProvider::getCurrentDecisionLevel() const
-    noexcept {
+TestAssignmentProvider::DecisionLevel
+TestAssignmentProvider::getCurrentDecisionLevel() const noexcept {
     return m_currentLevel;
 }
 

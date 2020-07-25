@@ -481,8 +481,8 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::setOnSeenVariableCallback(
 }
 
 template <class DLProvider, class ReasonProvider>
-void FirstUIPLearning<DLProvider, ReasonProvider>::test_assertClassInvariantsSatisfied() const
-    noexcept {
+void FirstUIPLearning<DLProvider, ReasonProvider>::test_assertClassInvariantsSatisfied()
+    const noexcept {
     JAM_ASSERT(detail_solver::isAllZero(m_stamps, m_maxVar), "Class invariant A violated");
 }
 }

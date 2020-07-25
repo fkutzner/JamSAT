@@ -250,8 +250,8 @@ void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::remov
 }
 
 template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
-auto OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::
-operator[](value_type value) noexcept -> ContainerRange {
+auto OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::operator[](
+    value_type value) noexcept -> ContainerRange {
     auto& occList = m_occurrences[value].m_occList;
     if (m_occurrences[value].m_requiresUpdate) {
         boost::remove_erase_if(occList, m_deletedQuery);

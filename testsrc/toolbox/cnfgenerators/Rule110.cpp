@@ -43,8 +43,8 @@ Rule110PredecessorStateProblem::Rule110PredecessorStateProblem(const std::string
                "Source and target automaton states must be of equal size");
 }
 
-CNFVar Rule110PredecessorStateProblem::getCellVariable(uint32_t step, uint32_t cellIndex) const
-    noexcept {
+CNFVar Rule110PredecessorStateProblem::getCellVariable(uint32_t step,
+                                                       uint32_t cellIndex) const noexcept {
     JAM_ASSERT(cellIndex < m_automatonWidth, "Argument cellIndex out of bounds");
     JAM_ASSERT(step < m_numberOfIntermediateSteps + 2, "Argument step out of bounds");
     CNFVar::RawVariable v = (step * m_automatonWidth) + cellIndex;

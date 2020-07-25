@@ -243,8 +243,8 @@ public:
      * \tparam DecisionLevelProvider    A type satisfying the DecisionLevelProvider concept.
      */
     template <typename DecisionLevelProvider>
-    auto isAssignmentReason(const Clause& clause, const DecisionLevelProvider& dlProvider) const
-        noexcept -> bool;
+    auto isAssignmentReason(const Clause& clause,
+                            const DecisionLevelProvider& dlProvider) const noexcept -> bool;
 
 
     /**
