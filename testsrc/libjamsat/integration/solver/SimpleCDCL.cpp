@@ -32,6 +32,7 @@
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
 #include <libjamsat/simplification/ClauseMinimization.h>
+#include <libjamsat/solver/Assignment.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/LiteralBlockDistance.h>
 #include <libjamsat/solver/Propagation.h>
@@ -66,20 +67,19 @@ public:
     TBool isProblemSatisfiable();
 
 private:
-    using TrailType = Trail<Clause>;
-    using PropagationType = Propagation<TrailType>;
-    using ConflictAnalysisType = FirstUIPLearning<TrailType, PropagationType>;
+    using ConflictAnalysisType = FirstUIPLearning<assignment, assignment>;
     using ClauseDBType = HeapClauseDB<Clause>;
-    using BranchingHeuristicType = VSIDSBranchingHeuristic<TrailType>;
+    using BranchingHeuristicType = VSIDSBranchingHeuristic<assignment>;
 
     enum class UnitPropagationResult { CONFLICTING, CONSISTENT };
     UnitPropagationResult propagateUnitClauses();
 
-    void backtrackToLevel(TrailType::DecisionLevel level);
+    void backtrackToLevel(assignment::level level);
+    void backtrackAll();
+    void resetBranchingStates(assignment::level minLevel);
 
     CNFVar m_maxVar;
-    TrailType m_trail;
-    PropagationType m_propagation;
+    assignment m_assignment;
     ConflictAnalysisType m_conflictAnalyzer;
     ClauseDBType m_clauseDB;
     BranchingHeuristicType m_branchingHeuristic;
@@ -90,11 +90,10 @@ private:
 // TODO: resizable data structures
 SimpleCDCL::SimpleCDCL()
   : m_maxVar(CNFVar{1})
-  , m_trail(m_maxVar)
-  , m_propagation(m_maxVar, m_trail)
-  , m_conflictAnalyzer(m_maxVar, m_trail, m_propagation)
+  , m_assignment(m_maxVar)
+  , m_conflictAnalyzer(m_maxVar, m_assignment, m_assignment)
   , m_clauseDB()
-  , m_branchingHeuristic(m_maxVar, m_trail) {}
+  , m_branchingHeuristic(m_maxVar, m_assignment) {}
 
 void SimpleCDCL::addClause(const CNFClause& clause) {
     auto oldMaxVar = m_maxVar;
@@ -104,8 +103,7 @@ void SimpleCDCL::addClause(const CNFClause& clause) {
     if (m_maxVar > oldMaxVar) {
         JAM_LOG_CDCLITEST(info,
                           "Increasing max. variable from " << oldMaxVar << " to " << m_maxVar);
-        m_trail.increaseMaxVarTo(m_maxVar);
-        m_propagation.increaseMaxVarTo(m_maxVar);
+        m_assignment.inc_max_var(m_maxVar);
         m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
         m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
     }
@@ -114,7 +112,7 @@ void SimpleCDCL::addClause(const CNFClause& clause) {
     if (clause.size() > 1) {
         auto& newClause = m_clauseDB.insertClause(clause);
         JAM_LOG_CDCLITEST(info, "Added clause " << &clause << " " << clause);
-        m_propagation.registerClause(newClause);
+        m_assignment.register_clause(newClause);
     } else if (clause.size() == 1) {
         m_unitClauses.push_back(clause[0]);
         JAM_LOG_CDCLITEST(info, "Added unit clause " << clause[0]);
@@ -124,8 +122,8 @@ void SimpleCDCL::addClause(const CNFClause& clause) {
 SimpleCDCL::UnitPropagationResult SimpleCDCL::propagateUnitClauses() {
     JAM_LOG_CDCLITEST(info, "Propagating unit clauses...");
     for (auto unitClauseLit : m_unitClauses) {
-        if (isDeterminate(m_trail.getAssignment(unitClauseLit))) {
-            auto assignment = m_trail.getAssignment(unitClauseLit);
+        if (isDeterminate(m_assignment.get_assignment(unitClauseLit))) {
+            auto assignment = m_assignment.get_assignment(unitClauseLit);
             auto litIsPositive = toTBool(unitClauseLit.getSign() == CNFSign::POSITIVE);
             if (assignment == litIsPositive) {
                 continue;
@@ -135,8 +133,7 @@ SimpleCDCL::UnitPropagationResult SimpleCDCL::propagateUnitClauses() {
         }
 
         m_branchingHeuristic.setEligibleForDecisions(unitClauseLit.getVariable(), false);
-        m_trail.addAssignment(unitClauseLit);
-        auto conflictingClause = m_propagation.propagateUntilFixpoint(unitClauseLit);
+        auto conflictingClause = m_assignment.append(unitClauseLit);
         if (conflictingClause != nullptr) {
             JAM_LOG_CDCLITEST(info, "Detected a conflict within the unit clauses.");
             return UnitPropagationResult::CONFLICTING;
@@ -145,10 +142,9 @@ SimpleCDCL::UnitPropagationResult SimpleCDCL::propagateUnitClauses() {
     return UnitPropagationResult::CONSISTENT;
 }
 
-void SimpleCDCL::backtrackToLevel(TrailType::DecisionLevel level) {
-    JAM_LOG_CDCLITEST(info, "Backtracking to level " << level);
-    for (auto currentDL = m_trail.getCurrentDecisionLevel(); currentDL >= level; --currentDL) {
-        for (auto lit : m_trail.getDecisionLevelAssignments(currentDL)) {
+void SimpleCDCL::resetBranchingStates(assignment::level minLevel) {
+    for (auto currentDL = m_assignment.get_current_level(); currentDL >= minLevel; --currentDL) {
+        for (auto lit : m_assignment.get_level_assignments(currentDL)) {
             JAM_LOG_CDCLITEST(info, "  Undoing assignment: " << lit);
             m_branchingHeuristic.reset(lit.getVariable());
         }
@@ -156,7 +152,18 @@ void SimpleCDCL::backtrackToLevel(TrailType::DecisionLevel level) {
             break;
         }
     }
-    m_trail.shrinkToDecisionLevel(level);
+}
+
+void SimpleCDCL::backtrackToLevel(assignment::level level) {
+    JAM_LOG_CDCLITEST(info, "Backtracking, revisiting level " << level);
+    resetBranchingStates(level + 1);
+    m_assignment.undo_to_level(level);
+}
+
+void SimpleCDCL::backtrackAll() {
+    JAM_LOG_CDCLITEST(info, "Backtracking all");
+    resetBranchingStates(0);
+    m_assignment.undo_all();
 }
 
 TBool SimpleCDCL::isProblemSatisfiable() {
@@ -169,26 +176,24 @@ TBool SimpleCDCL::isProblemSatisfiable() {
         [this](CNFVar seenVar) { m_branchingHeuristic.seenInConflict(seenVar); });
 
     // Leave the solver with an empty trail:
-    OnExitScope backtrackToLevel0{[this]() { this->backtrackToLevel(0); }};
+    OnExitScope backtrackToLevel0{[this]() { this->backtrackAll(); }};
 
-    while (!m_trail.isVariableAssignmentComplete()) {
+    while (!m_assignment.is_complete()) {
         JAM_LOG_CDCLITEST(info, "Performing a restart.");
-        JAM_ASSERT(m_trail.getCurrentDecisionLevel() == 0ull, "Illegal restart: not on DL 0");
+        JAM_ASSERT(m_assignment.get_current_level() == 0ull, "Illegal restart: not on DL 0");
         if (propagateUnitClauses() != UnitPropagationResult::CONSISTENT) {
             return toTBool(false);
         }
 
         // Breaking out of this inner loop causes a restart.
-        while (!m_trail.isVariableAssignmentComplete()) {
-            m_trail.newDecisionLevel();
+        while (!m_assignment.is_complete()) {
+            m_assignment.new_level();
             auto branchingLit = m_branchingHeuristic.pickBranchLiteral();
             JAM_LOG_CDCLITEST(info, "Decided branching variable: " << branchingLit);
 
             JAM_ASSERT(branchingLit != CNFLit::getUndefinedLiteral(),
                        "branching should always return a defined literal");
-            m_trail.addAssignment(branchingLit);
-
-            auto conflictingClause = m_propagation.propagateUntilFixpoint(branchingLit);
+            auto conflictingClause = m_assignment.append(branchingLit);
 
             if (conflictingClause != nullptr) {
                 JAM_LOG_CDCLITEST(info, "Handling a conflict...");
@@ -201,12 +206,11 @@ TBool SimpleCDCL::isProblemSatisfiable() {
 
                 // Put a literal with second-highest decision level next to the asserting literal
                 // (will backtrack there later)
-                auto backtrackLevel =
-                    m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable());
+                auto backtrackLevel = m_assignment.get_level(learntClause[1].getVariable());
                 auto litWithMaxDecisionLevel = learntClause.begin() + 1;
                 for (auto lit = learntClause.begin() + 1; lit != learntClause.end(); ++lit) {
-                    auto currentBacktrackLevel = std::max(
-                        backtrackLevel, m_trail.getAssignmentDecisionLevel(lit->getVariable()));
+                    auto currentBacktrackLevel =
+                        std::max(backtrackLevel, m_assignment.get_level(lit->getVariable()));
                     if (currentBacktrackLevel > backtrackLevel) {
                         litWithMaxDecisionLevel = lit;
                         backtrackLevel = currentBacktrackLevel;
@@ -217,7 +221,7 @@ TBool SimpleCDCL::isProblemSatisfiable() {
                 // Learning clauses until the solver learns a contradiction on the unit clause
                 // level (or finds a satisfying variable assignment)
                 if (learntClause.size() == 1 ||
-                    m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable()) == 0) {
+                    m_assignment.get_level(learntClause[1].getVariable()) == 0) {
                     JAM_LOG_CDCLITEST(info, "Learnt a unit clause: " << learntClause[0]);
                     m_unitClauses.push_back(learntClause[0]);
                     backtrackToLevel(0);
@@ -227,10 +231,9 @@ TBool SimpleCDCL::isProblemSatisfiable() {
                 } else {
                     auto& newClause = m_clauseDB.insertClause(learntClause);
                     JAM_LOG_CDCLITEST(info, "Learnt a clause: " << newClause);
-                    auto targetLevel =
-                        m_trail.getAssignmentDecisionLevel(learntClause[1].getVariable());
+                    auto targetLevel = m_assignment.get_level(learntClause[1].getVariable());
                     backtrackToLevel(targetLevel);
-                    conflictingClause = m_propagation.registerClause(newClause);
+                    conflictingClause = m_assignment.register_lemma(newClause);
                     JAM_ASSERT(conflictingClause == nullptr, "Illegal state: double conflict");
                 }
             }

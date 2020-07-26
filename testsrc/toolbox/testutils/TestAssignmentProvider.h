@@ -95,10 +95,10 @@ public:
 
     TestAssignmentProvider();
 
-    TBool getAssignment(CNFVar variable) const noexcept;
-    TBool getAssignment(CNFLit literal) const noexcept;
-    void addAssignment(CNFLit literal) noexcept;
-    void addAssignment(CNFLit literal, Clause& clause) noexcept;
+    TBool get_assignment(CNFVar variable) const noexcept;
+    TBool get_assignment(CNFLit literal) const noexcept;
+    void append(CNFLit literal) noexcept;
+    void append(CNFLit literal, Clause& clause) noexcept;
     void popLiteral() noexcept;
     size_t getNumberOfAssignments() const noexcept;
 
@@ -106,16 +106,16 @@ public:
     getAssignments(size_t index) const noexcept;
 
     boost::iterator_range<std::vector<CNFLit>::const_iterator>
-    getDecisionLevelAssignments(DecisionLevel level) const noexcept;
+    get_level_assignments(DecisionLevel level) const noexcept;
 
-    DecisionLevel getAssignmentDecisionLevel(CNFVar variable) const noexcept;
+    DecisionLevel get_level(CNFVar variable) const noexcept;
     void setAssignmentDecisionLevel(CNFVar variable, DecisionLevel level) noexcept;
-    DecisionLevel getCurrentDecisionLevel() const noexcept;
+    DecisionLevel get_current_level() const noexcept;
     void setCurrentDecisionLevel(DecisionLevel level) noexcept;
 
-    auto getAssignmentReason(CNFVar variable) const noexcept -> Clause const*;
-    auto getAssignmentReason(CNFVar variable) noexcept -> Clause*;
-    void setAssignmentReason(CNFVar variable, Clause* reason) noexcept;
+    auto get_reason(CNFVar variable) const noexcept -> Clause const*;
+    auto get_reason(CNFVar variable) noexcept -> Clause*;
+    void set_reason(CNFVar variable, Clause* reason) noexcept;
 
     struct DecisionLevelKey {
         using Type = DecisionLevel;

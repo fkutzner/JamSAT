@@ -63,7 +63,7 @@ public:
      * \param variable  A regular variable.
      * \returns         The variable's assignment.
      */
-    virtual TBool getAssignment(CNFVar variable) const noexcept = 0;
+    virtual TBool get_assignment(CNFVar variable) const noexcept = 0;
 
     /**
      * \brief Checks the proof.

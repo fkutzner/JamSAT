@@ -158,8 +158,7 @@ public:
                      typename StampMapT::Stamp currentStamp,
                      DLSet decisionLevelsInLemma) {
 
-        if (dlProvider.getAssignmentDecisionLevel(literal.getVariable()) ==
-            dlProvider.getCurrentDecisionLevel()) {
+        if (dlProvider.get_level(literal.getVariable()) == dlProvider.get_current_level()) {
             return false;
         }
 
@@ -174,7 +173,7 @@ public:
             CNFVar workItem = m_work.back();
             m_work.pop_back();
 
-            auto clausePtr = reasonProvider.getAssignmentReason(workItem);
+            auto clausePtr = reasonProvider.get_reason(workItem);
             JAM_LOG_MINIMIZER(info,
                               "  Checking if lits with variable "
                                   << workItem << " and reason " << clausePtr << " are redundant.");
@@ -184,7 +183,7 @@ public:
             decisionLevelsInLemma.insert(0);
             for (CNFLit lit : *clausePtr) {
                 CNFVar var = lit.getVariable();
-                auto varLevel = dlProvider.getAssignmentDecisionLevel(var);
+                auto varLevel = dlProvider.get_level(var);
 
                 if (!decisionLevelsInLemma.mightContain(varLevel)) {
                     // The reason of lit will contain at least two literals on varLevel.
@@ -202,7 +201,7 @@ public:
                     continue;
                 }
 
-                if (reasonProvider.getAssignmentReason(var) != nullptr) {
+                if (reasonProvider.get_reason(var) != nullptr) {
                     JAM_LOG_MINIMIZER(
                         info, "    Reason lit " << lit << " not checked yet, adding to queue");
                     tempStamps.setStamped(var, currentStamp, true);
@@ -245,7 +244,7 @@ void eraseRedundantLiterals(LiteralContainer& literals,
 
     for (auto literal : literals) {
         tempStamps.setStamped(literal.getVariable(), stamp, true);
-        decisionLevels.insert(dlProvider.getAssignmentDecisionLevel(literal.getVariable()));
+        decisionLevels.insert(dlProvider.get_level(literal.getVariable()));
     }
 
     erl_detail::LiteralRedundancyChecker redundancyChecker;
@@ -253,7 +252,7 @@ void eraseRedundantLiterals(LiteralContainer& literals,
     auto isRedundant =
         [&reasonProvider, &dlProvider, &tempStamps, &stamp, &redundancyChecker, decisionLevels](
             CNFLit literal) {
-            auto reason = reasonProvider.getAssignmentReason(literal.getVariable());
+            auto reason = reasonProvider.get_reason(literal.getVariable());
             if (reason != nullptr) {
                 JAM_LOG_MINIMIZER(info,
                                   "Checking if lit " << literal << " with reason " << reason
@@ -261,7 +260,7 @@ void eraseRedundantLiterals(LiteralContainer& literals,
                 return redundancyChecker.isRedundant(
                     literal, reasonProvider, dlProvider, tempStamps, stamp, decisionLevels);
             }
-            return dlProvider.getAssignmentDecisionLevel(literal.getVariable()) == 0;
+            return dlProvider.get_level(literal.getVariable()) == 0;
         };
 
     boost::remove_erase_if(literals, isRedundant);

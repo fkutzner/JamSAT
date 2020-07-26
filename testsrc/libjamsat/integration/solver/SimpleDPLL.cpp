@@ -69,7 +69,7 @@ public:
         }
 
         // Decision level 0 is finished here
-        m_trail.newDecisionLevel();
+        m_trail.new_level();
     }
 
     TBool solve() {
@@ -86,8 +86,8 @@ public:
 
 private:
     void addUnitClause(const CNFLit unitLit) {
-        if (!isDeterminate(m_trail.getAssignment(unitLit))) {
-            m_trail.addAssignment(unitLit);
+        if (!isDeterminate(m_trail.get_assignment(unitLit))) {
+            m_trail.append(unitLit);
             m_propagation.propagateUntilFixpoint(unitLit);
         }
     }
@@ -104,19 +104,18 @@ private:
     }
 
     CNFVar getBranchingVariable() {
-        JAM_ASSERT(m_trail.getCurrentDecisionLevel() > 0, "Can't branch on decision level 0");
-        CNFVar result =
-            CNFVar{static_cast<CNFVar::RawVariable>(m_trail.getCurrentDecisionLevel() - 1)};
+        JAM_ASSERT(m_trail.get_current_level() > 0, "Can't branch on decision level 0");
+        CNFVar result = CNFVar{static_cast<CNFVar::RawVariable>(m_trail.get_current_level() - 1)};
 
         // TODO: comparison operators on variables would apparently be really nice
         while (result.getRawValue() <= m_maxVar.getRawValue() &&
-               isDeterminate(m_trail.getAssignment(result))) {
+               isDeterminate(m_trail.get_assignment(result))) {
             // TODO: an increment operator on variables would be nice, too.
             result = CNFVar{result.getRawValue() + 1};
         }
 
         if (result.getRawValue() > m_maxVar.getRawValue() ||
-            isDeterminate(m_trail.getAssignment(result))) {
+            isDeterminate(m_trail.get_assignment(result))) {
             return CNFVar::getUndefinedVariable();
         }
 
@@ -129,12 +128,11 @@ private:
     }
 
     bool solve(CNFLit branchingLit) {
-        auto currentDecisionLevel = m_trail.getCurrentDecisionLevel();
-        OnExitScope autoBacktrack{[this, currentDecisionLevel]() {
-            this->m_trail.shrinkToDecisionLevel(currentDecisionLevel);
-        }};
+        auto currentDecisionLevel = m_trail.get_current_level();
+        OnExitScope autoBacktrack{
+            [this, currentDecisionLevel]() { this->m_trail.undo_all(currentDecisionLevel); }};
 
-        m_trail.addAssignment(branchingLit);
+        m_trail.append(branchingLit);
         if (m_propagation.propagateUntilFixpoint(branchingLit) != nullptr) {
             // conflicting clause found -> current assignment falsifies the formula
             return false;
@@ -151,7 +149,7 @@ private:
                    "Illegal branching variable");
         CNFLit nextBranchingLit{branchingVariable, CNFSign::NEGATIVE};
 
-        m_trail.newDecisionLevel();
+        m_trail.new_level();
         return solve(nextBranchingLit) || solve(~nextBranchingLit);
     }
 

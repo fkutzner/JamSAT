@@ -69,7 +69,7 @@ namespace jamsat {
  *    <td> </td>
  *  </tr>
  *  <tr>
- *    <td> `r.getAssignmentReason(v)`</td>
+ *    <td> `r.get_reason(v)`</td>
  *    <td> Returns a pointer to the assignment reason clause for `v` if `v`
  *         has been assigned via propagation; returns `nullptr` otherwise. </td>
  *    <td> `R::Reason const*` </td>
@@ -87,11 +87,10 @@ struct is_reason_provider<
         // Require that T::Reason is the same type as Reason:
         std::enable_if_t<std::is_same<Reason, typename T::Reason>::value, void>,
 
-        // For t of type const T and v of type CNFVar, require that t.getAssignmentReason(v)
+        // For t of type const T and v of type CNFVar, require that t.get_reason(v)
         // is a pointer to a const T::Clause:
-        JAM_REQUIRE_EXPR(
-            std::declval<std::add_const_t<T>>().getAssignmentReason(std::declval<CNFVar>()),
-            Reason const*)
+        JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().get_reason(std::declval<CNFVar>()),
+                         Reason const*)
 
         // end requirements
         >> : public std::true_type {};
@@ -150,18 +149,18 @@ struct is_const_range<T, O, j_void_t<
  *    <td> </td>
  *  </tr>
  *  <tr>
- *    <td> `d.getCurrentDecisionLevel()` </td>
+ *    <td> `d.get_current_level()` </td>
  *    <td> </td>
  *    <td> `D::DecisionLevel` </td>
  *  </tr>
  *  <tr>
- *    <td> `d.getAssignmentDecisionLevel(v)` </td>
+ *    <td> `d.get_level(v)` </td>
  *    <td> Returns the decision level on which `v` has been assigned. `v` must
  *         be a variable with an assignment.</td>
  *    <td> `D::DecisionLevel` </td>
  *  </tr>
  *  <tr>
- *    <td> `d.getDecisionLevelAssignments(e)` </td>
+ *    <td> `d.get_level_assignments(e)` </td>
  *    <td> Returns the const range of literals which have been assigned on level `e`.
  *         If `e` is larger than the current decision level, an empty range is
  *         returned. </td>
@@ -178,18 +177,18 @@ struct is_decision_level_provider<T,
     // Require that T::DecisionLevel is an integral type:
     std::enable_if_t<std::is_integral<typename T::DecisionLevel>::value, void>,
 
-    // For t of type const T, require that t.getCurrentDecisionLevel() returns a decision level:
-    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getCurrentDecisionLevel(),
+    // For t of type const T, require that t.get_current_level() returns a decision level:
+    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().get_current_level(),
                      typename T::DecisionLevel),
 
-    // For t of type const T and v of type CNFVar, require that t.getAssignmentDecisionLevel(v)
+    // For t of type const T and v of type CNFVar, require that t.get_level(v)
     // returns a decision level:
-    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getAssignmentDecisionLevel(std::declval<CNFVar>()),
+    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().get_level(std::declval<CNFVar>()),
                      typename T::DecisionLevel),
 
     // For t of type const T and l of type T::DecisionLevel, require that
-    // t.getDecisionLevelAssignments(l) returns a range over CNFLit const:
-    std::enable_if_t<is_const_range<decltype(std::declval<T>().getDecisionLevelAssignments(std::declval<typename T::DecisionLevel>())),
+    // t.get_level_assignments(l) returns a range over CNFLit const:
+    std::enable_if_t<is_const_range<decltype(std::declval<T>().get_level_assignments(std::declval<typename T::DecisionLevel>())),
                      CNFLit>::value, void>
 
   // end requirements
@@ -230,12 +229,12 @@ struct is_decision_level_provider<T,
  *    <td> </td>
  *  </tr>
  *  <tr>
- *    <td> `a.getAssignment(l)` </td>
+ *    <td> `a.get_assignment(l)` </td>
  *    <td> Returns the assignment of `l`'s variable.</td>
  *    <td> `TBool` </td>
  *  </tr>
  *  <tr>
- *    <td> `a.getAssignment(v)` </td>
+ *    <td> `a.get_assignment(v)` </td>
  *    <td> Returns the assignment of `v`.</td>
  *    <td> `TBool` </td>
  *  </tr>
@@ -263,14 +262,14 @@ struct is_assignment_provider<T, j_void_t<
     // Require that T::size_type is an integral type:
     std::enable_if_t<std::is_integral<typename T::size_type>::value, void>,
 
-    // For t of type const T and l of type CNFLit, require that t.getAssignment(l) returns
+    // For t of type const T and l of type CNFLit, require that t.get_assignment(l) returns
     // a TBool:
-    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getAssignment(std::declval<CNFLit>()),
+    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().get_assignment(std::declval<CNFLit>()),
                      TBool),
 
-    // For t of type const T and v of type CNFVar, require that t.getAssignment(l) returns
+    // For t of type const T and v of type CNFVar, require that t.get_assignment(l) returns
     // a TBool:
-    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getAssignment(std::declval<CNFVar>()),
+    JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().get_assignment(std::declval<CNFVar>()),
                      TBool),
 
     // For t of type const T, require that t.getNumberOfAssignments() returns a value of type

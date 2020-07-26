@@ -2,6 +2,8 @@
 
 #include <libjamsat/utils/Assert.h>
 #include <libjamsat/utils/Casts.h>
+#include <libjamsat/utils/Logger.h>
+#include <libjamsat/utils/Printers.h>
 
 #if defined(JAM_ENABLE_ASSIGNMENT_LOGGING)
 #define JAM_LOG_ASSIGN(x, y) JAM_LOG(x, "assign", y)
@@ -91,7 +93,9 @@ auto assignment::register_lemma(Clause& clause) -> Clause* {
     register_clause(clause);
 
     JAM_EXPENSIVE_ASSERT(
-        std::all_of(clause.begin() + 1, clause.end(), [this](CNFLit l) { return isFalse(get(l)); }),
+        std::all_of(clause.begin() + 1,
+                    clause.end(),
+                    [this](CNFLit l) { return isFalse(get_assignment(l)); }),
         "Added a clause requiring first-literal propagation which does not actually "
         "force the first literal");
     JAM_LOG_ASSIGN(info, "Propagating first literal of registered clause.");
@@ -120,6 +124,9 @@ void assignment::register_clause_modification(Clause& clause) noexcept {
 void assignment::new_level() noexcept {
     m_level_limits.push_back(static_checked_cast<level_limit>(m_trail.size()));
     ++m_current_level;
+    JAM_LOG_ASSIGN(info,
+                   "Entering assignment level: " << m_current_level << ", currently "
+                                                 << m_trail.size() << " assignments in total");
 }
 
 void assignment::undo_to_level(level level) noexcept {
@@ -131,6 +138,25 @@ void assignment::undo_to_level(level level) noexcept {
     m_trail.pop_to(m_level_limits[level + 1]);
     m_level_limits.resize(level + 1);
     m_current_level = level;
+
+    JAM_LOG_ASSIGN(info,
+                   "Entering assignment level: " << m_current_level << ", currently "
+                                                 << m_trail.size() << " assignments in total");
+}
+
+void assignment::undo_all() noexcept {
+    // TODO: remove code duplication
+    // TODO: testing
+    for (auto i = m_trail.begin(); i != m_trail.end(); ++i) {
+        m_phases[i->getVariable()] = m_assignments[(*i).getVariable()];
+        m_assignments[i->getVariable()] = TBools::INDETERMINATE;
+    }
+
+    m_trail.pop_to(0);
+    m_level_limits.resize(1);
+    m_current_level = 0;
+
+    JAM_LOG_ASSIGN(info, "Entering assignment level: 0, currently 0 assignments in total");
 }
 
 auto assignment::get_level_assignments(level level) const noexcept -> assignment_range {
@@ -147,7 +173,7 @@ auto assignment::get_level_assignments(level level) const noexcept -> assignment
 }
 
 auto assignment::propagate_until_fixpoint(CNFLit to_propagate, up_mode mode) -> Clause* {
-    JAM_LOG_ASSIGN(info, "Propagating assignment until fixpoint: " << toPropagate);
+    JAM_LOG_ASSIGN(info, "Propagating assignment until fixpoint: " << to_propagate);
 
     if (is_watcher_cleanup_required()) {
         cleanup_watchers();
@@ -200,7 +226,7 @@ template <assignment::up_mode mode>
 auto assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Clause* {
     // Caution: this method is on the solver's hottest path.
 
-    JAM_LOG_ASSIGN(info, "  Propagating assignment: " << toPropagate);
+    JAM_LOG_ASSIGN(info, "  Propagating assignment: " << to_propagate);
     amnt_new_facts = 0;
 
     if (Clause* conflict = propagate_binaries(to_propagate, amnt_new_facts)) {
@@ -221,7 +247,7 @@ auto assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Claus
         }
 
         CNFLit other_watched_lit = current_watcher.getOtherWatchedLiteral();
-        TBool assignment = get(other_watched_lit);
+        TBool assignment = get_assignment(other_watched_lit);
 
         if (isTrue(assignment)) {
             // The clause is already satisfied and can be ignored for propagation.
@@ -234,7 +260,7 @@ auto assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Claus
         // other_watched_lit might not actually be the other watched literal due to
         // the swap at (*), so restore it
         other_watched_lit = clause[1 - current_watcher.getIndex()];
-        assignment = get(other_watched_lit);
+        assignment = get_assignment(other_watched_lit);
         if (isTrue(assignment)) {
             // The clause is already satisfied and can be ignored for propagation.
             ++watcher_list_traversal;
@@ -247,7 +273,7 @@ auto assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Claus
 
         for (typename Clause::size_type i = 2; i < clause.size(); ++i) {
             CNFLit current_lit = clause[i];
-            if (!isFalse(get(current_lit))) {
+            if (!isFalse(get_assignment(current_lit))) {
                 // The FALSE literal is moved into the unwatched of the clause here,
                 // such that an INDETERMINATE or TRUE literal gets watched.
                 //
@@ -309,7 +335,7 @@ auto assignment::propagate_binaries(CNFLit to_propagate, size_t& amnt_new_facts)
     while (!watcher_list_traversal.hasFinishedTraversal()) {
         auto& current_watcher = *watcher_list_traversal;
         CNFLit secondLit = current_watcher.getOtherWatchedLiteral();
-        TBool assignment = get(secondLit);
+        TBool assignment = get_assignment(secondLit);
 
         if (isFalse(assignment)) {
             // conflict case:

@@ -38,7 +38,7 @@ public:
     explicit ModelImpl(CNFVar maxVar);
 
     void setAssignment(CNFVar variable, TBool value) noexcept override;
-    TBool getAssignment(CNFVar variable) const noexcept override;
+    TBool get_assignment(CNFVar variable) const noexcept override;
 
     TBool check(const CNFProblem& problem) const noexcept override;
 
@@ -69,7 +69,7 @@ void ModelImpl::setAssignment(CNFVar variable, TBool value) noexcept {
     m_assignments[variable] = value;
 }
 
-TBool ModelImpl::getAssignment(CNFVar variable) const noexcept {
+TBool ModelImpl::get_assignment(CNFVar variable) const noexcept {
     if (variable <= m_currentMaxVar) {
         return m_assignments[variable];
     }
@@ -82,7 +82,7 @@ TBool ModelImpl::check(const jamsat::CNFProblem& problem) const noexcept {
         for (auto lit : clause) {
             TBool expectedValue =
                 (lit.getSign() == CNFSign::POSITIVE) ? TBools::TRUE : TBools::FALSE;
-            satisfied |= (getAssignment(lit.getVariable()) == expectedValue);
+            satisfied |= (get_assignment(lit.getVariable()) == expectedValue);
         }
         if (!satisfied) {
             return TBools::FALSE;

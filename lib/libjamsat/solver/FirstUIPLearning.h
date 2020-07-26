@@ -318,7 +318,7 @@ auto FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(Clause const& re
     // appear in those reason clauses with the same sign, though, which is why
     // we need to keep track of the literals already included in the result.
 
-    const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
+    const auto currentLevel = m_dlProvider.get_current_level();
 
     if (resolveAtLit != CNFLit::getUndefinedLiteral()) {
         m_stamps[resolveAtLit.getVariable()] = 0;
@@ -334,7 +334,7 @@ auto FirstUIPLearning<DLProvider, ReasonProvider>::addResolvent(Clause const& re
         if (resolveAtLit != reasonLit && m_stamps[reasonLit.getVariable()] == 0) {
             m_stamps[reasonLit.getVariable()] = 1;
 
-            if (m_dlProvider.getAssignmentDecisionLevel(reasonLit.getVariable()) == currentLevel) {
+            if (m_dlProvider.get_level(reasonLit.getVariable()) == currentLevel) {
                 ++unresolvedCount;
             } else {
                 result[effectiveResultSize] = reasonLit;
@@ -367,8 +367,8 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::resolveUntilUIP(std::vector<C
 
     JAM_LOG_CA(info, "  Resolving until UIP. Literals to resolve: " << unresolvedCount);
 
-    const auto currentLevel = m_dlProvider.getCurrentDecisionLevel();
-    auto trailIterators = m_dlProvider.getDecisionLevelAssignments(currentLevel);
+    const auto currentLevel = m_dlProvider.get_current_level();
+    auto trailIterators = m_dlProvider.get_level_assignments(currentLevel);
     auto span = std::distance(trailIterators.begin(), trailIterators.end());
     auto cursor = trailIterators.begin() + span - 1;
 
@@ -397,9 +397,9 @@ void FirstUIPLearning<DLProvider, ReasonProvider>::resolveUntilUIP(std::vector<C
                 m_onSeenVariableCallback(resolveAtLit.getVariable());
             }
 
-            JAM_ASSERT(m_dlProvider.getAssignmentDecisionLevel(resolveAtVar) == currentLevel,
+            JAM_ASSERT(m_dlProvider.get_level(resolveAtVar) == currentLevel,
                        "Expected to traverse only literals on the current decision level");
-            auto reason = m_reasonProvider.getAssignmentReason(resolveAtVar);
+            auto reason = m_reasonProvider.get_reason(resolveAtVar);
 
             JAM_ASSERT(reason != nullptr, "Encountered the UIP too early");
             unresolvedCount += addResolvent(*reason, resolveAtLit, result);

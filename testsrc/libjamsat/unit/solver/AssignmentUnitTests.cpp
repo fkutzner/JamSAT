@@ -131,23 +131,23 @@ TEST(UnitSolver, assignmentAssgnLevelIteratorsRemainValidAfterAdd) {
 TEST(UnitSolver, emptyAssignmentHasIndeterminateAssignment) {
     assignment under_test{CNFVar{10}};
     for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
-        EXPECT_EQ(under_test.get(CNFVar{i}), TBools::INDETERMINATE);
+        EXPECT_EQ(under_test.get_assignment(CNFVar{i}), TBools::INDETERMINATE);
         CNFLit iLit = CNFLit{CNFVar{i}, CNFSign::POSITIVE};
-        EXPECT_EQ(under_test.get(iLit), TBools::INDETERMINATE);
-        EXPECT_EQ(under_test.get(~iLit), TBools::INDETERMINATE);
+        EXPECT_EQ(under_test.get_assignment(iLit), TBools::INDETERMINATE);
+        EXPECT_EQ(under_test.get_assignment(~iLit), TBools::INDETERMINATE);
     }
 }
 
 TEST(UnitSolver, variablesOnAssignmentHaveAssignment) {
     assignment under_test{CNFVar{10}};
     under_test.append(~4_Lit);
-    EXPECT_EQ(under_test.get(CNFVar{4}), TBools::FALSE);
-    EXPECT_EQ(under_test.get(4_Lit), TBools::FALSE);
-    EXPECT_EQ(under_test.get(~4_Lit), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{4}), TBools::FALSE);
+    EXPECT_EQ(under_test.get_assignment(4_Lit), TBools::FALSE);
+    EXPECT_EQ(under_test.get_assignment(~4_Lit), TBools::TRUE);
 
     for (CNFVar::RawVariable i = 0; i <= 10; ++i) {
         if (i != 4) {
-            EXPECT_EQ(under_test.get(CNFVar{i}), TBools::INDETERMINATE);
+            EXPECT_EQ(under_test.get_assignment(CNFVar{i}), TBools::INDETERMINATE);
         }
     }
 }
@@ -172,10 +172,10 @@ TEST(UnitSolver, assignmentsBecomeIndeterminateOnRevisit) {
     under_test.append(7_Lit);
 
     under_test.undo_to_level(1);
-    EXPECT_EQ(under_test.get(CNFVar{4}), TBools::FALSE);
-    EXPECT_EQ(under_test.get(CNFVar{5}), TBools::TRUE);
-    EXPECT_EQ(under_test.get(CNFVar{6}), TBools::INDETERMINATE);
-    EXPECT_EQ(under_test.get(CNFVar{7}), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{4}), TBools::FALSE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{5}), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{6}), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{7}), TBools::INDETERMINATE);
 }
 
 TEST(UnitSolver, undiscardedAssgnLevelsRemainIntactAfterRevisit) {
@@ -252,15 +252,15 @@ TEST(UnitSolver, assignmentmax_variableCanBeIncreased) {
     under_test.new_level();
 
     under_test.append(5_Lit);
-    ASSERT_EQ(under_test.get(CNFVar{5}), TBools::TRUE);
+    ASSERT_EQ(under_test.get_assignment(CNFVar{5}), TBools::TRUE);
     under_test.inc_max_var(CNFVar{7});
-    ASSERT_EQ(under_test.get(CNFVar{5}), TBools::TRUE);
+    ASSERT_EQ(under_test.get_assignment(CNFVar{5}), TBools::TRUE);
 
-    EXPECT_EQ(under_test.get(CNFVar{7}), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{7}), TBools::INDETERMINATE);
     EXPECT_EQ(under_test.get_phase(CNFVar{7}), TBools::FALSE);
     under_test.append(7_Lit);
     ASSERT_EQ(under_test.get_num_assignments(), 2ull);
-    EXPECT_EQ(under_test.get(CNFVar{7}), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{7}), TBools::TRUE);
     EXPECT_EQ(under_test.get_level(CNFVar{7}), 1ull);
     EXPECT_EQ(under_test.get_phase(CNFVar{7}), TBools::FALSE);
 }
@@ -304,7 +304,7 @@ TEST(UnitSolver, falsingSingleLiteralInbinary_clauseCausesPropagation) {
     auto conflicting_clause = under_test.propagate(~lit2, amnt_new_facts);
     EXPECT_EQ(conflicting_clause, nullptr); // no conflict expected
     EXPECT_EQ(amnt_new_facts, 1ull);
-    EXPECT_EQ(under_test.get(CNFVar{1}), TBools::FALSE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{1}), TBools::FALSE);
 }
 
 TEST(UnitSolver, reasonsAreRecordedDuringPropagation) {
@@ -341,8 +341,8 @@ TEST(UnitSolver, propagateWithSingleTrueClauseCausesNoPropagation) {
     auto conflicting_clause = under_test.propagate(~lit2, amnt_new_facts);
     EXPECT_EQ(conflicting_clause, nullptr); // no conflict expected
     EXPECT_EQ(amnt_new_facts, 0ull);
-    EXPECT_EQ(under_test.get(CNFVar{1}), TBools::FALSE);
-    EXPECT_EQ(under_test.get(CNFVar{2}), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{1}), TBools::FALSE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{2}), TBools::TRUE);
 }
 
 TEST(UnitSolver, propagateWithTernaryClause) {
@@ -363,7 +363,7 @@ TEST(UnitSolver, propagateWithTernaryClause) {
     under_test.assign(~lit2, nullptr);
     under_test.propagate(~lit2, newFacts);
     EXPECT_EQ(newFacts, 1ull);
-    EXPECT_EQ(under_test.get(lit3), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit3), TBools::TRUE);
 }
 
 TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
@@ -400,7 +400,7 @@ TEST(UnitSolver, propagateWithTernaryClausesAfterConflict) {
     conflicting_clause = under_test.propagate(~lit2, newFacts);
     EXPECT_EQ(newFacts, 1ull);
     EXPECT_EQ(conflicting_clause, nullptr);
-    EXPECT_EQ(under_test.get(lit3), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit3), TBools::TRUE);
 }
 
 TEST(UnitSolver, register_clauseWithUnassignedLiteralsCausesNoPropagation) {
@@ -413,9 +413,9 @@ TEST(UnitSolver, register_clauseWithUnassignedLiteralsCausesNoPropagation) {
     assignment under_test{max_var};
     under_test.register_clause(*ternary_clause);
 
-    EXPECT_EQ(under_test.get(CNFVar{1}), TBools::INDETERMINATE);
-    EXPECT_EQ(under_test.get(CNFVar{2}), TBools::INDETERMINATE);
-    EXPECT_EQ(under_test.get(CNFVar{3}), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{1}), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{2}), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{3}), TBools::INDETERMINATE);
 }
 
 TEST(UnitSolver, register_clauseWithAssignedLiteralsCausesPropagation) {
@@ -431,9 +431,9 @@ TEST(UnitSolver, register_clauseWithAssignedLiteralsCausesPropagation) {
 
     under_test.register_lemma(*ternary_clause);
 
-    EXPECT_EQ(under_test.get(lit1), TBools::TRUE);
-    EXPECT_EQ(under_test.get(lit2), TBools::FALSE);
-    EXPECT_EQ(under_test.get(lit3), TBools::FALSE);
+    EXPECT_EQ(under_test.get_assignment(lit1), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit2), TBools::FALSE);
+    EXPECT_EQ(under_test.get_assignment(lit3), TBools::FALSE);
 }
 
 TEST(UnitSolver, propagateUntilFixpointPropagatesTransitively) {
@@ -458,11 +458,11 @@ TEST(UnitSolver, propagateUntilFixpointPropagatesTransitively) {
     Clause* const conflicting_clause = under_test.append(~lit1);
 
     EXPECT_EQ(conflicting_clause, nullptr);
-    EXPECT_EQ(under_test.get(lit1), TBools::FALSE);
-    EXPECT_EQ(under_test.get(lit2), TBools::TRUE);
-    EXPECT_EQ(under_test.get(lit3), TBools::FALSE);
-    EXPECT_EQ(under_test.get(lit4), TBools::TRUE);
-    EXPECT_EQ(under_test.get(lit5), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit1), TBools::FALSE);
+    EXPECT_EQ(under_test.get_assignment(lit2), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit3), TBools::FALSE);
+    EXPECT_EQ(under_test.get_assignment(lit4), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit5), TBools::TRUE);
 }
 
 TEST(UnitSolver, propagateUntilFixpointReportsImmediateConflicts) {
@@ -515,7 +515,7 @@ TEST(UnitSolver, propagateAfterIncreasingMaximumVariable) {
     under_test.inc_max_var(CNFVar{10});
     under_test.register_clause(*forcingClause);
     under_test.append(10_Lit);
-    EXPECT_EQ(under_test.get(CNFVar{6}), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(CNFVar{6}), TBools::TRUE);
 }
 
 TEST(UnitSolver, propagationDetectsAssignmentReasonClause) {
@@ -550,7 +550,7 @@ TEST(UnitSolver, propagationDoesNotDetectImpliedFactAssignmentReasonClauseAfterB
     under_test.append(~1_Lit);
     under_test.append(~2_Lit);
 
-    ASSERT_EQ(under_test.get(3_Lit), TBools::TRUE);
+    ASSERT_EQ(under_test.get_assignment(3_Lit), TBools::TRUE);
     EXPECT_EQ(under_test.get_reason(CNFVar{3}), testData.get());
     EXPECT_TRUE(under_test.is_reason(*testData));
 
@@ -586,7 +586,7 @@ TEST(UnitSolver, clearClausesInPropagation_withReasonsKept) {
     under_test.append(~lit1);
     under_test.append(~lit3);
     auto conflicting = under_test.append(~lit2);
-    EXPECT_EQ(under_test.get(lit4), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(lit4), TBools::INDETERMINATE);
     EXPECT_EQ(conflicting, nullptr);
 }
 
@@ -672,12 +672,12 @@ void test_shortenedClausesArePropagatedCorrectly(bool withChangeInWatchedLits,
     ASSERT_EQ(conflict, nullptr);
 
     // The shortened clause now forces the assignment of lit3:
-    EXPECT_EQ(under_test.get(lit3), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit3), TBools::TRUE);
 
     // Check that c2 remains unchanged:
     conflict = under_test.append(~lit4);
     ASSERT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit5), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit5), TBools::TRUE);
 }
 }
 
@@ -716,7 +716,7 @@ TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_withBothWatchedLitsRemov
     auto conflict = under_test.append(~3_Lit);
     ASSERT_EQ(conflict, nullptr);
 
-    EXPECT_EQ(under_test.get(4_Lit), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(4_Lit), TBools::TRUE);
 }
 
 TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary) {
@@ -740,12 +740,12 @@ TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary) {
 
     auto conflict = under_test.append(~lit1);
     ASSERT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit2), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit2), TBools::TRUE);
 
     // Check that c2 remains unchanged:
     conflict = under_test.append(~lit4);
     ASSERT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit5), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit5), TBools::TRUE);
 }
 
 TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary_watchersUpdatedCorrectly) {
@@ -770,20 +770,20 @@ TEST(UnitSolver, shortenedClausesArePropagatedCorrectly_shortenToBinary_watchers
     // does not cause propagations:
     auto conflict = under_test.append(~lit2);
     EXPECT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit1), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(lit1), TBools::INDETERMINATE);
 
     under_test.new_level();
 
     // Check that the clause forces assignments as expected:
     conflict = under_test.append(~lit1);
     EXPECT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit3), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit3), TBools::TRUE);
 
     under_test.undo_to_level(0);
 
     conflict = under_test.append(~lit3);
     EXPECT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit1), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit1), TBools::TRUE);
 }
 
 TEST(UnitSolver, deletedBinariesAreRemovedFromPropagationAfterAnnounce) {
@@ -802,7 +802,7 @@ TEST(UnitSolver, deletedBinariesAreRemovedFromPropagationAfterAnnounce) {
 
     auto conflict = under_test.append(~lit2);
     EXPECT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit1), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(lit1), TBools::INDETERMINATE);
 }
 
 TEST(UnitSolver, deletedNonbinary_clausesAreRemovedFromPropagationAfterAnnounce) {
@@ -831,12 +831,12 @@ TEST(UnitSolver, deletedNonbinary_clausesAreRemovedFromPropagationAfterAnnounce)
     ASSERT_EQ(conflict, nullptr);
 
     // c1 should be removed from propagation now:
-    EXPECT_EQ(under_test.get(lit3), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(lit3), TBools::INDETERMINATE);
 
     // Check that c2 remains unchanged:
     conflict = under_test.append(~lit4);
     ASSERT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit5), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit5), TBools::TRUE);
 }
 
 TEST(UnitSolver, redundantClausesAreNotPropagatedInExcludeRedundantMode) {
@@ -864,16 +864,16 @@ TEST(UnitSolver, redundantClausesAreNotPropagatedInExcludeRedundantMode) {
     // Check that binaries are propagated no matter what their redundancy status is:
     auto conflict = under_test.append(~lit1, assignment::up_mode::exclude_lemmas);
     ASSERT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit2), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit2), TBools::TRUE);
 
     // Check that redundant non-binary clauses are not propagated:
     conflict = under_test.append(~lit3, assignment::up_mode::exclude_lemmas);
     ASSERT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit4), TBools::INDETERMINATE);
+    EXPECT_EQ(under_test.get_assignment(lit4), TBools::INDETERMINATE);
 
     // Check that the third (non-redundant) clause is not ignored:
     conflict = under_test.append(~lit5, assignment::up_mode::exclude_lemmas);
     ASSERT_EQ(conflict, nullptr);
-    EXPECT_EQ(under_test.get(lit6), TBools::TRUE);
+    EXPECT_EQ(under_test.get_assignment(lit6), TBools::TRUE);
 }
 }

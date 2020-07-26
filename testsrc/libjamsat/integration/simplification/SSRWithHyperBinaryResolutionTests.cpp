@@ -169,7 +169,7 @@ TEST_F(IntegrationSSRWithHyperBinaryResolution, NoClausesModifiedForUnitLiterals
     auto bin1 = createAndRegClause({~1_Lit, 2_Lit});
     auto bin2 = createAndRegClause({~1_Lit, 2_Lit, 3_Lit});
 
-    m_trail.addAssignment(1_Lit);
+    m_trail.append(1_Lit);
     performSSRWithHBR(1_Lit);
     expectUnmodified(*bin1);
     expectUnmodified(*bin2);

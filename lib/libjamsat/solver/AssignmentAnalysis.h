@@ -94,27 +94,27 @@ std::vector<CNFLit> analyzeAssignment(ReasonProviderT& reasonProvider,
 
     std::vector<CNFLit> result{query};
 
-    if (reasonProvider.getAssignmentReason(query.getVariable()) == nullptr) {
+    if (reasonProvider.get_reason(query.getVariable()) == nullptr) {
         return result;
     }
 
-    auto currentDecisionLevel = dlProvider.getCurrentDecisionLevel();
+    auto currentDecisionLevel = dlProvider.get_current_level();
 
     std::vector<CNFVar> toAnalyze{query.getVariable()};
     while (!toAnalyze.empty()) {
         CNFVar currentVar = toAnalyze.back();
         toAnalyze.pop_back();
         stamps.setStamped(currentVar, stamp, true);
-        JAM_ASSERT(reasonProvider.getAssignmentReason(currentVar) != nullptr,
+        JAM_ASSERT(reasonProvider.get_reason(currentVar) != nullptr,
                    "Expected only literals with reasons in the work queue");
-        auto assignmentReason = reasonProvider.getAssignmentReason(currentVar);
+        auto assignmentReason = reasonProvider.get_reason(currentVar);
         for (CNFLit lit : *assignmentReason) {
             if (stamps.isStamped(lit.getVariable(), stamp)) {
                 continue;
             }
             stamps.setStamped(lit.getVariable(), stamp, true);
-            if (dlProvider.getAssignmentDecisionLevel(lit.getVariable()) == currentDecisionLevel) {
-                if (reasonProvider.getAssignmentReason(lit.getVariable()) != nullptr) {
+            if (dlProvider.get_level(lit.getVariable()) == currentDecisionLevel) {
+                if (reasonProvider.get_reason(lit.getVariable()) != nullptr) {
                     toAnalyze.push_back(lit.getVariable());
                 } else {
                     // ~lit must be on the trail: the only positive-assigned literal of

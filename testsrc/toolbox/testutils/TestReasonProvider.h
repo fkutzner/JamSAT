@@ -38,11 +38,9 @@ public:
     using Clause = ClauseT;
     using Reason = ClauseT;
 
-    void setAssignmentReason(CNFVar variable, ClauseT& reason) noexcept {
-        m_reasons[variable] = &reason;
-    }
+    void set_reason(CNFVar variable, ClauseT& reason) noexcept { m_reasons[variable] = &reason; }
 
-    const ClauseT* getAssignmentReason(CNFVar variable) const noexcept {
+    const ClauseT* get_reason(CNFVar variable) const noexcept {
         auto reason = m_reasons.find(variable);
         if (reason != m_reasons.end()) {
             return reason->second;

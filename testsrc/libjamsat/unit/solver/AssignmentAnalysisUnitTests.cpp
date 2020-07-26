@@ -45,7 +45,7 @@ TEST(UnitSolver, AssignmentAnalysisProducesUnitaryResultForReasonlessConflict) {
     StampMap<int, CNFVar::Index> tempStamps{CNFVar{1024}.getRawValue()};
     CNFLit lit{CNFVar{3}, CNFSign::POSITIVE};
     decisionLevelProvider.setCurrentDecisionLevel(0);
-    decisionLevelProvider.addAssignment(lit);
+    decisionLevelProvider.append(lit);
     decisionLevelProvider.setAssignmentDecisionLevel(lit.getVariable(), 0);
 
     auto result = analyzeAssignment(reasonProvider, decisionLevelProvider, tempStamps, lit);
@@ -63,14 +63,14 @@ TEST(UnitSolver, AssignmentAnalysisProducesFailingAssumptionsForReasonfulConflic
         lit7{CNFVar{25}, CNFSign::NEGATIVE};
 
     decisionLevelProvider.setCurrentDecisionLevel(0);
-    decisionLevelProvider.addAssignment(lit1);
-    decisionLevelProvider.addAssignment(lit2);
+    decisionLevelProvider.append(lit1);
+    decisionLevelProvider.append(lit2);
     decisionLevelProvider.setCurrentDecisionLevel(1);
-    decisionLevelProvider.addAssignment(lit3);
-    decisionLevelProvider.addAssignment(lit4);
-    decisionLevelProvider.addAssignment(lit5);
-    decisionLevelProvider.addAssignment(lit6);
-    decisionLevelProvider.addAssignment(lit7);
+    decisionLevelProvider.append(lit3);
+    decisionLevelProvider.append(lit4);
+    decisionLevelProvider.append(lit5);
+    decisionLevelProvider.append(lit6);
+    decisionLevelProvider.append(lit7);
 
     decisionLevelProvider.setAssignmentDecisionLevel(lit1.getVariable(), 0);
     decisionLevelProvider.setAssignmentDecisionLevel(lit2.getVariable(), 0);
@@ -83,9 +83,9 @@ TEST(UnitSolver, AssignmentAnalysisProducesFailingAssumptionsForReasonfulConflic
     TrivialClause reasonFor2{~lit1, lit2};
     TrivialClause reasonFor4{~lit2, ~lit1, ~lit6, ~lit3, lit4};
     TrivialClause reasonFor5{~lit2, ~lit7, ~lit3, ~lit4, lit5};
-    reasonProvider.setAssignmentReason(lit2.getVariable(), reasonFor2);
-    reasonProvider.setAssignmentReason(lit4.getVariable(), reasonFor4);
-    reasonProvider.setAssignmentReason(lit5.getVariable(), reasonFor5);
+    reasonProvider.set_reason(lit2.getVariable(), reasonFor2);
+    reasonProvider.set_reason(lit4.getVariable(), reasonFor4);
+    reasonProvider.set_reason(lit5.getVariable(), reasonFor5);
 
     std::vector<CNFLit> expected{lit3, lit5, lit6, lit7};
     auto result = analyzeAssignment(reasonProvider, decisionLevelProvider, tempStamps, lit5);

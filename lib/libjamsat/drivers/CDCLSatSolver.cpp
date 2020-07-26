@@ -613,20 +613,20 @@ void CDCLSatSolverImpl::tryReduceClauseDB() {
 void CDCLSatSolverImpl::backtrackAll() {
     JAM_LOG_SOLVER(info, "Backtracking to level 0");
     prepareBacktrack(0);
-    m_trail.shrinkToDecisionLevel(0);
+    m_trail.undo_all(0);
 }
 
 void CDCLSatSolverImpl::backtrackToLevel(Trail<ClauseT>::DecisionLevel targetLevel) {
     JAM_LOG_SOLVER(info, "Backtracking by revisiting decision level " << targetLevel);
     prepareBacktrack(targetLevel + 1);
-    m_trail.revisitDecisionLevel(targetLevel);
+    m_trail.undo_to_level(targetLevel);
 }
 
 void CDCLSatSolverImpl::prepareBacktrack(Trail<ClauseT>::DecisionLevel level) {
     updateReasonClauseLBDsOnCurrentLevel();
 
-    for (auto l = m_trail.getCurrentDecisionLevel(); l >= level; --l) {
-        for (auto lit : m_trail.getDecisionLevelAssignments(l)) {
+    for (auto l = m_trail.get_current_level(); l >= level; --l) {
+        for (auto lit : m_trail.get_level_assignments(l)) {
             m_branchingHeuristic.reset(lit.getVariable());
         }
         if (l == 0) {
@@ -640,12 +640,12 @@ void CDCLSatSolverImpl::updateReasonClauseLBDsOnCurrentLevel() {
         return;
     }
 
-    auto level = m_trail.getCurrentDecisionLevel();
+    auto level = m_trail.get_current_level();
 
     std::size_t updated = 0;
-    for (auto lit : boost::adaptors::reverse(m_trail.getDecisionLevelAssignments(level))) {
+    for (auto lit : boost::adaptors::reverse(m_trail.get_level_assignments(level))) {
         if (m_propagator.hasForcedAssignment(lit.getVariable())) {
-            ClauseT* reason = m_propagator.getAssignmentReason(lit.getVariable());
+            ClauseT* reason = m_propagator.get_reason(lit.getVariable());
             LBD newLBD = getLBD(*reason, m_trail, m_stamps);
             reason->setLBD(newLBD);
             ++updated;
@@ -666,19 +666,19 @@ auto CDCLSatSolverImpl::solveUntilRestart(std::vector<CNFLit> const& assumedFact
     if (propagateHardFacts(m_facts) == FactPropagationResult::INCONSISTENT) {
         return TBools::FALSE;
     }
-    m_trail.newDecisionLevel();
+    m_trail.new_level();
     if (propagateAssumedFacts(assumedFacts, failedAssumptions) ==
         FactPropagationResult::INCONSISTENT) {
         return TBools::FALSE;
     }
 
-    while (!m_trail.isVariableAssignmentComplete()) {
-        m_trail.newDecisionLevel();
+    while (!m_trail.is_complete()) {
+        m_trail.new_level();
         auto decision = m_branchingHeuristic.pickBranchLiteral();
         JAM_ASSERT(decision != CNFLit::getUndefinedLiteral(),
                    "The branching heuristic is not expected to return an undefined literal");
         JAM_LOG_SOLVER(info,
-                       "Beginning new decision level " << m_trail.getCurrentDecisionLevel()
+                       "Beginning new decision level " << m_trail.get_current_level()
                                                        << " with branching decision " << decision);
 
         if (resolveDecision(decision) == ResolveDecisionResult::RESTART ||
@@ -700,8 +700,8 @@ auto CDCLSatSolverImpl::solveUntilRestart(std::vector<CNFLit> const& assumedFact
 }
 
 auto CDCLSatSolverImpl::propagateHardFacts(std::vector<CNFLit>& facts) -> FactPropagationResult {
-    JAM_LOG_SOLVER(
-        info, "Propagating hard facts on decision level " << m_trail.getCurrentDecisionLevel());
+    JAM_LOG_SOLVER(info,
+                   "Propagating hard facts on decision level " << m_trail.get_current_level());
     auto amntUnits = facts.size();
     auto result = propagateFactsOnSystemLevels(facts, nullptr);
     if (result != FactPropagationResult::INCONSISTENT &&
@@ -721,8 +721,8 @@ auto CDCLSatSolverImpl::propagateHardFacts(std::vector<CNFLit>& facts) -> FactPr
 auto CDCLSatSolverImpl::propagateAssumedFacts(std::vector<CNFLit> const& assumedFacts,
                                               std::vector<CNFLit>& failedAssumptions)
     -> FactPropagationResult {
-    JAM_LOG_SOLVER(
-        info, "Propagating assumed facts on decision level " << m_trail.getCurrentDecisionLevel());
+    JAM_LOG_SOLVER(info,
+                   "Propagating assumed facts on decision level " << m_trail.get_current_level());
     return propagateFactsOnSystemLevels(assumedFacts, &failedAssumptions);
 }
 
@@ -731,7 +731,7 @@ auto CDCLSatSolverImpl::propagateFactsOnSystemLevels(std::vector<CNFLit> const& 
                                                      std::vector<CNFLit>* failedAssumptions)
     -> FactPropagationResult {
     for (auto fact : factsToPropagate) {
-        auto assignment = m_trail.getAssignment(fact.getVariable());
+        auto assignment = m_trail.get_assignment(fact.getVariable());
         if (isDeterminate(assignment) &&
             toTBool(fact.getSign() == CNFSign::POSITIVE) != assignment) {
             JAM_LOG_SOLVER(info, "Detected conflict at fact " << fact);
@@ -742,7 +742,7 @@ auto CDCLSatSolverImpl::propagateFactsOnSystemLevels(std::vector<CNFLit> const& 
         }
 
         if (!isDeterminate(assignment)) {
-            m_trail.addAssignment(fact);
+            m_trail.append(fact);
         } else {
             JAM_ASSERT(toTBool(fact.getSign() == CNFSign::POSITIVE) == assignment,
                        "Illegal unit clause conflict");
@@ -768,7 +768,7 @@ auto CDCLSatSolverImpl::propagateFactsOnSystemLevels(std::vector<CNFLit> const& 
 }
 
 auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResult {
-    m_trail.addAssignment(decision);
+    m_trail.append(decision);
     m_statistics.registerDecision();
     auto amntAssignments = m_trail.getNumberOfAssignments();
     ClauseT* conflictingClause = m_propagator.propagateUntilFixpoint(decision);
@@ -873,7 +873,7 @@ auto CDCLSatSolverImpl::deriveLemma(ClauseT& conflictingClause) -> LemmaDerivati
         Trail<ClauseT>::DecisionLevel backtrackLevel = 0;
         for (auto lit = newLemma.begin() + 1; lit != newLemma.end(); ++lit) {
             auto currentBacktrackLevel =
-                std::max(backtrackLevel, m_trail.getAssignmentDecisionLevel(lit->getVariable()));
+                std::max(backtrackLevel, m_trail.get_level(lit->getVariable()));
             if (currentBacktrackLevel > backtrackLevel) {
                 litWithMaxDecisionLevel = lit;
                 backtrackLevel = currentBacktrackLevel;

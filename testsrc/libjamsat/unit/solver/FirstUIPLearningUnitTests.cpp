@@ -88,11 +88,11 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
     TrivialClause dummyReasonClause{~3_Lit, ~1_Lit};
     TrivialClause conflictingClause{3_Lit, ~4_Lit, 6_Lit, ~9_Lit};
 
-    assignments.addAssignment(~conflictingClause[1]);
-    assignments.addAssignment(~conflictingClause[3]);
-    assignments.addAssignment(~dummyReasonClause[1]);
-    assignments.addAssignment(~conflictingClause[2]);
-    assignments.addAssignment(~conflictingClause[0]);
+    assignments.append(~conflictingClause[1]);
+    assignments.append(~conflictingClause[3]);
+    assignments.append(~dummyReasonClause[1]);
+    assignments.append(~conflictingClause[2]);
+    assignments.append(~conflictingClause[0]);
 
     assignments.setAssignmentDecisionLevel(CNFVar{4}, 2);
     assignments.setAssignmentDecisionLevel(CNFVar{1}, 3);
@@ -101,7 +101,7 @@ TEST(UnitSolver, firstUIPIsFoundWhenConflictingClauseHas2LitsOnCurLevel) {
     assignments.setAssignmentDecisionLevel(CNFVar{3}, 4);
     assignments.setAssignmentDecisionLevel(CNFVar{6}, 4);
 
-    reasons.setAssignmentReason(CNFVar{3}, dummyReasonClause);
+    reasons.set_reason(CNFVar{3}, dummyReasonClause);
 
     assignments.setCurrentDecisionLevel(4);
 
@@ -131,11 +131,11 @@ TEST(UnitSolver, firstUIPLearningCallsSeenVariableCallback) {
     TrivialClause dummyReasonClause{~3_Lit, ~1_Lit};
     TrivialClause conflictingClause{3_Lit, ~4_Lit, 6_Lit, ~9_Lit};
 
-    assignments.addAssignment(~conflictingClause[1]);
-    assignments.addAssignment(~conflictingClause[3]);
-    assignments.addAssignment(~dummyReasonClause[1]);
-    assignments.addAssignment(~conflictingClause[2]);
-    assignments.addAssignment(~conflictingClause[0]);
+    assignments.append(~conflictingClause[1]);
+    assignments.append(~conflictingClause[3]);
+    assignments.append(~dummyReasonClause[1]);
+    assignments.append(~conflictingClause[2]);
+    assignments.append(~conflictingClause[0]);
 
     assignments.setAssignmentDecisionLevel(CNFVar{4}, 2);
     assignments.setAssignmentDecisionLevel(CNFVar{1}, 3);
@@ -144,7 +144,7 @@ TEST(UnitSolver, firstUIPLearningCallsSeenVariableCallback) {
     assignments.setAssignmentDecisionLevel(CNFVar{3}, 4);
     assignments.setAssignmentDecisionLevel(CNFVar{6}, 4);
 
-    reasons.setAssignmentReason(CNFVar{3}, dummyReasonClause);
+    reasons.set_reason(CNFVar{3}, dummyReasonClause);
 
     assignments.setCurrentDecisionLevel(4);
 
@@ -182,21 +182,21 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralHasBeenPropagated) {
     DummyReasonProvider reasons;
 
     for (auto lit : filler) {
-        assignments.addAssignment(lit);
+        assignments.append(lit);
         assignments.setAssignmentDecisionLevel(lit.getVariable(), 1);
     }
 
-    assignments.addAssignment(decisionLit);
+    assignments.append(decisionLit);
     assignments.setAssignmentDecisionLevel(decisionLit.getVariable(), 2);
-    assignments.addAssignment(assertingLit);
+    assignments.append(assertingLit);
     assignments.setAssignmentDecisionLevel(assertingLit.getVariable(), 2);
-    reasons.setAssignmentReason(assertingLit.getVariable(), clause1);
-    assignments.addAssignment(prop1);
+    reasons.set_reason(assertingLit.getVariable(), clause1);
+    assignments.append(prop1);
     assignments.setAssignmentDecisionLevel(prop1.getVariable(), 2);
-    reasons.setAssignmentReason(prop1.getVariable(), clause2);
-    assignments.addAssignment(prop2);
+    reasons.set_reason(prop1.getVariable(), clause2);
+    assignments.append(prop2);
     assignments.setAssignmentDecisionLevel(prop2.getVariable(), 2);
-    reasons.setAssignmentReason(prop2.getVariable(), clause3);
+    reasons.set_reason(prop2.getVariable(), clause3);
 
     assignments.setCurrentDecisionLevel(2);
 
@@ -234,14 +234,14 @@ void test_firstUIPIsFoundWhenAllLiteralsAreOnSameLevel(bool simulateOOM) {
     TestAssignmentProvider assignments;
     DummyReasonProvider reasons;
 
-    assignments.addAssignment(decisionLit);
+    assignments.append(decisionLit);
     assignments.setAssignmentDecisionLevel(decisionLit.getVariable(), 1);
-    assignments.addAssignment(intermediateLit);
+    assignments.append(intermediateLit);
     assignments.setAssignmentDecisionLevel(intermediateLit.getVariable(), 1);
-    reasons.setAssignmentReason(intermediateLit.getVariable(), clause1);
-    assignments.addAssignment(conflLit);
+    reasons.set_reason(intermediateLit.getVariable(), clause1);
+    assignments.append(conflLit);
     assignments.setAssignmentDecisionLevel(conflLit.getVariable(), 1);
-    reasons.setAssignmentReason(conflLit.getVariable(), clause2);
+    reasons.set_reason(conflLit.getVariable(), clause2);
     assignments.setCurrentDecisionLevel(1);
 
     CNFVar maxVar{2};
@@ -295,34 +295,34 @@ TEST(UnitSolver, firstUIPIsFoundWhenAssertingLiteralIsDecisionLiteral) {
 
     TrivialClause waerden6{~2_Lit, ~5_Lit, ~8_Lit};
 
-    assignments.addAssignment(~6_Lit);
+    assignments.append(~6_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{6}, 1);
 
-    assignments.addAssignment(~9_Lit);
+    assignments.append(~9_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{9}, 2);
 
-    assignments.addAssignment(3_Lit);
+    assignments.append(3_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{3}, 2);
-    reasons.setAssignmentReason(CNFVar{3}, waerden1);
+    reasons.set_reason(CNFVar{3}, waerden1);
 
-    assignments.addAssignment(~4_Lit);
+    assignments.append(~4_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{4}, 3);
 
-    assignments.addAssignment(5_Lit);
+    assignments.append(5_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{5}, 3);
-    reasons.setAssignmentReason(CNFVar{5}, waerden2);
+    reasons.set_reason(CNFVar{5}, waerden2);
 
-    assignments.addAssignment(8_Lit);
+    assignments.append(8_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{8}, 3);
-    reasons.setAssignmentReason(CNFVar{8}, waerden3);
+    reasons.set_reason(CNFVar{8}, waerden3);
 
-    assignments.addAssignment(2_Lit);
+    assignments.append(2_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{2}, 3);
-    reasons.setAssignmentReason(CNFVar{2}, waerden4);
+    reasons.set_reason(CNFVar{2}, waerden4);
 
-    assignments.addAssignment(~7_Lit);
+    assignments.append(~7_Lit);
     assignments.setAssignmentDecisionLevel(CNFVar{7}, 3);
-    reasons.setAssignmentReason(CNFVar{7}, waerden5);
+    reasons.set_reason(CNFVar{7}, waerden5);
 
     assignments.setCurrentDecisionLevel(3);
 

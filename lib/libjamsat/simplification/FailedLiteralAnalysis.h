@@ -169,13 +169,12 @@ auto FailedLiteralAnalyzer<DLProviderT, PropagationT>::analyze(CNFLit failedLite
     JAM_LOG_FLE(info, "Neg. of asserting lit. " << assertingLit << " is also a failed literal.");
 
     // Now learn assertingLit and all its consequences:
-    m_assignmentProvider.revisitDecisionLevel(m_factLevel);
-    m_decisionLevelProvider.newDecisionLevel();
-    OnExitScope returnTofactLevel{
-        [this]() { m_assignmentProvider.revisitDecisionLevel(m_factLevel); }};
+    m_assignmentProvider.undo_to_level(m_factLevel);
+    m_decisionLevelProvider.new_level();
+    OnExitScope returnTofactLevel{[this]() { m_assignmentProvider.undo_to_level(m_factLevel); }};
 
     auto firstNewUnaryIdx = m_assignmentProvider.getNumberOfAssignments();
-    m_assignmentProvider.addAssignment(assertingLit);
+    m_assignmentProvider.append(assertingLit);
     Clause* newConflict = m_propagator.propagateUntilFixpoint(assertingLit);
 
     if (newConflict) {
@@ -186,11 +185,11 @@ auto FailedLiteralAnalyzer<DLProviderT, PropagationT>::analyze(CNFLit failedLite
     // If propagating assertingLit did not imply an assignment for the failed
     // literal's variable, propagate ~failedLiteral, too - at this point, it
     // is known that ~failedLiteral is unary.
-    if (m_assignmentProvider.getAssignment(failedLiteral) == TBools::INDETERMINATE) {
+    if (m_assignmentProvider.get_assignment(failedLiteral) == TBools::INDETERMINATE) {
         JAM_LOG_FLE(info,
                     "Propagating the asserting lit did not imply an assignment "
                     "for the failed literal's variable");
-        m_assignmentProvider.addAssignment(~failedLiteral);
+        m_assignmentProvider.append(~failedLiteral);
         newConflict = m_propagator.propagateUntilFixpoint(~failedLiteral);
         if (newConflict) {
             JAM_LOG_FLE(info, "Detected UNSAT: can't assign var." << failedLiteral.getVariable());

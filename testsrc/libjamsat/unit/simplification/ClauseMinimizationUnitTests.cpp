@@ -66,7 +66,7 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancy) {
         3_Lit,
         ~4_Lit,
     };
-    reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
+    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
     TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
@@ -93,14 +93,14 @@ TEST(UnitSolver, eraseRedundantLiterals_removesTwoLevelRedundancy) {
         ~4_Lit,
         ~5_Lit,
     };
-    reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
+    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
     TrivialClause reasonFor5{
         ~5_Lit,
         ~8_Lit,
         ~9_Lit,
     };
-    reasonProvider.setAssignmentReason(CNFVar{5}, reasonFor5);
+    reasonProvider.set_reason(CNFVar{5}, reasonFor5);
 
     TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit, ~8_Lit, 9_Lit};
 
@@ -129,7 +129,7 @@ TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancyWithUnit) {
         ~4_Lit,
         ~5_Lit,
     };
-    reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
+    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
     TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
@@ -173,7 +173,7 @@ TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveNonredundantLiteral) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
     TrivialClause reasonFor3{3_Lit, ~4_Lit, 5_Lit};
-    reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
+    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
     TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
@@ -198,7 +198,7 @@ TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveLiteralsOnCurrentLevel) {
     TestReasonProvider<TrivialClause> reasonProvider;
 
     TrivialClause reasonFor1{~1_Lit, ~4_Lit};
-    reasonProvider.setAssignmentReason(CNFVar{1}, reasonFor1);
+    reasonProvider.set_reason(CNFVar{1}, reasonFor1);
 
     TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
@@ -219,15 +219,15 @@ TEST(UnitSolver, eraseRedundantLiterals_regression_doesNotMarkNonredundantLitAsR
     TestReasonProvider<TrivialClause> reasonProvider;
 
     TrivialClause reasonFor3{3_Lit, 7_Lit};
-    reasonProvider.setAssignmentReason(CNFVar{3}, reasonFor3);
+    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
     TrivialClause reasonFor7{~7_Lit, 1_Lit};
-    reasonProvider.setAssignmentReason(CNFVar{7}, reasonFor7);
+    reasonProvider.set_reason(CNFVar{7}, reasonFor7);
 
     // Variable 1 has no reason clause.
 
     TrivialClause reasonFor2{7_Lit, 2_Lit};
-    reasonProvider.setAssignmentReason(CNFVar{2}, reasonFor2);
+    reasonProvider.set_reason(CNFVar{2}, reasonFor2);
 
     TestAssignmentProvider dlProvider;
     dlProvider.setCurrentDecisionLevel(2);

@@ -56,6 +56,9 @@ public:
 
     using size_type = BoundedStack<CNFLit>::size_type;
 
+    using Reason = Clause;
+    using DecisionLevel = level;
+
     /**
      * \brief Constructs an assignment object.
      * 
@@ -99,12 +102,12 @@ public:
     /**
      * \brief Returns the truth value of the given literal under the current assignment.
      */
-    auto get(CNFLit lit) const noexcept -> TBool;
+    auto get_assignment(CNFLit lit) const noexcept -> TBool;
 
     /**
      * \brief Returns the truth value of the given variable under the current assignment.
      */
-    auto get(CNFVar var) const noexcept -> TBool;
+    auto get_assignment(CNFVar var) const noexcept -> TBool;
 
     /**
      * \brief Returns the most recently assigned truth value of the given variable.
@@ -177,7 +180,7 @@ public:
      * \returns the clause having forced the assignment of the given variable, if any; otherwise,
      *   `nullptr` is returned.
      */
-    auto get_reason(CNFVar var) const noexcept -> Clause*;
+    auto get_reason(CNFVar var) const noexcept -> Clause const*;
 
 
     /**
@@ -216,6 +219,13 @@ public:
      * After calling this method, the current level is \p{level}.
      */
     void undo_to_level(level level) noexcept;
+
+    /**
+     * \brief Undos all variable assignments.
+     * 
+     * After calling this method, the current level is 0.
+     */
+    void undo_all() noexcept;
 
     /**
      * \brief Gets the assignments of the requested level, expressed as literals.
@@ -306,14 +316,14 @@ private:
 };
 
 
-inline auto assignment::get(CNFLit lit) const noexcept -> TBool {
-    TBool var_assignment = get(lit.getVariable());
+inline auto assignment::get_assignment(CNFLit lit) const noexcept -> TBool {
+    TBool var_assignment = get_assignment(lit.getVariable());
     TBool::UnderlyingType sign = static_cast<TBool::UnderlyingType>(lit.getSign());
     // TODO: further optimize if neccessary: flip CNFSign constants to get rid of the subtraction
     return TBool::fromUnderlyingValue(var_assignment.getUnderlyingValue() ^ (1 - sign));
 }
 
-inline auto assignment::get(CNFVar var) const noexcept -> TBool {
+inline auto assignment::get_assignment(CNFVar var) const noexcept -> TBool {
     return m_assignments[var];
 }
 
@@ -329,7 +339,7 @@ inline auto assignment::get_level(CNFVar var) const noexcept -> level {
     return m_reasons_and_als[var].m_level;
 }
 
-inline auto assignment::get_reason(CNFVar var) const noexcept -> Clause* {
+inline auto assignment::get_reason(CNFVar var) const noexcept -> Clause const* {
     return m_reasons_and_als[var].m_reason;
 }
 

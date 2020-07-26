@@ -243,14 +243,14 @@ auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT& params, CNFLit resolveAt)
     auto& assignments = *(params.assignments);
     auto& tempStamps = *(params.tempStamps);
 
-    if (assignments.getAssignment(resolveAt) != TBools::INDETERMINATE) {
+    if (assignments.get_assignment(resolveAt) != TBools::INDETERMINATE) {
         // The assignment of resolveAt is already forced by a unary clause
         return result;
     }
 
-    auto backtrackLevel = assignments.getCurrentDecisionLevel();
-    assignments.newDecisionLevel();
-    assignments.addAssignment(~resolveAt);
+    auto backtrackLevel = assignments.get_current_level();
+    assignments.new_level();
+    assignments.append(~resolveAt);
     auto confl = propagation.propagateUntilFixpoint(
         ~resolveAt, SSRWithHBRParamsT::Propagation::PropagationMode::EXCLUDE_REDUNDANT_CLAUSES);
     if (confl) {
@@ -260,9 +260,9 @@ auto ssrWithHyperBinaryResolution(SSRWithHBRParamsT& params, CNFLit resolveAt)
         throw FailedLiteralException<Clause>(confl, backtrackLevel);
     }
     OnExitScope backtrackOnExit{
-        [&assignments, backtrackLevel]() { assignments.revisitDecisionLevel(backtrackLevel); }};
+        [&assignments, backtrackLevel]() { assignments.undo_to_level(backtrackLevel); }};
 
-    auto currentDL = assignments.getDecisionLevelAssignments(assignments.getCurrentDecisionLevel());
+    auto currentDL = assignments.get_level_assignments(assignments.get_current_level());
     if (currentDL.size() == 1) {
         return result; // the assignment didn't force any other assignments
     }
