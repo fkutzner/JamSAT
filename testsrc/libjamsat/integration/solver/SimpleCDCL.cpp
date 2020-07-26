@@ -185,8 +185,10 @@ TBool SimpleCDCL::isProblemSatisfiable() {
             return toTBool(false);
         }
 
+        bool doRestart = false;
         // Breaking out of this inner loop causes a restart.
-        while (!m_assignment.is_complete()) {
+        while (!m_assignment.is_complete() && !doRestart) {
+            doRestart = false;
             m_assignment.new_level();
             auto branchingLit = m_branchingHeuristic.pickBranchLiteral();
             JAM_LOG_CDCLITEST(info, "Decided branching variable: " << branchingLit);
@@ -195,7 +197,7 @@ TBool SimpleCDCL::isProblemSatisfiable() {
                        "branching should always return a defined literal");
             auto conflictingClause = m_assignment.append(branchingLit);
 
-            if (conflictingClause != nullptr) {
+            while (conflictingClause != nullptr) {
                 JAM_LOG_CDCLITEST(info, "Handling a conflict...");
                 m_branchingHeuristic.beginHandlingConflict();
                 OnExitScope notifyEndOfConflictHandling{
@@ -227,14 +229,16 @@ TBool SimpleCDCL::isProblemSatisfiable() {
                     backtrackToLevel(0);
                     // Restarting, since unit clauses need to be put on the first decision
                     // level.
-                    break;
+                    conflictingClause = nullptr;
+                    doRestart = true;
                 } else {
                     auto& newClause = m_clauseDB.insertClause(learntClause);
                     JAM_LOG_CDCLITEST(info, "Learnt a clause: " << newClause);
                     auto targetLevel = m_assignment.get_level(learntClause[1].getVariable());
                     backtrackToLevel(targetLevel);
                     conflictingClause = m_assignment.register_lemma(newClause);
-                    JAM_ASSERT(conflictingClause == nullptr, "Illegal state: double conflict");
+                    // If conflictingClause != nullptr, another round of conflict resolution is
+                    // performed
                 }
             }
         }
