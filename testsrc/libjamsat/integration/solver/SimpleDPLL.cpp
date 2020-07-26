@@ -32,8 +32,7 @@
 
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFProblem.h>
-#include <libjamsat/solver/Propagation.h>
-#include <libjamsat/solver/Trail.h>
+#include <libjamsat/solver/Assignment.h>
 #include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/ControlFlow.h>
 
@@ -49,10 +48,7 @@ namespace {
 class SimpleDPLL {
 public:
     SimpleDPLL(const CNFProblem& problem)
-      : m_trail(problem.getMaxVar())
-      , m_propagation(problem.getMaxVar(), m_trail)
-      , m_clauses()
-      , m_maxVar(problem.getMaxVar()) {
+      : m_assignment(problem.getMaxVar()), m_clauses(), m_maxVar(problem.getMaxVar()) {
 
         std::vector<CNFLit> units;
         for (auto clause : problem.getClauses()) {
@@ -69,7 +65,7 @@ public:
         }
 
         // Decision level 0 is finished here
-        m_trail.new_level();
+        m_assignment.new_level();
     }
 
     TBool solve() {
@@ -86,9 +82,8 @@ public:
 
 private:
     void addUnitClause(const CNFLit unitLit) {
-        if (!isDeterminate(m_trail.get_assignment(unitLit))) {
-            m_trail.append(unitLit);
-            m_propagation.propagateUntilFixpoint(unitLit);
+        if (!isDeterminate(m_assignment.get_assignment(unitLit))) {
+            m_assignment.append(unitLit);
         }
     }
 
@@ -100,40 +95,39 @@ private:
 
     void addClause(const CNFClause& clause) {
         m_clauses.push_back(createInternalClause(clause));
-        m_propagation.registerClause(*(m_clauses.back()));
+        m_assignment.register_clause(*(m_clauses.back()));
     }
 
     CNFVar getBranchingVariable() {
-        JAM_ASSERT(m_trail.get_current_level() > 0, "Can't branch on decision level 0");
-        CNFVar result = CNFVar{static_cast<CNFVar::RawVariable>(m_trail.get_current_level() - 1)};
+        JAM_ASSERT(m_assignment.get_current_level() > 0, "Can't branch on decision level 0");
+        CNFVar result =
+            CNFVar{static_cast<CNFVar::RawVariable>(m_assignment.get_current_level() - 1)};
 
         // TODO: comparison operators on variables would apparently be really nice
         while (result.getRawValue() <= m_maxVar.getRawValue() &&
-               isDeterminate(m_trail.get_assignment(result))) {
+               isDeterminate(m_assignment.get_assignment(result))) {
             // TODO: an increment operator on variables would be nice, too.
             result = CNFVar{result.getRawValue() + 1};
         }
 
         if (result.getRawValue() > m_maxVar.getRawValue() ||
-            isDeterminate(m_trail.get_assignment(result))) {
+            isDeterminate(m_assignment.get_assignment(result))) {
             return CNFVar::getUndefinedVariable();
         }
 
         return result;
     }
 
-    bool allVariablesAssigned() {
-        auto maxAssignments = static_cast<Trail<Clause>::size_type>(m_maxVar.getRawValue()) + 1;
-        return m_trail.getNumberOfAssignments() == maxAssignments;
-    }
+    bool allVariablesAssigned() { return m_assignment.is_complete(); }
 
     bool solve(CNFLit branchingLit) {
-        auto currentDecisionLevel = m_trail.get_current_level();
-        OnExitScope autoBacktrack{
-            [this, currentDecisionLevel]() { this->m_trail.undo_all(currentDecisionLevel); }};
+        auto currentDecisionLevel = m_assignment.get_current_level();
+        OnExitScope autoBacktrack{[this, currentDecisionLevel]() {
+            this->m_assignment.undo_to_level(currentDecisionLevel);
+        }};
 
-        m_trail.append(branchingLit);
-        if (m_propagation.propagateUntilFixpoint(branchingLit) != nullptr) {
+        m_assignment.new_level();
+        if (m_assignment.append(branchingLit) != nullptr) {
             // conflicting clause found -> current assignment falsifies the formula
             return false;
         }
@@ -149,12 +143,11 @@ private:
                    "Illegal branching variable");
         CNFLit nextBranchingLit{branchingVariable, CNFSign::NEGATIVE};
 
-        m_trail.new_level();
+
         return solve(nextBranchingLit) || solve(~nextBranchingLit);
     }
 
-    Trail<Clause> m_trail;
-    Propagation<Trail<Clause>> m_propagation;
+    assignment m_assignment;
     std::vector<std::unique_ptr<Clause>> m_clauses;
     CNFVar m_maxVar;
 };

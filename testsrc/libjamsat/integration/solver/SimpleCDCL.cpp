@@ -35,8 +35,6 @@
 #include <libjamsat/solver/Assignment.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/LiteralBlockDistance.h>
-#include <libjamsat/solver/Propagation.h>
-#include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/ControlFlow.h>
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/Truth.h>
