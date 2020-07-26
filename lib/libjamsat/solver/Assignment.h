@@ -43,8 +43,6 @@ namespace jamsat {
  * \ingroup JamSAT_Solver
  * 
  * \brief Class representing a variable assignment.
- * 
- * This class is responsible for maintaining a consistent variable assignment.
  */
 class assignment final {
 public:
@@ -68,11 +66,6 @@ public:
     explicit assignment(CNFVar max_var);
 
     /**
-     * \brief Undos all assignments and removes all clauses.
-     */
-    void clear() noexcept;
-
-    /**
      * \brief Increases the maximum variable occurring in the problem instance.
      * 
      * \param var    A variable; must not be smaller than the previous maximum variable.
@@ -81,13 +74,19 @@ public:
      */
     void inc_max_var(CNFVar var);
 
+    /** Unit propagation mode */
+    enum class up_mode { exclude_lemmas, include_lemmas };
+
     /**
      * \brief Adds the given literal to the current variable assignment along with all
-     *   consequential assignments.
+     *   immediately consequential assignments, via unit propagation.
      * 
      * The variable `v` of \p l is assigned `true` iff the sign of \p l is positive.
      * 
-     * \param l     The literal to be added. \p l must be unassigned.
+     * \param l                 The literal to be added. \p l must be unassigned.
+     * \param up_mode           If exclude_lemmas, then only clauses not marked
+     *                          as redundant are considered when computing consequences.
+     *                          Otherwise, all clauses are considered.
      * 
      * \returns If the operation results in a conflicting assignment, a conflicting clause
      *   is returned, ie. a clause that is falsified under the new assignment. Otherwise,
@@ -95,7 +94,7 @@ public:
      * 
      * \throw std::bad_alloc on memory allocation failure.
      */
-    auto append(CNFLit l) -> Clause*;
+    auto append(CNFLit l, up_mode mode = up_mode::include_lemmas) -> Clause*;
 
     /**
      * \brief Returns the truth value of the given literal under the current assignment.
@@ -134,7 +133,7 @@ public:
      * 
      * \throw std::bad_alloc on memory allocation failure.
      */
-    void register_new_clause(Clause& clause);
+    void register_clause(Clause& clause);
 
     /**
      * \brief Registers a clause currently forcing an assignment for participating in
@@ -157,7 +156,7 @@ public:
      * 
      * \throw std::bad_alloc on memory allocation failure.
      */
-    auto register_new_clause(Clause& clause, CNFLit asserting_lit) -> Clause*;
+    auto register_lemma(Clause& clause) -> Clause*;
 
     /**
      * \brief Registers a clause modification.
@@ -167,12 +166,27 @@ public:
     void register_clause_modification(Clause& clause) noexcept;
 
     /**
+     * \brief Unregisters all clauses from participating in consequence computation.
+     */
+    void clear_clauses() noexcept;
+
+
+    /**
      * \brief Returns the clause having forced the assignment of the given variable.
      * 
      * \returns the clause having forced the assignment of the given variable, if any; otherwise,
      *   `nullptr` is returned.
      */
     auto get_reason(CNFVar var) const noexcept -> Clause*;
+
+
+    /**
+     * \brief Returns `true` iff the given clause is the reason for any variable assignment.
+     * 
+     * \param clause    A clause registered with this assignment object. The clause must have at
+     *                  least 2 literals.
+     */
+    auto is_reason(Clause& clause) noexcept -> bool;
 
     /**
      * \brief Determines whether the given variable's assignment was forced by propagation.
@@ -214,7 +228,20 @@ public:
      */
     auto get_level_assignments(level level) const noexcept -> assignment_range;
 
+    // Exposed for testing purposes, do not call in production client code
+    template <up_mode mode = up_mode::include_lemmas>
+    auto propagate(CNFLit toPropagate, size_t& amountOfNewFacts) -> Clause*;
+
+    // Exposed for testing purposes, do not call in production client code
+    void assign(CNFLit literal, Clause* reason);
+
 private:
+    auto propagate_until_fixpoint(CNFLit toPropagate, up_mode mode) -> Clause*;
+    auto propagate_binaries(CNFLit toPropagate, size_t& amountOfNewFacts) -> Clause*;
+    void cleanup_watchers();
+    auto is_watcher_cleanup_required() const noexcept -> bool;
+    void cleanup_watchers(CNFLit lit);
+
     using level_limit = uint32_t;
 
     /** \internal Variable assignments, in order of assignment */

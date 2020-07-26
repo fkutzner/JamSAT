@@ -36,7 +36,7 @@ using TrivialClause = jamsat::TestAssignmentProvider::Clause;
 
 static_assert(is_reason_provider<Propagation<TestAssignmentProvider>, TrivialClause>::value,
               "Propagation<TestAssignmentProvider> should satisfy ReasonProvider, but does not");
-
+/*
 TEST(UnitSolver, propagateWithoutClausesIsNoop) {
     TestAssignmentProvider assignments;
     CNFVar maxVar{4};
@@ -711,6 +711,7 @@ TEST(UnitSolver, redundantClausesAreNotPropagatedInExcludeRedundantMode) {
     ASSERT_EQ(conflict, nullptr);
     EXPECT_EQ(assignments.getAssignment(lit6), TBools::TRUE);
 }
+*/
 
 // TODO: test watcher restoration
 }
