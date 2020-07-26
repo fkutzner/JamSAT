@@ -238,6 +238,13 @@ public:
      */
     auto get_level_assignments(level level) const noexcept -> assignment_range;
 
+    /**
+     * \brief Gets a range over the current variable assignment, expressed as literals.
+     * 
+     * \returns       Iterator range over the current variable assignment.
+     */
+    auto get_assignments() const noexcept -> assignment_range;
+
     // Exposed for testing purposes, do not call in production client code
     template <up_mode mode = up_mode::include_lemmas>
     auto propagate(CNFLit toPropagate, size_t& amountOfNewFacts) -> Clause*;

@@ -26,11 +26,14 @@
 
 #include <libjamsat/solver/Assignment.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 
 #include <toolbox/testutils/ClauseUtils.h>
+#include <toolbox/testutils/GMockMatchers.h>
 
 #include <vector>
 
@@ -75,6 +78,29 @@ TEST(UnitSolver, initialAddedLiteralsAreOnLevel0) {
     under_test.append(~3_Lit);
     EXPECT_EQ(under_test.get_current_level(), 0ull);
 }
+
+TEST(UnitSolver, whenNoAssignmentsArePresent_thenAssignmentRangeIsEmpty) {
+    assignment under_test{CNFVar{10}};
+    assignment::assignment_range result = under_test.get_assignments();
+    EXPECT_THAT(result, range_empty());
+}
+
+TEST(UnitSolver, whenSingleAssignmentIsPresent_thenAssignmentRangeHasSingleElement) {
+    assignment under_test{CNFVar{10}};
+    under_test.append(1_Lit);
+    assignment::assignment_range result = under_test.get_assignments();
+    EXPECT_THAT(result, range_is(std::vector<CNFLit>{1_Lit}));
+}
+
+TEST(UnitSolver, whenThreeAssignmentsArePresent_thenAssignmentRangeHasThreeElements) {
+    assignment under_test{CNFVar{10}};
+    under_test.append(1_Lit);
+    under_test.append(3_Lit);
+    under_test.append(6_Lit);
+    assignment::assignment_range result = under_test.get_assignments();
+    EXPECT_THAT(result, range_is(std::vector<CNFLit>{1_Lit, 3_Lit, 6_Lit}));
+}
+
 
 TEST(UnitSolver, assignmentSeparatesLiteralsByAssgnLevels) {
     CNFLit testLiteral1{CNFVar{1}, CNFSign::POSITIVE};

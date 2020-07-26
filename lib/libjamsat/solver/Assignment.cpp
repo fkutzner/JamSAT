@@ -172,6 +172,10 @@ auto assignment::get_level_assignments(level level) const noexcept -> assignment
     return boost::make_iterator_range(begin, end);
 }
 
+auto assignment::get_assignments() const noexcept -> assignment_range {
+    return {m_trail.begin(), m_trail.end()};
+}
+
 auto assignment::propagate_until_fixpoint(CNFLit to_propagate, up_mode mode) -> Clause* {
     JAM_LOG_ASSIGN(info, "Propagating assignment until fixpoint: " << to_propagate);
 
