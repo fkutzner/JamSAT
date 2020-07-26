@@ -29,8 +29,6 @@ endif()
 
 add_jamsat_core_unittest_library(jstest.libjamsat.unit.solver
   AssignmentUnitTests.cpp
-  TrailUnitTests.cpp
-  PropagationUnitTests.cpp
   WatcherUnitTests.cpp
   FirstUIPLearningUnitTests.cpp
   LiteralBlockDistanceUnitTests.cpp
