@@ -23,6 +23,7 @@
 # other dealings in this Software without prior written authorization.
 
 nm_add_library(jstest.toolbox.testutils STATIC
+  GMockMatchers.h
   RangeUtils.h
   Minisat.cpp
   Minisat.h
