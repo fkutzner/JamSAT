@@ -284,6 +284,17 @@ public:
     // Exposed for testing purposes, do not call in production client code
     void assign(CNFLit literal, Clause* reason);
 
+
+    /**
+     * \brief StampMap key for Trail::DecisionLevel
+     */
+    class DecisionLevelKey {
+    public:
+        using Type = level;
+        static size_t getIndex(DecisionLevel variable) { return static_cast<size_t>(variable); }
+    };
+
+
 private:
     auto propagate_until_fixpoint(CNFLit toPropagate, up_mode mode) -> Clause*;
     auto propagate_binaries(CNFLit toPropagate, size_t& amountOfNewFacts) -> Clause*;

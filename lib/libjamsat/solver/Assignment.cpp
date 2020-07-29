@@ -57,6 +57,8 @@ void assignment::inc_max_var(CNFVar var) {
 }
 
 void assignment::assign(CNFLit literal, Clause* reason) {
+    JAM_LOG_ASSIGN(info, "  Assigning " << literal);
+    JAM_ASSERT(get_assignment(literal) == TBools::INDETERMINATE, "Assgn needs to be indeterminate");
     m_trail.push_back(literal);
 
     TBool const value =
