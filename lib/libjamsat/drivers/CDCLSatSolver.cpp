@@ -36,7 +36,6 @@
 #include <libjamsat/clausedb/IterableClauseDB.h>
 #include <libjamsat/proof/Model.h>
 #include <libjamsat/simplification/ClauseMinimization.h>
-#include <libjamsat/simplification/LightweightSimplifier.h>
 #include <libjamsat/solver/AssignmentAnalysis.h>
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
@@ -321,7 +320,6 @@ private:
     Propagation<Trail<ClauseT>> m_propagator;
     VSIDSBranchingHeuristic<Trail<ClauseT>> m_branchingHeuristic;
     FirstUIPLearning<Trail<ClauseT>, Trail<ClauseT>> m_conflictAnalyzer;
-    LightweightSimplifier<Propagation<Trail<ClauseT>>, Trail<ClauseT>> m_simplifier;
 
     // Clause storage
     IterableClauseDB<ClauseT> m_clauseDB;
@@ -384,7 +382,6 @@ CDCLSatSolverImpl::CDCLSatSolverImpl(Config const& configuration)
   , m_propagator{CNFVar{0}, m_trail}
   , m_branchingHeuristic{CNFVar{0}, m_trail}
   , m_conflictAnalyzer{CNFVar{0}, m_trail, m_trail}
-  , m_simplifier{CNFVar{0}, m_propagator, m_trail}
   , m_clauseDB{configuration.clauseRegionSize}
   , m_facts{}
   , m_lemmas{}
@@ -533,7 +530,6 @@ void CDCLSatSolverImpl::resizeSubsystems() {
     m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
     m_stamps.increaseSizeTo(getMaxLit(m_maxVar).getRawValue());
     m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
-    m_simplifier.increaseMaxVarTo(m_maxVar);
 }
 
 
@@ -573,16 +569,8 @@ void CDCLSatSolverImpl::trySimplify() {
 
     JAM_LOG_SOLVER(info, "Starting simplification");
 
-    auto problemClausePtrs =
-        boost::adaptors::transform(m_clauseDB.getClauses(), [](Clause& c) { return &c; });
-    SimplificationStats simpStats = m_simplifier.simplify(m_facts, problemClausePtrs, m_stamps);
+    // TODO
 
-    if (simpStats.amntClausesStrengthened != 0 || simpStats.amntClausesRemovedBySubsumption != 0) {
-        m_clauseDB.compress();
-        synchronizeSubsystemsWithClauseDB();
-    }
-
-    m_statistics.registerSimplification(simpStats);
     JAM_LOG_SOLVER(info, "Finished simplification");
 }
 

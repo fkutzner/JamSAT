@@ -23,8 +23,5 @@
 # other dealings in this Software without prior written authorization.
 
 add_jamsat_core_unittest_library(jstest.libjamsat.unit.simplification
-  UnaryOptimizationsTests.cpp
   ClauseMinimizationUnitTests.cpp
-  SubsumptionCheckerTests.cpp
-  VariableEliminationTests.cpp
 )
