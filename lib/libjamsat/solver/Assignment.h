@@ -184,6 +184,15 @@ public:
 
 
     /**
+     * \brief Returns the clause having forced the assignment of the given variable.
+     * 
+     * \returns the clause having forced the assignment of the given variable, if any; otherwise,
+     *   `nullptr` is returned.
+     */
+    auto get_reason(CNFVar var) noexcept -> Clause*;
+
+
+    /**
      * \brief Returns `true` iff the given clause is the reason for any variable assignment.
      * 
      * \param clause    A clause registered with this assignment object. The clause must have at
@@ -244,6 +253,29 @@ public:
      * \returns       Iterator range over the current variable assignment.
      */
     auto get_assignments() const noexcept -> assignment_range;
+
+
+    using binaries_map = typename detail_propagation::Watchers<Clause>::BlockerMapT;
+
+    /**
+     * \brief Returns a map representing the binary clauses registered with the
+     * assignment object.
+     *
+     * \return Let M be the value returned by this function. For each literal L with a
+     * variable no greater than the current maximum variable, M[L] returns a
+     * range containing exactly the literals L' such binary clause (L L') or
+     * (L' L) has been registered with the assignment object.
+     */
+    auto get_binaries_map() const noexcept -> binaries_map;
+
+    assignment& operator=(assignment const&) = delete;
+    assignment(assignment const&) = delete;
+
+    assignment& operator=(assignment&&) noexcept = default;
+    assignment(assignment&&) noexcept = default;
+
+    ~assignment() = default;
+
 
     // Exposed for testing purposes, do not call in production client code
     template <up_mode mode = up_mode::include_lemmas>
@@ -350,6 +382,10 @@ inline auto assignment::get_reason(CNFVar var) const noexcept -> Clause const* {
     return m_reasons_and_als[var].m_reason;
 }
 
+inline auto assignment::get_reason(CNFVar var) noexcept -> Clause* {
+    return m_reasons_and_als[var].m_reason;
+}
+
 inline auto assignment::is_forced(CNFVar var) const noexcept {
     return m_reasons_and_als[var].m_reason != nullptr;
 }
@@ -360,6 +396,10 @@ inline auto assignment::is_complete() const noexcept -> bool {
 
 inline auto assignment::get_num_assignments() const noexcept -> size_type {
     return m_trail.size();
+}
+
+inline auto assignment::get_binaries_map() const noexcept -> binaries_map {
+    return m_binaryWatchers.getBlockerMap();
 }
 
 }
