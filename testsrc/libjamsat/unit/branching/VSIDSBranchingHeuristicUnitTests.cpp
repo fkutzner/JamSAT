@@ -39,7 +39,7 @@ class FakeAssignmentProvider {
 public:
     FakeAssignmentProvider(TBool defaultAssignment) : m_defaultAssignment(defaultAssignment) {}
 
-    TBool get_assignment(CNFVar variable) const noexcept {
+    TBool getAssignment(CNFVar variable) const noexcept {
         auto result = m_assignments.find(variable);
         if (result == m_assignments.end()) {
             return m_defaultAssignment;
@@ -54,7 +54,7 @@ public:
 
     void setPhase(CNFVar variable, TBool assignment) { m_phases[variable] = assignment; }
 
-    TBool get_phase(CNFVar variable) const noexcept {
+    TBool getPhase(CNFVar variable) const noexcept {
         auto result = m_phases.find(variable);
         if (result == m_phases.end()) {
             return TBools::FALSE;

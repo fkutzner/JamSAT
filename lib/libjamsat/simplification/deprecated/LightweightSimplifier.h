@@ -288,7 +288,7 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
                "LightweightSimplifier may only be invoked when the solver has no assignments");
     OnExitScope undoAllAssignments{[this]() {
         JAM_LOG_LIGHTWEIGHTSIMP(info, "Finished problem simplification");
-        m_assignmentProvider.undo_all(0);
+        m_assignmentProvider.undoAll(0);
     }};
 
     SimplificationStats result;
@@ -305,7 +305,7 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::simplify(
     m_occurrenceMap.clear();
     m_occurrenceMap.insert(problemClauses.begin(), problemClauses.end());
 
-    m_assignmentProvider.undo_all(0);
+    m_assignmentProvider.undoAll(0);
     result += runUnaryOptimizations(unaryClauses);
 
     propagateFacts(unaryClauses);
@@ -325,7 +325,7 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::propagateFacts(
     auto initialFactCount = facts.size();
 
     for (CNFLit fact : facts) {
-        TBool previousAssignment = m_assignmentProvider.get_assignment(fact);
+        TBool previousAssignment = m_assignmentProvider.getAssignment(fact);
         if (!isDeterminate(previousAssignment)) {
             m_assignmentProvider.append(fact);
             if (m_propagation.propagateUntilFixpoint(fact) != nullptr) {
@@ -340,7 +340,7 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::propagateFacts(
 
     result.amntUnariesLearnt = m_assignmentProvider.getNumberOfAssignments() - initialFactCount;
     facts.clear();
-    auto newFacts = m_assignmentProvider.get_level_assignments(0);
+    auto newFacts = m_assignmentProvider.getLevelAssignments(0);
     facts.insert(facts.begin(), newFacts.begin(), newFacts.end());
 
     JAM_LOG_LIGHTWEIGHTSIMP(info, "Finished propagating facts, no conflict detected");
@@ -353,20 +353,20 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::eliminateFailedLi
     JAM_LOG_LIGHTWEIGHTSIMP(info, "Performing full failed literal elimination");
 
     SimplificationStats result;
-    auto currentDL = m_assignmentProvider.get_current_level();
+    auto currentDL = m_assignmentProvider.getCurrentLevel();
 
     for (CNFVar i{0}; i <= m_maxVar; i = nextCNFVar(i)) {
         for (CNFSign sign : {CNFSign::NEGATIVE, CNFSign::POSITIVE}) {
-            if (m_assignmentProvider.get_assignment(i) != TBools::INDETERMINATE) {
+            if (m_assignmentProvider.getAssignment(i) != TBools::INDETERMINATE) {
                 continue;
             }
 
             CNFLit candidate{i, sign};
-            m_assignmentProvider.new_level();
+            m_assignmentProvider.newLevel();
             m_assignmentProvider.append(candidate);
             auto conflictingClause = m_propagation.propagateUntilFixpoint(candidate);
             if (!conflictingClause) {
-                m_assignmentProvider.undo_to_level(currentDL);
+                m_assignmentProvider.undoToLevel(currentDL);
                 continue;
             }
 
@@ -375,7 +375,7 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::eliminateFailedLi
                 result += eliminateFailedLiteral(
                     candidate, conflictingClause, unaryClauses, FLEPostProcessing::NONE);
                 JAM_ASSERT(
-                    m_assignmentProvider.get_current_level() == currentDL,
+                    m_assignmentProvider.getCurrentLevel() == currentDL,
                     "eliminateFailedLiteral() should have returned to currentDL, but didn't");
             } catch (DetectedUNSATException&) {
                 // The unaries are contradictory now, so simplifying the problem
@@ -463,13 +463,13 @@ auto LightweightSimplifier<PropagationT, AssignmentProviderT>::eliminateFailedLi
 
     SimplificationStats result = analysis.stats;
     if (postProcMode == FLEPostProcessing::FULL) {
-        m_assignmentProvider.undo_all(0);
+        m_assignmentProvider.undoAll(0);
         result += runUnaryOptimizations(analysis.newFacts);
         propagateFacts(unaries);
     } else {
         // Propagate the facts to keep the propagator in a consistent state:
         for (CNFLit fact : analysis.newFacts) {
-            if (!isDeterminate(m_assignmentProvider.get_assignment(fact))) {
+            if (!isDeterminate(m_assignmentProvider.getAssignment(fact))) {
                 m_assignmentProvider.append(fact);
                 m_propagation.propagateUntilFixpoint(fact);
             }

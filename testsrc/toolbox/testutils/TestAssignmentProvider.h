@@ -95,8 +95,8 @@ public:
 
     TestAssignmentProvider();
 
-    TBool get_assignment(CNFVar variable) const noexcept;
-    TBool get_assignment(CNFLit literal) const noexcept;
+    TBool getAssignment(CNFVar variable) const noexcept;
+    TBool getAssignment(CNFLit literal) const noexcept;
     void append(CNFLit literal) noexcept;
     void append(CNFLit literal, Clause& clause) noexcept;
     void popLiteral() noexcept;
@@ -106,15 +106,15 @@ public:
     getAssignments(size_t index) const noexcept;
 
     boost::iterator_range<std::vector<CNFLit>::const_iterator>
-    get_level_assignments(DecisionLevel level) const noexcept;
+    getLevelAssignments(DecisionLevel level) const noexcept;
 
-    DecisionLevel get_level(CNFVar variable) const noexcept;
+    DecisionLevel getLevel(CNFVar variable) const noexcept;
     void setAssignmentDecisionLevel(CNFVar variable, DecisionLevel level) noexcept;
-    DecisionLevel get_current_level() const noexcept;
+    DecisionLevel getCurrentLevel() const noexcept;
     void setCurrentDecisionLevel(DecisionLevel level) noexcept;
 
-    auto get_reason(CNFVar variable) const noexcept -> Clause const*;
-    auto get_reason(CNFVar variable) noexcept -> Clause*;
+    auto getReason(CNFVar variable) const noexcept -> Clause const*;
+    auto getReason(CNFVar variable) noexcept -> Clause*;
     void set_reason(CNFVar variable, Clause* reason) noexcept;
 
     struct DecisionLevelKey {

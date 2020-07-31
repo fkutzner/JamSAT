@@ -197,7 +197,7 @@ public:
         CNFLit internalLit = ipasirLitToCNFLit(lit);
 
         auto& model = (m_result->getModel())->get();
-        TBool varAssignment = model.get_assignment(internalLit.getVariable());
+        TBool varAssignment = model.getAssignment(internalLit.getVariable());
 
         if (!isDeterminate(varAssignment)) {
             // "unimportant" case

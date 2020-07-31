@@ -65,7 +65,7 @@ public:
         }
 
         // Decision level 0 is finished here
-        m_assignment.new_level();
+        m_assignment.newLevel();
     }
 
     TBool solve() {
@@ -82,7 +82,7 @@ public:
 
 private:
     void addUnitClause(const CNFLit unitLit) {
-        if (!isDeterminate(m_assignment.get_assignment(unitLit))) {
+        if (!isDeterminate(m_assignment.getAssignment(unitLit))) {
             m_assignment.append(unitLit);
         }
     }
@@ -95,38 +95,38 @@ private:
 
     void addClause(const CNFClause& clause) {
         m_clauses.push_back(createInternalClause(clause));
-        m_assignment.register_clause(*(m_clauses.back()));
+        m_assignment.registerClause(*(m_clauses.back()));
     }
 
     CNFVar getBranchingVariable() {
-        JAM_ASSERT(m_assignment.get_current_level() > 0, "Can't branch on decision level 0");
+        JAM_ASSERT(m_assignment.getCurrentLevel() > 0, "Can't branch on decision level 0");
         CNFVar result =
-            CNFVar{static_cast<CNFVar::RawVariable>(m_assignment.get_current_level() - 1)};
+            CNFVar{static_cast<CNFVar::RawVariable>(m_assignment.getCurrentLevel() - 1)};
 
         // TODO: comparison operators on variables would apparently be really nice
         while (result.getRawValue() <= m_maxVar.getRawValue() &&
-               isDeterminate(m_assignment.get_assignment(result))) {
+               isDeterminate(m_assignment.getAssignment(result))) {
             // TODO: an increment operator on variables would be nice, too.
             result = CNFVar{result.getRawValue() + 1};
         }
 
         if (result.getRawValue() > m_maxVar.getRawValue() ||
-            isDeterminate(m_assignment.get_assignment(result))) {
+            isDeterminate(m_assignment.getAssignment(result))) {
             return CNFVar::getUndefinedVariable();
         }
 
         return result;
     }
 
-    bool allVariablesAssigned() { return m_assignment.is_complete(); }
+    bool allVariablesAssigned() { return m_assignment.isComplete(); }
 
     bool solve(CNFLit branchingLit) {
-        auto currentDecisionLevel = m_assignment.get_current_level();
+        auto currentDecisionLevel = m_assignment.getCurrentLevel();
         OnExitScope autoBacktrack{[this, currentDecisionLevel]() {
-            this->m_assignment.undo_to_level(currentDecisionLevel);
+            this->m_assignment.undoToLevel(currentDecisionLevel);
         }};
 
-        m_assignment.new_level();
+        m_assignment.newLevel();
         if (m_assignment.append(branchingLit) != nullptr) {
             // conflicting clause found -> current assignment falsifies the formula
             return false;
@@ -147,7 +147,7 @@ private:
         return solve(nextBranchingLit) || solve(~nextBranchingLit);
     }
 
-    assignment m_assignment;
+    Assignment m_assignment;
     std::vector<std::unique_ptr<Clause>> m_clauses;
     CNFVar m_maxVar;
 };

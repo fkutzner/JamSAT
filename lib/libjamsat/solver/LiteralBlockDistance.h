@@ -77,7 +77,7 @@ LBD getLBD(const ForwardRange& literals,
 
     for (auto& literal : literals) {
         auto variable = literal.getVariable();
-        auto level = decisionLevelProvider.get_level(variable);
+        auto level = decisionLevelProvider.getLevel(variable);
         if (!tempStamps.isStamped(level, stamp)) {
             tempStamps.setStamped(level, stamp, true);
             ++result;

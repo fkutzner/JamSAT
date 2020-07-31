@@ -79,7 +79,7 @@ std::vector<CNFLit> analyzeAssignment(ReasonProviderT& reasonProvider,
                                       DLProviderT& dlProvider,
                                       StampMapT& stamps,
                                       CNFLit query) {
-    static_assert(is_reason_provider<ReasonProviderT, typename ReasonProviderT::Reason>::value,
+    static_assert(isReason_provider<ReasonProviderT, typename ReasonProviderT::Reason>::value,
                   "Template arg. ReasonProviderT doesn't satisfy the ReasonProvider concept");
     static_assert(is_literal_container<typename ReasonProviderT::Reason>::value,
                   "Template arg. ReasonProviderT::Reason doesn't satisfy the"
@@ -94,27 +94,27 @@ std::vector<CNFLit> analyzeAssignment(ReasonProviderT& reasonProvider,
 
     std::vector<CNFLit> result{query};
 
-    if (reasonProvider.get_reason(query.getVariable()) == nullptr) {
+    if (reasonProvider.getReason(query.getVariable()) == nullptr) {
         return result;
     }
 
-    auto currentDecisionLevel = dlProvider.get_current_level();
+    auto currentDecisionLevel = dlProvider.getCurrentLevel();
 
     std::vector<CNFVar> toAnalyze{query.getVariable()};
     while (!toAnalyze.empty()) {
         CNFVar currentVar = toAnalyze.back();
         toAnalyze.pop_back();
         stamps.setStamped(currentVar, stamp, true);
-        JAM_ASSERT(reasonProvider.get_reason(currentVar) != nullptr,
+        JAM_ASSERT(reasonProvider.getReason(currentVar) != nullptr,
                    "Expected only literals with reasons in the work queue");
-        auto assignmentReason = reasonProvider.get_reason(currentVar);
+        auto assignmentReason = reasonProvider.getReason(currentVar);
         for (CNFLit lit : *assignmentReason) {
             if (stamps.isStamped(lit.getVariable(), stamp)) {
                 continue;
             }
             stamps.setStamped(lit.getVariable(), stamp, true);
-            if (dlProvider.get_level(lit.getVariable()) == currentDecisionLevel) {
-                if (reasonProvider.get_reason(lit.getVariable()) != nullptr) {
+            if (dlProvider.getLevel(lit.getVariable()) == currentDecisionLevel) {
+                if (reasonProvider.getReason(lit.getVariable()) != nullptr) {
                     toAnalyze.push_back(lit.getVariable());
                 } else {
                     // ~lit must be on the trail: the only positive-assigned literal of

@@ -169,9 +169,9 @@ auto FailedLiteralAnalyzer<DLProviderT, PropagationT>::analyze(CNFLit failedLite
     JAM_LOG_FLE(info, "Neg. of asserting lit. " << assertingLit << " is also a failed literal.");
 
     // Now learn assertingLit and all its consequences:
-    m_assignmentProvider.undo_to_level(m_factLevel);
-    m_decisionLevelProvider.new_level();
-    OnExitScope returnTofactLevel{[this]() { m_assignmentProvider.undo_to_level(m_factLevel); }};
+    m_assignmentProvider.undoToLevel(m_factLevel);
+    m_decisionLevelProvider.newLevel();
+    OnExitScope returnTofactLevel{[this]() { m_assignmentProvider.undoToLevel(m_factLevel); }};
 
     auto firstNewUnaryIdx = m_assignmentProvider.getNumberOfAssignments();
     m_assignmentProvider.append(assertingLit);
@@ -185,7 +185,7 @@ auto FailedLiteralAnalyzer<DLProviderT, PropagationT>::analyze(CNFLit failedLite
     // If propagating assertingLit did not imply an assignment for the failed
     // literal's variable, propagate ~failedLiteral, too - at this point, it
     // is known that ~failedLiteral is unary.
-    if (m_assignmentProvider.get_assignment(failedLiteral) == TBools::INDETERMINATE) {
+    if (m_assignmentProvider.getAssignment(failedLiteral) == TBools::INDETERMINATE) {
         JAM_LOG_FLE(info,
                     "Propagating the asserting lit did not imply an assignment "
                     "for the failed literal's variable");

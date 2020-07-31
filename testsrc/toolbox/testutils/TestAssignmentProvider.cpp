@@ -32,7 +32,7 @@ namespace jamsat {
 TestAssignmentProvider::TestAssignmentProvider()
   : m_assignments(), m_decisionLevels(), m_currentLevel(0), m_trail(1024) {}
 
-TBool TestAssignmentProvider::get_assignment(CNFVar variable) const noexcept {
+TBool TestAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
     auto possibleAssgn = m_assignments.find(variable);
     if (possibleAssgn != m_assignments.end()) {
         return possibleAssgn->second;
@@ -40,8 +40,8 @@ TBool TestAssignmentProvider::get_assignment(CNFVar variable) const noexcept {
     return TBools::INDETERMINATE;
 }
 
-TBool TestAssignmentProvider::get_assignment(CNFLit literal) const noexcept {
-    auto varAssgn = get_assignment(literal.getVariable());
+TBool TestAssignmentProvider::getAssignment(CNFLit literal) const noexcept {
+    auto varAssgn = getAssignment(literal.getVariable());
     if (literal.getSign() == CNFSign::POSITIVE || !isDeterminate(varAssgn)) {
         return varAssgn;
     }
@@ -67,7 +67,7 @@ size_t TestAssignmentProvider::getNumberOfAssignments() const noexcept {
 }
 
 boost::iterator_range<std::vector<CNFLit>::const_iterator>
-TestAssignmentProvider::get_level_assignments(DecisionLevel level) const noexcept {
+TestAssignmentProvider::getLevelAssignments(DecisionLevel level) const noexcept {
     decltype(m_trail)::size_type startIndex = 0;
     decltype(m_trail)::size_type idx = 0;
     bool foundStart = false;
@@ -105,7 +105,7 @@ TestAssignmentProvider::getAssignments(size_t index) const noexcept {
 }
 
 TestAssignmentProvider::DecisionLevel
-TestAssignmentProvider::get_level(CNFVar variable) const noexcept {
+TestAssignmentProvider::getLevel(CNFVar variable) const noexcept {
     auto result = m_decisionLevels.find(variable);
     if (result != m_decisionLevels.end()) {
         return result->second;
@@ -118,7 +118,7 @@ void TestAssignmentProvider::setAssignmentDecisionLevel(CNFVar variable,
     m_decisionLevels[variable] = level;
 }
 
-TestAssignmentProvider::DecisionLevel TestAssignmentProvider::get_current_level() const noexcept {
+TestAssignmentProvider::DecisionLevel TestAssignmentProvider::getCurrentLevel() const noexcept {
     return m_currentLevel;
 }
 
@@ -132,7 +132,7 @@ void TestAssignmentProvider::append(CNFLit literal, Clause& clause) noexcept {
     m_reasons[literal.getVariable()] = &clause;
 }
 
-auto TestAssignmentProvider::get_reason(CNFVar variable) const noexcept -> Clause const* {
+auto TestAssignmentProvider::getReason(CNFVar variable) const noexcept -> Clause const* {
     auto candidate = m_reasons.find(variable);
     if (candidate == m_reasons.end()) {
         return nullptr;
@@ -140,7 +140,7 @@ auto TestAssignmentProvider::get_reason(CNFVar variable) const noexcept -> Claus
     return candidate->second;
 }
 
-auto TestAssignmentProvider::get_reason(CNFVar variable) noexcept -> Clause* {
+auto TestAssignmentProvider::getReason(CNFVar variable) noexcept -> Clause* {
     auto candidate = m_reasons.find(variable);
     if (candidate == m_reasons.end()) {
         return nullptr;

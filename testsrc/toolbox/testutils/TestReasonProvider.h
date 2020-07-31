@@ -40,7 +40,7 @@ public:
 
     void set_reason(CNFVar variable, ClauseT& reason) noexcept { m_reasons[variable] = &reason; }
 
-    const ClauseT* get_reason(CNFVar variable) const noexcept {
+    const ClauseT* getReason(CNFVar variable) const noexcept {
         auto reason = m_reasons.find(variable);
         if (reason != m_reasons.end()) {
             return reason->second;

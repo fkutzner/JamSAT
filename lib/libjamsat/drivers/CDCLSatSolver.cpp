@@ -317,9 +317,9 @@ private:
     auto resolveDecision(CNFLit decision) -> ResolveDecisionResult;
 
     // Solver subsystems
-    assignment m_assignment;
-    VSIDSBranchingHeuristic<assignment> m_branchingHeuristic;
-    FirstUIPLearning<assignment, assignment> m_conflictAnalyzer;
+    Assignment m_assignment;
+    VSIDSBranchingHeuristic<Assignment> m_branchingHeuristic;
+    FirstUIPLearning<Assignment, Assignment> m_conflictAnalyzer;
     //LightweightSimplifier<Propagation<Trail<ClauseT>>, Trail<ClauseT>> m_simplifier;
 
     // Clause storage
@@ -513,7 +513,7 @@ auto CDCLSatSolverImpl::createSolvingResult(TBool result,
 
     if (isTrue(result)) {
         model = createModel(m_maxVar);
-        for (CNFLit lit : m_assignment.get_assignments()) {
+        for (CNFLit lit : m_assignment.getAssignments()) {
             model->setAssignment(lit.getVariable(),
                                  lit.getSign() == CNFSign::POSITIVE ? TBools::TRUE : TBools::FALSE);
         }
@@ -526,7 +526,7 @@ auto CDCLSatSolverImpl::createSolvingResult(TBool result,
 }
 
 void CDCLSatSolverImpl::resizeSubsystems() {
-    m_assignment.inc_max_var(m_maxVar);
+    m_assignment.increaseMaxVar(m_maxVar);
     m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
     m_stamps.increaseSizeTo(getMaxLit(m_maxVar).getRawValue());
     m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
@@ -535,13 +535,13 @@ void CDCLSatSolverImpl::resizeSubsystems() {
 
 
 void CDCLSatSolverImpl::synchronizeSubsystemsWithClauseDB() {
-    JAM_ASSERT(m_assignment.get_num_assignments() == 0,
+    JAM_ASSERT(m_assignment.getNumAssignments() == 0,
                "Illegally attempted to synchronize the clause database in-flight");
 
-    m_assignment.clear_clauses();
+    m_assignment.clearClauses();
     m_lemmas.clear();
     for (auto& clause : m_clauseDB.getClauses()) {
-        m_assignment.register_clause(clause);
+        m_assignment.registerClause(clause);
         if (clause.getFlag(Clause::Flag::REDUNDANT)) {
             m_lemmas.push_back(&clause);
         }
@@ -560,14 +560,14 @@ void CDCLSatSolverImpl::initializeBranchingHeuristic(std::vector<CNFLit> const& 
 
 
 void CDCLSatSolverImpl::trySimplify() {
-    JAM_ASSERT(m_assignment.get_num_assignments() == 0,
+    JAM_ASSERT(m_assignment.getNumAssignments() == 0,
                "Illegally attempted to simplify the problem in-flight");
     // TODO: invoke simplifiers here
 }
 
 
 void CDCLSatSolverImpl::tryReduceClauseDB() {
-    JAM_ASSERT(m_assignment.get_num_assignments() == 0,
+    JAM_ASSERT(m_assignment.getNumAssignments() == 0,
                "Illegally attempted to reduce the clause database in-flight");
     if (!m_clauseDBReductionPolicy.shouldReduceDB()) {
         return;
@@ -592,20 +592,20 @@ void CDCLSatSolverImpl::tryReduceClauseDB() {
 void CDCLSatSolverImpl::backtrackAll() {
     JAM_LOG_SOLVER(info, "Backtracking to level 0");
     prepareBacktrack(0);
-    m_assignment.undo_all();
+    m_assignment.undoAll();
 }
 
 void CDCLSatSolverImpl::backtrackToLevel(Trail<ClauseT>::DecisionLevel targetLevel) {
     JAM_LOG_SOLVER(info, "Backtracking by revisiting decision level " << targetLevel);
     prepareBacktrack(targetLevel + 1);
-    m_assignment.undo_to_level(targetLevel);
+    m_assignment.undoToLevel(targetLevel);
 }
 
 void CDCLSatSolverImpl::prepareBacktrack(Trail<ClauseT>::DecisionLevel level) {
     updateReasonClauseLBDsOnCurrentLevel();
 
-    for (auto l = m_assignment.get_current_level(); l >= level; --l) {
-        for (auto lit : m_assignment.get_level_assignments(l)) {
+    for (auto l = m_assignment.getCurrentLevel(); l >= level; --l) {
+        for (auto lit : m_assignment.getLevelAssignments(l)) {
             m_branchingHeuristic.reset(lit.getVariable());
         }
         if (l == 0) {
@@ -619,12 +619,12 @@ void CDCLSatSolverImpl::updateReasonClauseLBDsOnCurrentLevel() {
         return;
     }
 
-    auto level = m_assignment.get_current_level();
+    auto level = m_assignment.getCurrentLevel();
 
     std::size_t updated = 0;
-    for (auto lit : boost::adaptors::reverse(m_assignment.get_level_assignments(level))) {
-        if (m_assignment.is_forced(lit.getVariable())) {
-            ClauseT* reason = m_assignment.get_reason(lit.getVariable());
+    for (auto lit : boost::adaptors::reverse(m_assignment.getLevelAssignments(level))) {
+        if (m_assignment.isForced(lit.getVariable())) {
+            ClauseT* reason = m_assignment.getReason(lit.getVariable());
             LBD newLBD = getLBD(*reason, m_assignment, m_stamps);
             reason->setLBD(newLBD);
             ++updated;
@@ -638,26 +638,26 @@ void CDCLSatSolverImpl::updateReasonClauseLBDsOnCurrentLevel() {
 
 auto CDCLSatSolverImpl::solveUntilRestart(std::vector<CNFLit> const& assumedFacts,
                                           std::vector<CNFLit>& failedAssumptions) -> TBool {
-    JAM_ASSERT(m_assignment.get_num_assignments() == 0,
+    JAM_ASSERT(m_assignment.getNumAssignments() == 0,
                "Illegally called solveUntilRestart() in-flight");
     JAM_LOG_SOLVER(info, "Restarting");
 
     if (propagateHardFacts(m_facts) == FactPropagationResult::INCONSISTENT) {
         return TBools::FALSE;
     }
-    m_assignment.new_level();
+    m_assignment.newLevel();
     if (propagateAssumedFacts(assumedFacts, failedAssumptions) ==
         FactPropagationResult::INCONSISTENT) {
         return TBools::FALSE;
     }
 
-    while (!m_assignment.is_complete()) {
-        m_assignment.new_level();
+    while (!m_assignment.isComplete()) {
+        m_assignment.newLevel();
         auto decision = m_branchingHeuristic.pickBranchLiteral();
         JAM_ASSERT(decision != CNFLit::getUndefinedLiteral(),
                    "The branching heuristic is not expected to return an undefined literal");
         JAM_LOG_SOLVER(info,
-                       "Beginning new decision level " << m_assignment.get_current_level()
+                       "Beginning new decision level " << m_assignment.getCurrentLevel()
                                                        << " with branching decision " << decision);
 
         if (resolveDecision(decision) == ResolveDecisionResult::RESTART ||
@@ -680,14 +680,14 @@ auto CDCLSatSolverImpl::solveUntilRestart(std::vector<CNFLit> const& assumedFact
 
 auto CDCLSatSolverImpl::propagateHardFacts(std::vector<CNFLit>& facts) -> FactPropagationResult {
     JAM_LOG_SOLVER(info,
-                   "Propagating hard facts on decision level " << m_assignment.get_current_level());
+                   "Propagating hard facts on decision level " << m_assignment.getCurrentLevel());
     auto amntUnits = facts.size();
     auto result = propagateFactsOnSystemLevels(facts, nullptr);
     if (result != FactPropagationResult::INCONSISTENT &&
-        m_assignment.get_num_assignments() != amntUnits) {
+        m_assignment.getNumAssignments() != amntUnits) {
         auto oldAmntUnits = m_facts.size();
         m_facts.clear();
-        auto newUnits = m_assignment.get_assignments();
+        auto newUnits = m_assignment.getAssignments();
         for (size_t i = 0; i < (newUnits.size() - oldAmntUnits); ++i) {
             m_statistics.registerLemma(1);
         }
@@ -701,7 +701,7 @@ auto CDCLSatSolverImpl::propagateAssumedFacts(std::vector<CNFLit> const& assumed
                                               std::vector<CNFLit>& failedAssumptions)
     -> FactPropagationResult {
     JAM_LOG_SOLVER(
-        info, "Propagating assumed facts on decision level " << m_assignment.get_current_level());
+        info, "Propagating assumed facts on decision level " << m_assignment.getCurrentLevel());
     return propagateFactsOnSystemLevels(assumedFacts, &failedAssumptions);
 }
 
@@ -710,7 +710,7 @@ auto CDCLSatSolverImpl::propagateFactsOnSystemLevels(std::vector<CNFLit> const& 
                                                      std::vector<CNFLit>* failedAssumptions)
     -> FactPropagationResult {
     for (auto fact : factsToPropagate) {
-        auto assignment = m_assignment.get_assignment(fact.getVariable());
+        auto assignment = m_assignment.getAssignment(fact.getVariable());
 
         if (isDeterminate(assignment)) {
             if (toTBool(fact.getSign() == CNFSign::POSITIVE) != assignment) {
@@ -773,7 +773,7 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
             m_restartPolicy.registerConflict({newLemmaLBD});
 
             backtrackToLevel(result.backtrackLevel);
-            conflictingClause = m_assignment.register_lemma(*newLemmaClause);
+            conflictingClause = m_assignment.registerLemma(*newLemmaClause);
 
             if (result.backtrackLevel == 0 ||
                 (result.backtrackLevel == 1 && conflictingClause != nullptr)) {
@@ -837,7 +837,7 @@ auto CDCLSatSolverImpl::deriveLemma(ClauseT& conflictingClause) -> LemmaDerivati
         Trail<ClauseT>::DecisionLevel backtrackLevel = 0;
         for (auto lit = newLemma.begin() + 1; lit != newLemma.end(); ++lit) {
             auto currentBacktrackLevel =
-                std::max(backtrackLevel, m_assignment.get_level(lit->getVariable()));
+                std::max(backtrackLevel, m_assignment.getLevel(lit->getVariable()));
             if (currentBacktrackLevel > backtrackLevel) {
                 litWithMaxDecisionLevel = lit;
                 backtrackLevel = currentBacktrackLevel;
@@ -857,7 +857,7 @@ void CDCLSatSolverImpl::optimizeLemma(std::vector<CNFLit>& lemma) {
     if (lemma.size() <= m_configuration.lemmaSimplificationSizeBound) {
         LBD lbd = getLBD(lemma, m_assignment, m_stamps);
         if (lbd <= m_configuration.lemmaSimplificationLBDBound) {
-            auto binariesMap = m_assignment.get_binaries_map();
+            auto binariesMap = m_assignment.getBinariesMap();
             resolveWithBinaries(lemma, binariesMap, lemma[0], m_stamps);
             JAM_LOG_SOLVER(info,
                            "  After resolution with binary clauses: ("

@@ -12,26 +12,26 @@
 #endif
 
 namespace jamsat {
-assignment::assignment(CNFVar max_var)
+Assignment::Assignment(CNFVar max_var)
   : m_trail{max_var.getRawValue() + 1}
-  , m_level_limits{}
+  , m_levelLimits{}
   , m_assignments{max_var, TBools::INDETERMINATE}
   , m_phases{max_var, TBools::FALSE}
-  , m_current_level{0}
-  , m_reasons_and_als{max_var}
+  , m_currentLevel{0}
+  , m_reasonsAndALs{max_var}
   , m_binaryWatchers{max_var}
   , m_watchers{max_var}
-  , m_lits_with_required_watcher_update{getMaxLit(max_var)}
-  , m_lits_with_required_watcher_update_as_vec{} {
-    m_level_limits.push_back(0);
+  , m_litsRequiringWatcherUpdate{getMaxLit(max_var)}
+  , m_litsRequiringWatcherUpdateAsVec{} {
+    m_levelLimits.push_back(0);
 }
 
-void assignment::clear_clauses() noexcept {
+void Assignment::clearClauses() noexcept {
     m_watchers.clear();
     m_binaryWatchers.clear();
 }
 
-void assignment::inc_max_var(CNFVar var) {
+void Assignment::increaseMaxVar(CNFVar var) {
     JAM_ASSERT(var.getRawValue() + 1 >= m_assignments.size(), "Decreasing size not allowed");
     auto amnt_new_vars = var.getRawValue() + 1 - m_assignments.size();
     if (amnt_new_vars == 0) {
@@ -42,38 +42,38 @@ void assignment::inc_max_var(CNFVar var) {
     m_trail.increaseMaxSizeBy(amnt_new_vars);
     m_assignments.increaseSizeTo(var);
     m_phases.increaseSizeTo(var);
-    m_reasons_and_als.increaseSizeTo(var);
+    m_reasonsAndALs.increaseSizeTo(var);
     m_binaryWatchers.increaseMaxVarTo(var);
     m_watchers.increaseMaxVarTo(var);
-    m_lits_with_required_watcher_update.increaseSizeTo(getMaxLit(var));
+    m_litsRequiringWatcherUpdate.increaseSizeTo(getMaxLit(var));
 
 
     for (CNFVar i = first_new_var; i <= var; i = nextCNFVar(i)) {
         m_assignments[i] = TBools::INDETERMINATE;
-        m_reasons_and_als[i].m_level = 0;
-        m_reasons_and_als[i].m_reason = nullptr;
+        m_reasonsAndALs[i].m_level = 0;
+        m_reasonsAndALs[i].m_reason = nullptr;
         m_phases[i] = TBools::FALSE;
     }
 }
 
-void assignment::assign(CNFLit literal, Clause* reason) {
+void Assignment::assign(CNFLit literal, Clause* reason) {
     JAM_LOG_ASSIGN(info, "  Assigning " << literal);
-    JAM_ASSERT(get_assignment(literal) == TBools::INDETERMINATE, "Assgn needs to be indeterminate");
+    JAM_ASSERT(getAssignment(literal) == TBools::INDETERMINATE, "Assgn needs to be indeterminate");
     m_trail.push_back(literal);
 
     TBool const value =
         TBool::fromUnderlyingValue(static_cast<TBool::UnderlyingType>(literal.getSign()));
     m_assignments[literal.getVariable()] = value;
-    m_reasons_and_als[literal.getVariable()].m_level = get_current_level();
-    m_reasons_and_als[literal.getVariable()].m_reason = reason;
+    m_reasonsAndALs[literal.getVariable()].m_level = getCurrentLevel();
+    m_reasonsAndALs[literal.getVariable()].m_reason = reason;
 }
 
-auto assignment::append(CNFLit literal, up_mode mode) -> Clause* {
+auto Assignment::append(CNFLit literal, up_mode mode) -> Clause* {
     assign(literal, nullptr);
-    return propagate_until_fixpoint(literal, mode);
+    return propagateUntilFixpoint(literal, mode);
 }
 
-void assignment::register_clause(Clause& clause) {
+void Assignment::registerClause(Clause& clause) {
     JAM_ASSERT(clause.size() >= 2ull, "Illegally small clause argument");
     JAM_LOG_ASSIGN(info,
                    "Registering clause " << &clause << " ("
@@ -91,62 +91,62 @@ void assignment::register_clause(Clause& clause) {
     target_watch_list.addWatcher(lit1, watcher1);
 }
 
-auto assignment::register_lemma(Clause& clause) -> Clause* {
-    register_clause(clause);
+auto Assignment::registerLemma(Clause& clause) -> Clause* {
+    registerClause(clause);
 
     JAM_EXPENSIVE_ASSERT(
         std::all_of(clause.begin() + 1,
                     clause.end(),
-                    [this](CNFLit l) { return isFalse(get_assignment(l)); }),
+                    [this](CNFLit l) { return isFalse(getAssignment(l)); }),
         "Added a clause requiring first-literal propagation which does not actually "
         "force the first literal");
     JAM_LOG_ASSIGN(info, "Propagating first literal of registered clause.");
     CNFLit const asserting_lit = clause[0];
     assign(asserting_lit, &clause);
-    return propagate_until_fixpoint(asserting_lit, up_mode::include_lemmas);
+    return propagateUntilFixpoint(asserting_lit, up_mode::include_lemmas);
 }
 
 
-void assignment::register_clause_modification(Clause& clause) noexcept {
+void Assignment::registerClauseModification(Clause& clause) noexcept {
     JAM_LOG_ASSIGN(info,
                    "About to modify clause: " << std::addressof(clause) << " ("
                                               << toString(clause.begin(), clause.end()) << ")");
     JAM_ASSERT(clause.size() >= 2, "Can't modify clauses with size <= 1");
-    JAM_ASSERT(!is_reason(clause), "Can't modify reason clauses");
-    if (m_lits_with_required_watcher_update[clause[0]] != 1) {
-        m_lits_with_required_watcher_update[clause[0]] = 1;
-        m_lits_with_required_watcher_update_as_vec.push_back(clause[0]);
+    JAM_ASSERT(!isReason(clause), "Can't modify reason clauses");
+    if (m_litsRequiringWatcherUpdate[clause[0]] != 1) {
+        m_litsRequiringWatcherUpdate[clause[0]] = 1;
+        m_litsRequiringWatcherUpdateAsVec.push_back(clause[0]);
     }
-    if (m_lits_with_required_watcher_update[clause[1]] != 1) {
-        m_lits_with_required_watcher_update[clause[1]] = 1;
-        m_lits_with_required_watcher_update_as_vec.push_back(clause[1]);
+    if (m_litsRequiringWatcherUpdate[clause[1]] != 1) {
+        m_litsRequiringWatcherUpdate[clause[1]] = 1;
+        m_litsRequiringWatcherUpdateAsVec.push_back(clause[1]);
     }
 }
 
-void assignment::new_level() noexcept {
-    m_level_limits.push_back(static_checked_cast<level_limit>(m_trail.size()));
-    ++m_current_level;
+void Assignment::newLevel() noexcept {
+    m_levelLimits.push_back(static_checked_cast<level_limit>(m_trail.size()));
+    ++m_currentLevel;
     JAM_LOG_ASSIGN(info,
-                   "Entering assignment level: " << m_current_level << ", currently "
+                   "Entering assignment level: " << m_currentLevel << ", currently "
                                                  << m_trail.size() << " assignments in total");
 }
 
-void assignment::undo_to_level(level level) noexcept {
-    for (auto i = m_trail.begin() + m_level_limits[level + 1]; i != m_trail.end(); ++i) {
+void Assignment::undoToLevel(level level) noexcept {
+    for (auto i = m_trail.begin() + m_levelLimits[level + 1]; i != m_trail.end(); ++i) {
         m_phases[i->getVariable()] = m_assignments[(*i).getVariable()];
         m_assignments[i->getVariable()] = TBools::INDETERMINATE;
     }
 
-    m_trail.pop_to(m_level_limits[level + 1]);
-    m_level_limits.resize(level + 1);
-    m_current_level = level;
+    m_trail.pop_to(m_levelLimits[level + 1]);
+    m_levelLimits.resize(level + 1);
+    m_currentLevel = level;
 
     JAM_LOG_ASSIGN(info,
-                   "Entering assignment level: " << m_current_level << ", currently "
+                   "Entering assignment level: " << m_currentLevel << ", currently "
                                                  << m_trail.size() << " assignments in total");
 }
 
-void assignment::undo_all() noexcept {
+void Assignment::undoAll() noexcept {
     // TODO: remove code duplication
     // TODO: testing
     for (auto i = m_trail.begin(); i != m_trail.end(); ++i) {
@@ -155,34 +155,34 @@ void assignment::undo_all() noexcept {
     }
 
     m_trail.pop_to(0);
-    m_level_limits.resize(1);
-    m_current_level = 0;
+    m_levelLimits.resize(1);
+    m_currentLevel = 0;
 
     JAM_LOG_ASSIGN(info, "Entering assignment level: 0, currently 0 assignments in total");
 }
 
-auto assignment::get_level_assignments(level level) const noexcept -> assignment_range {
-    if (level >= m_level_limits.size()) {
+auto Assignment::getLevelAssignments(level level) const noexcept -> AssignmentRange {
+    if (level >= m_levelLimits.size()) {
         return boost::make_iterator_range(m_trail.end(), m_trail.end());
     }
 
-    auto begin = m_trail.begin() + m_level_limits[level];
-    if (level + 1 == m_level_limits.size()) {
+    auto begin = m_trail.begin() + m_levelLimits[level];
+    if (level + 1 == m_levelLimits.size()) {
         return boost::make_iterator_range(begin, m_trail.end());
     }
-    auto end = m_trail.begin() + m_level_limits[level + 1];
+    auto end = m_trail.begin() + m_levelLimits[level + 1];
     return boost::make_iterator_range(begin, end);
 }
 
-auto assignment::get_assignments() const noexcept -> assignment_range {
+auto Assignment::getAssignments() const noexcept -> AssignmentRange {
     return {m_trail.begin(), m_trail.end()};
 }
 
-auto assignment::propagate_until_fixpoint(CNFLit to_propagate, up_mode mode) -> Clause* {
+auto Assignment::propagateUntilFixpoint(CNFLit to_propagate, up_mode mode) -> Clause* {
     JAM_LOG_ASSIGN(info, "Propagating assignment until fixpoint: " << to_propagate);
 
-    if (is_watcher_cleanup_required()) {
-        cleanup_watchers();
+    if (isWatcherCleanupRequired()) {
+        cleanupWatchers();
     }
 
     auto prop_queue_begin = m_trail.begin() + m_trail.size();
@@ -228,14 +228,14 @@ auto assignment::propagate_until_fixpoint(CNFLit to_propagate, up_mode mode) -> 
     return nullptr;
 }
 
-template <assignment::up_mode mode>
-auto assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Clause* {
+template <Assignment::up_mode mode>
+auto Assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Clause* {
     // Caution: this method is on the solver's hottest path.
 
     JAM_LOG_ASSIGN(info, "  Propagating assignment: " << to_propagate);
     amnt_new_facts = 0;
 
-    if (Clause* conflict = propagate_binaries(to_propagate, amnt_new_facts)) {
+    if (Clause* conflict = propagateBinaries(to_propagate, amnt_new_facts)) {
         return conflict;
     }
 
@@ -253,7 +253,7 @@ auto assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Claus
         }
 
         CNFLit other_watched_lit = current_watcher.getOtherWatchedLiteral();
-        TBool assignment = get_assignment(other_watched_lit);
+        TBool assignment = getAssignment(other_watched_lit);
 
         if (isTrue(assignment)) {
             // The clause is already satisfied and can be ignored for propagation.
@@ -266,7 +266,7 @@ auto assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Claus
         // other_watched_lit might not actually be the other watched literal due to
         // the swap at (*), so restore it
         other_watched_lit = clause[1 - current_watcher.getIndex()];
-        assignment = get_assignment(other_watched_lit);
+        assignment = getAssignment(other_watched_lit);
         if (isTrue(assignment)) {
             // The clause is already satisfied and can be ignored for propagation.
             ++watcher_list_traversal;
@@ -279,7 +279,7 @@ auto assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Claus
 
         for (typename Clause::size_type i = 2; i < clause.size(); ++i) {
             CNFLit current_lit = clause[i];
-            if (!isFalse(get_assignment(current_lit))) {
+            if (!isFalse(getAssignment(current_lit))) {
                 // The FALSE literal is moved into the unwatched of the clause here,
                 // such that an INDETERMINATE or TRUE literal gets watched.
                 //
@@ -335,13 +335,13 @@ auto assignment::propagate(CNFLit to_propagate, size_t& amnt_new_facts) -> Claus
     return nullptr;
 }
 
-auto assignment::propagate_binaries(CNFLit to_propagate, size_t& amnt_new_facts) -> Clause* {
+auto Assignment::propagateBinaries(CNFLit to_propagate, size_t& amnt_new_facts) -> Clause* {
     CNFLit negated_to_prop = ~to_propagate;
     auto watcher_list_traversal = m_binaryWatchers.getWatchers(negated_to_prop);
     while (!watcher_list_traversal.hasFinishedTraversal()) {
         auto& current_watcher = *watcher_list_traversal;
         CNFLit secondLit = current_watcher.getOtherWatchedLiteral();
-        TBool assignment = get_assignment(secondLit);
+        TBool assignment = getAssignment(secondLit);
 
         if (isFalse(assignment)) {
             // conflict case:
@@ -366,10 +366,10 @@ auto assignment::propagate_binaries(CNFLit to_propagate, size_t& amnt_new_facts)
     return nullptr;
 }
 
-auto assignment::is_reason(Clause& clause) noexcept -> bool {
+auto Assignment::isReason(Clause& clause) noexcept -> bool {
     JAM_ASSERT(clause.size() >= 2, "Argument clause must at have a size of 2");
 
-    if (get_num_assignments() == 0) {
+    if (getNumAssignments() == 0) {
         // Special case for decision level 0, to avoid erroneously marking
         // clauses having been reasons for implied facts as reasons even
         // after backtracking:
@@ -377,13 +377,13 @@ auto assignment::is_reason(Clause& clause) noexcept -> bool {
     }
 
     for (auto var : {clause[0].getVariable(), clause[1].getVariable()}) {
-        if (get_reason(var) != &clause) {
+        if (getReason(var) != &clause) {
             continue;
         }
 
         // The reason pointers do not neccessarily get cleared eagerly during backtracking
-        auto decisionLevel = get_level(var);
-        if (decisionLevel <= get_current_level()) {
+        auto decisionLevel = getLevel(var);
+        if (decisionLevel <= getCurrentLevel()) {
             return true;
         }
     }
@@ -391,18 +391,18 @@ auto assignment::is_reason(Clause& clause) noexcept -> bool {
 }
 
 
-void assignment::cleanup_watchers() {
-    for (CNFLit dirty_lit : m_lits_with_required_watcher_update_as_vec) {
-        cleanup_watchers(dirty_lit);
+void Assignment::cleanupWatchers() {
+    for (CNFLit dirty_lit : m_litsRequiringWatcherUpdateAsVec) {
+        cleanupWatchers(dirty_lit);
     }
-    m_lits_with_required_watcher_update_as_vec.clear();
+    m_litsRequiringWatcherUpdateAsVec.clear();
 }
 
-auto assignment::is_watcher_cleanup_required() const noexcept -> bool {
-    return !m_lits_with_required_watcher_update_as_vec.empty();
+auto Assignment::isWatcherCleanupRequired() const noexcept -> bool {
+    return !m_litsRequiringWatcherUpdateAsVec.empty();
 }
 
-void assignment::cleanup_watchers(CNFLit lit) {
+void Assignment::cleanupWatchers(CNFLit lit) {
     // This is not implemented as a detail of the watcher data structure
     // since watchers may be moved from the "regular" watchers to the binary
     // ones.
@@ -465,6 +465,6 @@ void assignment::cleanup_watchers(CNFLit lit) {
         }
     }
     binarywatcher_list_traversal.finishedTraversal();
-    m_lits_with_required_watcher_update[lit] = 0;
+    m_litsRequiringWatcherUpdate[lit] = 0;
 }
 }

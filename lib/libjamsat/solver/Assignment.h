@@ -44,7 +44,7 @@ namespace jamsat {
  * 
  * \brief Class representing a variable assignment.
  */
-class assignment final {
+class Assignment final {
 public:
     using const_iterator = BoundedStack<CNFLit>::const_iterator;
 
@@ -52,7 +52,7 @@ public:
     using level = std::uint32_t;
 
     /** Range type for assignments, expressed as literals */
-    using assignment_range = boost::iterator_range<const_iterator>;
+    using AssignmentRange = boost::iterator_range<const_iterator>;
 
     using size_type = BoundedStack<CNFLit>::size_type;
 
@@ -66,7 +66,7 @@ public:
      * 
      * \throw std::bad_alloc on memory allocation failure.
      */
-    explicit assignment(CNFVar max_var);
+    explicit Assignment(CNFVar max_var);
 
     /**
      * \brief Increases the maximum variable occurring in the problem instance.
@@ -75,7 +75,7 @@ public:
      * 
      * \throw std::bad_alloc on memory allocation failure.
      */
-    void inc_max_var(CNFVar var);
+    void increaseMaxVar(CNFVar var);
 
     /** Unit propagation mode */
     enum class up_mode { exclude_lemmas, include_lemmas };
@@ -102,27 +102,27 @@ public:
     /**
      * \brief Returns the truth value of the given literal under the current assignment.
      */
-    auto get_assignment(CNFLit lit) const noexcept -> TBool;
+    auto getAssignment(CNFLit lit) const noexcept -> TBool;
 
     /**
      * \brief Returns the truth value of the given variable under the current assignment.
      */
-    auto get_assignment(CNFVar var) const noexcept -> TBool;
+    auto getAssignment(CNFVar var) const noexcept -> TBool;
 
     /**
      * \brief Returns the most recently assigned truth value of the given variable.
      */
-    auto get_phase(CNFVar var) const noexcept -> TBool;
+    auto getPhase(CNFVar var) const noexcept -> TBool;
 
     /**
      * \brief Returns `true` iff all variables have an assignment.
      */
-    auto is_complete() const noexcept -> bool;
+    auto isComplete() const noexcept -> bool;
 
     /**
      * \brief Returns the number of current variable assignments.
      */
-    auto get_num_assignments() const noexcept -> size_type;
+    auto getNumAssignments() const noexcept -> size_type;
 
     /**
      * \brief Registers a clause (without assignments) for participating in consequence
@@ -131,12 +131,12 @@ public:
      * \param clause    A clause that is not yet participating in consequence computation.
      *   \p clause must reference a valid object until `clear()` is called or the assignment
      *   object is destroyed. If the clause is modified (except by this object),
-     *   `register_clause_modification()` must be called accordingly. No literal in \p clause
+     *   `registerClauseModification()` must be called accordingly. No literal in \p clause
      *   must have an assignment yet.
      * 
      * \throw std::bad_alloc on memory allocation failure.
      */
-    void register_clause(Clause& clause);
+    void registerClause(Clause& clause);
 
     /**
      * \brief Registers a clause currently forcing an assignment for participating in
@@ -147,7 +147,7 @@ public:
      * \param clause   A clause that is not yet participating in consequence computation.
      *   \p clause must reference a valid object until `clear()` is called or the assignment
      *   object is destroyed. If the clause is modified (except by this object),
-     *   `register_clause_modification()` must be called accordingly. All literals except
+     *   `registerClauseModification()` must be called accordingly. All literals except
      *   the first one must have a `false` assignment; the first literal of the clause must
      *   be unassigned.
      * 
@@ -159,19 +159,19 @@ public:
      * 
      * \throw std::bad_alloc on memory allocation failure.
      */
-    auto register_lemma(Clause& clause) -> Clause*;
+    auto registerLemma(Clause& clause) -> Clause*;
 
     /**
      * \brief Registers a clause modification.
      * 
      * \param clause   The modified clause.
      */
-    void register_clause_modification(Clause& clause) noexcept;
+    void registerClauseModification(Clause& clause) noexcept;
 
     /**
      * \brief Unregisters all clauses from participating in consequence computation.
      */
-    void clear_clauses() noexcept;
+    void clearClauses() noexcept;
 
 
     /**
@@ -180,7 +180,7 @@ public:
      * \returns the clause having forced the assignment of the given variable, if any; otherwise,
      *   `nullptr` is returned.
      */
-    auto get_reason(CNFVar var) const noexcept -> Clause const*;
+    auto getReason(CNFVar var) const noexcept -> Clause const*;
 
 
     /**
@@ -189,7 +189,7 @@ public:
      * \returns the clause having forced the assignment of the given variable, if any; otherwise,
      *   `nullptr` is returned.
      */
-    auto get_reason(CNFVar var) noexcept -> Clause*;
+    auto getReason(CNFVar var) noexcept -> Clause*;
 
 
     /**
@@ -198,43 +198,43 @@ public:
      * \param clause    A clause registered with this assignment object. The clause must have at
      *                  least 2 literals.
      */
-    auto is_reason(Clause& clause) noexcept -> bool;
+    auto isReason(Clause& clause) noexcept -> bool;
 
     /**
      * \brief Determines whether the given variable's assignment was forced by propagation.
      */
-    auto is_forced(CNFVar var) const noexcept;
+    auto isForced(CNFVar var) const noexcept;
 
     /**
      * \brief Increases the level of the assignment.
      */
-    void new_level() noexcept;
+    void newLevel() noexcept;
 
     /**
      * \brief Gets the current level.
      */
-    auto get_current_level() const noexcept;
+    auto getCurrentLevel() const noexcept;
 
     /**
      * \brief Gets the level on which var has been assigned.
      * 
      * \param var   A variable currently having an assignment.
      */
-    auto get_level(CNFVar var) const noexcept -> level;
+    auto getLevel(CNFVar var) const noexcept -> level;
 
     /**
      * \brief Undos all variable assignments on levels higher than \p{level}.
      * 
      * After calling this method, the current level is \p{level}.
      */
-    void undo_to_level(level level) noexcept;
+    void undoToLevel(level level) noexcept;
 
     /**
      * \brief Undos all variable assignments.
      * 
      * After calling this method, the current level is 0.
      */
-    void undo_all() noexcept;
+    void undoAll() noexcept;
 
     /**
      * \brief Gets the assignments of the requested level, expressed as literals.
@@ -245,17 +245,17 @@ public:
      *   literal beyond the last literal of that level. The iterators
      *   remain valid until the assignment is modified.
      */
-    auto get_level_assignments(level level) const noexcept -> assignment_range;
+    auto getLevelAssignments(level level) const noexcept -> AssignmentRange;
 
     /**
      * \brief Gets a range over the current variable assignment, expressed as literals.
      * 
      * \returns       Iterator range over the current variable assignment.
      */
-    auto get_assignments() const noexcept -> assignment_range;
+    auto getAssignments() const noexcept -> AssignmentRange;
 
 
-    using binaries_map = typename detail_propagation::Watchers<Clause>::BlockerMapT;
+    using BinariesMap = typename detail_propagation::Watchers<Clause>::BlockerMapT;
 
     /**
      * \brief Returns a map representing the binary clauses registered with the
@@ -266,15 +266,15 @@ public:
      * range containing exactly the literals L' such binary clause (L L') or
      * (L' L) has been registered with the assignment object.
      */
-    auto get_binaries_map() const noexcept -> binaries_map;
+    auto getBinariesMap() const noexcept -> BinariesMap;
 
-    assignment& operator=(assignment const&) = delete;
-    assignment(assignment const&) = delete;
+    Assignment& operator=(Assignment const&) = delete;
+    Assignment(Assignment const&) = delete;
 
-    assignment& operator=(assignment&&) noexcept = default;
-    assignment(assignment&&) noexcept = default;
+    Assignment& operator=(Assignment&&) noexcept = default;
+    Assignment(Assignment&&) noexcept = default;
 
-    ~assignment() = default;
+    ~Assignment() = default;
 
 
     // Exposed for testing purposes, do not call in production client code
@@ -296,37 +296,37 @@ public:
 
 
 private:
-    auto propagate_until_fixpoint(CNFLit toPropagate, up_mode mode) -> Clause*;
-    auto propagate_binaries(CNFLit toPropagate, size_t& amountOfNewFacts) -> Clause*;
-    void cleanup_watchers();
-    auto is_watcher_cleanup_required() const noexcept -> bool;
-    void cleanup_watchers(CNFLit lit);
+    auto propagateUntilFixpoint(CNFLit toPropagate, up_mode mode) -> Clause*;
+    auto propagateBinaries(CNFLit toPropagate, size_t& amountOfNewFacts) -> Clause*;
+    void cleanupWatchers();
+    auto isWatcherCleanupRequired() const noexcept -> bool;
+    void cleanupWatchers(CNFLit lit);
 
     using level_limit = uint32_t;
 
     /** \internal Variable assignments, in order of assignment */
     BoundedStack<CNFLit> m_trail;
 
-    /** \internal m_level_limits[i] is the index in m_trail where level i begins */
-    std::vector<level_limit> m_level_limits;
+    /** \internal m_levelLimits[i] is the index in m_trail where level i begins */
+    std::vector<level_limit> m_levelLimits;
 
     /** \internal Map of variable assignments */
     BoundedMap<CNFVar, TBool> m_assignments;
 
-    /** \internal Map of variable phases; updated during undo_to_level */
+    /** \internal Map of variable phases; updated during undoToLevel */
     BoundedMap<CNFVar, TBool> m_phases;
 
     /** \internal The current assignment level */
-    level m_current_level;
+    level m_currentLevel;
 
     /** \internal Variable data grouped for cache-efficiency */
-    struct reason_and_al {
+    struct ReasonAndAssignmentLevel {
         Clause* m_reason;
         level m_level;
     };
 
     /** \internal Reason and assignment level for each assigned variable */
-    BoundedMap<CNFVar, reason_and_al> m_reasons_and_als;
+    BoundedMap<CNFVar, ReasonAndAssignmentLevel> m_reasonsAndALs;
 
     /**
      * \internal
@@ -354,62 +354,62 @@ private:
      * deletion, rewrite watchers out of sync with their clause (i.e. first
      * or second literal has been changed)
      */
-    BoundedMap<CNFLit, char> m_lits_with_required_watcher_update;
+    BoundedMap<CNFLit, char> m_litsRequiringWatcherUpdate;
 
     /**
      * \internal
      *
-     * A collection of elements marked in m_lits_with_required_watcher_update, for fast
+     * A collection of elements marked in m_litsRequiringWatcherUpdate, for fast
      * iteration.
      */
-    std::vector<CNFLit> m_lits_with_required_watcher_update_as_vec;
+    std::vector<CNFLit> m_litsRequiringWatcherUpdateAsVec;
 };
 
 
-inline auto assignment::get_assignment(CNFLit lit) const noexcept -> TBool {
-    TBool var_assignment = get_assignment(lit.getVariable());
+inline auto Assignment::getAssignment(CNFLit lit) const noexcept -> TBool {
+    TBool var_assignment = getAssignment(lit.getVariable());
     TBool::UnderlyingType sign = static_cast<TBool::UnderlyingType>(lit.getSign());
     // TODO: further optimize if neccessary: flip CNFSign constants to get rid of the subtraction
     return TBool::fromUnderlyingValue(var_assignment.getUnderlyingValue() ^ (1 - sign));
 }
 
-inline auto assignment::get_assignment(CNFVar var) const noexcept -> TBool {
+inline auto Assignment::getAssignment(CNFVar var) const noexcept -> TBool {
     return m_assignments[var];
 }
 
-inline auto assignment::get_phase(CNFVar var) const noexcept -> TBool {
+inline auto Assignment::getPhase(CNFVar var) const noexcept -> TBool {
     return m_phases[var];
 }
 
-inline auto assignment::get_current_level() const noexcept {
-    return m_current_level;
+inline auto Assignment::getCurrentLevel() const noexcept {
+    return m_currentLevel;
 }
 
-inline auto assignment::get_level(CNFVar var) const noexcept -> level {
-    return m_reasons_and_als[var].m_level;
+inline auto Assignment::getLevel(CNFVar var) const noexcept -> level {
+    return m_reasonsAndALs[var].m_level;
 }
 
-inline auto assignment::get_reason(CNFVar var) const noexcept -> Clause const* {
-    return m_reasons_and_als[var].m_reason;
+inline auto Assignment::getReason(CNFVar var) const noexcept -> Clause const* {
+    return m_reasonsAndALs[var].m_reason;
 }
 
-inline auto assignment::get_reason(CNFVar var) noexcept -> Clause* {
-    return m_reasons_and_als[var].m_reason;
+inline auto Assignment::getReason(CNFVar var) noexcept -> Clause* {
+    return m_reasonsAndALs[var].m_reason;
 }
 
-inline auto assignment::is_forced(CNFVar var) const noexcept {
-    return m_reasons_and_als[var].m_reason != nullptr;
+inline auto Assignment::isForced(CNFVar var) const noexcept {
+    return m_reasonsAndALs[var].m_reason != nullptr;
 }
 
-inline auto assignment::is_complete() const noexcept -> bool {
+inline auto Assignment::isComplete() const noexcept -> bool {
     return m_trail.size() == m_assignments.size();
 }
 
-inline auto assignment::get_num_assignments() const noexcept -> size_type {
+inline auto Assignment::getNumAssignments() const noexcept -> size_type {
     return m_trail.size();
 }
 
-inline auto assignment::get_binaries_map() const noexcept -> binaries_map {
+inline auto Assignment::getBinariesMap() const noexcept -> BinariesMap {
     return m_binaryWatchers.getBlockerMap();
 }
 

@@ -35,7 +35,7 @@ namespace jamsat {
 TEST(UnitProof, Model_valuesAreIndeterminateByDefault) {
     auto underTest = createModel(CNFVar{7});
     for (CNFVar i = CNFVar{0}; i <= CNFVar{7}; i = nextCNFVar(i)) {
-        EXPECT_EQ(underTest->get_assignment(i), TBools::INDETERMINATE)
+        EXPECT_EQ(underTest->getAssignment(i), TBools::INDETERMINATE)
             << "Variable " << i << " not assigned INDETERMINATE";
     }
 }
@@ -44,26 +44,26 @@ TEST(UnitProof, Model_storesValues) {
     auto underTest = createModel(CNFVar{7});
     underTest->setAssignment(CNFVar{4}, TBools::FALSE);
     underTest->setAssignment(CNFVar{5}, TBools::TRUE);
-    EXPECT_EQ(underTest->get_assignment(CNFVar{4}), TBools::FALSE);
-    EXPECT_EQ(underTest->get_assignment(CNFVar{5}), TBools::TRUE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{4}), TBools::FALSE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{5}), TBools::TRUE);
 }
 
 TEST(UnitProof, Model_valuesCanBeOverridden) {
     auto underTest = createModel(CNFVar{7});
     underTest->setAssignment(CNFVar{4}, TBools::FALSE);
     underTest->setAssignment(CNFVar{4}, TBools::TRUE);
-    EXPECT_EQ(underTest->get_assignment(CNFVar{4}), TBools::TRUE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{4}), TBools::TRUE);
 }
 
 TEST(UnitProof, Model_variablesHigherThanMaxAreIndeterminate) {
     auto underTest = createModel(CNFVar{7});
-    EXPECT_EQ(underTest->get_assignment(CNFVar{14}), TBools::INDETERMINATE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{14}), TBools::INDETERMINATE);
 }
 
 TEST(UnitProof, Model_sizeIsAutomaticallyIncreased) {
     auto underTest = createModel(CNFVar{7});
     underTest->setAssignment(CNFVar{14}, TBools::TRUE);
-    EXPECT_EQ(underTest->get_assignment(CNFVar{14}), TBools::TRUE);
+    EXPECT_EQ(underTest->getAssignment(CNFVar{14}), TBools::TRUE);
 }
 
 TEST(UnitProof, Model_checkForEmptyProblemSucceeds) {

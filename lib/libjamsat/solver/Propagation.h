@@ -195,7 +195,7 @@ public:
      * If the assignment was not forced due to propagation, \p nullptr is returned
      * instead.
      */
-    auto get_reason(CNFVar variable) const noexcept -> const Clause*;
+    auto getReason(CNFVar variable) const noexcept -> const Clause*;
 
     /**
      * \brief Gets the pointer to the clause which forced the assignment of the
@@ -208,7 +208,7 @@ public:
      * If the assignment was not forced due to propagation, \p nullptr is returned
      * instead.
      */
-    auto get_reason(CNFVar variable) noexcept -> Clause*;
+    auto getReason(CNFVar variable) noexcept -> Clause*;
 
     /**
      * \brief Increases the maximum variable which may occur during propagation.
@@ -359,7 +359,7 @@ auto Propagation<AssignmentProvider>::registerClause(Clause& clause, bool autoPr
         return nullptr;
     }
 
-    TBool secondLiteralAssignment = m_assignmentProvider.get_assignment(clause[1]);
+    TBool secondLiteralAssignment = m_assignmentProvider.getAssignment(clause[1]);
     // By method contract, if secondLiteralAssignment != INDETERMINATE, we need
     // to propagate the first literal.
     if (isDeterminate(secondLiteralAssignment)) {
@@ -367,7 +367,7 @@ auto Propagation<AssignmentProvider>::registerClause(Clause& clause, bool autoPr
             std::all_of(
                 clause.begin() + 1,
                 clause.end(),
-                [this](CNFLit l) { return isFalse(m_assignmentProvider.get_assignment(l)); }),
+                [this](CNFLit l) { return isFalse(m_assignmentProvider.getAssignment(l)); }),
             "Added a clause requiring first-literal propagation which does not actually "
             "force the first literal");
         JAM_LOG_PROPAGATION(info, "Propagating first literal of registered clause.");
@@ -387,18 +387,18 @@ auto Propagation<AssignmentProvider>::registerClause(Clause& clause) -> Clause* 
 
 
 template <class AssignmentProvider>
-auto Propagation<AssignmentProvider>::get_reason(CNFVar variable) const noexcept -> const Clause* {
-    return m_assignmentProvider.get_reason(variable);
+auto Propagation<AssignmentProvider>::getReason(CNFVar variable) const noexcept -> const Clause* {
+    return m_assignmentProvider.getReason(variable);
 }
 
 template <class AssignmentProvider>
-auto Propagation<AssignmentProvider>::get_reason(CNFVar variable) noexcept -> Clause* {
-    return m_assignmentProvider.get_reason(variable);
+auto Propagation<AssignmentProvider>::getReason(CNFVar variable) noexcept -> Clause* {
+    return m_assignmentProvider.getReason(variable);
 }
 
 template <class AssignmentProvider>
 auto Propagation<AssignmentProvider>::hasForcedAssignment(CNFVar variable) const noexcept -> bool {
-    return m_assignmentProvider.get_reason(variable) != nullptr;
+    return m_assignmentProvider.getReason(variable) != nullptr;
 }
 
 template <class AssignmentProvider>
@@ -463,7 +463,7 @@ auto Propagation<AssignmentProvider>::propagateBinaries(CNFLit toPropagate,
     while (!watcherListTraversal.hasFinishedTraversal()) {
         auto& currentWatcher = *watcherListTraversal;
         CNFLit secondLit = currentWatcher.getOtherWatchedLiteral();
-        TBool assignment = m_assignmentProvider.get_assignment(secondLit);
+        TBool assignment = m_assignmentProvider.getAssignment(secondLit);
 
         if (isFalse(assignment)) {
             // conflict case:
@@ -516,7 +516,7 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t& amou
         }
 
         CNFLit otherWatchedLit = currentWatcher.getOtherWatchedLiteral();
-        TBool assignment = m_assignmentProvider.get_assignment(otherWatchedLit);
+        TBool assignment = m_assignmentProvider.getAssignment(otherWatchedLit);
 
         if (isTrue(assignment)) {
             // The clause is already satisfied and can be ignored for propagation.
@@ -529,7 +529,7 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t& amou
         // otherWatchedLit might not actually be the other watched literal due to
         // the swap at (*), so restore it
         otherWatchedLit = clause[1 - currentWatcher.getIndex()];
-        assignment = m_assignmentProvider.get_assignment(otherWatchedLit);
+        assignment = m_assignmentProvider.getAssignment(otherWatchedLit);
         if (isTrue(assignment)) {
             // The clause is already satisfied and can be ignored for propagation.
             ++watcherListTraversal;
@@ -542,7 +542,7 @@ auto Propagation<AssignmentProvider>::propagate(CNFLit toPropagate, size_t& amou
 
         for (typename Clause::size_type i = 2; i < clause.size(); ++i) {
             CNFLit currentLiteral = clause[i];
-            if (!isFalse(m_assignmentProvider.get_assignment(currentLiteral))) {
+            if (!isFalse(m_assignmentProvider.getAssignment(currentLiteral))) {
                 // The FALSE literal is moved into the unwatched of the clause here,
                 // such that an INDETERMINATE or TRUE literal gets watched.
                 //
@@ -626,13 +626,13 @@ auto Propagation<AssignmentProvider>::isAssignmentReason(
     }
 
     for (auto var : {clause[0].getVariable(), clause[1].getVariable()}) {
-        if (m_assignmentProvider.get_reason(var) != &clause) {
+        if (m_assignmentProvider.getReason(var) != &clause) {
             continue;
         }
 
         // The reason pointers do not neccessarily get cleared eagerly during backtracking
-        auto decisionLevel = dlProvider.get_level(var);
-        if (decisionLevel <= dlProvider.get_current_level()) {
+        auto decisionLevel = dlProvider.getLevel(var);
+        if (decisionLevel <= dlProvider.getCurrentLevel()) {
             return true;
         }
     }

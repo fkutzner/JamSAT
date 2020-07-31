@@ -80,7 +80,7 @@ private:
  * assignment provider) when currently no further facts can be propagated.
  *
  * \tparam AssignmentProvider   A class type T having the method TBool
- * T::get_assignment(CNFLit x) which returns the current variable assignment of
+ * T::getAssignment(CNFLit x) which returns the current variable assignment of
  * x.
  */
 template <class AssignmentProvider>
@@ -210,10 +210,10 @@ auto VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept -
     while (!m_variableOrder.empty()) {
         JAM_ASSERT(!m_variableOrder.empty(), "Out of variables to pick for branching");
         branchingVar = m_variableOrder.removeMax();
-        if (!isDeterminate(m_assignmentProvider.get_assignment(branchingVar)) &&
+        if (!isDeterminate(m_assignmentProvider.getAssignment(branchingVar)) &&
             isEligibleForDecisions(branchingVar)) {
             CNFSign sign = static_cast<CNFSign>(
-                m_assignmentProvider.get_phase(branchingVar).getUnderlyingValue());
+                m_assignmentProvider.getPhase(branchingVar).getUnderlyingValue());
             return CNFLit{branchingVar, sign};
         }
     }
