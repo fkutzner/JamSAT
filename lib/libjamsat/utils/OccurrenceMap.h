@@ -39,6 +39,8 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 
 #include <cstdint>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace jamsat {
@@ -59,11 +61,21 @@ namespace jamsat {
  *                                  `Container const*` arguments, with instances of
  *                                  `ContainerDeletedQuery`indicating whether the container
  *                                  has been marked for deletion.
+ * \tparam ContainerModifiedQuery   A type satisfying the STL UnaryPredicate concept for
+ *                                  `Container const*` arguments, with instances `qz of
+ *                                  `ContainerDeletedQuery`indicating whether the container
+ *                                  has been modified since its addition or the last call
+ *                                  to setModified(). `q.clearModified(c)` must be a valid
+ *                                  expression for `Container&` objects `c`. When the
+ *                                  occurrence map has been informed about the modification
+ *                                  of `c`, `q.clearModified(c)` will eventually be
+ *                                  called.
  * \tparam ContainerValueIndex      A type that is a model of the concept `Index` with indexed
  *                                  type `Container::value_type`.
  */
 template <typename ContainerT,
           typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
           typename ContainerValueIndex = typename ContainerT::value_type::Index>
 class OccurrenceMap {
     static_assert(
@@ -98,6 +110,9 @@ public:
      */
     template <typename ContainerPtrIt>
     OccurrenceMap(value_type maxElement, ContainerPtrIt begin, ContainerPtrIt end);
+
+
+    ~OccurrenceMap();
 
     /**
      * \brief Increases the maximum element that may occur in the containers added
@@ -150,6 +165,37 @@ public:
     void remove(Container const& container) noexcept;
 
     /**
+     * \brief Informs the occurrence map that the given container has been modified.
+     *
+     * Precondition: \p container must be marked as to-be-deleted by all
+     * `ContainerModifiedQuery` objects.
+     * 
+     * \param container     The container to be marked as to-be-deleted from the
+     *                      occurrence map.
+     * 
+     * \param additions     Elements added to \p{container}.
+     * 
+     * \param removals      Elements removed from \p{container}. \p{removals} and
+     *                      \p{additions} must be disjoint.
+     * 
+     * \tparam IterableA    A type supporting iteration over `value_type` objects
+     *                      via begin() and end() methods.
+     * \tparam IterableB    A type supporting iteration over `value_type` objects
+     *                      via begin() and end() methods.
+     */
+    template <typename IterableA, typename IterableR>
+    void setModified(Container& container, IterableA const& additions, IterableR const& removals);
+
+
+    /**
+     * \brief Resolves all cleanups neccessary due to container modifications and
+     *   invokes the rsp. clearModified() function of the `ContainerModifiedQuery`
+     *   object for all clauses modified since the last `resolveModifications()`
+     *   call.
+     */
+    void resolveModifications();
+
+    /**
      * \brief Removes all elements from the occurrence map.
      */
     void clear() noexcept;
@@ -161,13 +207,23 @@ public:
     auto operator=(OccurrenceMap&& rhs) noexcept -> OccurrenceMap& = default;
 
 private:
+    void update(value_type const& value) noexcept;
+
+    using OccList = std::vector<Container*>;
+
     struct OccurrenceListWithFlags {
         bool m_requiresUpdate;
-        std::vector<Container*> m_occList;
+        OccList m_occList;
     };
 
     BoundedMap<value_type, OccurrenceListWithFlags, ContainerValueIndex> m_occurrences;
     ContainerDeletedQuery m_deletedQuery;
+    ContainerModifiedQuery m_modifiedQuery;
+
+    // Container caching elements requiring updates due to modifications of containers.
+    // This map is used to clear "modified" flags from containers as soon as possible,
+    // and also to avoid iterating over large containers too frequently.
+    std::unordered_map<Container*, std::unordered_set<value_type>> m_delModUpdates;
 };
 
 
@@ -198,29 +254,41 @@ struct is_occurrence_map<OccMapT,
 
 /********** Implementation ****************************** */
 
-template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
-OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::OccurrenceMap(
-    value_type maxElement)
+template <typename ContainerT,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    OccurrenceMap(value_type maxElement)
   : m_occurrences(maxElement), m_deletedQuery() {}
 
 
-template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
+template <typename ContainerT,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
 template <typename ContainerPtrIt>
-OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::OccurrenceMap(
-    value_type maxElement, ContainerPtrIt begin, ContainerPtrIt end)
+OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    OccurrenceMap(value_type maxElement, ContainerPtrIt begin, ContainerPtrIt end)
   : m_occurrences(maxElement), m_deletedQuery() {
     insert(begin, end);
 }
 
-template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
-void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::increaseMaxElementTo(
-    value_type maxElement) {
+template <typename ContainerT,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    increaseMaxElementTo(value_type maxElement) {
     m_occurrences.increaseSizeTo(maxElement);
 }
 
-template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
-void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::insert(
-    Container& container) {
+template <typename ContainerT,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    insert(Container& container) {
     if (m_deletedQuery(&container)) {
         return;
     }
@@ -229,19 +297,25 @@ void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::inse
     }
 }
 
-template <typename ContainerT, typename ContainerDeletedQuery, typename ContainerValueIndex>
+template <typename ContainerT,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
 template <typename ContainerPtrIt>
-void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerValueIndex>::insert(
-    ContainerPtrIt begin, ContainerPtrIt end) {
+void OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    insert(ContainerPtrIt begin, ContainerPtrIt end) {
     while (begin != end) {
         insert(**begin);
         ++begin;
     }
 }
 
-template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
-void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::remove(
-    Container const& container) noexcept {
+template <typename Container,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+void OccurrenceMap<Container, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    remove(Container const& container) noexcept {
     JAM_ASSERT(m_deletedQuery(&container),
                "Only remove containers marked for deletion may be deleted");
     for (auto& element : container) {
@@ -249,21 +323,154 @@ void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::remov
     }
 }
 
-template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
-auto OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::operator[](
-    value_type value) noexcept -> ContainerRange {
-    auto& occList = m_occurrences[value].m_occList;
-    if (m_occurrences[value].m_requiresUpdate) {
-        boost::remove_erase_if(occList, m_deletedQuery);
-        m_occurrences[value].m_requiresUpdate = false;
+
+template <typename Container,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+template <typename IterableA, typename IterableR>
+void OccurrenceMap<Container, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    setModified(Container& container, IterableA const& additions, IterableR const& removals) {
+
+    JAM_ASSERT(m_modifiedQuery(&container),
+               "Only remove containers marked for modification may be passed to setModified()");
+
+    bool const hasNewRemovals = (std::distance(removals.begin(), removals.end()) > 0);
+
+    auto delModUpdateSetIter = m_delModUpdates.find(&container);
+    if (delModUpdateSetIter != m_delModUpdates.end()) {
+        // Need to take previous removals into account:
+        // - only add to occurrence lists if there is no removal pending on that list
+        // - remove pending removals for elements that are added again
+
+        std::unordered_set<value_type>& delModUpdateSet = delModUpdateSetIter->second;
+        for (value_type const& element : additions) {
+            if (delModUpdateSet.find(element) != delModUpdateSet.end()) {
+                delModUpdateSet.erase(element);
+            } else {
+                m_occurrences[element].m_occList.push_back(&container);
+            }
+        }
+
+        if (delModUpdateSet.empty() && !hasNewRemovals) {
+            m_delModUpdates.erase(&container);
+            m_modifiedQuery.clearModified(container);
+        }
+    } else {
+        for (value_type const& element : additions) {
+            m_occurrences[element].m_occList.push_back(&container);
+        }
+        if (!hasNewRemovals) {
+            // Only performing additions ~> clear modified flag
+            m_modifiedQuery.clearModified(container);
+        }
     }
+
+    if (hasNewRemovals) {
+        m_delModUpdates[&container].insert(removals.begin(), removals.end());
+        for (auto const& element : removals) {
+            m_occurrences[element].m_requiresUpdate = true;
+        }
+    }
+}
+
+template <typename Container,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+void OccurrenceMap<Container, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    resolveModifications() {
+
+    std::vector<value_type> toUpdate;
+    std::vector<Container*> toClear;
+
+    for (auto modUpdateList : m_delModUpdates) {
+        for (auto const& element : modUpdateList.second) {
+            toUpdate.push_back(element);
+        }
+        toClear.push_back(modUpdateList.first);
+    }
+
+    for (value_type const& element : toUpdate) {
+        if (m_occurrences[element].m_requiresUpdate) {
+            update(element);
+        }
+    }
+
+    for (Container* c : toClear) {
+        m_modifiedQuery.clearModified(*c);
+    }
+
+    JAM_ASSERT(m_delModUpdates.empty(),
+               "Elements requiring updates remain after resolution of all modifications");
+}
+
+template <typename Container,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+auto OccurrenceMap<Container, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+operator[](value_type value) noexcept -> ContainerRange {
+    if (m_occurrences[value].m_requiresUpdate) {
+        update(value);
+    }
+    OccList& occList = m_occurrences[value].m_occList;
     return boost::make_iterator_range(occList.cbegin(), occList.cend());
 }
 
-template <typename Container, typename ContainerDeletedQuery, typename ContainerValueIndex>
-void OccurrenceMap<Container, ContainerDeletedQuery, ContainerValueIndex>::clear() noexcept {
+template <typename Container,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+void OccurrenceMap<Container, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    clear() noexcept {
     for (auto& x : m_occurrences.values()) {
         x.m_occList.clear();
+    }
+}
+
+template <typename Container,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+void OccurrenceMap<Container, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    update(value_type const& value) noexcept {
+    OccList& occList = m_occurrences[value].m_occList;
+    auto const removePred = [this, value](Container* c) {
+        if (m_deletedQuery(c)) {
+            return true;
+        }
+
+        if (m_modifiedQuery(c)) {
+            auto delModUpdateSetIter = m_delModUpdates.find(c);
+            if (delModUpdateSetIter != m_delModUpdates.end()) {
+                std::unordered_set<value_type>& delModUpdateSet = delModUpdateSetIter->second;
+                if (delModUpdateSet.find(value) != delModUpdateSet.end()) {
+                    delModUpdateSet.erase(value);
+                    if (delModUpdateSet.empty()) {
+                        m_modifiedQuery.clearModified(*c);
+                        m_delModUpdates.erase(c);
+                    }
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    boost::remove_erase_if(occList, removePred);
+    m_occurrences[value].m_requiresUpdate = false;
+}
+
+template <typename Container,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+OccurrenceMap<Container, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    ~OccurrenceMap() {
+    for (auto modUpdateList : m_delModUpdates) {
+        m_modifiedQuery.clearModified(*modUpdateList.first);
     }
 }
 }
