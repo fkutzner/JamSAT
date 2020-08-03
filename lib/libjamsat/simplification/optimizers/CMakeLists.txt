@@ -1,4 +1,4 @@
-# Copyright (c) 2017,2018, 2020 Felix Kutzner (github.com/fkutzner)
+# Copyright (c) 2017, 2018, 2020 Felix Kutzner (github.com/fkutzner)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
-add_subdirectory(optimizers)
-
-add_jamsat_core_library(libjamsat.simplification
-  Dummy.cpp
-  ClauseMinimization.h
-  ProblemOptimizer.h
-  ProblemOptimizer.cpp
+add_jamsat_core_library(libjamsat.simplification.optimizers
+  FactCleaner.h
+  FactCleaner.cpp
 )
