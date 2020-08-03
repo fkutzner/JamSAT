@@ -60,7 +60,19 @@ public:
     using const_iterator = const CNFLit*;
     using lbd_type = uint16_t;
 
-    enum class Flag : flag_type { SCHEDULED_FOR_DELETION = 1, REDUNDANT = 2 };
+    enum class Flag : flag_type {
+        /// If SCHEDULED_FOR_DELETION is set, the clause should not be considered for
+        /// deductions any longer and can be removed.
+        SCHEDULED_FOR_DELETION = 1,
+
+        /// If REDUNDANT is set, the clause has been derived from the problem instance
+        /// and can be removed without altering satisfiability.
+        REDUNDANT = 2,
+
+        /// MODIFIED is a general flag for clause modification flags and is intended to
+        /// be used in conjunction with occurrence maps.
+        MODIFIED = 4
+    };
 
     /**
      * \brief Returns a reference to a literal within the clause.
