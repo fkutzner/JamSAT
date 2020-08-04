@@ -16,13 +16,13 @@ std::vector<CNFLit> withConsequences(Assignment& assignment, std::vector<CNFLit>
     return std::vector<CNFLit>{factsAndConsequences.begin(), factsAndConsequences.end()};
 }
 
-class FactCleaner {
+class FactCleaner : public ProblemOptimizer {
 public:
-    auto wantsExecution(uint64_t conflictsSinceInvocation) const noexcept -> bool {
+    auto wantsExecution(uint64_t conflictsSinceInvocation) const noexcept -> bool override {
         return conflictsSinceInvocation >= 5000;
     }
 
-    auto optimize(SharedOptimizerState sharedOptimizerState) -> SharedOptimizerState {
+    auto optimize(SharedOptimizerState sharedOptimizerState) -> SharedOptimizerState override {
         if (sharedOptimizerState.hasDetectedUnsat()) {
             return sharedOptimizerState;
         }
@@ -70,7 +70,7 @@ private:
 };
 }
 
-ProblemOptimizer createFactCleaner() {
-    return ProblemOptimizer{FactCleaner{}};
+std::unique_ptr<ProblemOptimizer> createFactCleaner() {
+    return std::make_unique<FactCleaner>();
 }
 }

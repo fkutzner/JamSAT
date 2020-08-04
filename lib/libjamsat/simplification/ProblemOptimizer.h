@@ -141,41 +141,11 @@ private:
     bool m_detectedUnsat;
 };
 
-class ProblemOptimizer final {
-private:
-    class Base {
-    public:
-        virtual auto wantsExecution(uint64_t conflictsSinceInvocation) const noexcept -> bool = 0;
-        virtual auto optimize(SharedOptimizerState sharedOptimizerState)
-            -> SharedOptimizerState = 0;
-        virtual ~Base() = default;
-    };
-
-    template <typename T>
-    class Impl final : public Base {
-    public:
-        Impl(T&& t);
-        auto wantsExecution(uint64_t conflictsSinceInvocation) const noexcept -> bool override;
-        auto optimize(SharedOptimizerState sharedOptimizerState) -> SharedOptimizerState override;
-
-        T m_impl;
-    };
-
+class ProblemOptimizer {
 public:
-    template <typename T>
-    ProblemOptimizer(T&& optimizer);
-
-    auto wantsExecution(uint64_t conflictsSinceInvocation) const noexcept -> bool;
-    auto optimize(SharedOptimizerState sharedOptimizerState) -> SharedOptimizerState;
-
-    auto operator=(ProblemOptimizer const&) -> ProblemOptimizer& = delete;
-    ProblemOptimizer(ProblemOptimizer const&) = delete;
-
-    auto operator=(ProblemOptimizer&&) noexcept -> ProblemOptimizer&;
-    ProblemOptimizer(ProblemOptimizer&&) noexcept;
-
-private:
-    std::unique_ptr<Base> m_impl;
+    virtual auto wantsExecution(uint64_t conflictsSinceInvocation) const noexcept -> bool = 0;
+    virtual auto optimize(SharedOptimizerState sharedOptimizerState) -> SharedOptimizerState = 0;
+    virtual ~ProblemOptimizer() = default;
 };
 
 
@@ -229,36 +199,6 @@ template <typename T>
 auto PolymorphicClauseDB::Impl<T>::release() noexcept -> T {
     return std::move(m_impl);
 }
-
-template <typename T>
-ProblemOptimizer::ProblemOptimizer(T&& optimizer)
-  : m_impl{std::make_unique<Impl<T>>(std::move(optimizer))} {}
-
-template <typename T>
-ProblemOptimizer::Impl<T>::Impl(T&& t) : m_impl{std::move(t)} {};
-
-template <typename T>
-auto ProblemOptimizer::Impl<T>::wantsExecution(uint64_t conflictsSinceInvocation) const noexcept
-    -> bool {
-    return m_impl.wantsExecution(conflictsSinceInvocation);
-}
-
-template <typename T>
-auto ProblemOptimizer::Impl<T>::optimize(SharedOptimizerState sharedOptimizerState)
-    -> SharedOptimizerState {
-    return m_impl.optimize(std::move(sharedOptimizerState));
-}
-
-inline auto ProblemOptimizer::wantsExecution(uint64_t conflictsSinceInvocation) const noexcept
-    -> bool {
-    return m_impl->wantsExecution(conflictsSinceInvocation);
-}
-
-inline auto ProblemOptimizer::optimize(SharedOptimizerState sharedOptimizerState)
-    -> SharedOptimizerState {
-    return m_impl->optimize(std::move(sharedOptimizerState));
-}
-
 
 inline auto SharedOptimizerState::getFacts() noexcept -> std::vector<CNFLit>& {
     return m_facts;

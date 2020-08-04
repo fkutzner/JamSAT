@@ -562,13 +562,13 @@ void CDCLSatSolverImpl::trySimplify() {
     JAM_ASSERT(m_assignment.getNumAssignments() == 0,
                "Illegally attempted to simplify the problem in-flight");
 
-    ProblemOptimizer optimizer = createFactCleaner();
+    std::unique_ptr<ProblemOptimizer> optimizer = createFactCleaner();
 
     PolymorphicClauseDB movableClauseDB{std::move(m_clauseDB)};
 
     SharedOptimizerState sharedOptState{
         std::move(m_facts), std::move(movableClauseDB), std::move(m_assignment), m_maxVar};
-    SharedOptimizerState result = optimizer.optimize(std::move(sharedOptState));
+    SharedOptimizerState result = optimizer->optimize(std::move(sharedOptState));
     std::tie(m_facts, movableClauseDB, m_assignment) = result.release();
 
     m_clauseDB = movableClauseDB.release<decltype(m_clauseDB)>();

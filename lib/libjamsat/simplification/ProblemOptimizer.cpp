@@ -15,15 +15,6 @@ void PolymorphicClauseDB::getClauses(ClauseRecv const& receiver) {
     m_impl->getClauses(receiver);
 }
 
-ProblemOptimizer& ProblemOptimizer::operator=(ProblemOptimizer&& rhs) noexcept {
-    m_impl = std::move(rhs.m_impl);
-    return *this;
-}
-
-ProblemOptimizer::ProblemOptimizer(ProblemOptimizer&& rhs) noexcept
-  : m_impl{std::move(rhs.m_impl)} {}
-
-
 SharedOptimizerState::SharedOptimizerState(std::vector<CNFLit>&& facts,
                                            PolymorphicClauseDB&& clauseDB,
                                            Assignment&& assignment,

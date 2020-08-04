@@ -1,7 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include <libjamsat/simplification/ProblemOptimizer.h>
 
 namespace jamsat {
-ProblemOptimizer createFactCleaner();
+std::unique_ptr<ProblemOptimizer> createFactCleaner();
 }
