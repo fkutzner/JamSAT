@@ -36,6 +36,8 @@
 #include <libjamsat/clausedb/IterableClauseDB.h>
 #include <libjamsat/proof/Model.h>
 #include <libjamsat/simplification/ClauseMinimization.h>
+#include <libjamsat/simplification/ProblemOptimizer.h>
+#include <libjamsat/simplification/optimizers/FactCleaner.h>
 #include <libjamsat/solver/Assignment.h>
 #include <libjamsat/solver/AssignmentAnalysis.h>
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
@@ -320,7 +322,6 @@ private:
     Assignment m_assignment;
     VSIDSBranchingHeuristic<Assignment> m_branchingHeuristic;
     FirstUIPLearning<Assignment, Assignment> m_conflictAnalyzer;
-    //LightweightSimplifier<Propagation<Trail<ClauseT>>, Trail<ClauseT>> m_simplifier;
 
     // Clause storage
     IterableClauseDB<ClauseT> m_clauseDB;
@@ -382,7 +383,6 @@ CDCLSatSolverImpl::CDCLSatSolverImpl(Config const& configuration)
   , m_assignment{CNFVar{0}}
   , m_branchingHeuristic{CNFVar{0}, m_assignment}
   , m_conflictAnalyzer{CNFVar{0}, m_assignment, m_assignment}
-  //, m_simplifier{CNFVar{0}, m_assignment, m_assignment}
   , m_clauseDB{configuration.clauseRegionSize}
   , m_facts{}
   , m_lemmas{}
@@ -530,7 +530,6 @@ void CDCLSatSolverImpl::resizeSubsystems() {
     m_branchingHeuristic.increaseMaxVarTo(m_maxVar);
     m_stamps.increaseSizeTo(getMaxLit(m_maxVar).getRawValue());
     m_conflictAnalyzer.increaseMaxVarTo(m_maxVar);
-    // m_simplifier.increaseMaxVarTo(m_maxVar);
 }
 
 
@@ -562,7 +561,17 @@ void CDCLSatSolverImpl::initializeBranchingHeuristic(std::vector<CNFLit> const& 
 void CDCLSatSolverImpl::trySimplify() {
     JAM_ASSERT(m_assignment.getNumAssignments() == 0,
                "Illegally attempted to simplify the problem in-flight");
-    // TODO: invoke simplifiers here
+
+    ProblemOptimizer optimizer = createFactCleaner();
+
+    PolymorphicClauseDB movableClauseDB{std::move(m_clauseDB)};
+
+    SharedOptimizerState sharedOptState{
+        std::move(m_facts), std::move(movableClauseDB), std::move(m_assignment), m_maxVar};
+    SharedOptimizerState result = optimizer.optimize(std::move(sharedOptState));
+    std::tie(m_facts, movableClauseDB, m_assignment) = result.release();
+
+    m_clauseDB = movableClauseDB.release<decltype(m_clauseDB)>();
 }
 
 

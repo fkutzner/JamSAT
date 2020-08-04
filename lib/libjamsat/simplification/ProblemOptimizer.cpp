@@ -1,6 +1,20 @@
 #include "ProblemOptimizer.h"
 
 namespace jamsat {
+
+
+auto PolymorphicClauseDB::createClause(std::size_t size) noexcept -> Clause* {
+    return m_impl->createClause(size);
+}
+
+void PolymorphicClauseDB::compress() noexcept {
+    m_impl->compress();
+}
+
+void PolymorphicClauseDB::getClauses(ClauseRecv const& receiver) {
+    m_impl->getClauses(receiver);
+}
+
 ProblemOptimizer& ProblemOptimizer::operator=(ProblemOptimizer&& rhs) noexcept {
     m_impl = std::move(rhs.m_impl);
     return *this;
@@ -11,11 +25,11 @@ ProblemOptimizer::ProblemOptimizer(ProblemOptimizer&& rhs) noexcept
 
 
 SharedOptimizerState::SharedOptimizerState(std::vector<CNFLit>&& facts,
-                                           std::vector<Clause*>&& clauses,
+                                           PolymorphicClauseDB&& clauseDB,
                                            Assignment&& assignment,
                                            CNFVar maxVar) noexcept
   : m_facts{std::move(facts)}
-  , m_clauses{std::move(clauses)}
+  , m_clauseDB{std::move(clauseDB)}
   , m_assignment{std::move(assignment)}
   , m_maxVar{maxVar}
   , m_occMap{}
@@ -24,23 +38,25 @@ SharedOptimizerState::SharedOptimizerState(std::vector<CNFLit>&& facts,
 
 SharedOptimizerState::SharedOptimizerState(SharedOptimizerState&& rhs) noexcept
   : m_facts{std::move(rhs.m_facts)}
-  , m_clauses{std::move(rhs.m_clauses)}
+  , m_clauseDB{std::move(rhs.m_clauseDB)}
   , m_assignment{std::move(rhs.m_assignment)}
   , m_occMap{std::move(rhs.m_occMap)} {}
 
 auto SharedOptimizerState::operator=(SharedOptimizerState&& rhs) noexcept -> SharedOptimizerState& {
     m_facts = std::move(rhs.m_facts);
-    m_clauses = std::move(rhs.m_clauses);
+    m_clauseDB = std::move(rhs.m_clauseDB);
     m_assignment = std::move(rhs.m_assignment);
     m_occMap = std::move(rhs.m_occMap);
     return *this;
 }
 
-void SharedOptimizerState::precomputeOccurrenceMap() const {
+void SharedOptimizerState::precomputeOccurrenceMap() {
     m_occMap = OccMap{getMaxLit(m_maxVar)};
-    for (Clause* cl : m_clauses) {
-        m_occMap->insert(*cl);
-    }
+    m_clauseDB.getClauses([this](std::vector<Clause*> const& clauses) {
+        for (Clause* clause : clauses) {
+            m_occMap->insert(*clause);
+        }
+    });
 }
 
 auto SharedOptimizerState::hasPrecomputedOccurrenceMap() const noexcept -> bool {
@@ -64,8 +80,8 @@ void SharedOptimizerState::setBreakingChange() noexcept {
 }
 
 auto SharedOptimizerState::release() noexcept
-    -> std::tuple<std::vector<CNFLit>, std::vector<Clause*>, Assignment> {
-    return make_tuple(std::move(m_facts), std::move(m_clauses), std::move(m_assignment));
+    -> std::tuple<std::vector<CNFLit>, PolymorphicClauseDB, Assignment> {
+    return make_tuple(std::move(m_facts), std::move(m_clauseDB), std::move(m_assignment));
 }
 
 }
