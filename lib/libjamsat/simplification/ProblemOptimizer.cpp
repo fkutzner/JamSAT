@@ -31,12 +31,14 @@ SharedOptimizerState::SharedOptimizerState(SharedOptimizerState&& rhs) noexcept
   : m_facts{std::move(rhs.m_facts)}
   , m_clauseDB{std::move(rhs.m_clauseDB)}
   , m_assignment{std::move(rhs.m_assignment)}
+  , m_maxVar{rhs.m_maxVar}
   , m_occMap{std::move(rhs.m_occMap)} {}
 
 auto SharedOptimizerState::operator=(SharedOptimizerState&& rhs) noexcept -> SharedOptimizerState& {
     m_facts = std::move(rhs.m_facts);
     m_clauseDB = std::move(rhs.m_clauseDB);
     m_assignment = std::move(rhs.m_assignment);
+    m_maxVar = rhs.m_maxVar;
     m_occMap = std::move(rhs.m_occMap);
     return *this;
 }
