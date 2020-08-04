@@ -43,6 +43,26 @@
 namespace jamsat {
 
 /**
+ * \brief Optimization statistics
+ *
+ * \ingroup JamSAT_Solver
+ */
+struct OptimizationStats {
+    uint64_t amntFactsDerived = 0;
+    uint64_t amntLitsRemoved = 0;
+    uint64_t amntClausesRemoved = 0;
+    uint64_t amntClausesAdded = 0;
+    uint64_t amntVarsEliminated = 0;
+    uint64_t amntVarsAdded = 0;
+
+    auto operator+=(OptimizationStats const& rhs) -> OptimizationStats&;
+};
+
+auto operator<<(std::ostream& output, OptimizationStats const& stats) -> std::ostream&;
+auto to_string(OptimizationStats const& stats) -> std::string;
+
+
+/**
  * \brief Configuration struct for the Statistics class, enabling all statistics
  *
  * \ingroup JamSAT_Solver
@@ -54,6 +74,7 @@ struct AllEnabledStatisticsConfig {
     using CountRestarts = std::true_type;
     using MeasureLemmaSize = std::true_type;
     using CountLemmaDeletions = std::true_type;
+    using CountOptimizationStats = std::true_type;
 };
 
 /**
@@ -90,6 +111,7 @@ public:
         uint64_t m_unitLemmas = 0;
         uint64_t m_binaryLemmas = 0;
         uint64_t m_lemmaDeletions = 0;
+        OptimizationStats m_optimizationStats;
         SimpleMovingAverage<uint32_t> m_avgLemmaSize{1000};
         double m_avgLBD = 0.0;
         std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_startTime;
@@ -132,6 +154,12 @@ public:
      * \param amount    The amount of lemmas having been deleted.
      */
     void registerLemmaDeletion(uint32_t amount);
+
+    /**
+     * \brief Notifies the statistics system about optimizations performed
+     *   on the problem instance.
+     */
+    void registerOptimizationStatistics(OptimizationStats const& stats);
 
     /**
      * \brief Notifies the statistics system that the solver entered its main search
@@ -248,6 +276,13 @@ void Statistics<StatisticsConfig>::registerLemmaDeletion(uint32_t amount) {
 }
 
 template <typename StatisticsConfig>
+void Statistics<StatisticsConfig>::registerOptimizationStatistics(OptimizationStats const& stats) {
+    if (StatisticsConfig::CountOptimizationStats::value == true) {
+        m_currentEra.m_optimizationStats += stats;
+    }
+}
+
+template <typename StatisticsConfig>
 void Statistics<StatisticsConfig>::concludeEra() noexcept {
     m_previousEra = m_currentEra;
     m_currentEra = Era{};
@@ -275,7 +310,8 @@ void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream& stre
            << "L = avg. lemma size;\n"
            << "  #U = amount of unit lemmas added; "
            << "#B = amount of binary lemmas added; "
-           << "#LD = amount of lemmas deleted\n";
+           << "#LD = amount of lemmas deleted; "
+           << "O = optimization stats\n";
 }
 
 
@@ -314,6 +350,12 @@ auto operator<<(std::ostream& stream, const Statistics<StatisticsConfig>& stats)
 
     if (StatisticsConfig::CountRestarts::value == true) {
         stream << "| #R: " << currentEra.m_restartCount << " ";
+    }
+
+    stream << "\n  ";
+
+    if (StatisticsConfig::CountOptimizationStats::value == true) {
+        stream << "#O: " << to_string(currentEra.m_optimizationStats) << " ";
     }
 
     if (millisElapsed > 0) {

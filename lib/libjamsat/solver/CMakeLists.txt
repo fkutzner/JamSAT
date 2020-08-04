@@ -36,5 +36,6 @@ add_jamsat_core_library(libjamsat.solver
   RestartPolicies.cpp
   ClauseDBReductionPolicies.h
   Statistics.h
+  Statistics.cpp
   ModuleDocumentation.h
 )
