@@ -189,8 +189,10 @@ void PolymorphicClauseDB::Impl<T>::getClauses(ClauseRecv const& receiver) {
     while (cursor != clauses.end()) {
         while (cursor != clauses.end() && buffer.size() < 1024) {
             buffer.push_back(&(*cursor));
+            ++cursor;
         }
         receiver(buffer);
+        buffer.clear();
     }
 }
 

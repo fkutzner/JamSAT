@@ -3,14 +3,28 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 
 #include <libjamsat/utils/BoundedMap.h>
+#include <libjamsat/utils/ControlFlow.h>
+
 
 namespace jamsat {
 namespace {
 
+class InconsistentFactsException {};
+
 std::vector<CNFLit> withConsequences(Assignment& assignment, std::vector<CNFLit> const& facts) {
     assignment.undoAll();
+    OnExitScope undoAssignments{[&assignment]() { assignment.undoAll(); }};
+
     for (CNFLit fact : facts) {
-        assignment.append(fact);
+        TBool factValue = assignment.getAssignment(fact);
+        bool conflicting = false;
+        if (!isDeterminate(factValue)) {
+            conflicting = (assignment.append(fact) != nullptr);
+        }
+
+        if (conflicting || factValue != toTBool(fact.getSign() == CNFSign::POSITIVE)) {
+            throw InconsistentFactsException{};
+        }
     }
     auto factsAndConsequences = assignment.getAssignments();
     return std::vector<CNFLit>{factsAndConsequences.begin(), factsAndConsequences.end()};
@@ -35,7 +49,12 @@ public:
         Assignment& assignment = sharedOptimizerState.getAssignment();
 
         std::vector<CNFLit>& facts = sharedOptimizerState.getFacts();
-        facts = withConsequences(assignment, facts);
+        try {
+            facts = withConsequences(assignment, facts);
+        } catch (InconsistentFactsException const&) {
+            sharedOptimizerState.setDetectedUnsat();
+            return sharedOptimizerState;
+        }
 
         for (CNFLit fact : facts) {
             for (Clause* toDelete : occurrences[fact]) {
