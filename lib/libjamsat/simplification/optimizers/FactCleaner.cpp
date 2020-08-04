@@ -47,6 +47,7 @@ public:
 
         SharedOptimizerState::OccMap& occurrences = sharedOptimizerState.getOccurrenceMap();
         Assignment& assignment = sharedOptimizerState.getAssignment();
+        OptimizationStats& stats = sharedOptimizerState.getStats();
 
         std::vector<CNFLit>& facts = sharedOptimizerState.getFacts();
         try {
@@ -61,6 +62,7 @@ public:
                 toDelete->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
                 assignment.registerClauseModification(*toDelete);
                 occurrences.remove(*toDelete);
+                stats.amntClausesRemoved += 1;
             }
 
             for (Clause* toStrengthen : occurrences[~fact]) {
@@ -69,11 +71,13 @@ public:
                     // the literal that would remain is a fact
                     toStrengthen->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
                     occurrences.remove(*toStrengthen);
+                    stats.amntClausesRemoved += 1;
                 } else {
                     boost::remove_erase(*toStrengthen, ~fact);
                     toStrengthen->setFlag(Clause::Flag::MODIFIED);
                     occurrences.setModified(
                         *toStrengthen, std::array<CNFLit, 0>{}, std::array<CNFLit, 1>{~fact});
+                    stats.amntLitsRemoved += 1;
                 }
 
                 assignment.registerClauseModification(*toStrengthen);

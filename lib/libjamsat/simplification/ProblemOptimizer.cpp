@@ -1,7 +1,7 @@
 #include "ProblemOptimizer.h"
 
-namespace jamsat {
 
+namespace jamsat {
 
 auto PolymorphicClauseDB::createClause(std::size_t size) noexcept -> Clause* {
     return m_impl->createClause(size);
@@ -25,14 +25,16 @@ SharedOptimizerState::SharedOptimizerState(std::vector<CNFLit>&& facts,
   , m_maxVar{maxVar}
   , m_occMap{}
   , m_breakingChange{false}
-  , m_detectedUnsat{false} {}
+  , m_detectedUnsat{false}
+  , m_stats{} {}
 
 SharedOptimizerState::SharedOptimizerState(SharedOptimizerState&& rhs) noexcept
   : m_facts{std::move(rhs.m_facts)}
   , m_clauseDB{std::move(rhs.m_clauseDB)}
   , m_assignment{std::move(rhs.m_assignment)}
   , m_maxVar{rhs.m_maxVar}
-  , m_occMap{std::move(rhs.m_occMap)} {}
+  , m_occMap{std::move(rhs.m_occMap)}
+  , m_stats{rhs.m_stats} {}
 
 auto SharedOptimizerState::operator=(SharedOptimizerState&& rhs) noexcept -> SharedOptimizerState& {
     m_facts = std::move(rhs.m_facts);
@@ -40,6 +42,7 @@ auto SharedOptimizerState::operator=(SharedOptimizerState&& rhs) noexcept -> Sha
     m_assignment = std::move(rhs.m_assignment);
     m_maxVar = rhs.m_maxVar;
     m_occMap = std::move(rhs.m_occMap);
+    m_stats = rhs.m_stats;
     return *this;
 }
 
@@ -70,6 +73,14 @@ auto SharedOptimizerState::hasBreakingChange() const noexcept -> bool {
 
 void SharedOptimizerState::setBreakingChange() noexcept {
     m_breakingChange = true;
+}
+
+auto SharedOptimizerState::getStats() noexcept -> OptimizationStats& {
+    return m_stats;
+}
+
+auto SharedOptimizerState::getStats() const noexcept -> OptimizationStats const& {
+    return m_stats;
 }
 
 auto SharedOptimizerState::release() noexcept

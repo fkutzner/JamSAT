@@ -4,13 +4,14 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <vector>
 
 #include <libjamsat/clausedb/Clause.h>
-#include <libjamsat/clausedb/IterableClauseDB.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/solver/Assignment.h>
+#include <libjamsat/solver/Statistics.h>
 #include <libjamsat/utils/OccurrenceMap.h>
 
 #include <boost/optional.hpp>
@@ -121,6 +122,9 @@ public:
     auto hasBreakingChange() const noexcept -> bool;
     void setBreakingChange() noexcept;
 
+    auto getStats() noexcept -> OptimizationStats&;
+    auto getStats() const noexcept -> OptimizationStats const&;
+
     auto release() noexcept -> std::tuple<std::vector<CNFLit>, PolymorphicClauseDB, Assignment>;
 
     auto operator=(SharedOptimizerState const&) -> SharedOptimizerState& = delete;
@@ -139,6 +143,8 @@ private:
 
     bool m_breakingChange;
     bool m_detectedUnsat;
+
+    OptimizationStats m_stats;
 };
 
 class ProblemOptimizer {
