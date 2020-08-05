@@ -25,7 +25,6 @@
 add_subdirectory(optimizers)
 
 add_jamsat_core_library(libjamsat.simplification
-  Dummy.cpp
   ClauseMinimization.h
   ProblemOptimizer.h
   ProblemOptimizer.cpp
