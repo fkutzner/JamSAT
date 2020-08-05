@@ -49,7 +49,7 @@ public:
     using const_iterator = BoundedStack<CNFLit>::const_iterator;
 
     /** Assignment level index */
-    using level = std::uint32_t;
+    using Level = std::uint32_t;
 
     /** Range type for assignments, expressed as literals */
     using AssignmentRange = boost::iterator_range<const_iterator>;
@@ -57,7 +57,7 @@ public:
     using size_type = BoundedStack<CNFLit>::size_type;
 
     using Reason = Clause;
-    using DecisionLevel = level;
+    using DecisionLevel = Level;
 
     /**
      * \brief Constructs an assignment object.
@@ -220,14 +220,14 @@ public:
      * 
      * \param var   A variable currently having an assignment.
      */
-    auto getLevel(CNFVar var) const noexcept -> level;
+    auto getLevel(CNFVar var) const noexcept -> Level;
 
     /**
      * \brief Undos all variable assignments on levels higher than \p{level}.
      * 
      * After calling this method, the current level is \p{level}.
      */
-    void undoToLevel(level level) noexcept;
+    void undoToLevel(Level level) noexcept;
 
     /**
      * \brief Undos all variable assignments.
@@ -245,7 +245,7 @@ public:
      *   literal beyond the last literal of that level. The iterators
      *   remain valid until the assignment is modified.
      */
-    auto getLevelAssignments(level level) const noexcept -> AssignmentRange;
+    auto getLevelAssignments(Level level) const noexcept -> AssignmentRange;
 
     /**
      * \brief Gets a range over the current variable assignment, expressed as literals.
@@ -286,12 +286,12 @@ public:
 
 
     /**
-     * \brief StampMap key for Trail::DecisionLevel
+     * \brief StampMap key for Assignment::Level
      */
-    class DecisionLevelKey {
+    class LevelKey {
     public:
-        using Type = level;
-        static size_t getIndex(DecisionLevel variable) { return static_cast<size_t>(variable); }
+        using Type = Level;
+        static size_t getIndex(Level variable) { return static_cast<size_t>(variable); }
     };
 
 
@@ -317,12 +317,12 @@ private:
     BoundedMap<CNFVar, TBool> m_phases;
 
     /** \internal The current assignment level */
-    level m_currentLevel;
+    Level m_currentLevel;
 
     /** \internal Variable data grouped for cache-efficiency */
     struct ReasonAndAssignmentLevel {
         Clause* m_reason;
-        level m_level;
+        Level m_level;
     };
 
     /** \internal Reason and assignment level for each assigned variable */
@@ -385,7 +385,7 @@ inline auto Assignment::getCurrentLevel() const noexcept {
     return m_currentLevel;
 }
 
-inline auto Assignment::getLevel(CNFVar var) const noexcept -> level {
+inline auto Assignment::getLevel(CNFVar var) const noexcept -> Level {
     return m_reasonsAndALs[var].m_level;
 }
 

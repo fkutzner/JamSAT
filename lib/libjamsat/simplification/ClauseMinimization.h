@@ -240,7 +240,7 @@ void eraseRedundantLiterals(LiteralContainer& literals,
     const auto stampContext = tempStamps.createContext();
     const auto stamp = stampContext.getStamp();
 
-    OverApproximatingSet<64, typename DecisionLevelProvider::DecisionLevelKey> decisionLevels;
+    OverApproximatingSet<64, typename DecisionLevelProvider::LevelKey> decisionLevels;
 
     for (auto literal : literals) {
         tempStamps.setStamped(literal.getVariable(), stamp, true);

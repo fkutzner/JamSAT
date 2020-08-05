@@ -43,10 +43,8 @@
 #include <libjamsat/solver/ClauseDBReductionPolicies.h>
 #include <libjamsat/solver/FirstUIPLearning.h>
 #include <libjamsat/solver/LiteralBlockDistance.h>
-#include <libjamsat/solver/Propagation.h>
 #include <libjamsat/solver/RestartPolicies.h>
 #include <libjamsat/solver/Statistics.h>
-#include <libjamsat/solver/Trail.h>
 #include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/RangeUtils.h>
 #include <libjamsat/utils/StampMap.h>
@@ -188,7 +186,7 @@ private:
      *
      * \param target    see above
      */
-    void prepareBacktrack(Trail<ClauseT>::DecisionLevel targetLevel);
+    void prepareBacktrack(Assignment::Level targetLevel);
 
     /**
      * Backtracks all decisions. After this, the solver is on decision level
@@ -203,7 +201,7 @@ private:
      *
      * \param targetLevel targetLevel
      */
-    void backtrackToLevel(Trail<ClauseT>::DecisionLevel targetLevel);
+    void backtrackToLevel(Assignment::Level targetLevel);
 
     /**
      * Performs CDCL until a restart needs to be performed.
@@ -276,7 +274,7 @@ private:
 
     struct LemmaDerivationResult {
         boost::variant<CNFLit, ClauseT*> clause;
-        Trail<ClauseT>::DecisionLevel backtrackLevel;
+        Assignment::Level backtrackLevel;
         bool allocationFailed;
     };
 
@@ -351,8 +349,7 @@ private:
 
     // Buffers
     std::vector<CNFLit> m_lemmaBuffer;
-    StampMap<uint16_t, CNFVar::Index, CNFLit::Index, typename Trail<ClauseT>::DecisionLevelKey>
-        m_stamps;
+    StampMap<uint16_t, CNFVar::Index, CNFLit::Index, typename Assignment::LevelKey> m_stamps;
 
     static constexpr uint32_t m_printStatsInterval = 16384;
     static constexpr uint32_t m_checkStopInterval = 8192;
@@ -635,13 +632,13 @@ void CDCLSatSolverImpl::backtrackAll() {
     m_assignment.undoAll();
 }
 
-void CDCLSatSolverImpl::backtrackToLevel(Trail<ClauseT>::DecisionLevel targetLevel) {
+void CDCLSatSolverImpl::backtrackToLevel(Assignment::Level targetLevel) {
     JAM_LOG_SOLVER(info, "Backtracking by revisiting decision level " << targetLevel);
     prepareBacktrack(targetLevel + 1);
     m_assignment.undoToLevel(targetLevel);
 }
 
-void CDCLSatSolverImpl::prepareBacktrack(Trail<ClauseT>::DecisionLevel level) {
+void CDCLSatSolverImpl::prepareBacktrack(Assignment::Level level) {
     updateReasonClauseLBDsOnCurrentLevel();
 
     for (auto l = m_assignment.getCurrentLevel(); l >= level; --l) {
@@ -874,7 +871,7 @@ auto CDCLSatSolverImpl::deriveLemma(ClauseT& conflictingClause) -> LemmaDerivati
         // now, the propagation system would fail to notice that the clause forces an
         // assignment.
         auto litWithMaxDecisionLevel = newLemma.begin() + 1;
-        Trail<ClauseT>::DecisionLevel backtrackLevel = 0;
+        Assignment::Level backtrackLevel = 0;
         for (auto lit = newLemma.begin() + 1; lit != newLemma.end(); ++lit) {
             auto currentBacktrackLevel =
                 std::max(backtrackLevel, m_assignment.getLevel(lit->getVariable()));

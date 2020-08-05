@@ -131,7 +131,7 @@ void Assignment::newLevel() noexcept {
                                                  << m_trail.size() << " assignments in total");
 }
 
-void Assignment::undoToLevel(level level) noexcept {
+void Assignment::undoToLevel(Level level) noexcept {
     for (auto i = m_trail.begin() + m_levelLimits[level + 1]; i != m_trail.end(); ++i) {
         m_phases[i->getVariable()] = m_assignments[(*i).getVariable()];
         m_assignments[i->getVariable()] = TBools::INDETERMINATE;
@@ -161,7 +161,7 @@ void Assignment::undoAll() noexcept {
     JAM_LOG_ASSIGN(info, "Entering assignment level: 0, currently 0 assignments in total");
 }
 
-auto Assignment::getLevelAssignments(level level) const noexcept -> AssignmentRange {
+auto Assignment::getLevelAssignments(Level level) const noexcept -> AssignmentRange {
     if (level >= m_levelLimits.size()) {
         return boost::make_iterator_range(m_trail.end(), m_trail.end());
     }

@@ -25,9 +25,6 @@
 add_jamsat_core_library(libjamsat.solver
   Assignment.cpp
   Assignment.h
-  Trail.cpp
-  Trail.h
-  Propagation.h
   Watcher.h
   AssignmentAnalysis.h
   FirstUIPLearning.h

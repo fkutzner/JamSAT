@@ -35,7 +35,7 @@
 #include <toolbox/testutils/TestAssignmentProvider.h>
 
 namespace jamsat {
-struct DecisionLevelKey {
+struct LevelKey {
     using Type = TestAssignmentProvider::DecisionLevel;
 
     static size_t getIndex(TestAssignmentProvider::DecisionLevel level) {
@@ -43,7 +43,7 @@ struct DecisionLevelKey {
     }
 };
 
-using TestStampMap = StampMap<unsigned int, DecisionLevelKey>;
+using TestStampMap = StampMap<unsigned int, LevelKey>;
 using TestClause = TestAssignmentProvider::Clause;
 
 TEST(UnitSolver, getLBD_LBDofEmptyClauseIs0) {

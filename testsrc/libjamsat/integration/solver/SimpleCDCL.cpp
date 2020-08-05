@@ -72,9 +72,9 @@ private:
     enum class UnitPropagationResult { CONFLICTING, CONSISTENT };
     UnitPropagationResult propagateUnitClauses();
 
-    void backtrackToLevel(Assignment::level level);
+    void backtrackToLevel(Assignment::Level level);
     void backtrackAll();
-    void resetBranchingStates(Assignment::level minLevel);
+    void resetBranchingStates(Assignment::Level minLevel);
 
     CNFVar m_maxVar;
     Assignment m_assignment;
@@ -140,7 +140,7 @@ SimpleCDCL::UnitPropagationResult SimpleCDCL::propagateUnitClauses() {
     return UnitPropagationResult::CONSISTENT;
 }
 
-void SimpleCDCL::resetBranchingStates(Assignment::level minLevel) {
+void SimpleCDCL::resetBranchingStates(Assignment::Level minLevel) {
     for (auto currentDL = m_assignment.getCurrentLevel(); currentDL >= minLevel; --currentDL) {
         for (auto lit : m_assignment.getLevelAssignments(currentDL)) {
             JAM_LOG_CDCLITEST(info, "  Undoing assignment: " << lit);
@@ -152,7 +152,7 @@ void SimpleCDCL::resetBranchingStates(Assignment::level minLevel) {
     }
 }
 
-void SimpleCDCL::backtrackToLevel(Assignment::level level) {
+void SimpleCDCL::backtrackToLevel(Assignment::Level level) {
     JAM_LOG_CDCLITEST(info, "Backtracking, revisiting level " << level);
     resetBranchingStates(level + 1);
     m_assignment.undoToLevel(level);

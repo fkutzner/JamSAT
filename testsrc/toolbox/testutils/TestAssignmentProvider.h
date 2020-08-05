@@ -117,7 +117,7 @@ public:
     auto getReason(CNFVar variable) noexcept -> Clause*;
     void set_reason(CNFVar variable, Clause* reason) noexcept;
 
-    struct DecisionLevelKey {
+    struct LevelKey {
         using Type = DecisionLevel;
         static size_t getIndex(DecisionLevel variable) { return static_cast<size_t>(variable); }
     };
