@@ -28,9 +28,11 @@
 
 #include <boost/range/algorithm_ext/erase.hpp>
 
+#include <libjamsat/solver/Statistics.h>
 #include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/ControlFlow.h>
 
+#include <iostream>
 
 namespace jamsat {
 namespace {
@@ -48,7 +50,7 @@ std::vector<CNFLit> withConsequences(Assignment& assignment, std::vector<CNFLit>
             conflicting = (assignment.append(fact) != nullptr);
         }
 
-        if (conflicting || factValue != toTBool(fact.getSign() == CNFSign::POSITIVE)) {
+        if (conflicting || factValue == TBools::FALSE) {
             throw InconsistentFactsException{};
         }
     }
@@ -58,16 +60,20 @@ std::vector<CNFLit> withConsequences(Assignment& assignment, std::vector<CNFLit>
 
 class FactCleaner : public ProblemOptimizer {
 public:
-    auto wantsExecution(uint64_t conflictsSinceInvocation) const noexcept -> bool override {
-        return conflictsSinceInvocation >= 5000;
+    auto wantsExecution(StatisticsEra const& currentStats) const noexcept -> bool override {
+        return currentStats.m_conflictCount == 0 ||
+               currentStats.m_unitLemmas > m_learntFactsAfterLastCall;
     }
 
-    auto optimize(SharedOptimizerState sharedOptimizerState) -> SharedOptimizerState override {
+    auto optimize(SharedOptimizerState sharedOptimizerState, StatisticsEra const& currentStats)
+        -> SharedOptimizerState override {
         if (sharedOptimizerState.hasDetectedUnsat()) {
             return sharedOptimizerState;
         }
 
-        if (sharedOptimizerState.getFacts().size() == m_unariesAfterLastCall) {
+        m_learntFactsAfterLastCall = currentStats.m_unitLemmas;
+
+        if (sharedOptimizerState.getFacts().size() == m_factsAfterLastCall) {
             return sharedOptimizerState;
         }
 
@@ -76,12 +82,18 @@ public:
         OptimizationStats& stats = sharedOptimizerState.getStats();
 
         std::vector<CNFLit>& facts = sharedOptimizerState.getFacts();
+        std::size_t const amntFactsBeforePropagation = facts.size();
         try {
             facts = withConsequences(assignment, facts);
         } catch (InconsistentFactsException const&) {
             sharedOptimizerState.setDetectedUnsat();
             return sharedOptimizerState;
         }
+        std::size_t const additionalFacts = facts.size() - amntFactsBeforePropagation;
+        stats.amntFactsDerived += additionalFacts;
+        m_learntFactsAfterLastCall += additionalFacts;
+
+        m_factsAfterLastCall = sharedOptimizerState.getFacts().size();
 
         for (CNFLit fact : facts) {
             for (Clause* toDelete : occurrences[fact]) {
@@ -109,13 +121,12 @@ public:
                 assignment.registerClauseModification(*toStrengthen);
             }
         }
-
-        m_unariesAfterLastCall = sharedOptimizerState.getFacts().size();
         return sharedOptimizerState;
     }
 
 private:
-    uint64_t m_unariesAfterLastCall = 0;
+    uint64_t m_learntFactsAfterLastCall = 0;
+    uint64_t m_factsAfterLastCall = 0;
 };
 }
 

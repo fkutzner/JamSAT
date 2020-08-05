@@ -323,6 +323,8 @@ private:
     VSIDSBranchingHeuristic<Assignment> m_branchingHeuristic;
     FirstUIPLearning<Assignment, Assignment> m_conflictAnalyzer;
 
+    std::unique_ptr<ProblemOptimizer> m_optimizer;
+
     // Clause storage
     IterableClauseDB<ClauseT> m_clauseDB;
     std::vector<CNFLit> m_facts;
@@ -383,6 +385,7 @@ CDCLSatSolverImpl::CDCLSatSolverImpl(Config const& configuration)
   , m_assignment{CNFVar{0}}
   , m_branchingHeuristic{CNFVar{0}, m_assignment}
   , m_conflictAnalyzer{CNFVar{0}, m_assignment, m_assignment}
+  , m_optimizer{createFactCleaner()}
   , m_clauseDB{configuration.clauseRegionSize}
   , m_facts{}
   , m_lemmas{}
@@ -562,22 +565,20 @@ void CDCLSatSolverImpl::trySimplify() {
     JAM_ASSERT(m_assignment.getNumAssignments() == 0,
                "Illegally attempted to simplify the problem in-flight");
 
-    std::unique_ptr<ProblemOptimizer> optimizer = createFactCleaner();
-
-    if (optimizer->wantsExecution(m_statistics.getCurrentEra().m_conflictCount)) {
+    if (m_optimizer->wantsExecution(m_statistics.getCurrentEra())) {
         JAM_LOG_SOLVER(info, "Beginning simplification");
 
         PolymorphicClauseDB movableClauseDB{std::move(m_clauseDB)};
         SharedOptimizerState sharedOptState{
             std::move(m_facts), std::move(movableClauseDB), std::move(m_assignment), m_maxVar};
 
-        SharedOptimizerState result = optimizer->optimize(std::move(sharedOptState));
+        SharedOptimizerState result =
+            m_optimizer->optimize(std::move(sharedOptState), m_statistics.getCurrentEra());
         std::tie(m_facts, movableClauseDB, m_assignment) = result.release();
+
         m_statistics.registerOptimizationStatistics(result.getStats());
 
         m_clauseDB = movableClauseDB.release<decltype(m_clauseDB)>();
-
-        JAM_LOG_SOLVER(info, "Finished simplification: " << to_string(sharedOptState.getStats()));
     }
 }
 

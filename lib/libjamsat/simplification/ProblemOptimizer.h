@@ -175,8 +175,9 @@ private:
 
 class ProblemOptimizer {
 public:
-    virtual auto wantsExecution(uint64_t conflictsSinceInvocation) const noexcept -> bool = 0;
-    virtual auto optimize(SharedOptimizerState sharedOptimizerState) -> SharedOptimizerState = 0;
+    virtual auto wantsExecution(StatisticsEra const& currentStats) const noexcept -> bool = 0;
+    virtual auto optimize(SharedOptimizerState sharedOptimizerState,
+                          StatisticsEra const& currentStats) -> SharedOptimizerState = 0;
     virtual ~ProblemOptimizer() = default;
 };
 
@@ -215,11 +216,12 @@ void PolymorphicClauseDB::Impl<T>::getClauses(ClauseRecv const& receiver) {
     auto clauses = m_impl.getClauses();
     auto cursor = clauses.begin();
 
+    std::size_t const bufSize = 1024 * 10;
     std::vector<Clause*> buffer;
-    buffer.reserve(1024);
+    buffer.reserve(bufSize);
 
     while (cursor != clauses.end()) {
-        while (cursor != clauses.end() && buffer.size() < 1024) {
+        while (cursor != clauses.end() && buffer.size() < bufSize) {
             buffer.push_back(&(*cursor));
             ++cursor;
         }

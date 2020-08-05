@@ -60,6 +60,8 @@ SharedOptimizerState::SharedOptimizerState(SharedOptimizerState&& rhs) noexcept
   , m_assignment{std::move(rhs.m_assignment)}
   , m_maxVar{rhs.m_maxVar}
   , m_occMap{std::move(rhs.m_occMap)}
+  , m_breakingChange{rhs.m_breakingChange}
+  , m_detectedUnsat{rhs.m_detectedUnsat}
   , m_stats{rhs.m_stats} {}
 
 auto SharedOptimizerState::operator=(SharedOptimizerState&& rhs) noexcept -> SharedOptimizerState& {
@@ -68,6 +70,8 @@ auto SharedOptimizerState::operator=(SharedOptimizerState&& rhs) noexcept -> Sha
     m_assignment = std::move(rhs.m_assignment);
     m_maxVar = rhs.m_maxVar;
     m_occMap = std::move(rhs.m_occMap);
+    m_breakingChange = rhs.m_breakingChange;
+    m_detectedUnsat = rhs.m_detectedUnsat;
     m_stats = rhs.m_stats;
     return *this;
 }

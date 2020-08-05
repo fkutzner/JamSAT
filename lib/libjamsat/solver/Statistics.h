@@ -78,6 +78,24 @@ struct AllEnabledStatisticsConfig {
 };
 
 /**
+ * \brief Storage for statistics
+ */
+struct StatisticsEra {
+    uint64_t m_conflictCount = 0;
+    uint64_t m_propagationCount = 0;
+    uint64_t m_decisionCount = 0;
+    uint64_t m_restartCount = 0;
+    uint64_t m_unitLemmas = 0;
+    uint64_t m_binaryLemmas = 0;
+    uint64_t m_lemmaDeletions = 0;
+    OptimizationStats m_optimizationStats;
+    SimpleMovingAverage<uint32_t> m_avgLemmaSize{1000};
+    double m_avgLBD = 0.0;
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_startTime;
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_stopTime;
+};
+
+/**
  * \brief A class for accumulating solver statistics
  *
  * \tparam StatisticsConfig A type controlling what statistics shall be kept. \p StatisticsConfig
@@ -100,24 +118,6 @@ struct AllEnabledStatisticsConfig {
 template <typename StatisticsConfig = AllEnabledStatisticsConfig>
 class Statistics {
 public:
-    /**
-     * \brief Storage for statistics
-     */
-    struct Era {
-        uint64_t m_conflictCount = 0;
-        uint64_t m_propagationCount = 0;
-        uint64_t m_decisionCount = 0;
-        uint64_t m_restartCount = 0;
-        uint64_t m_unitLemmas = 0;
-        uint64_t m_binaryLemmas = 0;
-        uint64_t m_lemmaDeletions = 0;
-        OptimizationStats m_optimizationStats;
-        SimpleMovingAverage<uint32_t> m_avgLemmaSize{1000};
-        double m_avgLBD = 0.0;
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_startTime;
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> m_stopTime;
-    };
-
     /**
      * \brief Notifies the statistics system that a conflict has occurred.
      */
@@ -176,7 +176,7 @@ public:
      * \brief Notifies the statistics system that the current era has ended.
      *
      * The statistics data for the current era is made available via getPreviousEra()
-     * and all further statistics are recorded into a new Era object, with all
+     * and all further statistics are recorded into a new StatisticsEra object, with all
      * statistics values reset to their initial value.
      */
     void concludeEra() noexcept;
@@ -186,7 +186,7 @@ public:
      *
      * \return The recorded statistics of the current era.
      */
-    auto getCurrentEra() const noexcept -> Era const&;
+    auto getCurrentEra() const noexcept -> StatisticsEra const&;
 
     /**
      * \brief Returns the recorded statistics of the era that ended with
@@ -194,7 +194,7 @@ public:
      *
      * \return The recorded statistics of the previous era.
      */
-    auto getPreviousEra() const noexcept -> Era const&;
+    auto getPreviousEra() const noexcept -> StatisticsEra const&;
 
 
     /**
@@ -206,8 +206,8 @@ public:
     void printStatisticsDescription(std::ostream& stream) const noexcept;
 
 private:
-    Era m_previousEra;
-    Era m_currentEra;
+    StatisticsEra m_previousEra;
+    StatisticsEra m_currentEra;
 };
 
 template <typename StatisticsConfig>
@@ -285,16 +285,16 @@ void Statistics<StatisticsConfig>::registerOptimizationStatistics(OptimizationSt
 template <typename StatisticsConfig>
 void Statistics<StatisticsConfig>::concludeEra() noexcept {
     m_previousEra = m_currentEra;
-    m_currentEra = Era{};
+    m_currentEra = StatisticsEra{};
 }
 
 template <typename StatisticsConfig>
-auto Statistics<StatisticsConfig>::getCurrentEra() const noexcept -> Era const& {
+auto Statistics<StatisticsConfig>::getCurrentEra() const noexcept -> StatisticsEra const& {
     return m_currentEra;
 }
 
 template <typename StatisticsConfig>
-auto Statistics<StatisticsConfig>::getPreviousEra() const noexcept -> Era const& {
+auto Statistics<StatisticsConfig>::getPreviousEra() const noexcept -> StatisticsEra const& {
     return m_previousEra;
 }
 
