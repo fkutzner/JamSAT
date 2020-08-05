@@ -349,7 +349,7 @@ private:
 
     // Buffers
     std::vector<CNFLit> m_lemmaBuffer;
-    StampMap<uint16_t, CNFVar::Index, CNFLit::Index, typename Assignment::LevelKey> m_stamps;
+    StampMap<uint16_t, CNFVar::Index, CNFLit::Index, Assignment::LevelKey> m_stamps;
 
     static constexpr uint32_t m_printStatsInterval = 16384;
     static constexpr uint32_t m_checkStopInterval = 8192;

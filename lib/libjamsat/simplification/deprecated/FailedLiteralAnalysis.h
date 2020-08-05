@@ -79,7 +79,7 @@ public:
                           PropagationT& propagator,
                           AssignmentProvider& assignmentProvider,
                           DLProviderT& decisionLevelProvider,
-                          typename DLProviderT::DecisionLevel factLevel);
+                          typename DLProviderT::LevelKey factLevel);
 
     struct Analysis {
         /**
@@ -129,7 +129,7 @@ private:
     PropagationT& m_propagator;
     AssignmentProvider& m_assignmentProvider;
     DLProviderT& m_decisionLevelProvider;
-    typename DLProviderT::DecisionLevel m_factLevel;
+    typename DLProviderT::LevelKey m_factLevel;
     FirstUIPLearning<DLProviderT, PropagationT> m_conflictAnalyzer;
 };
 
@@ -141,7 +141,7 @@ FailedLiteralAnalyzer<DLProviderT, PropagationT>::FailedLiteralAnalyzer(
     PropagationT& propagator,
     AssignmentProvider& assignmentProvider,
     DLProviderT& decisionLevelProvider,
-    typename DLProviderT::DecisionLevel factLevel)
+    typename DLProviderT::LevelKey factLevel)
   : m_propagator{propagator}
   , m_assignmentProvider{assignmentProvider}
   , m_decisionLevelProvider{decisionLevelProvider}

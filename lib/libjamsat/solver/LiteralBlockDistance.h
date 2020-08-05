@@ -57,7 +57,7 @@ using LBD = uint32_t;
  * \tparam ForwardRange           a forward range of literals.
  * \tparam DLProvider             A type satisfying the DecisionLevelProvider concept.
  * \tparam StampMapT              A StampMap specialization supporting stamping of
- *                                DLProvider::DecisionLevel objects
+ *                                DLProvider::LevelKey objects
  * \tparam LBD                    The literal block distance type, an integral type.
  */
 template <typename ForwardRange, typename DLProvider, typename StampMapT>
@@ -67,9 +67,9 @@ LBD getLBD(const ForwardRange& literals,
     static_assert(is_decision_level_provider<DLProvider>::value,
                   "Template argument DLProvider must satisfy the DecisionLevelProvider concept,"
                   " but does not");
-    static_assert(is_stamp_map<StampMapT, typename DLProvider::DecisionLevel>::value,
+    static_assert(is_stamp_map<StampMapT, typename DLProvider::Level>::value,
                   "Template argument StampMapT must be a specialization of StampMap<...> supporting"
-                  " stamping of DLProvider::DecisionLevel objects");
+                  " stamping of DLProvider::LevelKey objects");
 
     auto stampContext = tempStamps.createContext();
     auto stamp = stampContext.getStamp();

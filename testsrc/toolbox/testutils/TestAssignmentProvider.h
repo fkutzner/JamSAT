@@ -89,7 +89,7 @@ private:
 
 class TestAssignmentProvider {
 public:
-    using DecisionLevel = size_t;
+    using Level = size_t;
     using size_type = BoundedStack<CNFLit>::size_type;
     using Clause = TestAssignmentProviderClause;
 
@@ -106,26 +106,26 @@ public:
     getAssignments(size_t index) const noexcept;
 
     boost::iterator_range<std::vector<CNFLit>::const_iterator>
-    getLevelAssignments(DecisionLevel level) const noexcept;
+    getLevelAssignments(Level level) const noexcept;
 
-    DecisionLevel getLevel(CNFVar variable) const noexcept;
-    void setAssignmentDecisionLevel(CNFVar variable, DecisionLevel level) noexcept;
-    DecisionLevel getCurrentLevel() const noexcept;
-    void setCurrentDecisionLevel(DecisionLevel level) noexcept;
+    Level getLevel(CNFVar variable) const noexcept;
+    void setAssignmentDecisionLevel(CNFVar variable, Level level) noexcept;
+    Level getCurrentLevel() const noexcept;
+    void setCurrentDecisionLevel(Level level) noexcept;
 
     auto getReason(CNFVar variable) const noexcept -> Clause const*;
     auto getReason(CNFVar variable) noexcept -> Clause*;
     void set_reason(CNFVar variable, Clause* reason) noexcept;
 
     struct LevelKey {
-        using Type = DecisionLevel;
-        static size_t getIndex(DecisionLevel variable) { return static_cast<size_t>(variable); }
+        using Type = Level;
+        static size_t getIndex(Level variable) { return static_cast<size_t>(variable); }
     };
 
 private:
     std::unordered_map<CNFVar, TBool> m_assignments;
-    std::unordered_map<CNFVar, DecisionLevel> m_decisionLevels;
-    DecisionLevel m_currentLevel;
+    std::unordered_map<CNFVar, Level> m_decisionLevels;
+    Level m_currentLevel;
     BoundedStack<CNFLit> m_trail;
     std::unordered_map<CNFVar, Clause*> m_reasons;
 };

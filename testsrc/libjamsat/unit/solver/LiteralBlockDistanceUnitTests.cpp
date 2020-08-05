@@ -36,9 +36,9 @@
 
 namespace jamsat {
 struct LevelKey {
-    using Type = TestAssignmentProvider::DecisionLevel;
+    using Type = TestAssignmentProvider::Level;
 
-    static size_t getIndex(TestAssignmentProvider::DecisionLevel level) {
+    static size_t getIndex(TestAssignmentProvider::Level level) {
         return static_cast<size_t>(level);
     }
 };

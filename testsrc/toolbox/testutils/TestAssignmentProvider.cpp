@@ -67,7 +67,7 @@ size_t TestAssignmentProvider::getNumberOfAssignments() const noexcept {
 }
 
 boost::iterator_range<std::vector<CNFLit>::const_iterator>
-TestAssignmentProvider::getLevelAssignments(DecisionLevel level) const noexcept {
+TestAssignmentProvider::getLevelAssignments(Level level) const noexcept {
     decltype(m_trail)::size_type startIndex = 0;
     decltype(m_trail)::size_type idx = 0;
     bool foundStart = false;
@@ -104,8 +104,7 @@ TestAssignmentProvider::getAssignments(size_t index) const noexcept {
     return boost::make_iterator_range(m_trail.begin() + index, m_trail.end());
 }
 
-TestAssignmentProvider::DecisionLevel
-TestAssignmentProvider::getLevel(CNFVar variable) const noexcept {
+TestAssignmentProvider::Level TestAssignmentProvider::getLevel(CNFVar variable) const noexcept {
     auto result = m_decisionLevels.find(variable);
     if (result != m_decisionLevels.end()) {
         return result->second;
@@ -113,17 +112,15 @@ TestAssignmentProvider::getLevel(CNFVar variable) const noexcept {
     return 0;
 }
 
-void TestAssignmentProvider::setAssignmentDecisionLevel(CNFVar variable,
-                                                        DecisionLevel level) noexcept {
+void TestAssignmentProvider::setAssignmentDecisionLevel(CNFVar variable, Level level) noexcept {
     m_decisionLevels[variable] = level;
 }
 
-TestAssignmentProvider::DecisionLevel TestAssignmentProvider::getCurrentLevel() const noexcept {
+TestAssignmentProvider::Level TestAssignmentProvider::getCurrentLevel() const noexcept {
     return m_currentLevel;
 }
 
-void TestAssignmentProvider::setCurrentDecisionLevel(
-    TestAssignmentProvider::DecisionLevel level) noexcept {
+void TestAssignmentProvider::setCurrentDecisionLevel(TestAssignmentProvider::Level level) noexcept {
     m_currentLevel = level;
 }
 

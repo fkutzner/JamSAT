@@ -138,26 +138,26 @@ struct is_const_range<T, O, j_void_t<
  *  - `d`, an object of type const `T`
  *  - `L`, a Random Access Range type with CNFLit const iterators
  *  - `v`, an object of type `CNFVar`
- *  - `e`, an object of type `D::DecisionLevel`
+ *  - `e`, an object of type `D::Level`
  *
  * <table>
  *  <tr><th>Expression</th><th>Requirements</th><th>Return value</th></tr>
  *  <tr>
- *    <td> `T::DecisionLevel` </td>
- *    <td> `T::DecisionLevel` is an integral type that can represent the largest
+ *    <td> `T::Level` </td>
+ *    <td> `T::Level` is an integral type that can represent the largest
  *         decision level index which an object of type `T` can store. </td>
  *    <td> </td>
  *  </tr>
  *  <tr>
  *    <td> `d.getCurrentLevel()` </td>
  *    <td> </td>
- *    <td> `D::DecisionLevel` </td>
+ *    <td> `D::Level` </td>
  *  </tr>
  *  <tr>
  *    <td> `d.getLevel(v)` </td>
  *    <td> Returns the decision level on which `v` has been assigned. `v` must
  *         be a variable with an assignment.</td>
- *    <td> `D::DecisionLevel` </td>
+ *    <td> `D::Level` </td>
  *  </tr>
  *  <tr>
  *    <td> `d.getLevelAssignments(e)` </td>
@@ -174,21 +174,21 @@ struct is_decision_level_provider : public std::false_type {};
 template<typename T>
 struct is_decision_level_provider<T,
                                   j_void_t<
-    // Require that T::DecisionLevel is an integral type:
-    std::enable_if_t<std::is_integral<typename T::DecisionLevel>::value, void>,
+    // Require that T::Level is an integral type:
+    std::enable_if_t<std::is_integral<typename T::Level>::value, void>,
 
     // For t of type const T, require that t.getCurrentLevel() returns a decision level:
     JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getCurrentLevel(),
-                     typename T::DecisionLevel),
+                     typename T::Level),
 
     // For t of type const T and v of type CNFVar, require that t.getLevel(v)
     // returns a decision level:
     JAM_REQUIRE_EXPR(std::declval<std::add_const_t<T>>().getLevel(std::declval<CNFVar>()),
-                     typename T::DecisionLevel),
+                     typename T::Level),
 
-    // For t of type const T and l of type T::DecisionLevel, require that
+    // For t of type const T and l of type T::Level, require that
     // t.getLevelAssignments(l) returns a range over CNFLit const:
-    std::enable_if_t<is_const_range<decltype(std::declval<T>().getLevelAssignments(std::declval<typename T::DecisionLevel>())),
+    std::enable_if_t<is_const_range<decltype(std::declval<T>().getLevelAssignments(std::declval<typename T::Level>())),
                      CNFLit>::value, void>
 
   // end requirements
