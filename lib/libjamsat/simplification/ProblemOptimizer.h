@@ -203,7 +203,7 @@ PolymorphicClauseDB::Impl<T>::Impl(T&& clauseDB) noexcept : m_impl{std::move(cla
 
 template <typename T>
 auto PolymorphicClauseDB::Impl<T>::createClause(std::size_t size) noexcept -> Clause* {
-    return m_impl.createClause(size).value_or(nullptr);
+    return m_impl.createClause(size);
 }
 
 template <typename T>

@@ -336,8 +336,8 @@ TEST(UnitClauseDB, IterableClauseDB_allocateClauseInSingleRegion) {
     IterableClauseDB<RegularTestClause> underTest{regionSize};
     auto clause = underTest.createClause(10);
 
-    ASSERT_TRUE(clause);
-    EXPECT_EQ((*clause)->size(), 10ull);
+    ASSERT_NE(clause, nullptr);
+    EXPECT_EQ(clause->size(), 10ull);
 }
 
 TEST(UnitClauseDB, IterableClauseDB_allocateClauseLargerThanRegionSizeFails) {
@@ -345,26 +345,26 @@ TEST(UnitClauseDB, IterableClauseDB_allocateClauseLargerThanRegionSizeFails) {
     IterableClauseDB<RegularTestClause> underTest{regionSize};
     auto clause = underTest.createClause(1025);
 
-    ASSERT_FALSE(clause);
+    ASSERT_EQ(clause, nullptr);
 }
 
-TEST(UnitClauseDB, IterableClauseDB_allocateClauseLargerClauseSizeTypeFails) {
+TEST(UnitClauseDB, IterableClauseDB_allocateClauseLargerThanClauseSizeTypeFails) {
     std::size_t const regionSize = 1048576;
     IterableClauseDB<SmallTestClause> underTest{regionSize};
     auto clause1 = underTest.createClause(256);
-    ASSERT_FALSE(clause1);
+    ASSERT_EQ(clause1, nullptr);
     auto clause2 = underTest.createClause(255);
-    ASSERT_TRUE(clause2);
+    ASSERT_NE(clause2, nullptr);
 }
 
 TEST(UnitClauseDB, IterableClauseDB_allocateClauseAfterFaultSucceeds) {
     std::size_t const regionSize = 1024;
     IterableClauseDB<RegularTestClause> underTest{regionSize};
     auto clauseA = underTest.createClause(1025);
-    EXPECT_FALSE(clauseA);
+    EXPECT_EQ(clauseA, nullptr);
     auto clauseB = underTest.createClause(13);
-    ASSERT_TRUE(clauseB);
-    EXPECT_EQ((*clauseB)->size(), 13ull);
+    ASSERT_NE(clauseB, nullptr);
+    EXPECT_EQ(clauseB->size(), 13ull);
 }
 
 TEST(UnitClauseDB, IterableClauseDB_emptyDBHasEmptyClauseRange) {
@@ -387,8 +387,8 @@ TEST(UnitClauseDB, IterableClauseDB_clauseDBWithSingleClauseHasSingleClauseRange
     IterableClauseDB<RegularTestClause> underTest{regionSize};
 
     auto clause1 = underTest.createClause(5);
-    ASSERT_TRUE(clause1);
-    std::vector<RegularTestClause*> expectedClauses{*clause1};
+    ASSERT_NE(clause1, nullptr);
+    std::vector<RegularTestClause*> expectedClauses{clause1};
 
     EXPECT_TRUE(refRangeIsEqualToPtrRange(underTest.getClauses(), expectedClauses));
 }
@@ -401,7 +401,7 @@ TEST(UnitClauseDB, IterableClauseDB_clauseDBWithMultipleClausesHasMatchingClause
     for (int i = 0; i < 10; ++i) {
         auto clause = underTest.createClause(5);
         ASSERT_TRUE(clause);
-        expectedClauses.push_back(*clause);
+        expectedClauses.push_back(clause);
     }
 
     EXPECT_TRUE(refRangeIsEqualToPtrRange(underTest.getClauses(), expectedClauses));
@@ -415,7 +415,7 @@ TEST(UnitClauseDB, IterableClauseDB_clauseDBWithMultipleRegionsHasMatchingClause
     for (int i = 0; i < 128; ++i) {
         auto clause = underTest.createClause(i % 20);
         ASSERT_TRUE(clause);
-        expectedClauses.push_back(*clause);
+        expectedClauses.push_back(clause);
     }
 
     EXPECT_TRUE(refRangeIsEqualToPtrRange(underTest.getClauses(), expectedClauses));
@@ -447,8 +447,8 @@ TEST(UnitClauseDB, IterableClauseDB_compressSingleElementClauseDBWithoutDelete) 
     IterableClauseDB<RegularTestClause> underTest{regionSize};
 
     auto clause1 = underTest.createClause(5);
-    ASSERT_TRUE(clause1);
-    std::vector<RegularTestClause*> expectedClauses{*clause1};
+    ASSERT_NE(clause1, nullptr);
+    std::vector<RegularTestClause*> expectedClauses{clause1};
 
 
     underTest.compress();
@@ -461,10 +461,10 @@ TEST(UnitClauseDB, IterableClauseDB_compressSingleElementClauseDBWithDelete) {
     IterableClauseDB<RegularTestClause> underTest{regionSize};
 
     auto clause1 = underTest.createClause(5);
-    ASSERT_TRUE(clause1);
-    std::vector<RegularTestClause*> expectedClauses{*clause1};
+    ASSERT_NE(clause1, nullptr);
+    std::vector<RegularTestClause*> expectedClauses{clause1};
 
-    (*clause1)->setFlag(RegularTestClause::Flag::SCHEDULED_FOR_DELETION);
+    clause1->setFlag(RegularTestClause::Flag::SCHEDULED_FOR_DELETION);
     underTest.compress();
 
     auto clauses = underTest.getClauses();
@@ -478,11 +478,11 @@ TEST(UnitClauseDB, IterableClauseDB_compressMultiRegionClauseDBWithDelete) {
     std::vector<int> clauseIDs{};
     for (int i = 0; i < 256; ++i) {
         auto clause = underTest.createClause(i % 20);
-        ASSERT_TRUE(clause);
+        ASSERT_NE(clause, nullptr);
         if (i % 13 == 0 || i % 4 == 0) {
-            (*clause)->setFlag(RegularTestClause::Flag::SCHEDULED_FOR_DELETION);
+            clause->setFlag(RegularTestClause::Flag::SCHEDULED_FOR_DELETION);
         } else {
-            clauseIDs.push_back((*clause)->size());
+            clauseIDs.push_back(clause->size());
         }
 
         if (i % 61 == 0) {

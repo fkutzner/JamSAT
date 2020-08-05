@@ -450,14 +450,13 @@ void CDCLSatSolverImpl::addClause(CNFClause const& clause) {
     if (compressed->size() == 1) {
         m_facts.push_back(compressed->at(0));
     } else {
-        auto dbClauseAllocation = m_clauseDB.createClause(compressed->size());
-        if (!dbClauseAllocation) {
+        ClauseT* dbClause = m_clauseDB.createClause(compressed->size());
+        if (dbClause == nullptr) {
             throw std::bad_alloc{};
         }
 
-        ClauseT& dbClause = **dbClauseAllocation;
-        std::copy(compressed->begin(), compressed->end(), dbClause.begin());
-        dbClause.clauseUpdated();
+        std::copy(compressed->begin(), compressed->end(), dbClause->begin());
+        dbClause->clauseUpdated();
     }
 
     for (CNFLit lit : *compressed) {
@@ -839,20 +838,18 @@ auto CDCLSatSolverImpl::deriveLemma(ClauseT& conflictingClause) -> LemmaDerivati
     if (m_lemmaBuffer.size() == 1) {
         return LemmaDerivationResult{m_lemmaBuffer[0], 0, false};
     } else {
-        auto newLemmaAllocation = m_clauseDB.createClause(m_lemmaBuffer.size());
+        ClauseT* newLemma = m_clauseDB.createClause(m_lemmaBuffer.size());
 
-        if (!newLemmaAllocation) {
+        if (newLemma == nullptr) {
             return LemmaDerivationResult{CNFLit::getUndefinedLiteral(), 0, true};
         }
 
-        ClauseT& newLemma = **newLemmaAllocation;
+        std::copy(m_lemmaBuffer.begin(), m_lemmaBuffer.end(), newLemma->begin());
+        newLemma->clauseUpdated();
+        newLemma->setLBD(getLBD(*newLemma, m_assignment, m_stamps));
 
-        std::copy(m_lemmaBuffer.begin(), m_lemmaBuffer.end(), newLemma.begin());
-        newLemma.clauseUpdated();
-        newLemma.setLBD(getLBD(newLemma, m_assignment, m_stamps));
-
-        if (newLemma.size() > 2) {
-            m_lemmas.push_back(&newLemma);
+        if (newLemma->size() > 2) {
+            m_lemmas.push_back(newLemma);
         } else {
             ++m_amntBinariesLearnt;
         }
@@ -870,9 +867,10 @@ auto CDCLSatSolverImpl::deriveLemma(ClauseT& conflictingClause) -> LemmaDerivati
         // watcher watches an already-assigned literal. If ~L3 is propagated again
         // now, the propagation system would fail to notice that the clause forces an
         // assignment.
-        auto litWithMaxDecisionLevel = newLemma.begin() + 1;
+        auto litWithMaxDecisionLevel = newLemma->begin() + 1;
         Assignment::Level backtrackLevel = 0;
-        for (auto lit = newLemma.begin() + 1; lit != newLemma.end(); ++lit) {
+        auto const lemmaEnd = newLemma->end();
+        for (auto lit = newLemma->begin() + 1; lit != lemmaEnd; ++lit) {
             auto currentBacktrackLevel =
                 std::max(backtrackLevel, m_assignment.getLevel(lit->getVariable()));
             if (currentBacktrackLevel > backtrackLevel) {
@@ -880,8 +878,8 @@ auto CDCLSatSolverImpl::deriveLemma(ClauseT& conflictingClause) -> LemmaDerivati
                 backtrackLevel = currentBacktrackLevel;
             }
         }
-        std::swap(*litWithMaxDecisionLevel, newLemma[1]);
-        return LemmaDerivationResult{&newLemma, backtrackLevel, false};
+        std::swap(*litWithMaxDecisionLevel, (*newLemma)[1]);
+        return LemmaDerivationResult{newLemma, backtrackLevel, false};
     }
 }
 

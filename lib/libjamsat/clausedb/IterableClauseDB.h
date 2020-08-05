@@ -287,9 +287,9 @@ public:
      * problems have few enough variables such that clauses not fitting in a Region<T> would
      * need to contain duplicate literals, which are however eliminated by the solver.
      *
-     * \returns A pointer to the new clause. If allocation failed, nothing is returned.
+     * \returns A pointer to the new clause. If allocation failed, nullptr is returned instead.
      */
-    auto createClause(size_type size) noexcept -> boost::optional<ClauseT*>;
+    auto createClause(size_type size) noexcept -> ClauseT*;
 
     /**
      * \brief Compresses the database by removing all clauses scheduled for deletion.
@@ -550,14 +550,14 @@ IterableClauseDB<ClauseT>::IterableClauseDB(size_type regionSize) noexcept
   : m_regionSize(regionSize), m_activeRegions(), m_spareRegions() {}
 
 template <typename ClauseT>
-auto IterableClauseDB<ClauseT>::createClause(size_type size) noexcept -> boost::optional<ClauseT*> {
+auto IterableClauseDB<ClauseT>::createClause(size_type size) noexcept -> ClauseT* {
 
     // Check if a clause of the requested size can be constructed:
     uintmax_t maxClauseSize = std::numeric_limits<typename ClauseT::size_type>::max();
     auto newClauseSize = static_cast<typename ClauseT::size_type>(size);
     if (static_cast<uintmax_t>(size) > static_cast<uintmax_t>(maxClauseSize) ||
         ClauseT::getAllocationSize(newClauseSize) > m_regionSize) {
-        return {};
+        return nullptr;
     }
 
     try {
@@ -570,9 +570,9 @@ auto IterableClauseDB<ClauseT>::createClause(size_type size) noexcept -> boost::
 
         // Allocation failed, create new region and retry:
         clause = createActiveRegion().allocate(newClauseSize);
-        return clause != nullptr ? clause : boost::optional<ClauseT*>{};
+        return clause;
     } catch (std::bad_alloc&) {
-        return {};
+        return nullptr;
     }
 }
 
