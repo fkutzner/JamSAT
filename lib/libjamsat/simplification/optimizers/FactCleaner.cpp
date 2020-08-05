@@ -121,6 +121,7 @@ public:
                 } else {
                     boost::remove_erase(*toStrengthen, ~fact);
                     toStrengthen->setFlag(Clause::Flag::MODIFIED);
+                    toStrengthen->clauseUpdated();
                     occurrences.setModified(
                         *toStrengthen, std::array<CNFLit, 0>{}, std::array<CNFLit, 1>{~fact});
                     stats.amntLitsRemoved += 1;
