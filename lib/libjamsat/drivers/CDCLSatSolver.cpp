@@ -162,12 +162,18 @@ private:
     /** Sets all variables except for assumed facts as eligible for being branched on */
     void initializeBranchingHeuristic(std::vector<CNFLit> const& assumedFacts);
 
+    enum class SimplificationResult { NONE, DETECTED_UNSAT };
+
     /**
      * Performs simplification if suitable.
      *
      * This method may only be called during restarts.
+     * 
+     * \returns SimplificationResult::DETECTED_UNSAT if unsatisfiability has been
+     *   determined during simplification, eg. by finding contradicting facts. Otherwise,
+     *   NONE is returned.
      */
-    void trySimplify();
+    auto trySimplify() -> SimplificationResult;
 
     /**
      * Heuristically deletes clauses from the clause database.
@@ -492,7 +498,11 @@ auto CDCLSatSolverImpl::solve(std::vector<CNFLit> const& assumedFacts)
         TBool intermediateResult = TBools::INDETERMINATE;
         std::vector<CNFLit> failedAssumptions;
         while (!isDeterminate(intermediateResult) && !m_stopRequested.load()) {
-            trySimplify();
+            if (trySimplify() == SimplificationResult::DETECTED_UNSAT) {
+                failedAssumptions.clear();
+                intermediateResult = TBools::FALSE;
+                break;
+            }
             tryReduceClauseDB();
             m_statistics.registerRestart();
             intermediateResult = solveUntilRestart(assumedFacts, failedAssumptions);
@@ -561,25 +571,38 @@ void CDCLSatSolverImpl::initializeBranchingHeuristic(std::vector<CNFLit> const& 
 }
 
 
-void CDCLSatSolverImpl::trySimplify() {
+auto CDCLSatSolverImpl::trySimplify() -> SimplificationResult {
     JAM_ASSERT(m_assignment.getNumAssignments() == 0,
                "Illegally attempted to simplify the problem in-flight");
 
     if (m_optimizer->wantsExecution(m_statistics.getCurrentEra())) {
         JAM_LOG_SOLVER(info, "Beginning simplification");
 
-        PolymorphicClauseDB movableClauseDB{std::move(m_clauseDB)};
+        PolymorphicClauseDB pmrClauseDB{std::move(m_clauseDB)};
         SharedOptimizerState sharedOptState{
-            std::move(m_facts), std::move(movableClauseDB), std::move(m_assignment), m_maxVar};
+            std::move(m_facts), std::move(pmrClauseDB), std::move(m_assignment), m_maxVar};
 
         SharedOptimizerState result =
             m_optimizer->optimize(std::move(sharedOptState), m_statistics.getCurrentEra());
-        std::tie(m_facts, movableClauseDB, m_assignment) = result.release();
+        std::tie(m_facts, pmrClauseDB, m_assignment) = result.release();
 
         m_statistics.registerOptimizationStatistics(result.getStats());
 
-        m_clauseDB = movableClauseDB.release<decltype(m_clauseDB)>();
+        m_clauseDB = pmrClauseDB.release<decltype(m_clauseDB)>();
+
+        if (result.hasBreakingChange()) {
+            m_maxVar = result.getMaxVar();
+            resizeSubsystems();
+            synchronizeSubsystemsWithClauseDB();
+        }
+
+        JAM_LOG_SOLVER(info, "Finished simplification");
+
+        bool const unsat = result.hasDetectedUnsat();
+        return unsat ? SimplificationResult::DETECTED_UNSAT : SimplificationResult::NONE;
     }
+
+    return SimplificationResult::NONE;
 }
 
 
