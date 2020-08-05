@@ -95,6 +95,8 @@ public:
 
         m_factsAfterLastCall = sharedOptimizerState.getFacts().size();
 
+        // Deleting clauses in a separate loop to avoid strengthening
+        // operations later on
         for (CNFLit fact : facts) {
             for (Clause* toDelete : occurrences[fact]) {
                 toDelete->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
@@ -102,8 +104,14 @@ public:
                 occurrences.remove(*toDelete);
                 stats.amntClausesRemoved += 1;
             }
+        }
 
+        for (CNFLit fact : facts) {
             for (Clause* toStrengthen : occurrences[~fact]) {
+                if (toStrengthen->getFlag(Clause::Flag::SCHEDULED_FOR_DELETION)) {
+                    continue;
+                }
+
                 if (toStrengthen->size() == 2) {
                     // Assuming that all facts have been propagated without conflict,
                     // the literal that would remain is a fact
