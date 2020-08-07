@@ -35,7 +35,6 @@
 #include <libjamsat/utils/Assert.h>
 
 #include <cmath>
-#include <exception>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -132,7 +131,7 @@ public:
                 m_solver->addClause(m_clauseAddBuffer);
                 m_clauseAddBuffer.clear();
             }
-        } catch (std::exception&) {
+        } catch (...) {
             // defensively catching all exceptions
             m_failed = true;
         }
@@ -146,7 +145,7 @@ public:
         try {
             ensureSolverExists();
             m_assumptionBuffer.push_back(ipasirLitToCNFLit(lit));
-        } catch (std::exception&) {
+        } catch (...) {
             // defensively catching all exceptions
             m_failed = true;
         }
@@ -180,7 +179,7 @@ public:
                 return unsatisfiableResult;
             }
             return indeterminateResult;
-        } catch (std::exception&) {
+        } catch (...) {
             // defensively catching all exceptions
             m_failed = true;
             return indeterminateResult;
@@ -238,7 +237,7 @@ public:
             if (launchNewThread) {
                 launchKillThread();
             }
-        } catch (std::exception&) {
+        } catch (...) {
             // defensively catching all exceptions
             m_failed = true;
         }
@@ -256,7 +255,7 @@ public:
             ensureSolverExists();
             m_solver->setLogger(
                 [logger, state](std::string const& message) { logger(state, message.c_str()); });
-        } catch (std::exception&) {
+        } catch (...) {
             // defensively catching all exceptions
             m_failed = true;
         }
@@ -355,7 +354,7 @@ const char* ipasir_signature() {
 void* ipasir_init() {
     try {
         return reinterpret_cast<void*>(new jamsat::IPASIRContext{});
-    } catch (std::exception&) {
+    } catch (...) {
         return nullptr;
     }
 }
