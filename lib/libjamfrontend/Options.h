@@ -38,11 +38,11 @@ namespace jamsat {
 struct JamSATOptions {
     std::string m_problemFilename;
     bool m_printVersion = false;
-    bool m_printHelp = false;
     bool m_waitForUserInput = false;
     boost::optional<std::chrono::seconds> m_timeout;
     std::vector<std::string> m_backendOptions;
     bool m_verbose = false;
+    bool m_quit = false;
 };
 
 /**
@@ -58,15 +58,4 @@ struct JamSATOptions {
  * \throws std::invalid_argument    argv represents invalid JamSAT arguments.
  */
 auto parseOptions(int argc, char const* const* argv) -> JamSATOptions;
-
-/**
- * \brief Prints the list of available command-line options.
- *
- * \ingroup JamSAT_Frontend
- *
- * \param output    The stream to which the options shall be printed.
- * \param indent    The amount of space characters that shall be prepended
- *                  to each printed line.
- */
-void printOptions(std::ostream& output, unsigned int indent) noexcept;
 }

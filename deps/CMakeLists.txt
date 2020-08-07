@@ -15,3 +15,5 @@ if(JAMSAT_ENABLE_TESTING)
   set(CMAKE_CXX_EXTENSIONS ON)
   add_subdirectory(minisat EXCLUDE_FROM_ALL)
 endif()
+
+add_subdirectory(CLI11)

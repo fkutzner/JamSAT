@@ -45,3 +45,5 @@ nm_add_library(libjamfrontend STATIC
   Timeout.cpp)
 
 set_property(TARGET libjamfrontend PROPERTY OUTPUT_NAME jamfrontend)
+
+target_link_libraries(libjamfrontend PRIVATE CLI11::CLI11)

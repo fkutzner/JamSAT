@@ -7,3 +7,6 @@
 [submodule "etc/cmake/nicemake"]
 	path = etc/cmake/nicemake
 	url = https://github.com/fkutzner/nicemake
+[submodule "deps/CLI11"]
+	path = deps/CLI11
+	url = https://github.com/CLIUtils/CLI11.git
