@@ -49,6 +49,7 @@ namespace jamsat {
 template <typename CNFLitIt>
 std::string toString(CNFLitIt begin, CNFLitIt end);
 
+
 /**
  * \brief Helper function calling to_string defined in the JamSAT
  *   namespace or, if no such function is defined for `T`, forwards
@@ -59,7 +60,7 @@ std::string toString(CNFLitIt begin, CNFLitIt end);
  * \param item      The item to convert to std::string.
  */
 template <typename T>
-auto to_string(T&& item) -> std::string;
+auto toString(T&& item) -> std::string;
 
 /********** Implementation ****************************** */
 
@@ -91,7 +92,9 @@ auto toString(T&& item) -> std::string {
 }
 
 template <typename T>
-auto to_string(T&& item) -> std::string {
+auto toString(T&& item) -> std::string {
     return jamsat_printers_detail::toString(std::forward<T>(item));
 }
+
+
 }

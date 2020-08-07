@@ -145,6 +145,15 @@ public:
      */
     virtual void stop() noexcept = 0;
 
+    using LoggerFn = std::function<void(std::string const&)>;
+
+    /**
+     * \brief Sets a logger function.
+     * 
+     * Sets a function periodically receiving details about the solving process.
+     */
+    virtual void setLogger(LoggerFn loggerFunction) = 0;
+
     virtual ~CDCLSatSolver();
 };
 

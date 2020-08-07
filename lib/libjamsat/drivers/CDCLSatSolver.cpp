@@ -46,6 +46,7 @@
 #include <libjamsat/solver/RestartPolicies.h>
 #include <libjamsat/solver/Statistics.h>
 #include <libjamsat/utils/Logger.h>
+#include <libjamsat/utils/Printers.h>
 #include <libjamsat/utils/RangeUtils.h>
 #include <libjamsat/utils/StampMap.h>
 
@@ -56,7 +57,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
-#include <iostream>
 
 #if defined(JAM_ENABLE_SOLVER_LOGGING)
 #define JAM_LOG_SOLVER(x, y) JAM_LOG(x, "solver", y)
@@ -140,6 +140,7 @@ public:
     void addClause(CNFClause const& clause) override;
     auto solve(std::vector<CNFLit> const& assumedFacts) -> std::unique_ptr<SolvingResult> override;
     void stop() noexcept override;
+    void setLogger(LoggerFn loggerFunction) override;
 
     virtual ~CDCLSatSolverImpl();
 
@@ -351,6 +352,8 @@ private:
     std::vector<CNFLit> m_lemmaBuffer;
     StampMap<uint16_t, CNFVar::Index, CNFLit::Index, Assignment::LevelKey> m_stamps;
 
+    LoggerFn m_loggerFn;
+
     static constexpr uint32_t m_printStatsInterval = 16384;
     static constexpr uint32_t m_checkStopInterval = 8192;
 };
@@ -402,7 +405,8 @@ CDCLSatSolverImpl::CDCLSatSolverImpl(Config const& configuration)
   , m_stopRequested{false}
   , m_configuration{configuration}
   , m_lemmaBuffer{}
-  , m_stamps{getMaxLit(CNFVar{0}).getRawValue()} {
+  , m_stamps{getMaxLit(CNFVar{0}).getRawValue()}
+  , m_loggerFn{} {
     m_conflictAnalyzer.setOnSeenVariableCallback(
         [this](CNFVar var) { m_branchingHeuristic.seenInConflict(var); });
 }
@@ -471,8 +475,8 @@ auto CDCLSatSolverImpl::solve(std::vector<CNFLit> const& assumedFacts)
         m_statistics.registerSolvingStart();
         m_stopRequested.store(false);
 
-        if (m_configuration.printStatistics) {
-            m_statistics.printStatisticsDescription(std::cout);
+        if (m_configuration.printStatistics && m_loggerFn) {
+            m_loggerFn(m_statistics.getStatisticsDescription());
         }
 
         if (m_detectedOutOfMemory) {
@@ -823,7 +827,9 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
 
         if (m_configuration.printStatistics &&
             m_statistics.getCurrentEra().m_conflictCount % m_printStatsInterval == 0) {
-            std::cout << m_statistics;
+            if (m_loggerFn) {
+                m_loggerFn(to_string(m_statistics));
+            }
         }
     }
 
@@ -904,6 +910,10 @@ void CDCLSatSolverImpl::optimizeLemma(std::vector<CNFLit>& lemma) {
 
 void CDCLSatSolverImpl::stop() noexcept {
     m_stopRequested.store(true);
+}
+
+void CDCLSatSolverImpl::setLogger(LoggerFn logger) {
+    m_loggerFn = std::move(logger);
 }
 
 }

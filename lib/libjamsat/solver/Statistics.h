@@ -34,6 +34,7 @@
 #include <chrono>
 #include <cstdint>
 #include <ostream>
+#include <sstream>
 #include <type_traits>
 
 #include <boost/format.hpp>
@@ -198,12 +199,13 @@ public:
 
 
     /**
-     * \brief Prints the meaning of abbreviations used when printing the
-     * statistics object to a stream.
+     * \brief Returns the description string.
      *
-     * @param stream The target output stream.
+     * \return a string describing the abbreviations used when
+     *   converting the statistics object to a string rsp. printing it
+     *   to a stream.
      */
-    void printStatisticsDescription(std::ostream& stream) const noexcept;
+    auto getStatisticsDescription() const -> std::string;
 
 private:
     StatisticsEra m_previousEra;
@@ -213,6 +215,9 @@ private:
 template <typename StatisticsConfig>
 auto operator<<(std::ostream& stream, const Statistics<StatisticsConfig>& stats) noexcept
     -> std::ostream&;
+
+template <typename T>
+auto to_string(Statistics<T> const& stats) -> std::string;
 
 /********** Implementation ****************************** */
 
@@ -300,18 +305,20 @@ auto Statistics<StatisticsConfig>::getPreviousEra() const noexcept -> Statistics
 
 
 template <typename StatisticsConfig>
-void Statistics<StatisticsConfig>::printStatisticsDescription(std::ostream& stream) const noexcept {
-    stream << "Statistics: "
-           << "#C = amount of conflicts; "
-           << "#P = amount of propagations; "
-           << "#D = amount of decision literals picked;\n"
-           << "  #R = amount of restarts performed; "
-           << "T = time passed since last solve() invocation; "
-           << "L = avg. lemma size;\n"
-           << "  #U = amount of unit lemmas added; "
-           << "#B = amount of binary lemmas added; "
-           << "#LD = amount of lemmas deleted; "
-           << "O = optimization stats\n";
+auto Statistics<StatisticsConfig>::getStatisticsDescription() const -> std::string {
+    // clang-format off
+    return std::string{"Statistics: " \
+           "#C = amount of conflicts; " \
+           "#P = amount of propagations; " \
+           "#D = amount of decision literals picked;\n" \
+           "  #R = amount of restarts performed; " \
+           "T = time passed since last solve() invocation; " \
+           "L = avg. lemma size;\n" \
+           "  #U = amount of unit lemmas added; " \
+           "#B = amount of binary lemmas added; " \
+           "#LD = amount of lemmas deleted; " \
+           "O = optimization stats"};
+    // clang-format on
 }
 
 
@@ -380,8 +387,13 @@ auto operator<<(std::ostream& stream, const Statistics<StatisticsConfig>& stats)
         }
     }
 
-    stream << "\n";
-
     return stream;
+}
+
+template <typename T>
+auto to_string(Statistics<T> const& stats) -> std::string {
+    std::stringstream recv;
+    recv << stats;
+    return recv.str();
 }
 }

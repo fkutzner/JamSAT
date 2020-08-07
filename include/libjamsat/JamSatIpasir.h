@@ -90,6 +90,10 @@ extern JAMSAT_PUBLIC_API void ipasir_set_learn(void* solver,
                                                int max_length,
                                                void (*learn)(void* state, int* clause));
 
+extern JAMSAT_PUBLIC_API int jamsat_ipasir_set_logger(void* solver,
+                                                      void* state,
+                                                      void(*logger)(void* state, const char* message));
+
 #if defined(__cplusplus)
 }
 #endif

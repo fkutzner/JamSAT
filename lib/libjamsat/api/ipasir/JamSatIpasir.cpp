@@ -44,6 +44,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <iostream>
+
 // Note: the try/catch blocks contained in this file are mostly defensive,
 // preventing the solver to crash the client. Eventually, exceptions should
 // not escape the solver, but in the short term, they do - plus, the API
@@ -249,6 +251,17 @@ public:
         (void)max_length;
     }
 
+    void setLogger(void* state, void (*logger)(void* state, const char*)) {
+        try {
+            ensureSolverExists();
+            m_solver->setLogger(
+                [logger, state](std::string const& message) { logger(state, message.c_str()); });
+        } catch (std::exception&) {
+            // defensively catching all exceptions
+            m_failed = true;
+        }
+    }
+
     ~IPASIRContext() {
         // Shut down the kill thread
         if (m_killThreadContext != nullptr) {
@@ -262,6 +275,7 @@ private:
     void ensureSolverExists() {
         if (!m_solver) {
             m_solver = createCDCLSatSolver();
+
             if (m_killThreadContext != nullptr) {
                 std::lock_guard<std::mutex> lock(m_killThreadContext->m_lock);
                 m_killThreadContext->m_solver = m_solver.get();
@@ -399,5 +413,15 @@ void ipasir_set_learn(void* solver,
         return;
     }
     reinterpret_cast<jamsat::IPASIRContext*>(solver)->setLearn(state, max_length, learn);
+}
+
+int jamsat_ipasir_set_logger(void* solver,
+                             void* state,
+                             void (*logger)(void* state, const char* message)) {
+    if (solver == nullptr) {
+        return -1;
+    }
+    reinterpret_cast<jamsat::IPASIRContext*>(solver)->setLogger(state, logger);
+    return 0;
 }
 }
