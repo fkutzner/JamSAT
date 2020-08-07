@@ -40,4 +40,8 @@ uint64_t startLoggingEpoch = 0ULL;
 }
 }
 
+#else
+// Silencing linker warnings about the object file
+// not having any symbols:
+char utils_logger_empty_file_dummy_sym;
 #endif
