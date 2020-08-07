@@ -49,10 +49,11 @@ public:
  *                                  If \p location equals "-", the problem instance
  *                                  is read from the standard input.
  * \param[in] msgStream             The stream to which logging messages shall be
+ *                                  printed. If nullptr, no logging messages are
  *                                  printed.
  *
  * \throws CNFParserError           An I/O or parsing error has occured while
  *                                  reading \p file.
  */
-void readProblem(IpasirSolver& solver, std::string const& location, std::ostream& msgStream);
+void readProblem(IpasirSolver& solver, std::string const& location, std::ostream* msgStream);
 }

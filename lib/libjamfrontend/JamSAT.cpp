@@ -103,7 +103,13 @@ auto jamsatMain(int argc, char** argv, std::ostream& outStream, std::ostream& er
         if (options.m_timeout) {
             configureTimeout(*wrappedSolver, options.m_timeout.get());
         }
-        readProblem(*wrappedSolver, options.m_problemFilename, outStream);
+
+        if (options.m_verbose) {
+            wrappedSolver->enableLogging(outStream);
+        }
+
+        std::ostream* logStream = options.m_verbose ? &outStream : nullptr;
+        readProblem(*wrappedSolver, options.m_problemFilename, logStream);
         return solve(*wrappedSolver, outStream);
     } catch (std::exception& e) {
         printErrorMessage(e.what(), errStream);

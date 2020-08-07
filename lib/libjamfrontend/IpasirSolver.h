@@ -106,6 +106,16 @@ public:
     virtual void
     setLearnFn(void* state, int max_length, void (*learn)(void* state, int* clause)) noexcept = 0;
 
+    /**
+     * \brief Wrapper for jamsat_ipasir_set_logger()
+     *
+     * Prints the log messages obtained from JamSAT to the given stream.
+     * 
+     * \param targetStream      An ostream. The argument must reference an object that remains
+     *                          valid until the destruction of the IpasirSolver object.
+     */
+    virtual void enableLogging(std::ostream& targetStream) noexcept = 0;
+
     IpasirSolver(IpasirSolver const& rhs) = delete;
     IpasirSolver(IpasirSolver&& rhs) = delete;
     auto operator=(IpasirSolver const& rhs) = delete;

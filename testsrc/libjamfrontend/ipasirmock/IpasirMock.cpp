@@ -107,4 +107,8 @@ void ipasir_set_learn(void* solver,
     (void)max_length;
     (void)learn;
 }
+
+int jamsat_ipasir_set_logger(void*, void*, void (*)(void* state, const char* message)) {
+    return 0;
+}
 }

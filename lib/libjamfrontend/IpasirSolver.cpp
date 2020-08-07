@@ -26,6 +26,8 @@
 
 #include "IpasirSolver.h"
 
+#include <ostream>
+
 #include <libjamsat/JamSatIpasir.h>
 
 #include <cassert>
@@ -48,6 +50,7 @@ public:
     void setLearnFn(void* state,
                     int max_length,
                     void (*learn)(void* state, int* clause)) noexcept override;
+    void enableLogging(std::ostream& targetStream) noexcept override;
 
     IpasirAPIWrapper(IpasirAPIWrapper const& rhs) = delete;
     IpasirAPIWrapper(IpasirAPIWrapper&& rhs) = delete;
@@ -116,6 +119,17 @@ void IpasirAPIWrapper::setLearnFn(void* state,
                                   int max_length,
                                   void (*learn)(void* state, int* clause)) noexcept {
     ipasir_set_learn(m_solver, state, max_length, learn);
+}
+
+namespace {
+void printSolverLogMesssage(void* state, char const* message) {
+    std::ostream* stream = reinterpret_cast<std::ostream*>(state);
+    (*stream) << message << "\n";
+}
+}
+
+void IpasirAPIWrapper::enableLogging(std::ostream& targetStream) noexcept {
+    jamsat_ipasir_set_logger(m_solver, &targetStream, printSolverLogMesssage);
 }
 }
 

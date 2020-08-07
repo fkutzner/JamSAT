@@ -42,6 +42,7 @@ struct JamSATOptions {
     bool m_waitForUserInput = false;
     boost::optional<std::chrono::seconds> m_timeout;
     std::vector<std::string> m_backendOptions;
+    bool m_verbose = false;
 };
 
 /**

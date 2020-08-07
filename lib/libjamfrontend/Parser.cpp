@@ -351,12 +351,14 @@ void readClauses(IpasirSolver& solver, gzFile file, DIMACSHeader problemHeader) 
 }
 }
 
-void readProblem(IpasirSolver& solver, std::string const& location, std::ostream& msgStream) {
+void readProblem(IpasirSolver& solver, std::string const& location, std::ostream* msgStream) {
     GZFileResource fileRAII{location.c_str()};
     gzFile file = fileRAII.getFile();
     DIMACSHeader problemHeader = readHeader(file);
-    msgStream << "Reading a problem with " << problemHeader.m_numClauses << " clauses and "
-              << problemHeader.m_numVariables << " variables\n";
+    if (msgStream != nullptr) {
+        *msgStream << "Reading a problem with " << problemHeader.m_numClauses << " clauses and "
+                   << problemHeader.m_numVariables << " variables\n";
+    }
     readClauses(solver, file, problemHeader);
 }
 }

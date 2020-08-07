@@ -91,6 +91,10 @@ auto parseArgument(std::string const& argument, JamSATOptions& result) -> bool {
         result.m_waitForUserInput = true;
         return true;
     }
+    if (argument == "--verbose") {
+        result.m_verbose = true;
+        return true;
+    }
     if (argument.compare(0, timeoutArgPrefix.size(), timeoutArgPrefix) == 0) {
         std::string timeoutValue{argument.begin() + timeoutArgPrefix.size(), argument.end()};
         result.m_timeout = parseTimeoutArgument(timeoutValue);
@@ -147,6 +151,10 @@ void printIndentedLine(std::ostream& output, unsigned int indent, std::string co
 
 void printOptions(std::ostream& output, unsigned int indent) noexcept {
     printIndentedLine(output, indent, "Options:");
+    printIndentedLine(
+        output,
+        indent,
+        " --verbose              Periodically print stats during the solving process.");
     printIndentedLine(
         output, indent, " --version              Print the version of JamSAT and exit.");
     printIndentedLine(output, indent, " --timeout=N            Stop solving after N seconds.");
