@@ -23,4 +23,5 @@
 # other dealings in this Software without prior written authorization.
 
 add_jamsat_core_integrationtest_library(jstest.libjamsat.integration.simplification
+  Dummy.cpp
 )
