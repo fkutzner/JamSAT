@@ -49,3 +49,10 @@ endif()
 
 # state_ptr is a header-only library:
 include_directories(SYSTEM deps/state_ptr/include)
+
+if (JAMSAT_USE_SYSTEM_GSL)
+  find_package(Microsoft.GSL 3.1.0 CONFIG REQUIRED)
+  nm_add_thirdparty_libs(LIBS Microsoft.GSL::GSL)
+else()
+  nm_add_thirdparty_libs(LIBS VendoredMicrosoftGSL)
+endif()

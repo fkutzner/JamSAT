@@ -17,3 +17,8 @@ if(JAMSAT_ENABLE_TESTING)
 endif()
 
 add_subdirectory(CLI11)
+
+if(NOT JAMSAT_USE_SYSTEM_GSL)
+  add_library(VendoredMicrosoftGSL INTERFACE IMPORTED)
+  target_include_directories(VendoredMicrosoftGSL INTERFACE "${CMAKE_CURRENT_LIST_DIR}/GSL/include")
+endif()

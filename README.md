@@ -79,6 +79,8 @@ The following prerequisites must be present on your system:
 * a C++ compiler with C++17 support
 * [Boost](https://www.boost.org) (at least version 1.59)
 * [zlib](https://github.com/madler/zlib)
+* (optionally) [GSL](https://github.com/microsoft/GSL) (at least
+  version 3.1.0; see the option `JAMSAT_USE_VENDORED_GSL`)
 
 ### Building without tests
 
@@ -131,6 +133,12 @@ by default. The list of JamSAT build options is given below.
 #### Controlling the scope of the build
 
 * `JAMSAT_ENABLE_TESTING` - Enable building the JamSAT test suite.
+
+#### 3rd party libraries
+
+* `JAMSAT_USE_SYSTEM_GSL` - Search for the Microsoft GSL in the CMake module
+search path. If `OFF` (which is the default), the GSL included in `deps/GSL`
+is used for building JamSAT.
 
 #### General compiler and linker settings
 

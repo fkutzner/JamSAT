@@ -40,6 +40,7 @@ option(JAMSAT_ENABLE_EXPENSIVE_ASSERTIONS "Enable more thorough, but expensive a
 option(JAMSAT_DISABLE_BOOST_LINKING_SETUP "Don't override linker settings for Boost" OFF)
 option(JAMSAT_ENABLE_TESTING "Enable building the JamSAT test suite." OFF)
 option(JAMSAT_BUILD_STATIC_LIB "Build libjamsat as a static library" OFF)
+option(JAMSAT_USE_SYSTEM_GSL "Search for Microsoft GSL in the CMake module path." OFF)
 
 ### Load CMake code
 
@@ -138,7 +139,7 @@ endif()
 if(APPLE)
   set(CMAKE_MACOSX_RPATH ON)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-  
+
   # See https://gitlab.kitware.com/cmake/community/wikis/doc/cmake/RPATH-handling
   list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
   if("${isSystemDir}" STREQUAL "-1")

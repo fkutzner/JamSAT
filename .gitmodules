@@ -10,3 +10,6 @@
 [submodule "deps/CLI11"]
 	path = deps/CLI11
 	url = https://github.com/CLIUtils/CLI11.git
+[submodule "deps/GSL"]
+	path = deps/GSL
+	url = https://github.com/microsoft/GSL
