@@ -195,21 +195,21 @@ constexpr unsigned char CL_DEL = 0x64;
 INSTANTIATE_TEST_CASE_P(UnitProof, FileDRATCertificateSerializationTests,
   ::testing::Values(
     ProofClauseAndResult{{}, {}},
-    ProofClauseAndResult{{RUPClause{}}, {CL_ADD}},
-    ProofClauseAndResult{{createRUPClause({1_Lit})}, {CL_ADD, 0x02}},
-    ProofClauseAndResult{{createRUPClause({1_Lit, 2_Lit, 129_Lit})}, {CL_ADD, 0x02, 0x04, 0x82, 0x02}},
-    ProofClauseAndResult{{createRATClause({1_Lit}, 0)}, {CL_ADD, 0x02}},
-    ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 0)}, {CL_ADD, 0x02, 0x04, 0x82, 0x02}},
-    ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 1)}, {CL_ADD, 0x04, 0x02, 0x82, 0x02}},
-    ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 2)}, {CL_ADD, 0x82, 0x02, 0x02, 0x04}},
-    ProofClauseAndResult{{createDeleteClause({1_Lit, 2_Lit, 129_Lit})}, {CL_DEL, 0x02, 0x04, 0x82, 0x02}},
+    ProofClauseAndResult{{RUPClause{}}, {CL_ADD, 0x00}},
+    ProofClauseAndResult{{createRUPClause({1_Lit})}, {CL_ADD, 0x02, 0x00}},
+    ProofClauseAndResult{{createRUPClause({1_Lit, 2_Lit, 129_Lit})}, {CL_ADD, 0x02, 0x04, 0x82, 0x02, 0x00}},
+    ProofClauseAndResult{{createRATClause({1_Lit}, 0)}, {CL_ADD, 0x02, 0x00}},
+    ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 0)}, {CL_ADD, 0x02, 0x04, 0x82, 0x02, 0x00}},
+    ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 1)}, {CL_ADD, 0x04, 0x02, 0x82, 0x02, 0x00}},
+    ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 2)}, {CL_ADD, 0x82, 0x02, 0x02, 0x04, 0x00}},
+    ProofClauseAndResult{{createDeleteClause({1_Lit, 2_Lit, 129_Lit})}, {CL_DEL, 0x02, 0x04, 0x82, 0x02, 0x00}},
     ProofClauseAndResult{
         {
             createRUPClause({1_Lit}),
             createDeleteClause({~1_Lit, 2_Lit}),
             createRATClause({~1_Lit, 2_Lit, 129_Lit}, 1),
         },
-        {CL_ADD, 0x02, CL_DEL, 0x03, 0x04, CL_ADD, 0x04, 0x03, 0x82, 0x02}}
+        {CL_ADD, 0x02, 0x00, CL_DEL, 0x03, 0x04, 0x00, CL_ADD, 0x04, 0x03, 0x82, 0x02, 0x00}}
   )
 );
 // clang-format on

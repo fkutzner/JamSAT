@@ -78,6 +78,8 @@ private:
         ensureBufferLargeEnough(clause.size());
         m_buffer[0] = added ? 0x61 : 0x64;
         std::size_t encodingLen = EncodeBinaryDRAT(clause, gsl::span{m_buffer}.subspan(1));
+        ++encodingLen; // accounting for m_buffer[0]
+        m_buffer[encodingLen] = 0;
 
         std::size_t itemsWritten = fwrite(m_buffer.data(), encodingLen + 1, 1, m_file);
         if (itemsWritten != 1) {
@@ -91,11 +93,13 @@ private:
 
         std::size_t encodingLen =
             EncodeBinaryDRAT(clause.subspan(pivotIdx, 1), gsl::span{m_buffer}.subspan(1));
+        ++encodingLen; // accounting for m_buffer[0]
 
         encodingLen += EncodeBinaryDRAT(clause.subspan(0, pivotIdx),
-                                        gsl::span{m_buffer}.subspan(1 + encodingLen));
+                                        gsl::span{m_buffer}.subspan(encodingLen));
         encodingLen += EncodeBinaryDRAT(clause.subspan(pivotIdx + 1),
-                                        gsl::span{m_buffer}.subspan(1 + encodingLen));
+                                        gsl::span{m_buffer}.subspan(encodingLen));
+        m_buffer[encodingLen] = 0;
 
         std::size_t itemsWritten = fwrite(m_buffer.data(), encodingLen + 1, 1, m_file);
         if (itemsWritten != 1) {
@@ -104,7 +108,7 @@ private:
     }
 
     void ensureBufferLargeEnough(std::size_t numLits) {
-        std::size_t requiredBufferSize = 5 * numLits + 1;
+        std::size_t requiredBufferSize = 5 * numLits + 2;
         if (m_buffer.size() < requiredBufferSize) {
             m_buffer.resize(requiredBufferSize);
         }
