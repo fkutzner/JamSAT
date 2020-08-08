@@ -62,7 +62,7 @@ configurations:
 | Apple macOS         | clang               |
 | Microsoft Windows   | Visual C++ 2017     |
 
-A compiler supporting C++14 is required to build JamSAT.
+A compiler supporting C++17 is required to build JamSAT.
 
 JamSAT integrates nicely with [CMake](http://cmake.org) projects.
 The repository
@@ -76,7 +76,7 @@ is planned, but not yet implemented.
 
 The following prerequisites must be present on your system:
 * CMake (at least version 3.12)
-* a C++ compiler with C++14 support
+* a C++ compiler with C++17 support
 * [Boost](https://www.boost.org) (at least version 1.59)
 * [zlib](https://github.com/madler/zlib)
 
