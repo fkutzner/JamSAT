@@ -23,6 +23,6 @@
 # other dealings in this Software without prior written authorization.
 
 add_jamsat_core_unittest_library(jstest.libjamsat.unit.proof
+  BinaryDRATEncoderTests.cpp
   ModelUnitTests.cpp
-  PlainDRUPCertificateUnitTests.cpp
 )

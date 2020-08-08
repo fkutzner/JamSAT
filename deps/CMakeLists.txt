@@ -18,7 +18,7 @@ endif()
 
 add_subdirectory(CLI11)
 
-if(NOT JAMSAT_USE_SYSTEM_GSL)
-  add_library(VendoredMicrosoftGSL INTERFACE IMPORTED)
-  target_include_directories(VendoredMicrosoftGSL INTERFACE "${CMAKE_CURRENT_LIST_DIR}/GSL/include")
-endif()
+# Note about header-only libraries used by libjamsat: using interface libraries
+# breaks the exports for the static library build, see e.g.
+# https://gitlab.kitware.com/cmake/cmake/-/issues/15415#note_333595
+# ~> Adding the include directories directly as a (hopefully preliminary) workaround

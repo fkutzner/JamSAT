@@ -47,6 +47,10 @@ if(UNIX AND Boost_USE_MULTITHREADED)
   nm_add_thirdparty_libs(LIBS pthread)
 endif()
 
+
+# See comment in deps/CMakeLists.txt about the usage
+# of include_directories() here.
+
 # state_ptr is a header-only library:
 include_directories(SYSTEM deps/state_ptr/include)
 
@@ -54,5 +58,5 @@ if (JAMSAT_USE_SYSTEM_GSL)
   find_package(Microsoft.GSL 3.1.0 CONFIG REQUIRED)
   nm_add_thirdparty_libs(LIBS Microsoft.GSL::GSL)
 else()
-  nm_add_thirdparty_libs(LIBS VendoredMicrosoftGSL)
+  include_directories(SYSTEM deps/GSL/include)
 endif()

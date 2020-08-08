@@ -1,4 +1,4 @@
-/* Copyright (c) 2017,2018 Felix Kutzner (github.com/fkutzner)
+/* Copyright (c) 2020 Felix Kutzner (github.com/fkutzner)
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,22 @@
 
 */
 
-#include <libjamsat/proof/DRUPCertificate.h>
+#include <gsl/span>
+
+#include <libjamsat/cnfproblem/CNFLiteral.h>
 
 namespace jamsat {
-DRUPCertificate::~DRUPCertificate() {}
+/**
+ * \ingroup JamSAT_Proof
+ * 
+ * \brief Encodes the given span of literals as binary DRAT.
+ * 
+ * \param literals      A span of literals not containing the undefined literal.
+ * \param target        A span of chars where the result is stored. Must be at least 5
+ *                      times as large as \p{literals}.
+ * 
+ * \returns The amount of bytes written to \p{target}.
+ */
+auto EncodeBinaryDRAT(gsl::span<CNFLit const> literals, gsl::span<unsigned char> target) noexcept
+    -> std::size_t;
 }

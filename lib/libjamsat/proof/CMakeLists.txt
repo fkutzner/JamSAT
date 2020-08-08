@@ -23,10 +23,11 @@
 # other dealings in this Software without prior written authorization.
 
 add_jamsat_core_library(libjamsat.proof
+  BinaryDRATEncoder.h
+  BinaryDRATEncoder.cpp
+  DRATCertificate.h
+  DRATCertificate.cpp
   Model.h
   Model.cpp
   ModuleDocumentation.h
-  DRUPCertificate.h
-  DRUPCertificate.cpp
-  PlainDRUPCertificate.cpp
 )

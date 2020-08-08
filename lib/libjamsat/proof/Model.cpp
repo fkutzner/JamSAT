@@ -82,7 +82,7 @@ TBool ModelImpl::check(const jamsat::CNFProblem& problem) const noexcept {
         for (auto lit : clause) {
             TBool expectedValue =
                 (lit.getSign() == CNFSign::POSITIVE) ? TBools::TRUE : TBools::FALSE;
-            satisfied |= (getAssignment(lit.getVariable()) == expectedValue);
+            satisfied = satisfied || (getAssignment(lit.getVariable()) == expectedValue);
         }
         if (!satisfied) {
             return TBools::FALSE;
