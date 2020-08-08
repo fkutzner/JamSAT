@@ -87,8 +87,8 @@ auto jamsatMain(int argc, char** argv, std::ostream& outStream, std::ostream& er
 
     try {
         std::unique_ptr<IpasirSolver> wrappedSolver = createIpasirSolver();
-        if (options.m_timeout) {
-            configureTimeout(*wrappedSolver, options.m_timeout.get());
+        if (options.m_timeout.has_value()) {
+            configureTimeout(*wrappedSolver, *(options.m_timeout));
         }
 
         if (options.m_verbose) {

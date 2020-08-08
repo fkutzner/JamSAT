@@ -33,9 +33,8 @@
 
 #include <cstdint>
 #include <iterator>
+#include <optional>
 #include <type_traits>
-
-#include <boost/optional.hpp>
 
 #include <libjamsat/utils/Assert.h>
 
@@ -121,8 +120,8 @@ private:
     // Class invariant B: m_outerIt != m_outerEndIt <=> m_innerIt exists
     // Class invariant C: m_innerIt exists <=> m_innerEndIt exists
     // Class invariant D: if m_innerIt exists, *m_innerIt is dereferencable
-    boost::optional<InnerIt> m_innerIt;
-    boost::optional<InnerIt> m_innerEndIt;
+    std::optional<InnerIt> m_innerIt;
+    std::optional<InnerIt> m_innerEndIt;
 };
 }
 
@@ -149,8 +148,8 @@ FlatteningIterator<I>::FlatteningIterator(I begin, I end)
     }
 
     if (m_outerIt != m_outerEndIt) {
-        m_innerIt = boost::optional<InnerIt>{m_outerIt->begin()};
-        m_innerEndIt = boost::optional<InnerIt>{m_outerIt->end()};
+        m_innerIt = std::optional<InnerIt>{m_outerIt->begin()};
+        m_innerEndIt = std::optional<InnerIt>{m_outerIt->end()};
     }
 }
 
@@ -192,7 +191,7 @@ FlatteningIterator<I>& FlatteningIterator<I>::operator++() {
         auto newInnerIt = *m_innerIt;
         ++newInnerIt;
         if (newInnerIt != *m_innerEndIt) {
-            m_innerIt = boost::optional<InnerIt>{newInnerIt};
+            m_innerIt = std::optional<InnerIt>{newInnerIt};
             return *this;
         }
     }
@@ -204,14 +203,14 @@ FlatteningIterator<I>& FlatteningIterator<I>::operator++() {
     } while (m_outerIt != m_outerEndIt && m_outerIt->empty());
 
     if (m_outerIt != m_outerEndIt) {
-        m_innerIt = boost::optional<InnerIt>{m_outerIt->begin()};
-        m_innerEndIt = boost::optional<InnerIt>{m_outerIt->end()};
+        m_innerIt = std::optional<InnerIt>{m_outerIt->begin()};
+        m_innerEndIt = std::optional<InnerIt>{m_outerIt->end()};
         return *this;
     }
 
     // No more elements to traverse
-    m_innerIt = boost::optional<InnerIt>{};
-    m_innerEndIt = boost::optional<InnerIt>{};
+    m_innerIt = std::optional<InnerIt>{};
+    m_innerEndIt = std::optional<InnerIt>{};
     return *this;
 }
 

@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <vector>
@@ -39,8 +40,6 @@
 #include <libjamsat/solver/Assignment.h>
 #include <libjamsat/solver/Statistics.h>
 #include <libjamsat/utils/OccurrenceMap.h>
-
-#include <boost/optional.hpp>
 
 
 namespace jamsat {
@@ -165,7 +164,7 @@ private:
     Assignment m_assignment;
     CNFVar m_maxVar;
 
-    boost::optional<OccMap> m_occMap;
+    std::optional<OccMap> m_occMap;
 
     bool m_breakingChange;
     bool m_detectedUnsat;

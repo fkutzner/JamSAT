@@ -37,13 +37,13 @@
 #include <libjamsat/utils/FlatteningIterator.h>
 #include <libjamsat/utils/Logger.h>
 
-#include <boost/optional.hpp>
 #include <boost/range.hpp>
 
 #include <cstdint>
 #include <cstring>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
@@ -171,7 +171,7 @@ public:
      *
      * \returns a bitwise clone of this region if allocation succeeded, otherwise nothing.
      */
-    auto clone() const noexcept -> boost::optional<Region>;
+    auto clone() const noexcept -> std::optional<Region>;
 
     /**
      * \brief Destroys all clauses in the region.
@@ -394,7 +394,7 @@ auto Region<ClauseT>::empty() const noexcept -> bool {
 }
 
 template <typename ClauseT>
-auto Region<ClauseT>::clone() const noexcept -> boost::optional<Region> {
+auto Region<ClauseT>::clone() const noexcept -> std::optional<Region> {
     Region<ClauseT> result{m_size};
     if (result.getFreeSize() == 0) {
         // Allocation failed, or cloning a size-0 region

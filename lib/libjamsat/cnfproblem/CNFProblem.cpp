@@ -31,8 +31,8 @@
 
 
 #include "CNFProblem.h"
-#include <boost/optional.hpp>
 #include <istream>
+#include <optional>
 #include <sstream>
 
 #include <libjamsat/utils/Casts.h>
@@ -215,10 +215,10 @@ namespace {
  * encodedLiteral succeeded (ie. iff encodedLiteral is within the legal range of
  * literals).
  */
-boost::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
+std::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
     if (encodedLiteral == std::numeric_limits<int>::min()) {
         JAM_LOG_CNFPROBLEM(warning, "Illegally large variable: " << encodedLiteral);
-        return boost::optional<CNFLit>{};
+        return std::optional<CNFLit>{};
     }
 
     CNFSign literalSign = encodedLiteral > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
@@ -226,7 +226,7 @@ boost::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
 
     if (rawVariable > CNFVar::getMaxRawValue()) {
         JAM_LOG_CNFPROBLEM(warning, "Illegally large variable: " << encodedLiteral);
-        return boost::optional<CNFLit>{};
+        return std::optional<CNFLit>{};
     }
 
     CNFVar literalVariable{rawVariable};
@@ -269,7 +269,7 @@ std::istream& operator>>(std::istream& input, CNFClause& clause) {
             return input;
         }
 
-        boost::optional<CNFLit> decodedLiteral = decodeCNFLit(encodedLiteral);
+        std::optional<CNFLit> decodedLiteral = decodeCNFLit(encodedLiteral);
         if (!decodedLiteral) {
             parsingFailed(clause, input);
             return input;

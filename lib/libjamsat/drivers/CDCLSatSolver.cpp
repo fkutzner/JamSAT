@@ -50,7 +50,6 @@
 #include <libjamsat/utils/RangeUtils.h>
 #include <libjamsat/utils/StampMap.h>
 
-#include <boost/optional.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/variant.hpp>
 
@@ -83,7 +82,7 @@ public:
                       std::vector<CNFLit> const& failedAssumptions);
     auto isProblemSatisfiable() const noexcept -> TBool override;
 
-    auto getModel() const noexcept -> boost::optional<std::reference_wrapper<Model const>> override;
+    auto getModel() const noexcept -> std::optional<std::reference_wrapper<Model const>> override;
     auto getFailedAssumptions() const noexcept -> std::vector<CNFLit> const& override;
 
     virtual ~SolvingResultImpl();
@@ -374,7 +373,7 @@ auto SolvingResultImpl::isProblemSatisfiable() const noexcept -> TBool {
 }
 
 auto SolvingResultImpl::getModel() const noexcept
-    -> boost::optional<std::reference_wrapper<Model const>> {
+    -> std::optional<std::reference_wrapper<Model const>> {
     if (m_model) {
         return std::cref(*m_model);
     } else {
@@ -419,7 +418,7 @@ void CDCLSatSolverImpl::addProblem(CNFProblem const& problem) {
     }
 }
 
-auto compressClause(CNFClause const& clause) -> boost::optional<std::vector<CNFLit>> {
+auto compressClause(CNFClause const& clause) -> std::optional<std::vector<CNFLit>> {
     if (clause.empty()) {
         return std::vector<CNFLit>{};
     }
@@ -431,7 +430,7 @@ auto compressClause(CNFClause const& clause) -> boost::optional<std::vector<CNFL
     // clause:
     for (auto claIt = compressedClause.begin() + 1; claIt != compressedClause.end(); ++claIt) {
         if (*(claIt - 1) == ~(*claIt)) {
-            return boost::optional<std::vector<CNFLit>>{};
+            return std::optional<std::vector<CNFLit>>{};
         }
     }
 
@@ -444,7 +443,7 @@ void CDCLSatSolverImpl::addClause(CNFClause const& clause) {
         return;
     }
 
-    boost::optional<std::vector<CNFLit>> compressed = compressClause(clause);
+    std::optional<std::vector<CNFLit>> compressed = compressClause(clause);
 
     if (!compressed) {
         // the clause is always satisfied and has been optimized away

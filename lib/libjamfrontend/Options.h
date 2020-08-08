@@ -26,9 +26,9 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
 #include <chrono>
 #include <cstdint>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -39,7 +39,7 @@ struct JamSATOptions {
     std::string m_problemFilename;
     bool m_printVersion = false;
     bool m_waitForUserInput = false;
-    boost::optional<std::chrono::seconds> m_timeout;
+    std::optional<std::chrono::seconds> m_timeout;
     std::vector<std::string> m_backendOptions;
     bool m_verbose = false;
     bool m_quit = false;

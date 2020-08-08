@@ -33,8 +33,6 @@
 
 #include <algorithm>
 
-#include <boost/optional.hpp>
-
 #include <libjamsat/branching/BranchingHeuristicBase.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Assert.h>

@@ -31,10 +31,9 @@
 #include <libjamsat/proof/Model.h>
 #include <libjamsat/utils/Truth.h>
 
-#include <boost/optional.hpp>
-
 #include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 /**
@@ -73,7 +72,7 @@ public:
      * a satisfying assignment ("model") is returned. Otherwise, nothing is returned.
      */
     virtual auto getModel() const noexcept
-        -> boost::optional<std::reference_wrapper<Model const>> = 0;
+        -> std::optional<std::reference_wrapper<Model const>> = 0;
 
     /**
      * \brief Returns a list of assumed facts that have been used to obtain the UNSAT result.
