@@ -22,6 +22,7 @@
 # shall not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization.
 
+list(APPEND JAMSAT_REQUIRED_BOOST_LIBRARIES filesystem)
 if (JAMSAT_ENABLE_LOGGING)
   list(APPEND JAMSAT_REQUIRED_BOOST_LIBRARIES log log_setup)
 endif()

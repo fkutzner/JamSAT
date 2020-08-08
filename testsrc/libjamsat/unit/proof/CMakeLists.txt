@@ -24,5 +24,6 @@
 
 add_jamsat_core_unittest_library(jstest.libjamsat.unit.proof
   BinaryDRATEncoderTests.cpp
+  DRATCertificateTests.cpp
   ModelUnitTests.cpp
 )

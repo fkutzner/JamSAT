@@ -40,6 +40,8 @@
 
 namespace jamsat {
 
+class FileIOError : public std::exception {};
+
 /**
  * \ingroup JamSAT_Proof
  *
@@ -55,6 +57,8 @@ public:
      * 
      * \param clause    A clause.
      * \param pivotIdx  The index of the pivot literal within \p{clause}.
+     * 
+     * \throw FileIOError           on file i/o errors
      */
     virtual void addRATClause(gsl::span<CNFLit const> clause, size_t pivotIdx) = 0;
 
@@ -62,6 +66,8 @@ public:
      * \brief Adds reverse unit propagation clause to the proof.
      * 
      * \param clause    A clause.
+     * 
+     * \throw FileIOError           on file i/o errors
      */
     virtual void addRUPClause(gsl::span<CNFLit const> clause) = 0;
 
@@ -69,25 +75,27 @@ public:
      * \brief Adds a clause deletion to the proof.
      *
      * \param clause                A clause.
+     * 
+     * \throw FileIOError           on file i/o errors
      */
     virtual void deleteClause(gsl::span<CNFLit const> clause) = 0;
 
+
     /**
-     * \brief Closes the UNSAT proof.
+     * \brief Flushes the proof to its target.
      *
-     * Call this method only when the problem is unsatisfiable.
+     * \throw FileIOError           on file i/o errors
      */
-    virtual void closeProof() = 0;
+    virtual void flush() = 0;
 
     DRATCertificate& operator=(const DRATCertificate& other) = delete;
     DRATCertificate& operator=(DRATCertificate&& other) = delete;
     DRATCertificate(const DRATCertificate& other) = delete;
     DRATCertificate(DRATCertificate&& other) = delete;
 
-    virtual ~DRATCertificate() = 0;
+    DRATCertificate() = default;
+    virtual ~DRATCertificate() = default;
 };
-
-class FileIOError : public std::exception {};
 
 /**
  * \ingroup JamSAT_Proof
@@ -96,7 +104,7 @@ class FileIOError : public std::exception {};
  * 
  * The proof is emitted in the binary DRAT format.
  * 
- * \throws FileIOError on 
+ * \throw FileIOError when the file could not be opened
  * 
  * TODO: use std::filesystem even though it's not supported
  *   in VS2017 and macOS 10.13?
