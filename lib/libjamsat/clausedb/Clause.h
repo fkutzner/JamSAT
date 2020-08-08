@@ -37,6 +37,8 @@
 #include <cstdint>
 #include <memory>
 
+#include <gsl/span>
+
 #include <libjamsat/cnfproblem/CNFLiteral.h>
 #include <libjamsat/utils/Casts.h>
 #include <libjamsat/utils/OverApproximatingSet.h>
@@ -157,6 +159,22 @@ public:
      * be dereferenced.
      */
     const_iterator end() const noexcept;
+
+    /**
+     * \brief Returns a span over the clause's literals.
+     * 
+     * The span is valid until the clause size is modified or the clause is
+     * destroyed.
+     */
+    gsl::span<CNFLit const> span() const noexcept;
+
+    /**
+     * \brief Returns a span over the clause's literals.
+     * 
+     * The span is valid until the clause size is modified or the clause is
+     * destroyed.
+     */
+    gsl::span<CNFLit> span() noexcept;
 
     /**
      * \brief Erases a literal from the clause.
@@ -482,5 +500,13 @@ inline void Clause::clauseUpdated() noexcept {
     for (auto lit : *this) {
         m_approximatedClause.insert(lit.getVariable());
     }
+}
+
+inline gsl::span<CNFLit const> Clause::span() const noexcept {
+    return {&m_anchor, m_size};
+}
+
+inline gsl::span<CNFLit> Clause::span() noexcept {
+    return {&m_anchor, m_size};
 }
 }

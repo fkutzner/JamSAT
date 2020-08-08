@@ -44,6 +44,8 @@
 
 namespace jamsat {
 
+class DRATCertificate;
+
 /**
  * \ingroup JamSAT_Drivers
  *
@@ -152,6 +154,25 @@ public:
      * Sets a function periodically receiving details about the solving process.
      */
     virtual void setLogger(LoggerFn loggerFunction) = 0;
+
+
+    /**
+     * \brief Sets the object receiving the DRUP certificate clauses.
+     *
+     * When this object is set, DRAT certificate generation is activated.
+     *
+     * Caveat: when solving with assumptions, the generated proof relates
+     * to the original problem with the assumptions added as facts.
+     * 
+     * Also caveat: when using proofs in incremental mode, you need to
+     * specify a proof object before each solve call.
+     *
+     * \param cert      The DRUP certificate object. The referenced object
+     *                  must be valid until the destruction of the solver
+     *                  or until another DRUP certificate object is set,
+     *                  whichever happens sooner.
+     */
+    virtual void setDRATCertificate(DRATCertificate& cert) noexcept = 0;
 
     virtual ~CDCLSatSolver();
 };

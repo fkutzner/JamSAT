@@ -34,6 +34,7 @@
 #include <libjamsat/branching/VSIDSBranchingHeuristic.h>
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/clausedb/IterableClauseDB.h>
+#include <libjamsat/proof/DRATCertificate.h>
 #include <libjamsat/proof/Model.h>
 #include <libjamsat/simplification/ClauseMinimization.h>
 #include <libjamsat/simplification/ProblemOptimizer.h>
@@ -140,6 +141,7 @@ public:
     auto solve(std::vector<CNFLit> const& assumedFacts) -> std::unique_ptr<SolvingResult> override;
     void stop() noexcept override;
     void setLogger(LoggerFn loggerFunction) override;
+    void setDRATCertificate(DRATCertificate& cert) noexcept override;
 
     virtual ~CDCLSatSolverImpl();
 
@@ -322,6 +324,20 @@ private:
      */
     auto resolveDecision(CNFLit decision) -> ResolveDecisionResult;
 
+    /**
+     * Adds the given clause to the UNSAT proof if a certificate object is present.
+     */
+    void addRUPClauseToProof(gsl::span<CNFLit const> clause);
+
+    /**
+     * Finalizes the UNSAT proof if a certificate object is present.
+     * 
+     * m_certificate is set to nullptr by this method, since no further clauses
+     * can be added to the proof.
+     */
+    void finalizeProofOnUnsat();
+
+
     // Solver subsystems
     Assignment m_assignment;
     VSIDSBranchingHeuristic<Assignment> m_branchingHeuristic;
@@ -352,6 +368,8 @@ private:
     StampMap<uint16_t, CNFVar::Index, CNFLit::Index, Assignment::LevelKey> m_stamps;
 
     LoggerFn m_loggerFn;
+
+    DRATCertificate* m_certificate;
 
     static constexpr uint32_t m_printStatsInterval = 16384;
     static constexpr uint32_t m_checkStopInterval = 8192;
@@ -405,7 +423,8 @@ CDCLSatSolverImpl::CDCLSatSolverImpl(Config const& configuration)
   , m_configuration{configuration}
   , m_lemmaBuffer{}
   , m_stamps{getMaxLit(CNFVar{0}).getRawValue()}
-  , m_loggerFn{} {
+  , m_loggerFn{}
+  , m_certificate{nullptr} {
     m_conflictAnalyzer.setOnSeenVariableCallback(
         [this](CNFVar var) { m_branchingHeuristic.seenInConflict(var); });
 }
@@ -505,6 +524,10 @@ auto CDCLSatSolverImpl::solve(std::vector<CNFLit> const& assumedFacts)
             tryReduceClauseDB();
             m_statistics.registerRestart();
             intermediateResult = solveUntilRestart(assumedFacts, failedAssumptions);
+        }
+
+        if (intermediateResult == TBools::FALSE) {
+            finalizeProofOnUnsat();
         }
 
         auto result = createSolvingResult(intermediateResult, failedAssumptions);
@@ -799,6 +822,7 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
         if (CNFLit* newFact = boost::get<CNFLit>(&result.clause)) {
             m_facts.push_back(*newFact);
             m_statistics.registerLemma(1);
+            addRUPClauseToProof({newFact, 1});
             return ResolveDecisionResult::RESTART;
         } else {
             ClauseT* newLemmaClause = boost::get<ClauseT*>(result.clause);
@@ -811,6 +835,7 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
             LBD newLemmaLBD = (*newLemmaClause).template getLBD<LBD>();
             m_restartPolicy.registerConflict({newLemmaLBD});
 
+            addRUPClauseToProof(newLemmaClause->span());
             backtrackToLevel(result.backtrackLevel);
             conflictingClause = m_assignment.registerLemma(*newLemmaClause);
 
@@ -913,6 +938,25 @@ void CDCLSatSolverImpl::stop() noexcept {
 
 void CDCLSatSolverImpl::setLogger(LoggerFn logger) {
     m_loggerFn = std::move(logger);
+}
+
+void CDCLSatSolverImpl::setDRATCertificate(DRATCertificate& cert) noexcept {
+    m_certificate = &cert;
+}
+
+void CDCLSatSolverImpl::addRUPClauseToProof(gsl::span<CNFLit const> clause) {
+    if (m_certificate != nullptr) {
+        m_certificate->addRUPClause(clause);
+    }
+}
+
+void CDCLSatSolverImpl::finalizeProofOnUnsat() {
+    if (m_certificate != nullptr) {
+        std::array<CNFLit, 0> emptyClause;
+        m_certificate->addRUPClause(emptyClause);
+        m_certificate->flush();
+        m_certificate = nullptr; // preventing proof writes in subsequent solve calls
+    }
 }
 
 }
