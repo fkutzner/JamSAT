@@ -26,8 +26,19 @@
 
 #include "ProblemOptimizer.h"
 
-
 namespace jamsat {
+
+namespace {
+class NullDRATCertificate : public DRATCertificate {
+public:
+    void addRATClause(gsl::span<CNFLit const>, size_t) override {}
+    void addATClause(gsl::span<CNFLit const>) override {}
+    void deleteClause(gsl::span<CNFLit const>) override {}
+    void flush() override {}
+
+    virtual ~NullDRATCertificate() = default;
+};
+}
 
 auto PolymorphicClauseDB::createClause(std::size_t size) noexcept -> Clause* {
     return m_impl->createClause(size);
@@ -44,11 +55,13 @@ void PolymorphicClauseDB::getClauses(ClauseRecv const& receiver) {
 SharedOptimizerState::SharedOptimizerState(std::vector<CNFLit>&& facts,
                                            PolymorphicClauseDB&& clauseDB,
                                            Assignment&& assignment,
+                                           DRATCertificate* unsatCertificate,
                                            CNFVar maxVar) noexcept
   : m_facts{std::move(facts)}
   , m_clauseDB{std::move(clauseDB)}
   , m_assignment{std::move(assignment)}
   , m_maxVar{maxVar}
+  , m_unsatCert{unsatCertificate}
   , m_occMap{}
   , m_breakingChange{false}
   , m_detectedUnsat{false}
@@ -59,6 +72,7 @@ SharedOptimizerState::SharedOptimizerState(SharedOptimizerState&& rhs) noexcept
   , m_clauseDB{std::move(rhs.m_clauseDB)}
   , m_assignment{std::move(rhs.m_assignment)}
   , m_maxVar{rhs.m_maxVar}
+  , m_unsatCert{rhs.m_unsatCert}
   , m_occMap{std::move(rhs.m_occMap)}
   , m_breakingChange{rhs.m_breakingChange}
   , m_detectedUnsat{rhs.m_detectedUnsat}
@@ -69,6 +83,7 @@ auto SharedOptimizerState::operator=(SharedOptimizerState&& rhs) noexcept -> Sha
     m_clauseDB = std::move(rhs.m_clauseDB);
     m_assignment = std::move(rhs.m_assignment);
     m_maxVar = rhs.m_maxVar;
+    m_unsatCert = rhs.m_unsatCert;
     m_occMap = std::move(rhs.m_occMap);
     m_breakingChange = rhs.m_breakingChange;
     m_detectedUnsat = rhs.m_detectedUnsat;
@@ -83,6 +98,15 @@ void SharedOptimizerState::precomputeOccurrenceMap() {
             m_occMap->insert(*clause);
         }
     });
+}
+
+auto SharedOptimizerState::getUnsatCertificate() noexcept -> DRATCertificate& {
+    static NullDRATCertificate nullCert;
+
+    if (m_unsatCert != nullptr) {
+        return *m_unsatCert;
+    }
+    return nullCert;
 }
 
 auto SharedOptimizerState::hasPrecomputedOccurrenceMap() const noexcept -> bool {

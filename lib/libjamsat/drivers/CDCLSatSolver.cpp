@@ -603,8 +603,11 @@ auto CDCLSatSolverImpl::trySimplify() -> SimplificationResult {
         JAM_LOG_SOLVER(info, "Beginning simplification");
 
         PolymorphicClauseDB pmrClauseDB{std::move(m_clauseDB)};
-        SharedOptimizerState sharedOptState{
-            std::move(m_facts), std::move(pmrClauseDB), std::move(m_assignment), m_maxVar};
+        SharedOptimizerState sharedOptState{std::move(m_facts),
+                                            std::move(pmrClauseDB),
+                                            std::move(m_assignment),
+                                            m_certificate,
+                                            m_maxVar};
 
         SharedOptimizerState result =
             m_optimizer->optimize(std::move(sharedOptState), m_statistics.getCurrentEra());

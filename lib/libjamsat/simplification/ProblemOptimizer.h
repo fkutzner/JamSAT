@@ -35,8 +35,11 @@
 #include <stdexcept>
 #include <vector>
 
+#include <gsl/span>
+
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/cnfproblem/CNFLiteral.h>
+#include <libjamsat/proof/DRATCertificate.h>
 #include <libjamsat/solver/Assignment.h>
 #include <libjamsat/solver/Statistics.h>
 #include <libjamsat/utils/OccurrenceMap.h>
@@ -119,6 +122,7 @@ public:
     SharedOptimizerState(std::vector<CNFLit>&& facts,
                          PolymorphicClauseDB&& clauseDB,
                          Assignment&& assignment,
+                         DRATCertificate* unsatCertificate,
                          CNFVar maxVar) noexcept;
 
 
@@ -130,6 +134,8 @@ public:
 
     auto getAssignment() noexcept -> Assignment&;
     auto getAssignment() const noexcept -> Assignment const&;
+
+    auto getUnsatCertificate() noexcept -> DRATCertificate&;
 
     using OccMap = OccurrenceMap<Clause, ClauseDeletedQuery, ClauseModifiedQuery>;
     auto getOccurrenceMap() noexcept -> OccMap&;
@@ -163,6 +169,8 @@ private:
     PolymorphicClauseDB m_clauseDB;
     Assignment m_assignment;
     CNFVar m_maxVar;
+
+    DRATCertificate* m_unsatCert;
 
     std::optional<OccMap> m_occMap;
 

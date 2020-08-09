@@ -58,6 +58,14 @@ std::vector<CNFLit> withConsequences(Assignment& assignment, std::vector<CNFLit>
     return std::vector<CNFLit>{factsAndConsequences.begin(), factsAndConsequences.end()};
 }
 
+void deleteClause(SharedOptimizerState& optState, Clause& clause) {
+    optState.getUnsatCertificate().deleteClause(clause.span());
+    clause.setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
+    optState.getAssignment().registerClauseModification(clause);
+    optState.getOccurrenceMap().remove(clause);
+    optState.getStats().amntClausesRemoved += 1;
+}
+
 class FactCleaner : public ProblemOptimizer {
 public:
     auto wantsExecution(StatisticsEra const& currentStats) const noexcept -> bool override {
@@ -80,6 +88,7 @@ public:
         SharedOptimizerState::OccMap& occurrences = sharedOptimizerState.getOccurrenceMap();
         Assignment& assignment = sharedOptimizerState.getAssignment();
         OptimizationStats& stats = sharedOptimizerState.getStats();
+        DRATCertificate& unsatCert = sharedOptimizerState.getUnsatCertificate();
 
         std::vector<CNFLit>& facts = sharedOptimizerState.getFacts();
         std::size_t const amntFactsBeforePropagation = facts.size();
@@ -99,10 +108,7 @@ public:
         // operations later on
         for (CNFLit fact : facts) {
             for (Clause* toDelete : occurrences[fact]) {
-                toDelete->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
-                assignment.registerClauseModification(*toDelete);
-                occurrences.remove(*toDelete);
-                stats.amntClausesRemoved += 1;
+                deleteClause(sharedOptimizerState, *toDelete);
             }
         }
 
@@ -115,11 +121,11 @@ public:
                 if (toStrengthen->size() == 2) {
                     // Assuming that all facts have been propagated without conflict,
                     // the literal that would remain is a fact
-                    toStrengthen->setFlag(Clause::Flag::SCHEDULED_FOR_DELETION);
-                    occurrences.remove(*toStrengthen);
-                    stats.amntClausesRemoved += 1;
+                    deleteClause(sharedOptimizerState, *toStrengthen);
                 } else {
+                    unsatCert.deleteClause(toStrengthen->span());
                     boost::remove_erase(*toStrengthen, ~fact);
+                    unsatCert.addATClause(toStrengthen->span());
                     toStrengthen->setFlag(Clause::Flag::MODIFIED);
                     toStrengthen->clauseUpdated();
                     occurrences.setModified(
