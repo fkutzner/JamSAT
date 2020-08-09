@@ -518,6 +518,7 @@ auto CDCLSatSolverImpl::solve(std::vector<CNFLit> const& assumedFacts)
           TBools::INDETERMINATE, nullptr, std::vector<CNFLit>{});
     }
     if (m_detectedUNSAT) {
+      finalizeProofOnUnsat();
       m_statistics.registerSolvingStop();
       return std::make_unique<SolvingResultImpl>(TBools::FALSE, nullptr, std::vector<CNFLit>{});
     }
