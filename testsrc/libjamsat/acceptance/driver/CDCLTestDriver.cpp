@@ -3,6 +3,7 @@
 #include <libjamsat/utils/Assert.h>
 
 #include <toolbox/testutils/Minisat.h>
+#include <toolbox/testutils/OnlineDRATChecker.h>
 
 #include <cstdlib>
 #include <fstream>
@@ -55,6 +56,14 @@ CheckMinisatResult checkResultWithMinisat(jamsat::CNFProblem& problem, jamsat::T
 }
 }
 
+void printDRATCheckerFailure(jamsat::OnlineDRATChecker const& checker)
+{
+  std::cout << "DRAT proof error:\n";
+  for (std::string const& msg : checker.getResultComments()) {
+    std::cout << msg << "\n";
+  }
+}
+
 int main(int argc, char** argv)
 {
   if (argc != 4) {
@@ -87,14 +96,30 @@ int main(int argc, char** argv)
     return getParseErrorExitValue(argv[1]);
   }
 
+  std::unique_ptr<jamsat::OnlineDRATChecker> dratChecker;
+  bool const checkResultEnabled = isCheckingResultEnabled(argv[2]);
+  if (checkResultEnabled) {
+    dratChecker = jamsat::createOnlineDRATChecker(problem);
+  }
+
   std::unique_ptr<jamsat::CDCLSatSolver> solver = jamsat::createCDCLSatSolver();
+  solver->setDRATCertificate(*dratChecker);
   solver->addProblem(problem);
   auto result = solver->solve({});
 
-  bool checkResultEnabled = isCheckingResultEnabled(argv[2]);
   if (checkResultEnabled) {
+    if (dratChecker->hasDetectedInvalidLemma() || dratChecker->hasDetectedUnsupportedLemma()) {
+      printDRATCheckerFailure(*dratChecker);
+      return EXIT_FAILURE;
+    }
+
     bool verified = false;
     if (jamsat::isTrue(result->isProblemSatisfiable())) {
+      if (dratChecker->hasValidatedUnsat()) {
+        std::cout << "Error: generated an UNSAT certificate for a satisfiable problem\n";
+        return EXIT_FAILURE;
+      }
+
       auto optModelRef = result->getModel();
       auto& model = (*optModelRef).get();
 
@@ -108,6 +133,13 @@ int main(int argc, char** argv)
       // satisfied => don't check again with minisat
       verified = true;
     }
+    else {
+      if (!dratChecker->hasValidatedUnsat()) {
+        std::cout << "Error: failed to generate an UNSAT proof for an unsatisfiable problem\n";
+        return EXIT_FAILURE;
+      }
+    }
+
     if (!verified && checkResultWithMinisat(problem, result->isProblemSatisfiable()) ==
                          CheckMinisatResult::NO_MATCH) {
       return EXIT_FAILURE;

@@ -27,6 +27,8 @@ nm_add_library(jstest.toolbox.testutils STATIC
   RangeUtils.h
   Minisat.cpp
   Minisat.h
+  OnlineDRATChecker.cpp
+  OnlineDRATChecker.h
   TestReasonProvider.h
   TestAssignmentProvider.cpp
   TestAssignmentProvider.h

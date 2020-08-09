@@ -32,7 +32,7 @@ foreach(cnfproblem ${cnfproblems})
         set(expected_result_regex ".*Satisfiable:0")
     endif()
 
-    set(testname "jstest.libjamsat.acceptance.driver/small-randomsat/${cnfproblemBasename}")
+    set(testname "jstest.libjamsat.acceptance.driver/small-randomsat-checked/${cnfproblemBasename}")
     add_test(NAME ${testname}
              COMMAND jstest.libjamsat.acceptance.driver --fail-on-parse-error --check-result ${cnfproblem})
     set_tests_properties(${testname} PROPERTIES PASS_REGULAR_EXPRESSION ${expected_result_regex})
