@@ -83,11 +83,17 @@ private:
 OnlineDRATCheckerImpl::OnlineDRATCheckerImpl(CNFProblem const& problem)
   : m_currentState{State::NORMAL}
   , m_resultComments{}
+  , m_maxVar{problem.getMaxVar()}
   , m_clauses{}
   , m_assignment{problem.getMaxVar()}
 {
   for (CNFClause const& clause : problem.getClauses()) {
-    addClause(clause);
+    if (clause.empty()) {
+      m_currentState = State::VALIDATED_UNSAT;
+    }
+    else if (m_currentState == State::NORMAL) {
+      addClause(clause);
+    }
   }
 }
 
@@ -195,14 +201,23 @@ void OnlineDRATCheckerImpl::addATClause(gsl::span<CNFLit const> clause)
   if (m_currentState != State::NORMAL) {
     if (m_currentState == State::VALIDATED_UNSAT && clause.empty()) {
       m_currentState = State::FINALIZED_PROOF;
+      return;
     }
     else if (m_currentState == State::FINALIZED_PROOF || m_currentState == State::VALIDATED_UNSAT) {
       log("After proof completion, this checker accepts only the empty clause, but got: " +
           toString(clause.begin(), clause.end()));
       m_currentState = State::DETECTED_UNSUPPORTED_LEMMA;
+      return;
     }
 
     // Otherwise: already complained earlier
+    return;
+  }
+
+  if (clause.empty()) {
+    // unsatisfiability has not been validated yet
+    log("Failed to validate AT property for the empty clause");
+    m_currentState = State::DETECTED_INVALID_LEMMA;
     return;
   }
 
