@@ -29,6 +29,7 @@
 
 #include <toolbox/fuzz/FuzzingEntryPoint.h>
 #include <toolbox/testutils/Minisat.h>
+#include <toolbox/testutils/OnlineDRATChecker.h>
 
 #include <iostream>
 
@@ -51,13 +52,21 @@ void JamSATFuzzingEntryPoint(std::istream& fuzzerInput)
     return;
   }
 
+  std::unique_ptr<OnlineDRATChecker> checker = createOnlineDRATChecker(problem);
+
   auto solver = createCDCLSatSolver();
+  solver->setDRATCertificate(*checker);
   solver->addProblem(problem);
   auto result = solver->solve({});
   std::cout << (isTrue(result->isProblemSatisfiable()) ? "SAT" : "INDET-OR-UNSAT");
 
+  assert(!checker->hasDetectedInvalidLemma() && !checker->hasDetectedUnsupportedLemma());
+
+  TBool const solvingResult = result->isProblemSatisfiable();
+  assert(isFalse(solvingResult) == checker->hasValidatedUnsat());
+
   auto minisatResult = isSatisfiableViaMinisat(problem);
   (void)minisatResult;
-  assert(result->isProblemSatisfiable() == minisatResult);
+  assert(solvingResult == minisatResult);
 }
 }
