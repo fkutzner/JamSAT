@@ -165,7 +165,7 @@ TEST_P(FileDRATCertificateSerializationTests, SerializationTest) {
             underTest->deleteClause(cl->literals);
         }
     }
-
+    underTest->flush();
     underTest.reset(nullptr);
 
     std::vector<unsigned char> result = slurpFile(tempFile.getPath());

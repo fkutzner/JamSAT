@@ -61,7 +61,7 @@ public:
     void deleteClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, false); }
 
     void flush() override {
-        if (fflush(m_file) == 0) {
+        if (fflush(m_file) != 0) {
             throw FileIOError();
         }
     }
