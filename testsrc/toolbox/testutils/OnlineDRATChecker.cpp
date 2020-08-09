@@ -29,11 +29,19 @@
 #include <libjamsat/clausedb/Clause.h>
 #include <libjamsat/solver/Assignment.h>
 #include <libjamsat/utils/ControlFlow.h>
+#include <libjamsat/utils/Logger.h>
 #include <libjamsat/utils/Printers.h>
+#include <libjamsat/utils/RangeUtils.h>
 
 #include <gsl/span>
 
 #include <algorithm>
+
+#if defined(JAM_ENABLE_CERT_LOGGING)
+#define JAM_LOG_CERT(x, y) JAM_LOG(x, "uscert", y)
+#else
+#define JAM_LOG_CERT(x, y)
+#endif
 
 namespace jamsat {
 namespace {
@@ -52,6 +60,7 @@ public:
   auto getResultComments() const noexcept -> std::vector<std::string> const& override;
 
 private:
+  void addProblem(CNFProblem const& problem);
   void addClause(gsl::span<CNFLit const> clause);
   void addUnaryClause(gsl::span<CNFLit const> clause);
   void addNonUnaryClause(gsl::span<CNFLit const> clause);
@@ -80,6 +89,7 @@ private:
   Assignment m_assignment;
 };
 
+
 OnlineDRATCheckerImpl::OnlineDRATCheckerImpl(CNFProblem const& problem)
   : m_currentState{State::NORMAL}
   , m_resultComments{}
@@ -87,13 +97,36 @@ OnlineDRATCheckerImpl::OnlineDRATCheckerImpl(CNFProblem const& problem)
   , m_clauses{}
   , m_assignment{problem.getMaxVar()}
 {
-  for (CNFClause const& clause : problem.getClauses()) {
+  addProblem(problem);
+}
+
+void OnlineDRATCheckerImpl::addProblem(CNFProblem const& problem)
+{
+  // Adding all non-unary clauses before unary clauses to be able to detect
+  // unary-level conflicts eagerly (needed for correctness)
+  std::vector<CNFLit> facts;
+
+  for (CNFClause const& rawClause : problem.getClauses()) {
+    std::vector<CNFLit> clause = withoutRedundancies(rawClause.begin(), rawClause.end());
+
     if (clause.empty()) {
       m_currentState = State::VALIDATED_UNSAT;
+      break;
     }
-    else if (m_currentState == State::NORMAL) {
-      addClause(clause);
+    else if (clause.size() == 1) {
+      facts.push_back(clause[0]);
     }
+    else {
+      auto redundantP = [](CNFLit lhs, CNFLit rhs) { return lhs == ~rhs; };
+      if (auto taut = std::adjacent_find(clause.begin(), clause.end(), redundantP);
+          taut == clause.end()) {
+        addClause(clause);
+      }
+    }
+  }
+
+  for (CNFLit lit : facts) {
+    addClause({&lit, 1});
   }
 }
 
@@ -139,6 +172,7 @@ void OnlineDRATCheckerImpl::addUnaryClause(gsl::span<CNFLit const> clause)
 
   if (TBool curAssign = m_assignment.getAssignment(newFact); isDeterminate(curAssign)) {
     if (isFalse(curAssign)) {
+      JAM_LOG_CERT(info, "Validated unsat at lit " << newFact);
       m_currentState = State::VALIDATED_UNSAT;
     }
   }
@@ -172,6 +206,10 @@ void OnlineDRATCheckerImpl::addNonUnaryClause(gsl::span<CNFLit const> clause)
 
 void OnlineDRATCheckerImpl::addRATClause(gsl::span<CNFLit const> clause, size_t pivotIdx)
 {
+  JAM_LOG_CERT(info,
+               "Adding RAT clause: (" << toString(clause.begin(), clause.end()) << "), pivot "
+                                      << pivotIdx);
+
   if (clause.empty()) {
     log("Empty clause passed to addRATClause");
     m_currentState = State::DETECTED_INVALID_LEMMA;
@@ -198,6 +236,8 @@ void OnlineDRATCheckerImpl::addRATClause(gsl::span<CNFLit const> clause, size_t 
 
 void OnlineDRATCheckerImpl::addATClause(gsl::span<CNFLit const> clause)
 {
+  JAM_LOG_CERT(info, "Adding AT clause: (" << toString(clause.begin(), clause.end()) << ")");
+
   if (m_currentState != State::NORMAL) {
     if (m_currentState == State::VALIDATED_UNSAT && clause.empty()) {
       m_currentState = State::FINALIZED_PROOF;
@@ -231,6 +271,7 @@ void OnlineDRATCheckerImpl::addATClause(gsl::span<CNFLit const> clause)
 
 void OnlineDRATCheckerImpl::deleteClause(gsl::span<CNFLit const> clause)
 {
+  JAM_LOG_CERT(info, "Deleting clause: (" << toString(clause.begin(), clause.end()) << ")");
   // TODO: find clause & mark it as removed
 }
 
@@ -273,6 +314,7 @@ void OnlineDRATCheckerImpl::flush() {}
 
 void OnlineDRATCheckerImpl::log(std::string const& message)
 {
+  JAM_LOG_CERT(info, message);
   m_resultComments.push_back(message);
 }
 }
