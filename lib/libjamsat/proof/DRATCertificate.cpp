@@ -56,7 +56,7 @@ public:
         }
     }
 
-    void addRUPClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, true); }
+    void addATClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, true); }
 
     void deleteClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, false); }
 
@@ -95,8 +95,8 @@ private:
             EncodeBinaryDRAT(clause.subspan(pivotIdx, 1), gsl::span{m_buffer}.subspan(1));
         ++encodingLen; // accounting for m_buffer[0]
 
-        encodingLen += EncodeBinaryDRAT(clause.subspan(0, pivotIdx),
-                                        gsl::span{m_buffer}.subspan(encodingLen));
+        encodingLen +=
+            EncodeBinaryDRAT(clause.subspan(0, pivotIdx), gsl::span{m_buffer}.subspan(encodingLen));
         encodingLen += EncodeBinaryDRAT(clause.subspan(pivotIdx + 1),
                                         gsl::span{m_buffer}.subspan(encodingLen));
         m_buffer[encodingLen] = 0;

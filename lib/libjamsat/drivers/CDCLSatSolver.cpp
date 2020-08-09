@@ -325,9 +325,11 @@ private:
     auto resolveDecision(CNFLit decision) -> ResolveDecisionResult;
 
     /**
-     * Adds the given clause to the UNSAT proof if a certificate object is present.
+     * Adds the given clause to the U/NSAT proof if a certificate object is present.
+     * 
+     * \param clause    A clause satisfying the asymmetric tautology property.
      */
-    void addRUPClauseToProof(gsl::span<CNFLit const> clause);
+    void addATClauseToProof(gsl::span<CNFLit const> clause);
 
     /**
      * Finalizes the UNSAT proof if a certificate object is present.
@@ -822,7 +824,7 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
         if (CNFLit* newFact = boost::get<CNFLit>(&result.clause)) {
             m_facts.push_back(*newFact);
             m_statistics.registerLemma(1);
-            addRUPClauseToProof({newFact, 1});
+            addATClauseToProof({newFact, 1});
             return ResolveDecisionResult::RESTART;
         } else {
             ClauseT* newLemmaClause = boost::get<ClauseT*>(result.clause);
@@ -835,7 +837,7 @@ auto CDCLSatSolverImpl::resolveDecision(CNFLit decision) -> ResolveDecisionResul
             LBD newLemmaLBD = (*newLemmaClause).template getLBD<LBD>();
             m_restartPolicy.registerConflict({newLemmaLBD});
 
-            addRUPClauseToProof(newLemmaClause->span());
+            addATClauseToProof(newLemmaClause->span());
             backtrackToLevel(result.backtrackLevel);
             conflictingClause = m_assignment.registerLemma(*newLemmaClause);
 
@@ -944,16 +946,16 @@ void CDCLSatSolverImpl::setDRATCertificate(DRATCertificate& cert) noexcept {
     m_certificate = &cert;
 }
 
-void CDCLSatSolverImpl::addRUPClauseToProof(gsl::span<CNFLit const> clause) {
+void CDCLSatSolverImpl::addATClauseToProof(gsl::span<CNFLit const> clause) {
     if (m_certificate != nullptr) {
-        m_certificate->addRUPClause(clause);
+        m_certificate->addATClause(clause);
     }
 }
 
 void CDCLSatSolverImpl::finalizeProofOnUnsat() {
     if (m_certificate != nullptr) {
         std::array<CNFLit, 0> emptyClause;
-        m_certificate->addRUPClause(emptyClause);
+        m_certificate->addATClause(emptyClause);
         m_certificate->flush();
         m_certificate = nullptr; // preventing proof writes in subsequent solve calls
     }

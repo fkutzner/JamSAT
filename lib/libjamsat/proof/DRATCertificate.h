@@ -53,7 +53,7 @@ class FileIOError : public std::exception {};
 class DRATCertificate {
 public:
     /**
-     * \brief Adds resolution asymmetric tautology clause to the proof.
+     * \brief Adds a resolution asymmetric tautology clause to the proof.
      * 
      * \param clause    A clause.
      * \param pivotIdx  The index of the pivot literal within \p{clause}.
@@ -63,13 +63,13 @@ public:
     virtual void addRATClause(gsl::span<CNFLit const> clause, size_t pivotIdx) = 0;
 
     /**
-     * \brief Adds reverse unit propagation clause to the proof.
+     * \brief Adds an asymmetric tautology clause to the proof.
      * 
      * \param clause    A clause.
      * 
      * \throw FileIOError           on file i/o errors
      */
-    virtual void addRUPClause(gsl::span<CNFLit const> clause) = 0;
+    virtual void addATClause(gsl::span<CNFLit const> clause) = 0;
 
     /**
      * \brief Adds a clause deletion to the proof.

@@ -109,7 +109,7 @@ struct DRATClauseBase {
     std::vector<CNFLit> literals;
 };
 
-struct RUPClause : public DRATClauseBase {};
+struct ATClause : public DRATClauseBase {};
 
 struct RATClause : public DRATClauseBase {
     std::size_t pivot = 0;
@@ -117,7 +117,7 @@ struct RATClause : public DRATClauseBase {
 
 struct DeleteClause : public DRATClauseBase {};
 
-using ProofClause = boost::variant<RUPClause, RATClause, DeleteClause>;
+using ProofClause = boost::variant<ATClause, RATClause, DeleteClause>;
 
 
 // clang-format off
@@ -127,8 +127,8 @@ using ProofClauseAndResult = std::tuple<
 >;
 //clang-format on
 
-auto operator<<(std::ostream& stream, RUPClause const& toPrint) -> std::ostream& {
-    stream << "RUP clause: (" << toString(toPrint.literals.begin(), toPrint.literals.end()) << ")";
+auto operator<<(std::ostream& stream, ATClause const& toPrint) -> std::ostream& {
+    stream << "AT clause: (" << toString(toPrint.literals.begin(), toPrint.literals.end()) << ")";
     return stream;
 }
 
@@ -155,8 +155,8 @@ TEST_P(FileDRATCertificateSerializationTests, SerializationTest) {
     std::unique_ptr<DRATCertificate> underTest = createFileDRATCertificate(tempFile.getPath().string());
 
     for(ProofClause const& clause : std::get<0>(GetParam())) {
-        if (RUPClause const* cl = boost::get<RUPClause>(&clause); cl != nullptr) {
-            underTest->addRUPClause(cl->literals);
+        if (ATClause const* cl = boost::get<ATClause>(&clause); cl != nullptr) {
+            underTest->addATClause(cl->literals);
         }
         else if (RATClause const* cl = boost::get<RATClause>(&clause); cl != nullptr) {
             underTest->addRATClause(cl->literals, cl->pivot);
@@ -174,8 +174,8 @@ TEST_P(FileDRATCertificateSerializationTests, SerializationTest) {
 }
 
 namespace {
-auto createRUPClause(std::vector<CNFLit> const& lits) -> RUPClause {
-    return RUPClause{{lits}};
+auto createATClause(std::vector<CNFLit> const& lits) -> ATClause {
+    return ATClause{{lits}};
 }
 
 auto createRATClause(std::vector<CNFLit> const& lits, std::size_t pivot) -> RATClause {
@@ -195,9 +195,9 @@ constexpr unsigned char CL_DEL = 0x64;
 INSTANTIATE_TEST_CASE_P(UnitProof, FileDRATCertificateSerializationTests,
   ::testing::Values(
     ProofClauseAndResult{{}, {}},
-    ProofClauseAndResult{{RUPClause{}}, {CL_ADD, 0x00}},
-    ProofClauseAndResult{{createRUPClause({1_Lit})}, {CL_ADD, 0x02, 0x00}},
-    ProofClauseAndResult{{createRUPClause({1_Lit, 2_Lit, 129_Lit})}, {CL_ADD, 0x02, 0x04, 0x82, 0x02, 0x00}},
+    ProofClauseAndResult{{ATClause{}}, {CL_ADD, 0x00}},
+    ProofClauseAndResult{{createATClause({1_Lit})}, {CL_ADD, 0x02, 0x00}},
+    ProofClauseAndResult{{createATClause({1_Lit, 2_Lit, 129_Lit})}, {CL_ADD, 0x02, 0x04, 0x82, 0x02, 0x00}},
     ProofClauseAndResult{{createRATClause({1_Lit}, 0)}, {CL_ADD, 0x02, 0x00}},
     ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 0)}, {CL_ADD, 0x02, 0x04, 0x82, 0x02, 0x00}},
     ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 1)}, {CL_ADD, 0x04, 0x02, 0x82, 0x02, 0x00}},
@@ -205,7 +205,7 @@ INSTANTIATE_TEST_CASE_P(UnitProof, FileDRATCertificateSerializationTests,
     ProofClauseAndResult{{createDeleteClause({1_Lit, 2_Lit, 129_Lit})}, {CL_DEL, 0x02, 0x04, 0x82, 0x02, 0x00}},
     ProofClauseAndResult{
         {
-            createRUPClause({1_Lit}),
+            createATClause({1_Lit}),
             createDeleteClause({~1_Lit, 2_Lit}),
             createRATClause({~1_Lit, 2_Lit, 129_Lit}, 1),
         },
