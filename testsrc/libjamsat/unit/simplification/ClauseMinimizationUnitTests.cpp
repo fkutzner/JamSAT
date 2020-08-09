@@ -43,280 +43,293 @@ namespace jamsat {
 using TrivialClause = TestAssignmentProvider::Clause;
 
 template <typename Container>
-bool isPermutation(const Container& c1, const Container& c2) {
-    return std::is_permutation(c1.begin(), c1.end(), c2.begin(), c2.end());
+bool isPermutation(const Container& c1, const Container& c2)
+{
+  return std::is_permutation(c1.begin(), c1.end(), c2.begin(), c2.end());
 }
 
-TEST(UnitSolver, eraseRedundantLiterals_fixpointOnEmptyClause) {
-    TestReasonProvider<TrivialClause> reasonProvider;
-    TestAssignmentProvider dlProvider;
+TEST(UnitSolver, eraseRedundantLiterals_fixpointOnEmptyClause)
+{
+  TestReasonProvider<TrivialClause> reasonProvider;
+  TestAssignmentProvider dlProvider;
 
-    TrivialClause emptyClause;
-    StampMap<int, CNFVar::Index> tempStamps{1024};
+  TrivialClause emptyClause;
+  StampMap<int, CNFVar::Index> tempStamps{1024};
 
-    eraseRedundantLiterals(emptyClause, reasonProvider, dlProvider, tempStamps);
+  eraseRedundantLiterals(emptyClause, reasonProvider, dlProvider, tempStamps);
 
-    EXPECT_TRUE(emptyClause.empty());
+  EXPECT_TRUE(emptyClause.empty());
 }
 
-TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancy) {
-    TestReasonProvider<TrivialClause> reasonProvider;
+TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancy)
+{
+  TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause reasonFor3{
-        3_Lit,
-        ~4_Lit,
-    };
-    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
+  TrivialClause reasonFor3{
+      3_Lit,
+      ~4_Lit,
+  };
+  reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
-    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
+  TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
-    StampMap<int, CNFVar::Index> tempStamps{1024};
-    TestAssignmentProvider dlProvider;
-    dlProvider.setCurrentDecisionLevel(2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
+  StampMap<int, CNFVar::Index> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
 
-    TrivialClause expected = testData;
-    boost::remove_erase(expected, ~3_Lit);
+  TrivialClause expected = testData;
+  boost::remove_erase(expected, ~3_Lit);
 
-    eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
-    EXPECT_TRUE(isPermutation(testData, expected));
+  EXPECT_TRUE(isPermutation(testData, expected));
 }
 
-TEST(UnitSolver, eraseRedundantLiterals_removesTwoLevelRedundancy) {
-    TestReasonProvider<TrivialClause> reasonProvider;
+TEST(UnitSolver, eraseRedundantLiterals_removesTwoLevelRedundancy)
+{
+  TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause reasonFor3{
-        3_Lit,
-        ~4_Lit,
-        ~5_Lit,
-    };
-    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
+  TrivialClause reasonFor3{
+      3_Lit,
+      ~4_Lit,
+      ~5_Lit,
+  };
+  reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
-    TrivialClause reasonFor5{
-        ~5_Lit,
-        ~8_Lit,
-        ~9_Lit,
-    };
-    reasonProvider.set_reason(CNFVar{5}, reasonFor5);
+  TrivialClause reasonFor5{
+      ~5_Lit,
+      ~8_Lit,
+      ~9_Lit,
+  };
+  reasonProvider.set_reason(CNFVar{5}, reasonFor5);
 
-    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit, ~8_Lit, 9_Lit};
+  TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit, ~8_Lit, 9_Lit};
 
-    StampMap<int, CNFVar::Index> tempStamps{1024};
-    TestAssignmentProvider dlProvider;
-    dlProvider.setCurrentDecisionLevel(2);
+  StampMap<int, CNFVar::Index> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
 
-    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
-    for (CNFVar::RawVariable i = 1; i < 10; ++i) {
-        dlProvider.setAssignmentDecisionLevel(CNFVar{i}, 1);
-    }
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  for (CNFVar::RawVariable i = 1; i < 10; ++i) {
+    dlProvider.setAssignmentDecisionLevel(CNFVar{i}, 1);
+  }
 
-    TrivialClause expected = testData;
-    boost::remove_erase(expected, ~3_Lit);
+  TrivialClause expected = testData;
+  boost::remove_erase(expected, ~3_Lit);
 
-    eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
-    EXPECT_TRUE(isPermutation(testData, expected));
+  EXPECT_TRUE(isPermutation(testData, expected));
 }
 
-TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancyWithUnit) {
-    TestReasonProvider<TrivialClause> reasonProvider;
+TEST(UnitSolver, eraseRedundantLiterals_removesSingleLevelRedundancyWithUnit)
+{
+  TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause reasonFor3{
-        3_Lit,
-        ~4_Lit,
-        ~5_Lit,
-    };
-    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
+  TrivialClause reasonFor3{
+      3_Lit,
+      ~4_Lit,
+      ~5_Lit,
+  };
+  reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
-    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
+  TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
-    StampMap<int, CNFVar::Index> tempStamps{1024};
-    TestAssignmentProvider dlProvider;
-    dlProvider.setCurrentDecisionLevel(2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{5}, 0);
+  StampMap<int, CNFVar::Index> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{5}, 0);
 
-    TrivialClause expected = testData;
-    boost::remove_erase(expected, ~3_Lit);
+  TrivialClause expected = testData;
+  boost::remove_erase(expected, ~3_Lit);
 
-    eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
-    EXPECT_TRUE(isPermutation(testData, expected));
+  EXPECT_TRUE(isPermutation(testData, expected));
 }
 
-TEST(UnitSolver, eraseRedundantLiterals_removesUnitLiteral) {
-    TestReasonProvider<TrivialClause> reasonProvider;
+TEST(UnitSolver, eraseRedundantLiterals_removesUnitLiteral)
+{
+  TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
+  TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
-    StampMap<int, CNFVar::Index> tempStamps{1024};
-    TestAssignmentProvider dlProvider;
-    dlProvider.setCurrentDecisionLevel(2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 0);
+  StampMap<int, CNFVar::Index> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 0);
 
-    TrivialClause expected = testData;
-    boost::remove_erase(expected, ~4_Lit);
+  TrivialClause expected = testData;
+  boost::remove_erase(expected, ~4_Lit);
 
-    eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
-    EXPECT_TRUE(isPermutation(testData, expected));
+  EXPECT_TRUE(isPermutation(testData, expected));
 }
 
-TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveNonredundantLiteral) {
-    TestReasonProvider<TrivialClause> reasonProvider;
+TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveNonredundantLiteral)
+{
+  TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause reasonFor3{3_Lit, ~4_Lit, 5_Lit};
-    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
+  TrivialClause reasonFor3{3_Lit, ~4_Lit, 5_Lit};
+  reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
-    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
+  TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
-    StampMap<int, CNFVar::Index> tempStamps{1024};
-    TestAssignmentProvider dlProvider;
-    dlProvider.setCurrentDecisionLevel(2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{5}, 1);
+  StampMap<int, CNFVar::Index> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{5}, 1);
 
-    // Literal 3 is not redundant since literal 5 does not occur
-    // in testData and is a decision literal (has no reason clause).
+  // Literal 3 is not redundant since literal 5 does not occur
+  // in testData and is a decision literal (has no reason clause).
 
-    TrivialClause expected = testData;
-    eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+  TrivialClause expected = testData;
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
-    EXPECT_TRUE(isPermutation(testData, expected));
+  EXPECT_TRUE(isPermutation(testData, expected));
 }
 
-TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveLiteralsOnCurrentLevel) {
-    TestReasonProvider<TrivialClause> reasonProvider;
+TEST(UnitSolver, eraseRedundantLiterals_doesNotRemoveLiteralsOnCurrentLevel)
+{
+  TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause reasonFor1{~1_Lit, ~4_Lit};
-    reasonProvider.set_reason(CNFVar{1}, reasonFor1);
+  TrivialClause reasonFor1{~1_Lit, ~4_Lit};
+  reasonProvider.set_reason(CNFVar{1}, reasonFor1);
 
-    TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
+  TrivialClause testData{1_Lit, ~3_Lit, ~4_Lit};
 
-    StampMap<int, CNFVar::Index> tempStamps{1024};
-    TestAssignmentProvider dlProvider;
-    dlProvider.setCurrentDecisionLevel(2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
+  StampMap<int, CNFVar::Index> tempStamps{1024};
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{4}, 1);
 
-    TrivialClause expected = testData;
-    eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+  TrivialClause expected = testData;
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
-    EXPECT_TRUE(isPermutation(testData, expected));
+  EXPECT_TRUE(isPermutation(testData, expected));
 }
 
-TEST(UnitSolver, eraseRedundantLiterals_regression_doesNotMarkNonredundantLitAsRedundant) {
-    TestReasonProvider<TrivialClause> reasonProvider;
+TEST(UnitSolver, eraseRedundantLiterals_regression_doesNotMarkNonredundantLitAsRedundant)
+{
+  TestReasonProvider<TrivialClause> reasonProvider;
 
-    TrivialClause reasonFor3{3_Lit, 7_Lit};
-    reasonProvider.set_reason(CNFVar{3}, reasonFor3);
+  TrivialClause reasonFor3{3_Lit, 7_Lit};
+  reasonProvider.set_reason(CNFVar{3}, reasonFor3);
 
-    TrivialClause reasonFor7{~7_Lit, 1_Lit};
-    reasonProvider.set_reason(CNFVar{7}, reasonFor7);
+  TrivialClause reasonFor7{~7_Lit, 1_Lit};
+  reasonProvider.set_reason(CNFVar{7}, reasonFor7);
 
-    // Variable 1 has no reason clause.
+  // Variable 1 has no reason clause.
 
-    TrivialClause reasonFor2{7_Lit, 2_Lit};
-    reasonProvider.set_reason(CNFVar{2}, reasonFor2);
+  TrivialClause reasonFor2{7_Lit, 2_Lit};
+  reasonProvider.set_reason(CNFVar{2}, reasonFor2);
 
-    TestAssignmentProvider dlProvider;
-    dlProvider.setCurrentDecisionLevel(2);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{2}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{7}, 1);
-    dlProvider.setAssignmentDecisionLevel(CNFVar{6}, 2);
+  TestAssignmentProvider dlProvider;
+  dlProvider.setCurrentDecisionLevel(2);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{1}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{2}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{3}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{7}, 1);
+  dlProvider.setAssignmentDecisionLevel(CNFVar{6}, 2);
 
-    TrivialClause testData{6_Lit, ~3_Lit, ~2_Lit};
+  TrivialClause testData{6_Lit, ~3_Lit, ~2_Lit};
 
-    StampMap<int, CNFVar::Index> tempStamps{1024};
+  StampMap<int, CNFVar::Index> tempStamps{1024};
 
-    TrivialClause expected = testData;
-    eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
+  TrivialClause expected = testData;
+  eraseRedundantLiterals(testData, reasonProvider, dlProvider, tempStamps);
 
-    // neither -3 nor -2 is redundant, since var. 1 has no reason clause and is not unit
-    EXPECT_TRUE(isPermutation(testData, expected));
+  // neither -3 nor -2 is redundant, since var. 1 has no reason clause and is not unit
+  EXPECT_TRUE(isPermutation(testData, expected));
 }
 
-TEST(UnitSolver, resolveWithBinaries_emptyClauseIsFixpoint) {
-    CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
-    // representing binary clauses as a map from first literals to a list of
-    // second literals
-    std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
-    binaryClauses[resolveAt] = {9_Lit, 8_Lit};
+TEST(UnitSolver, resolveWithBinaries_emptyClauseIsFixpoint)
+{
+  CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
+  // representing binary clauses as a map from first literals to a list of
+  // second literals
+  std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
+  binaryClauses[resolveAt] = {9_Lit, 8_Lit};
 
-    TrivialClause empty;
-    StampMap<int, CNFLit::Index> tempStamps{1024};
+  TrivialClause empty;
+  StampMap<int, CNFLit::Index> tempStamps{1024};
 
-    resolveWithBinaries(empty, binaryClauses, resolveAt, tempStamps);
+  resolveWithBinaries(empty, binaryClauses, resolveAt, tempStamps);
 
-    EXPECT_TRUE(empty.empty());
+  EXPECT_TRUE(empty.empty());
 }
 
-TEST(UnitSolver, resolveWithBinaries_clauseWithoutResOpportunityIsFixpoint) {
-    CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
-    // representing binary clauses as a map from first literals to a list of
-    // second literals
-    std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
-    binaryClauses[resolveAt] = {12_Lit, 13_Lit};
+TEST(UnitSolver, resolveWithBinaries_clauseWithoutResOpportunityIsFixpoint)
+{
+  CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
+  // representing binary clauses as a map from first literals to a list of
+  // second literals
+  std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
+  binaryClauses[resolveAt] = {12_Lit, 13_Lit};
 
-    TrivialClause noResPossible{7_Lit, 10_Lit, 11_Lit};
-    StampMap<int, CNFLit::Index> tempStamps{1024};
-    TrivialClause expected = noResPossible;
-    resolveWithBinaries(noResPossible, binaryClauses, resolveAt, tempStamps);
+  TrivialClause noResPossible{7_Lit, 10_Lit, 11_Lit};
+  StampMap<int, CNFLit::Index> tempStamps{1024};
+  TrivialClause expected = noResPossible;
+  resolveWithBinaries(noResPossible, binaryClauses, resolveAt, tempStamps);
 
-    EXPECT_TRUE(isPermutation(noResPossible, expected));
+  EXPECT_TRUE(isPermutation(noResPossible, expected));
 }
 
-TEST(UnitSolver, resolveWithBinaries_noResolutionWhenNoBinaryClauses) {
-    CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
-    // representing binary clauses as a map from first literals to a list of
-    // second literals
-    std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
+TEST(UnitSolver, resolveWithBinaries_noResolutionWhenNoBinaryClauses)
+{
+  CNFLit resolveAt{CNFVar{10}, CNFSign::POSITIVE};
+  // representing binary clauses as a map from first literals to a list of
+  // second literals
+  std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
 
-    TrivialClause noResPossible{1_Lit, 2_Lit};
-    StampMap<int, CNFLit::Index> tempStamps{1024};
-    TrivialClause expected = noResPossible;
-    resolveWithBinaries(noResPossible, binaryClauses, resolveAt, tempStamps);
+  TrivialClause noResPossible{1_Lit, 2_Lit};
+  StampMap<int, CNFLit::Index> tempStamps{1024};
+  TrivialClause expected = noResPossible;
+  resolveWithBinaries(noResPossible, binaryClauses, resolveAt, tempStamps);
 
-    EXPECT_TRUE(isPermutation(noResPossible, expected));
+  EXPECT_TRUE(isPermutation(noResPossible, expected));
 }
 
-TEST(UnitSolver, resolveWithBinaries_allResolutionOpportunitiesAreUsed) {
-    CNFLit resolveAt{CNFVar{5}, CNFSign::POSITIVE};
-    // representing binary clauses as a map from first literals to a list of
-    // second literals
-    std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
-    binaryClauses[resolveAt] = {
-        12_Lit,
-        ~15_Lit,
-        ~17_Lit,
-        30_Lit,
-    };
+TEST(UnitSolver, resolveWithBinaries_allResolutionOpportunitiesAreUsed)
+{
+  CNFLit resolveAt{CNFVar{5}, CNFSign::POSITIVE};
+  // representing binary clauses as a map from first literals to a list of
+  // second literals
+  std::unordered_map<CNFLit, std::vector<CNFLit>> binaryClauses;
+  binaryClauses[resolveAt] = {
+      12_Lit,
+      ~15_Lit,
+      ~17_Lit,
+      30_Lit,
+  };
 
-    TrivialClause testData{
-        ~12_Lit,
-        15_Lit,
-        ~30_Lit,
-        ~3_Lit,
-        5_Lit,
-    };
+  TrivialClause testData{
+      ~12_Lit,
+      15_Lit,
+      ~30_Lit,
+      ~3_Lit,
+      5_Lit,
+  };
 
-    StampMap<int, CNFLit::Index> tempStamps{1024};
-    TrivialClause expected = {~3_Lit, 5_Lit};
+  StampMap<int, CNFLit::Index> tempStamps{1024};
+  TrivialClause expected = {~3_Lit, 5_Lit};
 
-    resolveWithBinaries(testData, binaryClauses, resolveAt, tempStamps);
+  resolveWithBinaries(testData, binaryClauses, resolveAt, tempStamps);
 
-    EXPECT_TRUE(isPermutation(testData, expected));
+  EXPECT_TRUE(isPermutation(testData, expected));
 }
 }

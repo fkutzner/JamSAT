@@ -37,78 +37,90 @@ const char* IPASIRTestMockSignature = "JamSAT IPASIR test mock";
 namespace jamsat {
 jamsat::IpasirMockContext* currentIPASIRMockContext = nullptr;
 
-auto getCurrentIPASIRMockContext() noexcept -> IpasirMockContext& {
-    return *reinterpret_cast<jamsat::IpasirMockContext*>(currentIPASIRMockContext);
+auto getCurrentIPASIRMockContext() noexcept -> IpasirMockContext&
+{
+  return *reinterpret_cast<jamsat::IpasirMockContext*>(currentIPASIRMockContext);
 }
 }
 
 extern "C" {
-auto ipasir_signature() -> const char* {
-    return IPASIRTestMockSignature;
+auto ipasir_signature() -> const char*
+{
+  return IPASIRTestMockSignature;
 }
 
-auto ipasir_init() -> void* {
-    if (jamsat::currentIPASIRMockContext != nullptr) {
-        std::cerr << "Detected forbidden concurrent usage of the IPASIR mock" << std::endl;
-        std::terminate();
-    }
-    jamsat::currentIPASIRMockContext = new jamsat::IpasirMockContext{};
-    return reinterpret_cast<void*>(jamsat::currentIPASIRMockContext);
+auto ipasir_init() -> void*
+{
+  if (jamsat::currentIPASIRMockContext != nullptr) {
+    std::cerr << "Detected forbidden concurrent usage of the IPASIR mock" << std::endl;
+    std::terminate();
+  }
+  jamsat::currentIPASIRMockContext = new jamsat::IpasirMockContext{};
+  return reinterpret_cast<void*>(jamsat::currentIPASIRMockContext);
 }
 
-void ipasir_release(void* solver) {
-    if (jamsat::currentIPASIRMockContext != reinterpret_cast<jamsat::IpasirMockContext*>(solver)) {
-        std::cerr << "Detected forbidden concurrent usage of the IPASIR mock" << std::endl;
-        std::terminate();
-    }
-    jamsat::currentIPASIRMockContext = nullptr;
-    delete reinterpret_cast<jamsat::IpasirMockContext*>(solver);
+void ipasir_release(void* solver)
+{
+  if (jamsat::currentIPASIRMockContext != reinterpret_cast<jamsat::IpasirMockContext*>(solver)) {
+    std::cerr << "Detected forbidden concurrent usage of the IPASIR mock" << std::endl;
+    std::terminate();
+  }
+  jamsat::currentIPASIRMockContext = nullptr;
+  delete reinterpret_cast<jamsat::IpasirMockContext*>(solver);
 }
 
-void ipasir_add(void* solver, int lit_or_zero) {
-    jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
-    context->m_literals.push_back(lit_or_zero);
+void ipasir_add(void* solver, int lit_or_zero)
+{
+  jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
+  context->m_literals.push_back(lit_or_zero);
 }
 
-void ipasir_assume(void* solver, int lit) {
-    jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
-    context->m_assumptions.push_back(lit);
+void ipasir_assume(void* solver, int lit)
+{
+  jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
+  context->m_assumptions.push_back(lit);
 }
 
-auto ipasir_solve(void* solver) -> int {
-    jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
-    context->m_assumptionsAtLastSolveCall = context->m_assumptions;
-    context->m_assumptions.clear();
-    return context->m_cfgSolveResult;
+auto ipasir_solve(void* solver) -> int
+{
+  jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
+  context->m_assumptionsAtLastSolveCall = context->m_assumptions;
+  context->m_assumptions.clear();
+  return context->m_cfgSolveResult;
 }
 
-auto ipasir_val(void* solver, int lit) -> int {
-    jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
-    return context->m_cfgLiteralVals[lit];
+auto ipasir_val(void* solver, int lit) -> int
+{
+  jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
+  return context->m_cfgLiteralVals[lit];
 }
 
-auto ipasir_failed(void* solver, int lit) -> int {
-    jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
-    return context->m_cfgLiteralFailures[lit];
+auto ipasir_failed(void* solver, int lit) -> int
+{
+  jamsat::IpasirMockContext* context = reinterpret_cast<jamsat::IpasirMockContext*>(solver);
+  return context->m_cfgLiteralFailures[lit];
 }
 
-void ipasir_set_terminate(void* solver, void* state, int (*terminate)(void* state)) {
-    (void)solver;
-    (void)state;
-    (void)terminate;
+void ipasir_set_terminate(void* solver, void* state, int (*terminate)(void* state))
+{
+  (void)solver;
+  (void)state;
+  (void)terminate;
 }
 
 void ipasir_set_learn(void* solver,
                       void* state,
                       int max_length,
-                      void (*learn)(void* state, int* clause)) {
-    (void)solver;
-    (void)state;
-    (void)max_length;
-    (void)learn;
+                      void (*learn)(void* state, int* clause))
+{
+  (void)solver;
+  (void)state;
+  (void)max_length;
+  (void)learn;
 }
 
-int jamsat_ipasir_set_logger(void*, void*, void (*)(void* state, const char* message)) {
-    return 0;
+int jamsat_ipasir_set_logger(void*, void*, void (*)(void* state, const char* message))
+{
+  return 0;
 }
 }

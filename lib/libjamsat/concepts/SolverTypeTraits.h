@@ -77,7 +77,8 @@ namespace jamsat {
  * </table>
  */
 template <typename, typename Reason, typename = j_void_t<>>
-struct isReason_provider : public std::false_type {};
+struct isReason_provider : public std::false_type {
+};
 
 template <typename T, typename Reason>
 struct isReason_provider<
@@ -93,7 +94,8 @@ struct isReason_provider<
                          Reason const*)
 
         // end requirements
-        >> : public std::true_type {};
+        >> : public std::true_type {
+};
 
 
 // clang-format off

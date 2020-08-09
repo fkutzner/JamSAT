@@ -46,43 +46,43 @@ namespace jamsat {
  */
 class Model {
 public:
-    /**
-     * \brief Sets the assignment of the given variable.
-     *
-     * \param variable  A regular variable.
-     * \param value     The variable's value in the model.
-     */
-    virtual void setAssignment(CNFVar variable, TBool value) noexcept = 0;
+  /**
+   * \brief Sets the assignment of the given variable.
+   *
+   * \param variable  A regular variable.
+   * \param value     The variable's value in the model.
+   */
+  virtual void setAssignment(CNFVar variable, TBool value) noexcept = 0;
 
-    /**
-     * \brief Gets the assignment of the given variable.
-     *
-     * If the variable has not been assigned via setAssignment(), TBools::INDETERMINATE
-     * is returned.
-     *
-     * \param variable  A regular variable.
-     * \returns         The variable's assignment.
-     */
-    virtual TBool getAssignment(CNFVar variable) const noexcept = 0;
+  /**
+   * \brief Gets the assignment of the given variable.
+   *
+   * If the variable has not been assigned via setAssignment(), TBools::INDETERMINATE
+   * is returned.
+   *
+   * \param variable  A regular variable.
+   * \returns         The variable's assignment.
+   */
+  virtual TBool getAssignment(CNFVar variable) const noexcept = 0;
 
-    /**
-     * \brief Checks the proof.
-     *
-     * \param problem       A CNF problem.
-     * \returns             TBools::TRUE if the model is a model for \p problem; TBools::FALSE
-     *                      otherwise.
-     */
-    virtual TBool check(const CNFProblem& problem) const noexcept = 0;
+  /**
+   * \brief Checks the proof.
+   *
+   * \param problem       A CNF problem.
+   * \returns             TBools::TRUE if the model is a model for \p problem; TBools::FALSE
+   *                      otherwise.
+   */
+  virtual TBool check(const CNFProblem& problem) const noexcept = 0;
 
-    // TODO: add getAssignments() returning a range of assignments
+  // TODO: add getAssignments() returning a range of assignments
 
-    Model& operator=(const Model& other) = delete;
-    Model& operator=(Model&& other) = delete;
-    Model(const Model& other) = delete;
-    Model(Model&& other) = delete;
+  Model& operator=(const Model& other) = delete;
+  Model& operator=(Model&& other) = delete;
+  Model(const Model& other) = delete;
+  Model(Model&& other) = delete;
 
-    Model();
-    virtual ~Model();
+  Model();
+  virtual ~Model();
 };
 
 /**

@@ -42,91 +42,98 @@ namespace jamsat {
 
 class TestAssignmentProviderClause : public std::vector<CNFLit> {
 public:
-    enum class Flag : uint32_t { SCHEDULED_FOR_DELETION = 1, REDUNDANT = 2 };
+  enum class Flag : uint32_t { SCHEDULED_FOR_DELETION = 1, REDUNDANT = 2 };
 
-    TestAssignmentProviderClause() : std::vector<CNFLit>{}, m_flags(0), m_lbd(0) {}
-    TestAssignmentProviderClause(std::initializer_list<CNFLit> lits)
-      : std::vector<CNFLit>{lits}, m_flags(0), m_lbd(0) {}
+  TestAssignmentProviderClause() : std::vector<CNFLit>{}, m_flags(0), m_lbd(0) {}
+  TestAssignmentProviderClause(std::initializer_list<CNFLit> lits)
+    : std::vector<CNFLit>{lits}, m_flags(0), m_lbd(0)
+  {
+  }
 
-    void setFlag(Flag flag) noexcept { m_flags |= static_cast<std::underlying_type_t<Flag>>(flag); }
+  void setFlag(Flag flag) noexcept { m_flags |= static_cast<std::underlying_type_t<Flag>>(flag); }
 
-    void clearFlag(Flag flag) noexcept {
-        m_flags &= ~(static_cast<std::underlying_type_t<Flag>>(flag));
+  void clearFlag(Flag flag) noexcept
+  {
+    m_flags &= ~(static_cast<std::underlying_type_t<Flag>>(flag));
+  }
+
+  bool getFlag(Flag flag) const noexcept
+  {
+    return (m_flags & static_cast<std::underlying_type_t<Flag>>(flag)) != 0;
+  }
+
+  bool mightContain(CNFLit lit) const noexcept { return std::find(begin(), end(), lit) != end(); }
+
+  bool mightShareAllVarsWith(TestAssignmentProviderClause const& rhs) const noexcept
+  {
+    for (auto lit : *this) {
+      if (!rhs.mightContain(lit) && !rhs.mightContain(~lit)) {
+        return false;
+      }
     }
+    return true;
+  }
 
-    bool getFlag(Flag flag) const noexcept {
-        return (m_flags & static_cast<std::underlying_type_t<Flag>>(flag)) != 0;
-    }
+  void clauseUpdated() {}
 
-    bool mightContain(CNFLit lit) const noexcept { return std::find(begin(), end(), lit) != end(); }
+  template <typename L>
+  void setLBD(L lbd)
+  {
+    JAM_ASSERT(lbd >= 0, "LBD values cannot be negative");
+    m_lbd = lbd;
+  }
 
-    bool mightShareAllVarsWith(TestAssignmentProviderClause const& rhs) const noexcept {
-        for (auto lit : *this) {
-            if (!rhs.mightContain(lit) && !rhs.mightContain(~lit)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    void clauseUpdated() {}
-
-    template <typename L>
-    void setLBD(L lbd) {
-        JAM_ASSERT(lbd >= 0, "LBD values cannot be negative");
-        m_lbd = lbd;
-    }
-
-    template <typename L>
-    L getLBD() {
-        return m_lbd;
-    }
+  template <typename L>
+  L getLBD()
+  {
+    return m_lbd;
+  }
 
 private:
-    uint32_t m_flags;
-    uint64_t m_lbd;
+  uint32_t m_flags;
+  uint64_t m_lbd;
 };
 
 class TestAssignmentProvider {
 public:
-    using Level = size_t;
-    using size_type = BoundedStack<CNFLit>::size_type;
-    using Clause = TestAssignmentProviderClause;
+  using Level = size_t;
+  using size_type = BoundedStack<CNFLit>::size_type;
+  using Clause = TestAssignmentProviderClause;
 
-    TestAssignmentProvider();
+  TestAssignmentProvider();
 
-    TBool getAssignment(CNFVar variable) const noexcept;
-    TBool getAssignment(CNFLit literal) const noexcept;
-    void append(CNFLit literal) noexcept;
-    void append(CNFLit literal, Clause& clause) noexcept;
-    void popLiteral() noexcept;
-    size_t getNumberOfAssignments() const noexcept;
+  TBool getAssignment(CNFVar variable) const noexcept;
+  TBool getAssignment(CNFLit literal) const noexcept;
+  void append(CNFLit literal) noexcept;
+  void append(CNFLit literal, Clause& clause) noexcept;
+  void popLiteral() noexcept;
+  size_t getNumberOfAssignments() const noexcept;
 
-    boost::iterator_range<std::vector<CNFLit>::const_iterator>
-    getAssignments(size_t index) const noexcept;
+  boost::iterator_range<std::vector<CNFLit>::const_iterator>
+  getAssignments(size_t index) const noexcept;
 
-    boost::iterator_range<std::vector<CNFLit>::const_iterator>
-    getLevelAssignments(Level level) const noexcept;
+  boost::iterator_range<std::vector<CNFLit>::const_iterator>
+  getLevelAssignments(Level level) const noexcept;
 
-    Level getLevel(CNFVar variable) const noexcept;
-    void setAssignmentDecisionLevel(CNFVar variable, Level level) noexcept;
-    Level getCurrentLevel() const noexcept;
-    void setCurrentDecisionLevel(Level level) noexcept;
+  Level getLevel(CNFVar variable) const noexcept;
+  void setAssignmentDecisionLevel(CNFVar variable, Level level) noexcept;
+  Level getCurrentLevel() const noexcept;
+  void setCurrentDecisionLevel(Level level) noexcept;
 
-    auto getReason(CNFVar variable) const noexcept -> Clause const*;
-    auto getReason(CNFVar variable) noexcept -> Clause*;
-    void set_reason(CNFVar variable, Clause* reason) noexcept;
+  auto getReason(CNFVar variable) const noexcept -> Clause const*;
+  auto getReason(CNFVar variable) noexcept -> Clause*;
+  void set_reason(CNFVar variable, Clause* reason) noexcept;
 
-    struct LevelKey {
-        using Type = Level;
-        static size_t getIndex(Level variable) { return static_cast<size_t>(variable); }
-    };
+  struct LevelKey {
+    using Type = Level;
+    static size_t getIndex(Level variable) { return static_cast<size_t>(variable); }
+  };
 
 private:
-    std::unordered_map<CNFVar, TBool> m_assignments;
-    std::unordered_map<CNFVar, Level> m_decisionLevels;
-    Level m_currentLevel;
-    BoundedStack<CNFLit> m_trail;
-    std::unordered_map<CNFVar, Clause*> m_reasons;
+  std::unordered_map<CNFVar, TBool> m_assignments;
+  std::unordered_map<CNFVar, Level> m_decisionLevels;
+  Level m_currentLevel;
+  BoundedStack<CNFLit> m_trail;
+  std::unordered_map<CNFVar, Clause*> m_reasons;
 };
 }

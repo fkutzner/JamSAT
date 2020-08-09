@@ -43,11 +43,11 @@ namespace jamsat {
  * \brief A byte-based boolean datatype.
  */
 enum class Bool : uint8_t {
-    /// The "false" value.
-    FALSE = 0,
+  /// The "false" value.
+  FALSE = 0,
 
-    /// The "true" value.
-    TRUE = 1
+  /// The "true" value.
+  TRUE = 1
 };
 
 /**
@@ -56,8 +56,9 @@ enum class Bool : uint8_t {
  * \param value The value to be converted.
  * \returns Bool::TRUE iff value == true, Bool::FALSE otherwise.
  */
-inline bool toRawBool(Bool value) {
-    return value == Bool::TRUE ? true : false;
+inline bool toRawBool(Bool value)
+{
+  return value == Bool::TRUE ? true : false;
 }
 
 /**
@@ -66,8 +67,9 @@ inline bool toRawBool(Bool value) {
  * \param value The value to be converted.
  * \returns true iff value == Bool::TRUE, false otherwise.
  */
-inline Bool toBool(bool rawValue) {
-    return rawValue ? Bool::TRUE : Bool::FALSE;
+inline Bool toBool(bool rawValue)
+{
+  return rawValue ? Bool::TRUE : Bool::FALSE;
 }
 
 /**
@@ -79,45 +81,46 @@ inline Bool toBool(bool rawValue) {
  */
 class TBool {
 public:
-    using UnderlyingType = uint8_t;
+  using UnderlyingType = uint8_t;
 
-    /**
-     * \brief Constructs a TBool value equal to TBools::FALSE.
-     */
-    constexpr TBool() : m_value(0) {}
+  /**
+   * \brief Constructs a TBool value equal to TBools::FALSE.
+   */
+  constexpr TBool() : m_value(0) {}
 
-    TBool(const TBool& other) = default;
-    TBool& operator=(const TBool& other) = default;
+  TBool(const TBool& other) = default;
+  TBool& operator=(const TBool& other) = default;
 
-    constexpr bool operator==(TBool const other) const {
-        return (m_value > 1 && other.m_value > 1) || (m_value == other.m_value);
-    }
+  constexpr bool operator==(TBool const other) const
+  {
+    return (m_value > 1 && other.m_value > 1) || (m_value == other.m_value);
+  }
 
-    constexpr bool operator!=(TBool const other) const { return !(*this == other); }
+  constexpr bool operator!=(TBool const other) const { return !(*this == other); }
 
-    /**
-     * \brief Returns the integer used to represent the TBool value.
-     * \returns The integer used to represent the TBool value.
-     */
-    constexpr UnderlyingType getUnderlyingValue() const { return m_value; }
+  /**
+   * \brief Returns the integer used to represent the TBool value.
+   * \returns The integer used to represent the TBool value.
+   */
+  constexpr UnderlyingType getUnderlyingValue() const { return m_value; }
 
-    /**
-     * \brief Creates a TBool object.
-     *
-     * This method is intended for optimized code. Regularly, the TBools::*
-     * constants should be used.
-     *
-     * \param value If 0, a TBool equal to TBools::FALSE is returned.
-     *              If 1, a TBool equal to TBools::TRUE is returned.
-     *              Otherwise, a TBool equal to TBools::INDETERMINATE is returned.
-     * \returns The TBool object corresponding to \p value.
-     */
-    constexpr static TBool fromUnderlyingValue(UnderlyingType value) { return TBool{value}; }
+  /**
+   * \brief Creates a TBool object.
+   *
+   * This method is intended for optimized code. Regularly, the TBools::*
+   * constants should be used.
+   *
+   * \param value If 0, a TBool equal to TBools::FALSE is returned.
+   *              If 1, a TBool equal to TBools::TRUE is returned.
+   *              Otherwise, a TBool equal to TBools::INDETERMINATE is returned.
+   * \returns The TBool object corresponding to \p value.
+   */
+  constexpr static TBool fromUnderlyingValue(UnderlyingType value) { return TBool{value}; }
 
 private:
-    constexpr explicit TBool(UnderlyingType value) : m_value(value) {}
-    friend struct TBools;
-    UnderlyingType m_value;
+  constexpr explicit TBool(UnderlyingType value) : m_value(value) {}
+  friend struct TBools;
+  UnderlyingType m_value;
 };
 
 /**
@@ -128,9 +131,9 @@ private:
  * \brief Values of ternary logic: TRUE, FALSE and INDETERMINATE.
  */
 struct TBools {
-    static constexpr TBool FALSE{0};
-    static constexpr TBool TRUE{1};
-    static constexpr TBool INDETERMINATE{2};
+  static constexpr TBool FALSE{0};
+  static constexpr TBool TRUE{1};
+  static constexpr TBool INDETERMINATE{2};
 };
 
 
@@ -277,59 +280,69 @@ TBool& operator+=(const TBool& lhs, const TBool& rhs);
 /********** Implementation ****************************** */
 
 
-inline bool toRawBool(TBool value) {
-    JAM_ASSERT(value != TBools::INDETERMINATE, "Can't convert indeterminate TBool to bool");
-    return value == TBools::TRUE;
+inline bool toRawBool(TBool value)
+{
+  JAM_ASSERT(value != TBools::INDETERMINATE, "Can't convert indeterminate TBool to bool");
+  return value == TBools::TRUE;
 }
 
-constexpr bool isDeterminate(TBool value) {
-    return value.getUnderlyingValue() <= 1;
+constexpr bool isDeterminate(TBool value)
+{
+  return value.getUnderlyingValue() <= 1;
 }
 
-constexpr bool isTrue(TBool value) {
-    return value.getUnderlyingValue() == TBools::TRUE.getUnderlyingValue();
+constexpr bool isTrue(TBool value)
+{
+  return value.getUnderlyingValue() == TBools::TRUE.getUnderlyingValue();
 }
 
-constexpr bool isFalse(TBool value) {
-    return value.getUnderlyingValue() == TBools::FALSE.getUnderlyingValue();
+constexpr bool isFalse(TBool value)
+{
+  return value.getUnderlyingValue() == TBools::FALSE.getUnderlyingValue();
 }
 
-inline TBool toTBool(bool value) {
-    return value ? TBools::TRUE : TBools::FALSE;
+inline TBool toTBool(bool value)
+{
+  return value ? TBools::TRUE : TBools::FALSE;
 }
 
-inline TBool negate(const TBool a) {
-    auto raw = a.getUnderlyingValue();
-    return TBool::fromUnderlyingValue(raw ^ 1U);
+inline TBool negate(const TBool a)
+{
+  auto raw = a.getUnderlyingValue();
+  return TBool::fromUnderlyingValue(raw ^ 1U);
 }
 
-inline TBool operator*(const TBool lhs, const TBool rhs) {
-    if (lhs == TBools::TRUE && rhs == TBools::TRUE) {
-        return TBools::TRUE;
-    }
-    if (lhs == TBools::FALSE || rhs == TBools::FALSE) {
-        return TBools::FALSE;
-    }
-    return TBools::INDETERMINATE;
+inline TBool operator*(const TBool lhs, const TBool rhs)
+{
+  if (lhs == TBools::TRUE && rhs == TBools::TRUE) {
+    return TBools::TRUE;
+  }
+  if (lhs == TBools::FALSE || rhs == TBools::FALSE) {
+    return TBools::FALSE;
+  }
+  return TBools::INDETERMINATE;
 }
 
-inline TBool& operator*=(TBool& lhs, const TBool rhs) {
-    lhs = lhs * rhs;
-    return lhs;
+inline TBool& operator*=(TBool& lhs, const TBool rhs)
+{
+  lhs = lhs * rhs;
+  return lhs;
 }
 
-inline TBool operator+(const TBool lhs, const TBool rhs) {
-    if (lhs == TBools::TRUE || rhs == TBools::TRUE) {
-        return TBools::TRUE;
-    }
-    if (lhs == TBools::FALSE && rhs == TBools::FALSE) {
-        return TBools::FALSE;
-    }
-    return TBools::INDETERMINATE;
+inline TBool operator+(const TBool lhs, const TBool rhs)
+{
+  if (lhs == TBools::TRUE || rhs == TBools::TRUE) {
+    return TBools::TRUE;
+  }
+  if (lhs == TBools::FALSE && rhs == TBools::FALSE) {
+    return TBools::FALSE;
+  }
+  return TBools::INDETERMINATE;
 }
 
-inline TBool& operator+=(TBool& lhs, const TBool rhs) {
-    lhs = lhs + rhs;
-    return lhs;
+inline TBool& operator+=(TBool& lhs, const TBool rhs)
+{
+  lhs = lhs + rhs;
+  return lhs;
 }
 }

@@ -31,33 +31,38 @@ namespace jamsat {
 namespace {
 class TimeoutContext {
 public:
-    using TimeUnit = std::chrono::seconds;
+  using TimeUnit = std::chrono::seconds;
 
-    explicit TimeoutContext(TimeUnit timeout) noexcept
-      : m_start(std::chrono::system_clock::now()), m_timeout(timeout) {}
+  explicit TimeoutContext(TimeUnit timeout) noexcept
+    : m_start(std::chrono::system_clock::now()), m_timeout(timeout)
+  {
+  }
 
-    auto isTimeout() const noexcept -> bool {
-        auto now = decltype(m_start)::clock::now();
-        auto elapsed = now - m_start;
-        return std::chrono::duration_cast<TimeUnit>(elapsed) >= m_timeout;
-    }
+  auto isTimeout() const noexcept -> bool
+  {
+    auto now = decltype(m_start)::clock::now();
+    auto elapsed = now - m_start;
+    return std::chrono::duration_cast<TimeUnit>(elapsed) >= m_timeout;
+  }
 
 private:
-    std::chrono::time_point<std::chrono::system_clock> m_start;
-    TimeUnit m_timeout;
+  std::chrono::time_point<std::chrono::system_clock> m_start;
+  TimeUnit m_timeout;
 };
 
 // TODO: add timeoutContext to the IPASIR solver context object
 TimeoutContext timeoutContext{std::chrono::seconds{0}};
 
-auto ipasirTimeoutCallback(void* cookie) -> int {
-    TimeoutContext* context = reinterpret_cast<TimeoutContext*>(cookie);
-    return context->isTimeout() ? 1 : 0;
+auto ipasirTimeoutCallback(void* cookie) -> int
+{
+  TimeoutContext* context = reinterpret_cast<TimeoutContext*>(cookie);
+  return context->isTimeout() ? 1 : 0;
 }
 }
 
-void configureTimeout(IpasirSolver& ipasirSolver, std::chrono::seconds timeout) noexcept {
-    timeoutContext = TimeoutContext{timeout};
-    ipasirSolver.setTerminateFn(reinterpret_cast<void*>(&timeoutContext), ipasirTimeoutCallback);
+void configureTimeout(IpasirSolver& ipasirSolver, std::chrono::seconds timeout) noexcept
+{
+  timeoutContext = TimeoutContext{timeout};
+  ipasirSolver.setTerminateFn(reinterpret_cast<void*>(&timeoutContext), ipasirTimeoutCallback);
 }
 }

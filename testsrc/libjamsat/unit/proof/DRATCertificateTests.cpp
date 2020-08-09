@@ -42,80 +42,88 @@ namespace fs = boost::filesystem;
 namespace {
 class PathWithDeleter {
 public:
-    PathWithDeleter(fs::path const& path) : m_path{path} {}
+  PathWithDeleter(fs::path const& path) : m_path{path} {}
 
-    auto getPath() const noexcept -> fs::path const& { return m_path; }
+  auto getPath() const noexcept -> fs::path const& { return m_path; }
 
-    ~PathWithDeleter() {
-        if (!m_path.empty()) {
-            fs::remove(m_path);
-        }
+  ~PathWithDeleter()
+  {
+    if (!m_path.empty()) {
+      fs::remove(m_path);
     }
+  }
 
-    PathWithDeleter(PathWithDeleter&& rhs) noexcept {
-        if (!m_path.empty()) {
-            fs::remove(m_path);
-        }
-        m_path = rhs.m_path;
-        rhs.m_path.clear();
+  PathWithDeleter(PathWithDeleter&& rhs) noexcept
+  {
+    if (!m_path.empty()) {
+      fs::remove(m_path);
     }
+    m_path = rhs.m_path;
+    rhs.m_path.clear();
+  }
 
-    auto operator=(PathWithDeleter&& rhs) {
-        if (!m_path.empty()) {
-            fs::remove(m_path);
-        }
-        m_path = rhs.m_path;
-        rhs.m_path.clear();
+  auto operator=(PathWithDeleter&& rhs)
+  {
+    if (!m_path.empty()) {
+      fs::remove(m_path);
     }
+    m_path = rhs.m_path;
+    rhs.m_path.clear();
+  }
 
 
-    PathWithDeleter(PathWithDeleter const&) = delete;
-    auto operator=(PathWithDeleter const&) = delete;
+  PathWithDeleter(PathWithDeleter const&) = delete;
+  auto operator=(PathWithDeleter const&) = delete;
 
 private:
-    fs::path m_path;
+  fs::path m_path;
 };
 
-auto createTempFile() -> PathWithDeleter {
-    static std::mt19937 rng{32};
-    std::uniform_int_distribution<> numbers;
+auto createTempFile() -> PathWithDeleter
+{
+  static std::mt19937 rng{32};
+  std::uniform_int_distribution<> numbers;
 
-    fs::path tempDir = fs::temp_directory_path();
-    fs::path candidate;
-    do {
-        candidate = tempDir / ("jamsat-tmp-" + std::to_string(numbers(rng)));
-    } while (fs::exists(candidate));
+  fs::path tempDir = fs::temp_directory_path();
+  fs::path candidate;
+  do {
+    candidate = tempDir / ("jamsat-tmp-" + std::to_string(numbers(rng)));
+  } while (fs::exists(candidate));
 
-    std::ofstream create{candidate.string()};
-    return PathWithDeleter{candidate};
+  std::ofstream create{candidate.string()};
+  return PathWithDeleter{candidate};
 }
 
-auto slurpFile(fs::path const& path) -> std::vector<unsigned char> {
-    std::ifstream file(path.string());
-    std::vector<unsigned char> result((std::istreambuf_iterator<char>(file)),
-                                      std::istreambuf_iterator<char>());
-    return result;
+auto slurpFile(fs::path const& path) -> std::vector<unsigned char>
+{
+  std::ifstream file(path.string());
+  std::vector<unsigned char> result((std::istreambuf_iterator<char>(file)),
+                                    std::istreambuf_iterator<char>());
+  return result;
 }
 }
 
 namespace jamsat {
-TEST(UnitProof, FileDRATCertificate_WhenFileCannotBeCreated_ThenExceptionIsThrown) {
-    std::string const path = "/highly/unlikely/existing/folder/proof.drat";
-    EXPECT_THROW(createFileDRATCertificate(path), FileIOError);
+TEST(UnitProof, FileDRATCertificate_WhenFileCannotBeCreated_ThenExceptionIsThrown)
+{
+  std::string const path = "/highly/unlikely/existing/folder/proof.drat";
+  EXPECT_THROW(createFileDRATCertificate(path), FileIOError);
 }
 
 
 struct DRATClauseBase {
-    std::vector<CNFLit> literals;
+  std::vector<CNFLit> literals;
 };
 
-struct ATClause : public DRATClauseBase {};
+struct ATClause : public DRATClauseBase {
+};
 
 struct RATClause : public DRATClauseBase {
-    std::size_t pivot = 0;
+  std::size_t pivot = 0;
 };
 
-struct DeleteClause : public DRATClauseBase {};
+struct DeleteClause : public DRATClauseBase {
+};
 
 using ProofClause = boost::variant<ATClause, RATClause, DeleteClause>;
 

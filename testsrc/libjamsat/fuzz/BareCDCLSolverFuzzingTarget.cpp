@@ -36,27 +36,28 @@
 
 namespace jamsat {
 
-void JamSATFuzzingEntryPoint(std::istream& fuzzerInput) {
-    CNFProblem problem;
-    fuzzerInput >> problem;
+void JamSATFuzzingEntryPoint(std::istream& fuzzerInput)
+{
+  CNFProblem problem;
+  fuzzerInput >> problem;
 
-    if (fuzzerInput.fail()) {
-        // not relevant for this fuzz test
-        return;
-    }
+  if (fuzzerInput.fail()) {
+    // not relevant for this fuzz test
+    return;
+  }
 
-    if (problem.getMaxVar().getRawValue() > 100) {
-        // problem might be too large for fuzz testing
-        return;
-    }
+  if (problem.getMaxVar().getRawValue() > 100) {
+    // problem might be too large for fuzz testing
+    return;
+  }
 
-    auto solver = createCDCLSatSolver();
-    solver->addProblem(problem);
-    auto result = solver->solve({});
-    std::cout << (isTrue(result->isProblemSatisfiable()) ? "SAT" : "INDET-OR-UNSAT");
+  auto solver = createCDCLSatSolver();
+  solver->addProblem(problem);
+  auto result = solver->solve({});
+  std::cout << (isTrue(result->isProblemSatisfiable()) ? "SAT" : "INDET-OR-UNSAT");
 
-    auto minisatResult = isSatisfiableViaMinisat(problem);
-    (void)minisatResult;
-    assert(result->isProblemSatisfiable() == minisatResult);
+  auto minisatResult = isSatisfiableViaMinisat(problem);
+  (void)minisatResult;
+  assert(result->isProblemSatisfiable() == minisatResult);
 }
 }

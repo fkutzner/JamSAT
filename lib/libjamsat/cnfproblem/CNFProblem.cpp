@@ -48,81 +48,90 @@ namespace jamsat {
 
 CNFProblem::CNFProblem() : m_clauses({}), m_maxVar(CNFVar::getUndefinedVariable()) {}
 
-void CNFProblem::addClause(const CNFClause& clause) noexcept {
-    for (auto literal : clause) {
-        CNFVar variable = literal.getVariable();
-        if (m_maxVar == CNFVar::getUndefinedVariable() ||
-            variable.getRawValue() > m_maxVar.getRawValue()) {
-            m_maxVar = variable;
-        }
+void CNFProblem::addClause(const CNFClause& clause) noexcept
+{
+  for (auto literal : clause) {
+    CNFVar variable = literal.getVariable();
+    if (m_maxVar == CNFVar::getUndefinedVariable() ||
+        variable.getRawValue() > m_maxVar.getRawValue()) {
+      m_maxVar = variable;
     }
+  }
 
-    m_clauses.push_back(clause);
+  m_clauses.push_back(clause);
 }
 
-void CNFProblem::addClause(CNFClause&& clause) noexcept {
-    for (auto literal : clause) {
-        CNFVar variable = literal.getVariable();
-        if (m_maxVar == CNFVar::getUndefinedVariable() ||
-            variable.getRawValue() > m_maxVar.getRawValue()) {
-            m_maxVar = variable;
-        }
+void CNFProblem::addClause(CNFClause&& clause) noexcept
+{
+  for (auto literal : clause) {
+    CNFVar variable = literal.getVariable();
+    if (m_maxVar == CNFVar::getUndefinedVariable() ||
+        variable.getRawValue() > m_maxVar.getRawValue()) {
+      m_maxVar = variable;
     }
+  }
 
-    m_clauses.push_back(clause);
+  m_clauses.push_back(clause);
 }
 
-const std::vector<CNFClause>& CNFProblem::getClauses() const noexcept {
-    return m_clauses;
+const std::vector<CNFClause>& CNFProblem::getClauses() const noexcept
+{
+  return m_clauses;
 }
 
-CNFProblem::size_type CNFProblem::getSize() const noexcept {
-    return m_clauses.size();
+CNFProblem::size_type CNFProblem::getSize() const noexcept
+{
+  return m_clauses.size();
 }
 
-bool CNFProblem::isEmpty() const noexcept {
-    return m_clauses.empty();
+bool CNFProblem::isEmpty() const noexcept
+{
+  return m_clauses.empty();
 }
 
-CNFVar CNFProblem::getMaxVar() const noexcept {
-    if (isEmpty()) {
-        return CNFVar::getUndefinedVariable();
-    }
-    return m_maxVar;
+CNFVar CNFProblem::getMaxVar() const noexcept
+{
+  if (isEmpty()) {
+    return CNFVar::getUndefinedVariable();
+  }
+  return m_maxVar;
 }
 
-void CNFProblem::clear() noexcept {
-    m_clauses.clear();
-    m_maxVar = CNFVar::getUndefinedVariable();
+void CNFProblem::clear() noexcept
+{
+  m_clauses.clear();
+  m_maxVar = CNFVar::getUndefinedVariable();
 }
 
-std::ostream& operator<<(std::ostream& output, const CNFProblem& problem) {
-    if (problem.isEmpty()) {
-        output << "p cnf 0 0" << std::endl;
-        return output;
-    }
-
-    output << "p cnf " << problem.getMaxVar() << " " << problem.getSize() << std::endl;
-    for (auto& clause : problem.getClauses()) {
-        output << clause << std::endl;
-    }
-
+std::ostream& operator<<(std::ostream& output, const CNFProblem& problem)
+{
+  if (problem.isEmpty()) {
+    output << "p cnf 0 0" << std::endl;
     return output;
+  }
+
+  output << "p cnf " << problem.getMaxVar() << " " << problem.getSize() << std::endl;
+  for (auto& clause : problem.getClauses()) {
+    output << clause << std::endl;
+  }
+
+  return output;
 }
 
-std::ostream& operator<<(std::ostream& output, const CNFClause& clause) {
-    for (auto literal : clause) {
-        output << literal << " ";
-    }
-    output << "0";
+std::ostream& operator<<(std::ostream& output, const CNFClause& clause)
+{
+  for (auto literal : clause) {
+    output << literal << " ";
+  }
+  output << "0";
 
-    return output;
+  return output;
 }
 
 struct DIMACSHeader {
-    bool valid;
-    unsigned int variableCount;
-    unsigned int clauseCount;
+  bool valid;
+  unsigned int variableCount;
+  unsigned int clauseCount;
 };
 
 namespace {
@@ -131,38 +140,39 @@ namespace {
 // input stream, setting the stream's fail bit if a parsing failed (wrt. the
 // DIMACS CNF format). The resulting DIMACSHeader's "valid" member is set to
 // true iff the header could be parsed correctly.
-DIMACSHeader readDIMACSHeader(std::istream& input) {
-    std::string lineBuffer = "c";
-    while (input && (lineBuffer.empty() || lineBuffer[0] != 'p')) {
-        input >> std::ws;
-        std::getline(input, lineBuffer);
-    }
+DIMACSHeader readDIMACSHeader(std::istream& input)
+{
+  std::string lineBuffer = "c";
+  while (input && (lineBuffer.empty() || lineBuffer[0] != 'p')) {
+    input >> std::ws;
+    std::getline(input, lineBuffer);
+  }
 
-    if (!lineBuffer.empty() && lineBuffer[0] == 'p') {
-        std::stringstream headerLine{lineBuffer};
-        std::string cnfToken;
-        DIMACSHeader result = {true, 0, 0};
+  if (!lineBuffer.empty() && lineBuffer[0] == 'p') {
+    std::stringstream headerLine{lineBuffer};
+    std::string cnfToken;
+    DIMACSHeader result = {true, 0, 0};
 
-        // Read "p"
-        headerLine >> cnfToken;
-        result.valid = result.valid && !headerLine.fail() && cnfToken == "p";
+    // Read "p"
+    headerLine >> cnfToken;
+    result.valid = result.valid && !headerLine.fail() && cnfToken == "p";
 
-        // Read "cnf"
-        headerLine >> cnfToken;
-        result.valid = result.valid && !headerLine.fail() && cnfToken == "cnf";
+    // Read "cnf"
+    headerLine >> cnfToken;
+    result.valid = result.valid && !headerLine.fail() && cnfToken == "cnf";
 
-        headerLine >> result.variableCount;
-        result.valid = result.valid && !headerLine.fail();
-        headerLine >> result.clauseCount;
-        result.valid = result.valid && !headerLine.fail();
+    headerLine >> result.variableCount;
+    result.valid = result.valid && !headerLine.fail();
+    headerLine >> result.clauseCount;
+    result.valid = result.valid && !headerLine.fail();
 
-        result.valid = result.valid && (result.variableCount <= CNFVar::getMaxRawValue());
+    result.valid = result.valid && (result.variableCount <= CNFVar::getMaxRawValue());
 
-        return result;
-    }
+    return result;
+  }
 
-    JAM_LOG_CNFPROBLEM(warning, "Could not find the DIMACS header");
-    return {false, 0, 0};
+  JAM_LOG_CNFPROBLEM(warning, "Could not find the DIMACS header");
+  return {false, 0, 0};
 }
 
 // Reads as many clauses as specified in the DIMACS problem header from input
@@ -170,40 +180,42 @@ DIMACSHeader readDIMACSHeader(std::istream& input) {
 // stream does not satisfy the DIMACS CNF format, the problem is cleared and the
 // stream's fail bit is set.
 std::istream&
-readDIMACSClauses(std::istream& input, DIMACSHeader problemHeader, CNFProblem& problem) {
-    for (unsigned int i = 1; i <= problemHeader.clauseCount; ++i) {
-        CNFClause newClause;
-        input >> newClause;
-        if (input.fail()) {
-            problem.clear();
-            JAM_LOG_CNFPROBLEM(warning, "Failed parsing DIMACS clause no. " << i);
-            return input;
-        }
-
-        problem.addClause(std::move(newClause));
-
-        if (static_checked_cast<unsigned int>(problem.getMaxVar().getRawValue()) + 1 >
-            problemHeader.variableCount) {
-            input.setstate(std::ios::failbit);
-            problem.clear();
-            JAM_LOG_CNFPROBLEM(warning, "Illegal variable " << i);
-            JAM_LOG_CNFPROBLEM(warning, "Failed parsing DIMACS clause no. " << i);
-            return input;
-        }
+readDIMACSClauses(std::istream& input, DIMACSHeader problemHeader, CNFProblem& problem)
+{
+  for (unsigned int i = 1; i <= problemHeader.clauseCount; ++i) {
+    CNFClause newClause;
+    input >> newClause;
+    if (input.fail()) {
+      problem.clear();
+      JAM_LOG_CNFPROBLEM(warning, "Failed parsing DIMACS clause no. " << i);
+      return input;
     }
 
-    return input;
+    problem.addClause(std::move(newClause));
+
+    if (static_checked_cast<unsigned int>(problem.getMaxVar().getRawValue()) + 1 >
+        problemHeader.variableCount) {
+      input.setstate(std::ios::failbit);
+      problem.clear();
+      JAM_LOG_CNFPROBLEM(warning, "Illegal variable " << i);
+      JAM_LOG_CNFPROBLEM(warning, "Failed parsing DIMACS clause no. " << i);
+      return input;
+    }
+  }
+
+  return input;
 }
 } // namespace
 
-std::istream& operator>>(std::istream& input, CNFProblem& problem) {
-    const DIMACSHeader dimacsHeader = readDIMACSHeader(input);
-    if (!dimacsHeader.valid) {
-        input.setstate(std::ios::failbit);
-        JAM_LOG_CNFPROBLEM(warning, "Unable to parse the DIMACS header");
-        return input;
-    }
-    return readDIMACSClauses(input, dimacsHeader, problem);
+std::istream& operator>>(std::istream& input, CNFProblem& problem)
+{
+  const DIMACSHeader dimacsHeader = readDIMACSHeader(input);
+  if (!dimacsHeader.valid) {
+    input.setstate(std::ios::failbit);
+    JAM_LOG_CNFPROBLEM(warning, "Unable to parse the DIMACS header");
+    return input;
+  }
+  return readDIMACSClauses(input, dimacsHeader, problem);
 }
 
 namespace {
@@ -215,70 +227,73 @@ namespace {
  * encodedLiteral succeeded (ie. iff encodedLiteral is within the legal range of
  * literals).
  */
-std::optional<CNFLit> decodeCNFLit(int encodedLiteral) {
-    if (encodedLiteral == std::numeric_limits<int>::min()) {
-        JAM_LOG_CNFPROBLEM(warning, "Illegally large variable: " << encodedLiteral);
-        return std::optional<CNFLit>{};
-    }
+std::optional<CNFLit> decodeCNFLit(int encodedLiteral)
+{
+  if (encodedLiteral == std::numeric_limits<int>::min()) {
+    JAM_LOG_CNFPROBLEM(warning, "Illegally large variable: " << encodedLiteral);
+    return std::optional<CNFLit>{};
+  }
 
-    CNFSign literalSign = encodedLiteral > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
-    auto rawVariable = static_checked_cast<CNFVar::RawVariable>(std::abs(encodedLiteral) - 1);
+  CNFSign literalSign = encodedLiteral > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE;
+  auto rawVariable = static_checked_cast<CNFVar::RawVariable>(std::abs(encodedLiteral) - 1);
 
-    if (rawVariable > CNFVar::getMaxRawValue()) {
-        JAM_LOG_CNFPROBLEM(warning, "Illegally large variable: " << encodedLiteral);
-        return std::optional<CNFLit>{};
-    }
+  if (rawVariable > CNFVar::getMaxRawValue()) {
+    JAM_LOG_CNFPROBLEM(warning, "Illegally large variable: " << encodedLiteral);
+    return std::optional<CNFLit>{};
+  }
 
-    CNFVar literalVariable{rawVariable};
-    return CNFLit{literalVariable, literalSign};
+  CNFVar literalVariable{rawVariable};
+  return CNFLit{literalVariable, literalSign};
 }
 
-void parsingFailed(CNFClause& clause, std::istream& source) {
-    source.setstate(std::ios::failbit);
-    clause.clear();
+void parsingFailed(CNFClause& clause, std::istream& source)
+{
+  source.setstate(std::ios::failbit);
+  clause.clear();
 }
 } // namespace
 
-std::istream& operator>>(std::istream& input, CNFClause& clause) {
-    std::string buffer;
-    auto originalClauseSize = clause.size();
+std::istream& operator>>(std::istream& input, CNFClause& clause)
+{
+  std::string buffer;
+  auto originalClauseSize = clause.size();
 
-    while (input) {
-        input >> buffer;
+  while (input) {
+    input >> buffer;
 
-        // Try to parse a literal.
-        std::stringstream converter{buffer};
-        int encodedLiteral;
-        converter >> encodedLiteral;
+    // Try to parse a literal.
+    std::stringstream converter{buffer};
+    int encodedLiteral;
+    converter >> encodedLiteral;
 
-        // If parsing a literal failed, a comment might begin with "c" or the input
-        // stream is not DIMACS-formatted.
-        if (converter.fail()) {
-            if (buffer == "c") {
-                input.clear(input.rdstate() & ~std::ios::failbit);
-                std::getline(input, buffer);
-                continue;
-            }
-            parsingFailed(clause, input);
-            JAM_LOG_CNFPROBLEM(warning, "Illegal token in clause: " << buffer);
-            return input;
-        }
-
-        // A "0" token signifies the end of the clause.
-        if (encodedLiteral == 0) {
-            return input;
-        }
-
-        std::optional<CNFLit> decodedLiteral = decodeCNFLit(encodedLiteral);
-        if (!decodedLiteral) {
-            parsingFailed(clause, input);
-            return input;
-        }
-        clause.push_back(*decodedLiteral);
+    // If parsing a literal failed, a comment might begin with "c" or the input
+    // stream is not DIMACS-formatted.
+    if (converter.fail()) {
+      if (buffer == "c") {
+        input.clear(input.rdstate() & ~std::ios::failbit);
+        std::getline(input, buffer);
+        continue;
+      }
+      parsingFailed(clause, input);
+      JAM_LOG_CNFPROBLEM(warning, "Illegal token in clause: " << buffer);
+      return input;
     }
 
-    // This can only be reached if the clause is not properly terminated.
-    clause.resize(originalClauseSize);
-    return input;
+    // A "0" token signifies the end of the clause.
+    if (encodedLiteral == 0) {
+      return input;
+    }
+
+    std::optional<CNFLit> decodedLiteral = decodeCNFLit(encodedLiteral);
+    if (!decodedLiteral) {
+      parsingFailed(clause, input);
+      return input;
+    }
+    clause.push_back(*decodedLiteral);
+  }
+
+  // This can only be reached if the clause is not properly terminated.
+  clause.resize(originalClauseSize);
+  return input;
 }
 }

@@ -66,56 +66,56 @@ namespace jamsat {
  */
 template <class ClauseT, class LearntClauseSeq, typename LBD>
 class GlucoseClauseDBReductionPolicy {
-    static_assert(is_lbd_carrier<ClauseT>::value,
-                  "ClauseT must satisfy is_lbd_carrier<T>, but does not");
+  static_assert(is_lbd_carrier<ClauseT>::value,
+                "ClauseT must satisfy is_lbd_carrier<T>, but does not");
 
 public:
-    /**
-     * \brief Constructs a new ClauseDBReductionPolicy instance.
-     *
-     * \param intervalIncrease  The constant by which the intervals of conflicts between clause
-     *                          DB reductions are increased at each reduction.
-     * \param learntClauses     A reference to a sequence container containing pointers to the
-     *                          learnt clauses.
-     */
-    GlucoseClauseDBReductionPolicy(uint32_t intervalIncrease,
-                                   LearntClauseSeq& learntClauses) noexcept;
+  /**
+   * \brief Constructs a new ClauseDBReductionPolicy instance.
+   *
+   * \param intervalIncrease  The constant by which the intervals of conflicts between clause
+   *                          DB reductions are increased at each reduction.
+   * \param learntClauses     A reference to a sequence container containing pointers to the
+   *                          learnt clauses.
+   */
+  GlucoseClauseDBReductionPolicy(uint32_t intervalIncrease,
+                                 LearntClauseSeq& learntClauses) noexcept;
 
-    /**
-     * \brief Notifies the policy that the solver has performed a restart.
-     */
-    void registerConflict() noexcept;
+  /**
+   * \brief Notifies the policy that the solver has performed a restart.
+   */
+  void registerConflict() noexcept;
 
-    /**
-     * \brief Determines whether a clause DB reduction should be performed.
-     *
-     * \returns true iff a clause DB reduction should be performed.
-     */
-    bool shouldReduceDB() const noexcept;
+  /**
+   * \brief Determines whether a clause DB reduction should be performed.
+   *
+   * \returns true iff a clause DB reduction should be performed.
+   */
+  bool shouldReduceDB() const noexcept;
 
-    /**
-     * \brief Moves clauses to be deleted in \p learntClauses to the end of \p learntClauses
-     *        and returns an iterator pointing past the last clause not to be deleted.
-     *
-     * The elements in \p learntClauses are rearranged by this method.
-     *
-     * A clause is selected for removal if its LBD value is higher than that of 50% of all
-     * learnt clauses. If there are more "known good" clauses than clauses in \p learntClauses
-     * or if a clause with LBD <= 3 would have to be removed, an empty range is returned.
-     *
-     * \param knownGoodClauses  The amount of "known good" learnt clauses which will never be
-     *                          removed from the clause database and are not included in
-     *                          \p learntClauses.
-     * \returns An iterator pointing past the last clause not to be deleted.
-     */
-    typename LearntClauseSeq::iterator
-    getClausesMarkedForDeletion(typename LearntClauseSeq::size_type knownGoodClauses) noexcept;
+  /**
+   * \brief Moves clauses to be deleted in \p learntClauses to the end of \p learntClauses
+   *        and returns an iterator pointing past the last clause not to be deleted.
+   *
+   * The elements in \p learntClauses are rearranged by this method.
+   *
+   * A clause is selected for removal if its LBD value is higher than that of 50% of all
+   * learnt clauses. If there are more "known good" clauses than clauses in \p learntClauses
+   * or if a clause with LBD <= 3 would have to be removed, an empty range is returned.
+   *
+   * \param knownGoodClauses  The amount of "known good" learnt clauses which will never be
+   *                          removed from the clause database and are not included in
+   *                          \p learntClauses.
+   * \returns An iterator pointing past the last clause not to be deleted.
+   */
+  typename LearntClauseSeq::iterator
+  getClausesMarkedForDeletion(typename LearntClauseSeq::size_type knownGoodClauses) noexcept;
 
 private:
-    const uint32_t m_intervalIncrease;
-    LearntClauseSeq& m_learntClauses;
-    uint64_t m_intervalSize;
-    uint64_t m_conflictsRemaining;
+  const uint32_t m_intervalIncrease;
+  LearntClauseSeq& m_learntClauses;
+  uint64_t m_intervalSize;
+  uint64_t m_conflictsRemaining;
 };
 
 /********** Implementation ****************************** */
@@ -126,59 +126,63 @@ GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::GlucoseClause
   : m_intervalIncrease(intervalIncrease)
   , m_learntClauses(learntClauses)
   , m_intervalSize(0)
-  , m_conflictsRemaining(0) {}
+  , m_conflictsRemaining(0)
+{
+}
 
 template <class ClauseT, class LearntClauseSeq, typename LBDType>
-void GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::
-    registerConflict() noexcept {
-    if (m_conflictsRemaining > 0) {
-        --m_conflictsRemaining;
-    }
+void GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::registerConflict() noexcept
+{
+  if (m_conflictsRemaining > 0) {
+    --m_conflictsRemaining;
+  }
 }
 
 template <class ClauseT, class LearntClauseSeq, typename LBDType>
 bool GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::shouldReduceDB()
-    const noexcept {
-    return m_conflictsRemaining == 0 && !m_learntClauses.empty();
+    const noexcept
+{
+  return m_conflictsRemaining == 0 && !m_learntClauses.empty();
 }
 
 template <class ClauseT, class LearntClauseSeq, typename LBDType>
 typename LearntClauseSeq::iterator
 GlucoseClauseDBReductionPolicy<ClauseT, LearntClauseSeq, LBDType>::getClausesMarkedForDeletion(
-    typename LearntClauseSeq::size_type knownGoodClauses) noexcept {
+    typename LearntClauseSeq::size_type knownGoodClauses) noexcept
+{
 
-    using LearntClauseIdx = typename LearntClauseSeq::size_type;
+  using LearntClauseIdx = typename LearntClauseSeq::size_type;
 
-    JAM_ASSERT(shouldReduceDB(), "Clause DB reduction not allowed at this point");
-    JAM_LOG_REDUCE(info, "Determining clauses to be removed...");
+  JAM_ASSERT(shouldReduceDB(), "Clause DB reduction not allowed at this point");
+  JAM_LOG_REDUCE(info, "Determining clauses to be removed...");
 
-    m_intervalSize += m_intervalIncrease;
-    m_conflictsRemaining = m_intervalSize;
+  m_intervalSize += m_intervalIncrease;
+  m_conflictsRemaining = m_intervalSize;
 
-    LearntClauseIdx midIndex = (knownGoodClauses + m_learntClauses.size()) / 2;
-    if (midIndex >= m_learntClauses.size()) {
-        JAM_LOG_REDUCE(info, "Selecting no clauses for reduction: too few learnt clauses");
-        return m_learntClauses.end();
+  LearntClauseIdx midIndex = (knownGoodClauses + m_learntClauses.size()) / 2;
+  if (midIndex >= m_learntClauses.size()) {
+    JAM_LOG_REDUCE(info, "Selecting no clauses for reduction: too few learnt clauses");
+    return m_learntClauses.end();
+  }
+
+  std::sort(m_learntClauses.begin(), m_learntClauses.end(), [](ClauseT* lhs, ClauseT* rhs) {
+    auto lhsLBD = lhs->template getLBD<LBDType>();
+    auto rhsLBD = rhs->template getLBD<LBDType>();
+    if (lhsLBD != rhsLBD) {
+      return lhs->template getLBD<LBDType>() < rhs->template getLBD<LBDType>();
     }
 
-    std::sort(m_learntClauses.begin(), m_learntClauses.end(), [](ClauseT* lhs, ClauseT* rhs) {
-        auto lhsLBD = lhs->template getLBD<LBDType>();
-        auto rhsLBD = rhs->template getLBD<LBDType>();
-        if (lhsLBD != rhsLBD) {
-            return lhs->template getLBD<LBDType>() < rhs->template getLBD<LBDType>();
-        }
+    // Use the clause size for tie-breaking, since smaller clauses are likely propagated faster:
+    return lhs->size() < rhs->size();
+  });
 
-        // Use the clause size for tie-breaking, since smaller clauses are likely propagated faster:
-        return lhs->size() < rhs->size();
-    });
+  if (m_learntClauses[midIndex]->template getLBD<LBDType>() <= static_cast<LBDType>(3)) {
+    JAM_LOG_REDUCE(info, "Selecting no clauses for reduction: LBD values are too low");
+    return m_learntClauses.end();
+  }
 
-    if (m_learntClauses[midIndex]->template getLBD<LBDType>() <= static_cast<LBDType>(3)) {
-        JAM_LOG_REDUCE(info, "Selecting no clauses for reduction: LBD values are too low");
-        return m_learntClauses.end();
-    }
-
-    JAM_LOG_REDUCE(info,
-                   "Selecting " << (m_learntClauses.size() - midIndex) << " clauses for reduction");
-    return m_learntClauses.begin() + midIndex;
+  JAM_LOG_REDUCE(info,
+                 "Selecting " << (m_learntClauses.size() - midIndex) << " clauses for reduction");
+  return m_learntClauses.begin() + midIndex;
 }
 }

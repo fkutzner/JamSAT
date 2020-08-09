@@ -79,42 +79,44 @@ auto swapWithLastElement(VectorLike&& vector,
 /********** Implementation ****************************** */
 
 template <typename InputIt>
-auto withoutRedundancies(InputIt begin, InputIt end) -> std::vector<typename InputIt::value_type> {
-    using CompressionBuf = std::vector<typename InputIt::value_type>;
-    CompressionBuf compressionBuf;
+auto withoutRedundancies(InputIt begin, InputIt end) -> std::vector<typename InputIt::value_type>
+{
+  using CompressionBuf = std::vector<typename InputIt::value_type>;
+  CompressionBuf compressionBuf;
 
-    auto compressionBufSize = static_cast<typename CompressionBuf::size_type>(end - begin);
-    compressionBuf.resize(compressionBufSize);
-    std::copy(begin, end, compressionBuf.begin());
-    std::sort(compressionBuf.begin(), compressionBuf.end());
-    auto compressionBufEnd = std::unique(compressionBuf.begin(), compressionBuf.end());
+  auto compressionBufSize = static_cast<typename CompressionBuf::size_type>(end - begin);
+  compressionBuf.resize(compressionBufSize);
+  std::copy(begin, end, compressionBuf.begin());
+  std::sort(compressionBuf.begin(), compressionBuf.end());
+  auto compressionBufEnd = std::unique(compressionBuf.begin(), compressionBuf.end());
 
-    compressionBufSize =
-        static_cast<typename CompressionBuf::size_type>(compressionBufEnd - compressionBuf.begin());
-    compressionBuf.resize(compressionBufSize);
-    return compressionBuf;
+  compressionBufSize =
+      static_cast<typename CompressionBuf::size_type>(compressionBufEnd - compressionBuf.begin());
+  compressionBuf.resize(compressionBufSize);
+  return compressionBuf;
 }
 
 template <typename VectorLike>
 auto swapWithLastElement(VectorLike&& vector,
                          typename std::decay_t<VectorLike>::value_type const& element) noexcept
-    -> std::size_t {
-    using DecayedVL = std::decay_t<VectorLike>;
-    using SizeTy = typename DecayedVL::size_type;
-    using ValueTy = typename DecayedVL::value_type;
+    -> std::size_t
+{
+  using DecayedVL = std::decay_t<VectorLike>;
+  using SizeTy = typename DecayedVL::size_type;
+  using ValueTy = typename DecayedVL::value_type;
 
-    static_assert(std::is_nothrow_swappable_v<ValueTy>);
+  static_assert(std::is_nothrow_swappable_v<ValueTy>);
 
-    using std::swap;
+  using std::swap;
 
-    SizeTy const size = vector.size();
-    for (SizeTy i = 0; i < size; ++i) {
-        if (vector[i] == element) {
-            swap(vector[i], vector[size - 1]);
-            return 1;
-        }
+  SizeTy const size = vector.size();
+  for (SizeTy i = 0; i < size; ++i) {
+    if (vector[i] == element) {
+      swap(vector[i], vector[size - 1]);
+      return 1;
     }
+  }
 
-    return 0;
+  return 0;
 }
 }

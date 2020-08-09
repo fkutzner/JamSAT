@@ -53,20 +53,22 @@ namespace jamsat {
  */
 template <typename ToType, typename FromType>
 auto static_checked_cast(FromType value) ->
-    typename std::enable_if<std::is_integral<ToType>::value, ToType>::type {
+    typename std::enable_if<std::is_integral<ToType>::value, ToType>::type
+{
 #if defined(JAM_ASSERT_ENABLED)
-    if (value >= 0) {
-        uintmax_t i = static_cast<uintmax_t>(value);
-        uintmax_t max = static_cast<uintmax_t>(std::numeric_limits<ToType>::max());
-        JAM_ASSERT(i <= max, "Loss of precision caused loss of data");
-    } else {
-        intmax_t i = static_cast<intmax_t>(value);
-        intmax_t min = static_cast<intmax_t>(std::numeric_limits<ToType>::min());
-        JAM_ASSERT(std::numeric_limits<ToType>::min() < 0,
-                   "Cast of a negative integer to an unsigned type failed");
-        JAM_ASSERT(i >= min, "Loss of precision caused loss of data");
-    }
+  if (value >= 0) {
+    uintmax_t i = static_cast<uintmax_t>(value);
+    uintmax_t max = static_cast<uintmax_t>(std::numeric_limits<ToType>::max());
+    JAM_ASSERT(i <= max, "Loss of precision caused loss of data");
+  }
+  else {
+    intmax_t i = static_cast<intmax_t>(value);
+    intmax_t min = static_cast<intmax_t>(std::numeric_limits<ToType>::min());
+    JAM_ASSERT(std::numeric_limits<ToType>::min() < 0,
+               "Cast of a negative integer to an unsigned type failed");
+    JAM_ASSERT(i >= min, "Loss of precision caused loss of data");
+  }
 #endif
-    return static_cast<ToType>(value);
+  return static_cast<ToType>(value);
 }
 }

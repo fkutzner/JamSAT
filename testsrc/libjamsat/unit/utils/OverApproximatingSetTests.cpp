@@ -33,60 +33,65 @@
 namespace jamsat {
 
 struct TestUIntKey {
-    using Type = uint32_t;
+  using Type = uint32_t;
 
-    constexpr static auto getIndex(uint32_t value) -> size_t { return value; }
+  constexpr static auto getIndex(uint32_t value) -> size_t { return value; }
 };
 
-TEST(UnitUtils, OverApproximatingSetIsEmptyAfterConstruction) {
-    OverApproximatingSet<64, TestUIntKey> underTest;
-    EXPECT_FALSE(underTest.mightContain(0UL));
-    EXPECT_FALSE(underTest.mightContain(1UL));
-    EXPECT_FALSE(underTest.mightContain(1048576UL));
+TEST(UnitUtils, OverApproximatingSetIsEmptyAfterConstruction)
+{
+  OverApproximatingSet<64, TestUIntKey> underTest;
+  EXPECT_FALSE(underTest.mightContain(0UL));
+  EXPECT_FALSE(underTest.mightContain(1UL));
+  EXPECT_FALSE(underTest.mightContain(1048576UL));
 }
 
-TEST(UnitUtils, OverApproximatingSetDefinitelyContainsValueAfterInsert) {
-    OverApproximatingSet<64, TestUIntKey> underTest;
-    underTest.insert(0UL);
-    EXPECT_TRUE(underTest.mightContain(0UL));
+TEST(UnitUtils, OverApproximatingSetDefinitelyContainsValueAfterInsert)
+{
+  OverApproximatingSet<64, TestUIntKey> underTest;
+  underTest.insert(0UL);
+  EXPECT_TRUE(underTest.mightContain(0UL));
 
-    ASSERT_FALSE(underTest.mightContain(1048577UL)) << "Bad test data";
-    underTest.insert(1048577UL);
-    EXPECT_TRUE(underTest.mightContain(1048577UL));
+  ASSERT_FALSE(underTest.mightContain(1048577UL)) << "Bad test data";
+  underTest.insert(1048577UL);
+  EXPECT_TRUE(underTest.mightContain(1048577UL));
 }
 
-TEST(UnitUtils, OverApproximatingSetRecognizesRealSubset) {
-    OverApproximatingSet<64, TestUIntKey> subset;
-    subset.insert(1UL);
-    subset.insert(128UL);
-    subset.insert(255UL);
+TEST(UnitUtils, OverApproximatingSetRecognizesRealSubset)
+{
+  OverApproximatingSet<64, TestUIntKey> subset;
+  subset.insert(1UL);
+  subset.insert(128UL);
+  subset.insert(255UL);
 
-    OverApproximatingSet<64, TestUIntKey> superset{subset};
-    superset.insert(3UL);
+  OverApproximatingSet<64, TestUIntKey> superset{subset};
+  superset.insert(3UL);
 
-    EXPECT_TRUE(subset.mightBeSubsetOf(superset));
+  EXPECT_TRUE(subset.mightBeSubsetOf(superset));
 }
 
-TEST(UnitUtils, OverApproximatingSetRecognizesDefinitelyNotSubset) {
-    OverApproximatingSet<64, TestUIntKey> setA;
-    setA.insert(1UL);
-    setA.insert(128UL);
-    setA.insert(255UL);
+TEST(UnitUtils, OverApproximatingSetRecognizesDefinitelyNotSubset)
+{
+  OverApproximatingSet<64, TestUIntKey> setA;
+  setA.insert(1UL);
+  setA.insert(128UL);
+  setA.insert(255UL);
 
-    OverApproximatingSet<64, TestUIntKey> setB{setA};
-    setB.insert(3UL); // gets mapped to a bit that is not set in setA
+  OverApproximatingSet<64, TestUIntKey> setB{setA};
+  setB.insert(3UL); // gets mapped to a bit that is not set in setA
 
-    EXPECT_FALSE(setB.mightBeSubsetOf(setA));
+  EXPECT_FALSE(setB.mightBeSubsetOf(setA));
 }
 
-TEST(UnitUtils, OverApproximatingSetIsEmptyAfterClear) {
-    OverApproximatingSet<64, TestUIntKey> underTest;
-    for (unsigned int i = 0; i < 64; ++i) {
-        underTest.insert(i);
-    }
-    underTest.clear();
-    for (unsigned int i = 0; i < 64; ++i) {
-        EXPECT_FALSE(underTest.mightContain(i)) << "Set not empty; contains " << i;
-    }
+TEST(UnitUtils, OverApproximatingSetIsEmptyAfterClear)
+{
+  OverApproximatingSet<64, TestUIntKey> underTest;
+  for (unsigned int i = 0; i < 64; ++i) {
+    underTest.insert(i);
+  }
+  underTest.clear();
+  for (unsigned int i = 0; i < 64; ++i) {
+    EXPECT_FALSE(underTest.mightContain(i)) << "Set not empty; contains " << i;
+  }
 }
 }

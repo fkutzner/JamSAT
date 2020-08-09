@@ -38,69 +38,75 @@
 namespace jamsat {
 
 namespace {
-void printVersion(std::ostream& stream) noexcept {
-    stream << ipasir_signature() << "\n";
+void printVersion(std::ostream& stream) noexcept
+{
+  stream << ipasir_signature() << "\n";
 }
 
-void printErrorMessage(std::string const& message, std::ostream& errStream) noexcept {
-    errStream << "Error: " << message << "\n";
+void printErrorMessage(std::string const& message, std::ostream& errStream) noexcept
+{
+  errStream << "Error: " << message << "\n";
 }
 
-auto solve(IpasirSolver& solver, std::ostream& outStream) noexcept -> int {
-    IpasirSolver::Result result = solver.solve({});
-    switch (result) {
-    case IpasirSolver::Result::SATISFIABLE:
-        outStream << "SATISFIABLE\n";
-        return 10;
-    case IpasirSolver::Result::UNSATISFIABLE:
-        outStream << "UNSATISFIABLE\n";
-        return 20;
-    default: // also handles case IpasirSolver::Result::INDETERMINATE
-        outStream << "INDETERMINATE\n";
-        return 0;
-    }
+auto solve(IpasirSolver& solver, std::ostream& outStream) noexcept -> int
+{
+  IpasirSolver::Result result = solver.solve({});
+  switch (result) {
+  case IpasirSolver::Result::SATISFIABLE:
+    outStream << "SATISFIABLE\n";
+    return 10;
+  case IpasirSolver::Result::UNSATISFIABLE:
+    outStream << "UNSATISFIABLE\n";
+    return 20;
+  default: // also handles case IpasirSolver::Result::INDETERMINATE
+    outStream << "INDETERMINATE\n";
+    return 0;
+  }
 }
 }
 
 auto jamsatMain(int argc, char** argv, std::ostream& outStream, std::ostream& errStream) noexcept
-    -> int {
-    JamSATOptions options;
-    try {
-        options = parseOptions(argc, argv);
-    } catch (std::invalid_argument&) {
-        return EXIT_FAILURE;
+    -> int
+{
+  JamSATOptions options;
+  try {
+    options = parseOptions(argc, argv);
+  }
+  catch (std::invalid_argument&) {
+    return EXIT_FAILURE;
+  }
+
+  if (options.m_quit) {
+    return EXIT_SUCCESS;
+  }
+
+  if (options.m_printVersion) {
+    printVersion(outStream);
+    return EXIT_SUCCESS;
+  }
+
+  if (options.m_waitForUserInput) {
+    outStream << "Press any key to start the solver.\n";
+    std::getc(stdin);
+  }
+
+  try {
+    std::unique_ptr<IpasirSolver> wrappedSolver = createIpasirSolver();
+    if (options.m_timeout.has_value()) {
+      configureTimeout(*wrappedSolver, *(options.m_timeout));
     }
 
-    if (options.m_quit) {
-        return EXIT_SUCCESS;
+    if (options.m_verbose) {
+      wrappedSolver->enableLogging(outStream);
     }
 
-    if (options.m_printVersion) {
-        printVersion(outStream);
-        return EXIT_SUCCESS;
-    }
-
-    if (options.m_waitForUserInput) {
-        outStream << "Press any key to start the solver.\n";
-        std::getc(stdin);
-    }
-
-    try {
-        std::unique_ptr<IpasirSolver> wrappedSolver = createIpasirSolver();
-        if (options.m_timeout.has_value()) {
-            configureTimeout(*wrappedSolver, *(options.m_timeout));
-        }
-
-        if (options.m_verbose) {
-            wrappedSolver->enableLogging(outStream);
-        }
-
-        std::ostream* logStream = options.m_verbose ? &outStream : nullptr;
-        readProblem(*wrappedSolver, options.m_problemFilename, logStream);
-        return solve(*wrappedSolver, outStream);
-    } catch (std::exception& e) {
-        printErrorMessage(e.what(), errStream);
-        return EXIT_FAILURE;
-    }
+    std::ostream* logStream = options.m_verbose ? &outStream : nullptr;
+    readProblem(*wrappedSolver, options.m_problemFilename, logStream);
+    return solve(*wrappedSolver, outStream);
+  }
+  catch (std::exception& e) {
+    printErrorMessage(e.what(), errStream);
+    return EXIT_FAILURE;
+  }
 }
 }

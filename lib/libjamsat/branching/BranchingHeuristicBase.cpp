@@ -38,32 +38,36 @@
 
 namespace jamsat {
 BranchingHeuristicBase::BranchingHeuristicBase(CNFVar maxVar) noexcept
-  : m_decisionVariables(maxVar, Bool::FALSE) {}
-
-bool BranchingHeuristicBase::isEligibleForDecisions(CNFVar variable) const noexcept {
-    JAM_ASSERT(variable.getRawValue() <
-                   static_checked_cast<CNFVar::RawVariable>(m_decisionVariables.size()),
-               "Variable out of bounds");
-    return toRawBool(m_decisionVariables[variable]);
+  : m_decisionVariables(maxVar, Bool::FALSE)
+{
 }
 
-void BranchingHeuristicBase::setEligibleForDecisions(CNFVar variable, bool isEligible) noexcept {
-    JAM_ASSERT(variable.getRawValue() <
-                   static_checked_cast<CNFVar::RawVariable>(m_decisionVariables.size()),
-               "Variable out of bounds");
-    m_decisionVariables[variable] = toBool(isEligible);
+bool BranchingHeuristicBase::isEligibleForDecisions(CNFVar variable) const noexcept
+{
+  JAM_ASSERT(variable.getRawValue() <
+                 static_checked_cast<CNFVar::RawVariable>(m_decisionVariables.size()),
+             "Variable out of bounds");
+  return toRawBool(m_decisionVariables[variable]);
 }
 
-void BranchingHeuristicBase::increaseMaxDecisionVarTo(CNFVar newMaxVar) {
-    JAM_ASSERT(newMaxVar.getRawValue() >= (m_decisionVariables.size() - 1),
-               "Argument newMaxVar must not be smaller than the previous maximum variable");
-    JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
+void BranchingHeuristicBase::setEligibleForDecisions(CNFVar variable, bool isEligible) noexcept
+{
+  JAM_ASSERT(variable.getRawValue() <
+                 static_checked_cast<CNFVar::RawVariable>(m_decisionVariables.size()),
+             "Variable out of bounds");
+  m_decisionVariables[variable] = toBool(isEligible);
+}
 
-    CNFVar firstNewVar =
-        CNFVar{static_checked_cast<CNFVar::RawVariable>(m_decisionVariables.size())};
-    m_decisionVariables.increaseSizeTo(newMaxVar);
-    for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
-        m_decisionVariables[i] = Bool::FALSE;
-    }
+void BranchingHeuristicBase::increaseMaxDecisionVarTo(CNFVar newMaxVar)
+{
+  JAM_ASSERT(newMaxVar.getRawValue() >= (m_decisionVariables.size() - 1),
+             "Argument newMaxVar must not be smaller than the previous maximum variable");
+  JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
+
+  CNFVar firstNewVar = CNFVar{static_checked_cast<CNFVar::RawVariable>(m_decisionVariables.size())};
+  m_decisionVariables.increaseSizeTo(newMaxVar);
+  for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
+    m_decisionVariables[i] = Bool::FALSE;
+  }
 }
 }

@@ -40,80 +40,84 @@ namespace jamsat {
 // In many tests, no actual clauses are needed, just pointers to clauses.
 class TrivialClause {
 public:
-    template <typename LBDType>
-    auto getLBD() -> LBDType {
-        return 0;
-    }
+  template <typename LBDType>
+  auto getLBD() -> LBDType
+  {
+    return 0;
+  }
 
-    template <typename LBDType>
-    void setLBD(LBDType) {}
+  template <typename LBDType>
+  void setLBD(LBDType)
+  {
+  }
 
-    auto size() const noexcept -> std::size_t { return 2; }
+  auto size() const noexcept -> std::size_t { return 2; }
 };
 
 using TrivialClauseSeq = std::vector<TrivialClause*>;
 
-TEST(UnitSolver, GlucoseClauseDBReductionPolicy_forbidsReductionWhenNoClauseHasBeenLearned) {
-    TrivialClauseSeq emptyClauseList;
-    GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{10,
-                                                                                   emptyClauseList};
-    EXPECT_FALSE(underTest.shouldReduceDB());
+TEST(UnitSolver, GlucoseClauseDBReductionPolicy_forbidsReductionWhenNoClauseHasBeenLearned)
+{
+  TrivialClauseSeq emptyClauseList;
+  GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{10,
+                                                                                 emptyClauseList};
+  EXPECT_FALSE(underTest.shouldReduceDB());
 }
 
-TEST(UnitSolver, GlucoseClauseDBReductionPolicy_firstReductionPossibleAtArbitraryTime) {
-    TrivialClause l1;
-    TrivialClauseSeq learntClauses{&l1};
-    GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{10,
-                                                                                   learntClauses};
+TEST(UnitSolver, GlucoseClauseDBReductionPolicy_firstReductionPossibleAtArbitraryTime)
+{
+  TrivialClause l1;
+  TrivialClauseSeq learntClauses{&l1};
+  GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{10, learntClauses};
 
+  ASSERT_TRUE(underTest.shouldReduceDB());
+  for (int i = 0; i < 24; ++i) {
+    underTest.registerConflict();
     ASSERT_TRUE(underTest.shouldReduceDB());
-    for (int i = 0; i < 24; ++i) {
-        underTest.registerConflict();
-        ASSERT_TRUE(underTest.shouldReduceDB());
-    }
+  }
 }
 
-TEST(UnitSolver, GlucoseClauseDBReductionPolicy_reductionForbiddenJustAfterFirstReduction) {
-    TrivialClause l1;
-    TrivialClauseSeq learntClauses{&l1};
-    GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{10,
-                                                                                   learntClauses};
-    ASSERT_TRUE(underTest.shouldReduceDB());
-    underTest.getClausesMarkedForDeletion(0);
-    EXPECT_FALSE(underTest.shouldReduceDB());
+TEST(UnitSolver, GlucoseClauseDBReductionPolicy_reductionForbiddenJustAfterFirstReduction)
+{
+  TrivialClause l1;
+  TrivialClauseSeq learntClauses{&l1};
+  GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{10, learntClauses};
+  ASSERT_TRUE(underTest.shouldReduceDB());
+  underTest.getClausesMarkedForDeletion(0);
+  EXPECT_FALSE(underTest.shouldReduceDB());
 }
 
-TEST(UnitSolver, GlucoseClauseDBReductionPolicy_reductionIntervalsAreIncreased) {
-    TrivialClause l1;
-    TrivialClauseSeq learntClauses{&l1};
-    GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{5,
-                                                                                   learntClauses};
+TEST(UnitSolver, GlucoseClauseDBReductionPolicy_reductionIntervalsAreIncreased)
+{
+  TrivialClause l1;
+  TrivialClauseSeq learntClauses{&l1};
+  GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{5, learntClauses};
 
-    ASSERT_TRUE(underTest.shouldReduceDB());
-    underTest.getClausesMarkedForDeletion(0);
-    for (int i = 0; i < 5; ++i) {
-        ASSERT_FALSE(underTest.shouldReduceDB());
-        underTest.registerConflict();
-    }
+  ASSERT_TRUE(underTest.shouldReduceDB());
+  underTest.getClausesMarkedForDeletion(0);
+  for (int i = 0; i < 5; ++i) {
+    ASSERT_FALSE(underTest.shouldReduceDB());
+    underTest.registerConflict();
+  }
 
-    ASSERT_TRUE(underTest.shouldReduceDB());
-    underTest.getClausesMarkedForDeletion(0);
-    for (int i = 0; i < 10; ++i) {
-        ASSERT_FALSE(underTest.shouldReduceDB());
-        underTest.registerConflict();
-    }
+  ASSERT_TRUE(underTest.shouldReduceDB());
+  underTest.getClausesMarkedForDeletion(0);
+  for (int i = 0; i < 10; ++i) {
+    ASSERT_FALSE(underTest.shouldReduceDB());
+    underTest.registerConflict();
+  }
 
-    ASSERT_TRUE(underTest.shouldReduceDB());
+  ASSERT_TRUE(underTest.shouldReduceDB());
 }
 
-TEST(UnitSolver, GlucoseClauseDBReductionPolicy_noReductionForTooManyKnownGoodClauses) {
-    TrivialClause l1, l2, l3;
-    TrivialClauseSeq learntClauses{&l1, &l2, &l3};
-    GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{10,
-                                                                                   learntClauses};
-    ASSERT_TRUE(underTest.shouldReduceDB());
-    underTest.getClausesMarkedForDeletion(4);
-    EXPECT_FALSE(underTest.shouldReduceDB());
+TEST(UnitSolver, GlucoseClauseDBReductionPolicy_noReductionForTooManyKnownGoodClauses)
+{
+  TrivialClause l1, l2, l3;
+  TrivialClauseSeq learntClauses{&l1, &l2, &l3};
+  GlucoseClauseDBReductionPolicy<TrivialClause, TrivialClauseSeq, int> underTest{10, learntClauses};
+  ASSERT_TRUE(underTest.shouldReduceDB());
+  underTest.getClausesMarkedForDeletion(4);
+  EXPECT_FALSE(underTest.shouldReduceDB());
 }
 
 namespace {
@@ -129,44 +133,48 @@ namespace {
 void test_GlucoseClauseDBReductionPolicy_markedForDeletion(
     const std::vector<int>& LBDs,
     uint16_t knownGoods,
-    const std::vector<uint16_t>& expectedDeletedIndices) {
-    std::vector<std::unique_ptr<Clause>> clauses;
-    for (auto lbd : LBDs) {
-        clauses.push_back(createHeapClause(3));
-        clauses.back()->setLBD(lbd);
-    }
+    const std::vector<uint16_t>& expectedDeletedIndices)
+{
+  std::vector<std::unique_ptr<Clause>> clauses;
+  for (auto lbd : LBDs) {
+    clauses.push_back(createHeapClause(3));
+    clauses.back()->setLBD(lbd);
+  }
 
-    std::vector<Clause*> learntClauses;
-    for (auto& clause : clauses) {
-        learntClauses.push_back(clause.get());
-    }
-    auto originalLearntClauses = learntClauses;
+  std::vector<Clause*> learntClauses;
+  for (auto& clause : clauses) {
+    learntClauses.push_back(clause.get());
+  }
+  auto originalLearntClauses = learntClauses;
 
-    GlucoseClauseDBReductionPolicy<Clause, std::vector<Clause*>, int> underTest{10, learntClauses};
-    ASSERT_TRUE(underTest.shouldReduceDB());
-    auto toDeleteBegin = underTest.getClausesMarkedForDeletion(knownGoods);
+  GlucoseClauseDBReductionPolicy<Clause, std::vector<Clause*>, int> underTest{10, learntClauses};
+  ASSERT_TRUE(underTest.shouldReduceDB());
+  auto toDeleteBegin = underTest.getClausesMarkedForDeletion(knownGoods);
 
-    for (auto idx : expectedDeletedIndices) {
-        Clause* expected = originalLearntClauses[idx];
-        ASSERT_TRUE(std::find(toDeleteBegin, learntClauses.end(), expected) != learntClauses.end())
-            << "Clause at index " << idx << " has not been marked for deletion.";
-    }
+  for (auto idx : expectedDeletedIndices) {
+    Clause* expected = originalLearntClauses[idx];
+    ASSERT_TRUE(std::find(toDeleteBegin, learntClauses.end(), expected) != learntClauses.end())
+        << "Clause at index " << idx << " has not been marked for deletion.";
+  }
 
-    ASSERT_TRUE(std::distance(toDeleteBegin, learntClauses.end()) ==
-                static_cast<int>(expectedDeletedIndices.size()))
-        << "More clauses marked for deletion than expected";
+  ASSERT_TRUE(std::distance(toDeleteBegin, learntClauses.end()) ==
+              static_cast<int>(expectedDeletedIndices.size()))
+      << "More clauses marked for deletion than expected";
 }
 }
 
-TEST(UnitSolver, GlucoseClauseDBReductionPolicy_worstHalfOfClausesIsMarkedForDeletion) {
-    test_GlucoseClauseDBReductionPolicy_markedForDeletion({6, 2, 4, 3}, 0, {0, 2});
+TEST(UnitSolver, GlucoseClauseDBReductionPolicy_worstHalfOfClausesIsMarkedForDeletion)
+{
+  test_GlucoseClauseDBReductionPolicy_markedForDeletion({6, 2, 4, 3}, 0, {0, 2});
 }
 
-TEST(UnitSolver, GlucoseClauseDBReductionPolicy_knownGoodValueShrinksRangeOfDeletedClauses) {
-    test_GlucoseClauseDBReductionPolicy_markedForDeletion({6, 2, 4, 3}, 2, {0});
+TEST(UnitSolver, GlucoseClauseDBReductionPolicy_knownGoodValueShrinksRangeOfDeletedClauses)
+{
+  test_GlucoseClauseDBReductionPolicy_markedForDeletion({6, 2, 4, 3}, 2, {0});
 }
 
-TEST(UnitSolver, GlucoseClauseDBReductionPolicy_noClausesMarkedForDeletionWhenLBDTooLow) {
-    test_GlucoseClauseDBReductionPolicy_markedForDeletion({2, 2, 3, 6}, 0, {});
+TEST(UnitSolver, GlucoseClauseDBReductionPolicy_noClausesMarkedForDeletionWhenLBDTooLow)
+{
+  test_GlucoseClauseDBReductionPolicy_markedForDeletion({2, 2, 3, 6}, 0, {});
 }
 }

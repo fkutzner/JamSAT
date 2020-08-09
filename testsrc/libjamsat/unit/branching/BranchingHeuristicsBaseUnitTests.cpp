@@ -28,14 +28,16 @@
 #include <libjamsat/branching/BranchingHeuristicBase.h>
 
 namespace jamsat {
-TEST(UnitBranching, variablesArentEligibleForDecisionByDefault) {
-    BranchingHeuristicBase underTest{CNFVar{10}};
-    EXPECT_EQ(underTest.isEligibleForDecisions(CNFVar{3}), false);
+TEST(UnitBranching, variablesArentEligibleForDecisionByDefault)
+{
+  BranchingHeuristicBase underTest{CNFVar{10}};
+  EXPECT_EQ(underTest.isEligibleForDecisions(CNFVar{3}), false);
 }
 
-TEST(UnitBranching, decisionVariableEligibilityIsStored) {
-    BranchingHeuristicBase underTest{CNFVar{10}};
-    underTest.setEligibleForDecisions(CNFVar{3}, true);
-    EXPECT_EQ(underTest.isEligibleForDecisions(CNFVar{3}), true);
+TEST(UnitBranching, decisionVariableEligibilityIsStored)
+{
+  BranchingHeuristicBase underTest{CNFVar{10}};
+  underTest.setEligibleForDecisions(CNFVar{3}, true);
+  EXPECT_EQ(underTest.isEligibleForDecisions(CNFVar{3}), true);
 }
 }

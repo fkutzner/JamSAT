@@ -39,59 +39,61 @@
 namespace jamsat {
 using TrivialClause = TestAssignmentProvider::Clause;
 
-TEST(UnitSolver, AssignmentAnalysisProducesUnitaryResultForReasonlessConflict) {
-    TestAssignmentProvider decisionLevelProvider;
-    TestReasonProvider<TrivialClause> reasonProvider;
-    StampMap<int, CNFVar::Index> tempStamps{CNFVar{1024}.getRawValue()};
-    CNFLit lit{CNFVar{3}, CNFSign::POSITIVE};
-    decisionLevelProvider.setCurrentDecisionLevel(0);
-    decisionLevelProvider.append(lit);
-    decisionLevelProvider.setAssignmentDecisionLevel(lit.getVariable(), 0);
+TEST(UnitSolver, AssignmentAnalysisProducesUnitaryResultForReasonlessConflict)
+{
+  TestAssignmentProvider decisionLevelProvider;
+  TestReasonProvider<TrivialClause> reasonProvider;
+  StampMap<int, CNFVar::Index> tempStamps{CNFVar{1024}.getRawValue()};
+  CNFLit lit{CNFVar{3}, CNFSign::POSITIVE};
+  decisionLevelProvider.setCurrentDecisionLevel(0);
+  decisionLevelProvider.append(lit);
+  decisionLevelProvider.setAssignmentDecisionLevel(lit.getVariable(), 0);
 
-    auto result = analyzeAssignment(reasonProvider, decisionLevelProvider, tempStamps, lit);
-    EXPECT_EQ(result, std::vector<CNFLit>{lit});
+  auto result = analyzeAssignment(reasonProvider, decisionLevelProvider, tempStamps, lit);
+  EXPECT_EQ(result, std::vector<CNFLit>{lit});
 }
 
-TEST(UnitSolver, AssignmentAnalysisProducesFailingAssumptionsForReasonfulConflict) {
-    TestAssignmentProvider decisionLevelProvider;
-    TestReasonProvider<TrivialClause> reasonProvider;
-    StampMap<int, CNFVar::Index> tempStamps{CNFVar{1024}.getRawValue()};
+TEST(UnitSolver, AssignmentAnalysisProducesFailingAssumptionsForReasonfulConflict)
+{
+  TestAssignmentProvider decisionLevelProvider;
+  TestReasonProvider<TrivialClause> reasonProvider;
+  StampMap<int, CNFVar::Index> tempStamps{CNFVar{1024}.getRawValue()};
 
-    CNFLit lit1{CNFVar{3}, CNFSign::POSITIVE}, lit2{CNFVar{6}, CNFSign::POSITIVE},
-        lit3{CNFVar{8}, CNFSign::NEGATIVE}, lit4{CNFVar{16}, CNFSign::NEGATIVE},
-        lit5{CNFVar{20}, CNFSign::POSITIVE}, lit6{CNFVar{22}, CNFSign::NEGATIVE},
-        lit7{CNFVar{25}, CNFSign::NEGATIVE};
+  CNFLit lit1{CNFVar{3}, CNFSign::POSITIVE}, lit2{CNFVar{6}, CNFSign::POSITIVE},
+      lit3{CNFVar{8}, CNFSign::NEGATIVE}, lit4{CNFVar{16}, CNFSign::NEGATIVE},
+      lit5{CNFVar{20}, CNFSign::POSITIVE}, lit6{CNFVar{22}, CNFSign::NEGATIVE},
+      lit7{CNFVar{25}, CNFSign::NEGATIVE};
 
-    decisionLevelProvider.setCurrentDecisionLevel(0);
-    decisionLevelProvider.append(lit1);
-    decisionLevelProvider.append(lit2);
-    decisionLevelProvider.setCurrentDecisionLevel(1);
-    decisionLevelProvider.append(lit3);
-    decisionLevelProvider.append(lit4);
-    decisionLevelProvider.append(lit5);
-    decisionLevelProvider.append(lit6);
-    decisionLevelProvider.append(lit7);
+  decisionLevelProvider.setCurrentDecisionLevel(0);
+  decisionLevelProvider.append(lit1);
+  decisionLevelProvider.append(lit2);
+  decisionLevelProvider.setCurrentDecisionLevel(1);
+  decisionLevelProvider.append(lit3);
+  decisionLevelProvider.append(lit4);
+  decisionLevelProvider.append(lit5);
+  decisionLevelProvider.append(lit6);
+  decisionLevelProvider.append(lit7);
 
-    decisionLevelProvider.setAssignmentDecisionLevel(lit1.getVariable(), 0);
-    decisionLevelProvider.setAssignmentDecisionLevel(lit2.getVariable(), 0);
-    decisionLevelProvider.setAssignmentDecisionLevel(lit3.getVariable(), 1);
-    decisionLevelProvider.setAssignmentDecisionLevel(lit4.getVariable(), 1);
-    decisionLevelProvider.setAssignmentDecisionLevel(lit5.getVariable(), 1);
-    decisionLevelProvider.setAssignmentDecisionLevel(lit6.getVariable(), 1);
-    decisionLevelProvider.setAssignmentDecisionLevel(lit7.getVariable(), 1);
+  decisionLevelProvider.setAssignmentDecisionLevel(lit1.getVariable(), 0);
+  decisionLevelProvider.setAssignmentDecisionLevel(lit2.getVariable(), 0);
+  decisionLevelProvider.setAssignmentDecisionLevel(lit3.getVariable(), 1);
+  decisionLevelProvider.setAssignmentDecisionLevel(lit4.getVariable(), 1);
+  decisionLevelProvider.setAssignmentDecisionLevel(lit5.getVariable(), 1);
+  decisionLevelProvider.setAssignmentDecisionLevel(lit6.getVariable(), 1);
+  decisionLevelProvider.setAssignmentDecisionLevel(lit7.getVariable(), 1);
 
-    TrivialClause reasonFor2{~lit1, lit2};
-    TrivialClause reasonFor4{~lit2, ~lit1, ~lit6, ~lit3, lit4};
-    TrivialClause reasonFor5{~lit2, ~lit7, ~lit3, ~lit4, lit5};
-    reasonProvider.set_reason(lit2.getVariable(), reasonFor2);
-    reasonProvider.set_reason(lit4.getVariable(), reasonFor4);
-    reasonProvider.set_reason(lit5.getVariable(), reasonFor5);
+  TrivialClause reasonFor2{~lit1, lit2};
+  TrivialClause reasonFor4{~lit2, ~lit1, ~lit6, ~lit3, lit4};
+  TrivialClause reasonFor5{~lit2, ~lit7, ~lit3, ~lit4, lit5};
+  reasonProvider.set_reason(lit2.getVariable(), reasonFor2);
+  reasonProvider.set_reason(lit4.getVariable(), reasonFor4);
+  reasonProvider.set_reason(lit5.getVariable(), reasonFor5);
 
-    std::vector<CNFLit> expected{lit3, lit5, lit6, lit7};
-    auto result = analyzeAssignment(reasonProvider, decisionLevelProvider, tempStamps, lit5);
-    ASSERT_EQ(result.size(), expected.size());
-    EXPECT_TRUE(std::is_permutation(expected.begin(), expected.end(), result.begin()))
-        << "Expected a permutation of " << toString(expected.begin(), expected.end()) << " but got "
-        << toString(result.begin(), result.end());
+  std::vector<CNFLit> expected{lit3, lit5, lit6, lit7};
+  auto result = analyzeAssignment(reasonProvider, decisionLevelProvider, tempStamps, lit5);
+  ASSERT_EQ(result.size(), expected.size());
+  EXPECT_TRUE(std::is_permutation(expected.begin(), expected.end(), result.begin()))
+      << "Expected a permutation of " << toString(expected.begin(), expected.end()) << " but got "
+      << toString(result.begin(), result.end());
 }
 }

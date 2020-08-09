@@ -35,88 +35,103 @@
 namespace jamsat {
 namespace {
 template <typename ToType, typename FromType>
-void test_staticCheckedCastSucceeds(FromType from) {
+void test_staticCheckedCastSucceeds(FromType from)
+{
 #if defined(JAM_ASSERT_ENABLED)
-    static_checked_cast<ToType>(from);
-    // not expecting an exception to be thrown
+  static_checked_cast<ToType>(from);
+  // not expecting an exception to be thrown
 #else
-    (void)from;
-    std::cerr << "Warning: static cast checking is disabled, not testing anything" << std::endl;
+  (void)from;
+  std::cerr << "Warning: static cast checking is disabled, not testing anything" << std::endl;
 #endif
 }
 
 template <typename ToType, typename FromType>
-void test_staticCheckedCastFails(FromType from) {
+void test_staticCheckedCastFails(FromType from)
+{
 #if defined(JAM_ASSERT_ENABLED)
-    EXPECT_DEATH(static_checked_cast<ToType>(from), ".*");
+  EXPECT_DEATH(static_checked_cast<ToType>(from), ".*");
 #else
-    (void)from;
-    std::cerr << "Warning: static cast checking is disabled, not testing anything" << std::endl;
+  (void)from;
+  std::cerr << "Warning: static cast checking is disabled, not testing anything" << std::endl;
 #endif
 }
 }
 
-TEST(UnitUtils, staticCheckedCastSucceedsForSameWidthUintToUint) {
-    test_staticCheckedCastSucceeds<uint32_t>(uint32_t{4});
+TEST(UnitUtils, staticCheckedCastSucceedsForSameWidthUintToUint)
+{
+  test_staticCheckedCastSucceeds<uint32_t>(uint32_t{4});
 }
 
-TEST(UnitUtils, staticCheckedCastSucceedsForValidSmallUintToLargeUint) {
-    test_staticCheckedCastSucceeds<uint64_t>(uint32_t{4});
+TEST(UnitUtils, staticCheckedCastSucceedsForValidSmallUintToLargeUint)
+{
+  test_staticCheckedCastSucceeds<uint64_t>(uint32_t{4});
 }
 
-TEST(UnitUtils, staticCheckedCastSucceedsForValidLargeUintToSmallUint) {
-    test_staticCheckedCastSucceeds<uint32_t>(uint64_t{4});
+TEST(UnitUtils, staticCheckedCastSucceedsForValidLargeUintToSmallUint)
+{
+  test_staticCheckedCastSucceeds<uint32_t>(uint64_t{4});
 }
 
-TEST(UnitUtils, staticCheckedCastSucceedsForValidLargeIntToSmallUint) {
-    test_staticCheckedCastSucceeds<uint32_t>(int64_t{4});
+TEST(UnitUtils, staticCheckedCastSucceedsForValidLargeIntToSmallUint)
+{
+  test_staticCheckedCastSucceeds<uint32_t>(int64_t{4});
 }
 
-TEST(UnitUtils, staticCheckedCastSucceedsForValidSmallIntToLargeUint) {
-    test_staticCheckedCastSucceeds<uint64_t>(int32_t{4});
+TEST(UnitUtils, staticCheckedCastSucceedsForValidSmallIntToLargeUint)
+{
+  test_staticCheckedCastSucceeds<uint64_t>(int32_t{4});
 }
 
-TEST(UnitUtils, staticCheckedCastSucceedsForValidSmallIntToSmallUint) {
-    test_staticCheckedCastSucceeds<uint32_t>(int32_t{4});
+TEST(UnitUtils, staticCheckedCastSucceedsForValidSmallIntToSmallUint)
+{
+  test_staticCheckedCastSucceeds<uint32_t>(int32_t{4});
 }
 
-TEST(UnitUtils, staticCheckedCastSucceedsForValidNegLargeIntToNegSmallInt) {
-    test_staticCheckedCastSucceeds<int32_t>(int64_t{-4});
+TEST(UnitUtils, staticCheckedCastSucceedsForValidNegLargeIntToNegSmallInt)
+{
+  test_staticCheckedCastSucceeds<int32_t>(int64_t{-4});
 }
 
-TEST(UnitUtils, staticCheckedCastSucceedsForValidNegSmallIntToNegLargeInt) {
-    test_staticCheckedCastSucceeds<int64_t>(int32_t{-4});
+TEST(UnitUtils, staticCheckedCastSucceedsForValidNegSmallIntToNegLargeInt)
+{
+  test_staticCheckedCastSucceeds<int64_t>(int32_t{-4});
 }
 
-TEST(UnitUtils, staticCheckedCastFailsForInvalidUintToUintConversion) {
-    test_staticCheckedCastFails<uint16_t>(std::numeric_limits<uint32_t>::max());
+TEST(UnitUtils, staticCheckedCastFailsForInvalidUintToUintConversion)
+{
+  test_staticCheckedCastFails<uint16_t>(std::numeric_limits<uint32_t>::max());
 }
 
-TEST(UnitUtils, staticCheckedCastFailsForInvalidUintToSameWidthIntConversion) {
-    test_staticCheckedCastFails<int32_t>(std::numeric_limits<uint32_t>::max());
+TEST(UnitUtils, staticCheckedCastFailsForInvalidUintToSameWidthIntConversion)
+{
+  test_staticCheckedCastFails<int32_t>(std::numeric_limits<uint32_t>::max());
 }
 
-TEST(UnitUtils, staticCheckedCastFailsForInvalidNegIntToUintConversion) {
-    test_staticCheckedCastFails<uint32_t>(std::numeric_limits<int32_t>::min());
+TEST(UnitUtils, staticCheckedCastFailsForInvalidNegIntToUintConversion)
+{
+  test_staticCheckedCastFails<uint32_t>(std::numeric_limits<int32_t>::min());
 }
 
-TEST(UnitUtils, staticCheckedCastFailsForInvalidNegIntToNegIntConversion) {
-    test_staticCheckedCastFails<int32_t>(std::numeric_limits<int64_t>::min());
+TEST(UnitUtils, staticCheckedCastFailsForInvalidNegIntToNegIntConversion)
+{
+  test_staticCheckedCastFails<int32_t>(std::numeric_limits<int64_t>::min());
 }
 
 namespace {
 class ImplicitlyConvertibleToInt {
 public:
-    ImplicitlyConvertibleToInt(int x) : m_x(x) {}
+  ImplicitlyConvertibleToInt(int x) : m_x(x) {}
 
-    operator int() { return m_x; }
+  operator int() { return m_x; }
 
 private:
-    int m_x;
+  int m_x;
 };
 }
 
-TEST(UnitUtils, staticCheckedCastSucceedsForSameWidthImplicitConvIntToInt) {
-    test_staticCheckedCastSucceeds<int>(ImplicitlyConvertibleToInt{3});
+TEST(UnitUtils, staticCheckedCastSucceedsForSameWidthImplicitConvIntToInt)
+{
+  test_staticCheckedCastSucceeds<int>(ImplicitlyConvertibleToInt{3});
 }
 }

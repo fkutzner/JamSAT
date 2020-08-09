@@ -63,27 +63,28 @@ using LBD = uint32_t;
 template <typename ForwardRange, typename DLProvider, typename StampMapT>
 LBD getLBD(const ForwardRange& literals,
            const DLProvider& decisionLevelProvider,
-           StampMapT& tempStamps) noexcept {
-    static_assert(is_decision_level_provider<DLProvider>::value,
-                  "Template argument DLProvider must satisfy the DecisionLevelProvider concept,"
-                  " but does not");
-    static_assert(is_stamp_map<StampMapT, typename DLProvider::Level>::value,
-                  "Template argument StampMapT must be a specialization of StampMap<...> supporting"
-                  " stamping of DLProvider::LevelKey objects");
+           StampMapT& tempStamps) noexcept
+{
+  static_assert(is_decision_level_provider<DLProvider>::value,
+                "Template argument DLProvider must satisfy the DecisionLevelProvider concept,"
+                " but does not");
+  static_assert(is_stamp_map<StampMapT, typename DLProvider::Level>::value,
+                "Template argument StampMapT must be a specialization of StampMap<...> supporting"
+                " stamping of DLProvider::LevelKey objects");
 
-    auto stampContext = tempStamps.createContext();
-    auto stamp = stampContext.getStamp();
-    LBD result = 0;
+  auto stampContext = tempStamps.createContext();
+  auto stamp = stampContext.getStamp();
+  LBD result = 0;
 
-    for (auto& literal : literals) {
-        auto variable = literal.getVariable();
-        auto level = decisionLevelProvider.getLevel(variable);
-        if (!tempStamps.isStamped(level, stamp)) {
-            tempStamps.setStamped(level, stamp, true);
-            ++result;
-        }
+  for (auto& literal : literals) {
+    auto variable = literal.getVariable();
+    auto level = decisionLevelProvider.getLevel(variable);
+    if (!tempStamps.isStamped(level, stamp)) {
+      tempStamps.setStamped(level, stamp, true);
+      ++result;
     }
+  }
 
-    return result;
+  return result;
 }
 }

@@ -36,91 +36,100 @@ namespace {
 
 class FileDRATCertificate : public DRATCertificate {
 public:
-    explicit FileDRATCertificate(std::string const& path)
-      : m_file{nullptr}, m_buffer{}, m_fileBuffer{} {
-        m_file = fopen(path.data(), "w");
-        if (m_file == nullptr) {
-            throw FileIOError();
-        }
-
-        m_buffer.resize(1);
-        m_fileBuffer.resize(1024 * 1024);
-        std::setvbuf(m_file, m_fileBuffer.data(), _IOFBF, m_fileBuffer.size());
+  explicit FileDRATCertificate(std::string const& path)
+    : m_file{nullptr}, m_buffer{}, m_fileBuffer{}
+  {
+    m_file = fopen(path.data(), "w");
+    if (m_file == nullptr) {
+      throw FileIOError();
     }
 
-    void addRATClause(gsl::span<CNFLit const> clause, size_t pivotIdx) override {
-        if (pivotIdx == 0) {
-            writeLiterals(clause, true);
-        } else {
-            writeLiteralsPivotFirst(clause, true, pivotIdx);
-        }
+    m_buffer.resize(1);
+    m_fileBuffer.resize(1024 * 1024);
+    std::setvbuf(m_file, m_fileBuffer.data(), _IOFBF, m_fileBuffer.size());
+  }
+
+  void addRATClause(gsl::span<CNFLit const> clause, size_t pivotIdx) override
+  {
+    if (pivotIdx == 0) {
+      writeLiterals(clause, true);
     }
-
-    void addATClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, true); }
-
-    void deleteClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, false); }
-
-    void flush() override {
-        if (fflush(m_file) != 0) {
-            throw FileIOError();
-        }
+    else {
+      writeLiteralsPivotFirst(clause, true, pivotIdx);
     }
+  }
 
-    virtual ~FileDRATCertificate() {
-        if (m_file != nullptr) {
-            fclose(m_file);
-            m_file = nullptr;
-        }
+  void addATClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, true); }
+
+  void deleteClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, false); }
+
+  void flush() override
+  {
+    if (fflush(m_file) != 0) {
+      throw FileIOError();
     }
+  }
+
+  virtual ~FileDRATCertificate()
+  {
+    if (m_file != nullptr) {
+      fclose(m_file);
+      m_file = nullptr;
+    }
+  }
 
 private:
-    void writeLiterals(gsl::span<CNFLit const> clause, bool added) {
-        ensureBufferLargeEnough(clause.size());
-        m_buffer[0] = added ? 0x61 : 0x64;
-        std::size_t encodingLen = EncodeBinaryDRAT(clause, gsl::span{m_buffer}.subspan(1));
-        ++encodingLen; // accounting for m_buffer[0]
-        m_buffer[encodingLen] = 0;
+  void writeLiterals(gsl::span<CNFLit const> clause, bool added)
+  {
+    ensureBufferLargeEnough(clause.size());
+    m_buffer[0] = added ? 0x61 : 0x64;
+    std::size_t encodingLen = EncodeBinaryDRAT(clause, gsl::span{m_buffer}.subspan(1));
+    ++encodingLen; // accounting for m_buffer[0]
+    m_buffer[encodingLen] = 0;
 
-        std::size_t itemsWritten = fwrite(m_buffer.data(), encodingLen + 1, 1, m_file);
-        if (itemsWritten != 1) {
-            throw FileIOError();
-        }
+    std::size_t itemsWritten = fwrite(m_buffer.data(), encodingLen + 1, 1, m_file);
+    if (itemsWritten != 1) {
+      throw FileIOError();
     }
+  }
 
-    void writeLiteralsPivotFirst(gsl::span<CNFLit const> clause, bool added, std::size_t pivotIdx) {
-        ensureBufferLargeEnough(clause.size());
-        m_buffer[0] = added ? 0x61 : 0x64;
+  void writeLiteralsPivotFirst(gsl::span<CNFLit const> clause, bool added, std::size_t pivotIdx)
+  {
+    ensureBufferLargeEnough(clause.size());
+    m_buffer[0] = added ? 0x61 : 0x64;
 
-        std::size_t encodingLen =
-            EncodeBinaryDRAT(clause.subspan(pivotIdx, 1), gsl::span{m_buffer}.subspan(1));
-        ++encodingLen; // accounting for m_buffer[0]
+    std::size_t encodingLen =
+        EncodeBinaryDRAT(clause.subspan(pivotIdx, 1), gsl::span{m_buffer}.subspan(1));
+    ++encodingLen; // accounting for m_buffer[0]
 
-        encodingLen +=
-            EncodeBinaryDRAT(clause.subspan(0, pivotIdx), gsl::span{m_buffer}.subspan(encodingLen));
-        encodingLen += EncodeBinaryDRAT(clause.subspan(pivotIdx + 1),
-                                        gsl::span{m_buffer}.subspan(encodingLen));
-        m_buffer[encodingLen] = 0;
+    encodingLen +=
+        EncodeBinaryDRAT(clause.subspan(0, pivotIdx), gsl::span{m_buffer}.subspan(encodingLen));
+    encodingLen +=
+        EncodeBinaryDRAT(clause.subspan(pivotIdx + 1), gsl::span{m_buffer}.subspan(encodingLen));
+    m_buffer[encodingLen] = 0;
 
-        std::size_t itemsWritten = fwrite(m_buffer.data(), encodingLen + 1, 1, m_file);
-        if (itemsWritten != 1) {
-            throw FileIOError();
-        }
+    std::size_t itemsWritten = fwrite(m_buffer.data(), encodingLen + 1, 1, m_file);
+    if (itemsWritten != 1) {
+      throw FileIOError();
     }
+  }
 
-    void ensureBufferLargeEnough(std::size_t numLits) {
-        std::size_t requiredBufferSize = 5 * numLits + 2;
-        if (m_buffer.size() < requiredBufferSize) {
-            m_buffer.resize(requiredBufferSize);
-        }
+  void ensureBufferLargeEnough(std::size_t numLits)
+  {
+    std::size_t requiredBufferSize = 5 * numLits + 2;
+    if (m_buffer.size() < requiredBufferSize) {
+      m_buffer.resize(requiredBufferSize);
     }
+  }
 
-    FILE* m_file;
-    std::vector<unsigned char> m_buffer;
-    std::vector<char> m_fileBuffer;
+  FILE* m_file;
+  std::vector<unsigned char> m_buffer;
+  std::vector<char> m_fileBuffer;
 };
 }
 
-std::unique_ptr<DRATCertificate> createFileDRATCertificate(std::string const& path) {
-    return std::make_unique<FileDRATCertificate>(path);
+std::unique_ptr<DRATCertificate> createFileDRATCertificate(std::string const& path)
+{
+  return std::make_unique<FileDRATCertificate>(path);
 }
 }

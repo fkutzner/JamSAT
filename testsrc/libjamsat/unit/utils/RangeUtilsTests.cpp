@@ -36,59 +36,66 @@ using ::testing::Eq;
 using ::testing::IsEmpty;
 
 namespace jamsat {
-TEST(UnitUtils, withoutRedundanciesComputesEmptyVectorForEmptyInput) {
-    std::vector<int> empty;
-    auto reduced = withoutRedundancies(empty.begin(), empty.end());
-    EXPECT_TRUE(reduced.empty());
+TEST(UnitUtils, withoutRedundanciesComputesEmptyVectorForEmptyInput)
+{
+  std::vector<int> empty;
+  auto reduced = withoutRedundancies(empty.begin(), empty.end());
+  EXPECT_TRUE(reduced.empty());
 }
 
-TEST(UnitUtils, withoutRedundanciesRetainsNonredundantItems) {
-    std::vector<float> input{1.0f, 2.0f, -1.0f};
-    auto reduced = withoutRedundancies(input.begin(), input.end());
-    ASSERT_EQ(reduced.size(), input.size());
-    EXPECT_TRUE(std::is_permutation(reduced.begin(), reduced.end(), input.begin()));
+TEST(UnitUtils, withoutRedundanciesRetainsNonredundantItems)
+{
+  std::vector<float> input{1.0f, 2.0f, -1.0f};
+  auto reduced = withoutRedundancies(input.begin(), input.end());
+  ASSERT_EQ(reduced.size(), input.size());
+  EXPECT_TRUE(std::is_permutation(reduced.begin(), reduced.end(), input.begin()));
 }
 
-TEST(UnitUtils, withoutRedundanciesOmitsRedundantItems) {
-    std::vector<float> input{1.0f, 2.0f, -1.0f, 2.0f, 1.0f};
-    auto reduced = withoutRedundancies(input.begin(), input.end());
-    ASSERT_EQ(reduced.size(), 3ULL);
+TEST(UnitUtils, withoutRedundanciesOmitsRedundantItems)
+{
+  std::vector<float> input{1.0f, 2.0f, -1.0f, 2.0f, 1.0f};
+  auto reduced = withoutRedundancies(input.begin(), input.end());
+  ASSERT_EQ(reduced.size(), 3ULL);
 
-    std::vector<float> expected{1.0f, 2.0f, -1.0f};
-    EXPECT_TRUE(std::is_permutation(reduced.begin(), reduced.end(), expected.begin()));
+  std::vector<float> expected{1.0f, 2.0f, -1.0f};
+  EXPECT_TRUE(std::is_permutation(reduced.begin(), reduced.end(), expected.begin()));
 }
 
-TEST(UnitUtils, swapWithLastElement_WhenVecIsEmpty_NothingIsMoved) {
-    std::vector<int> empty;
-    std::size_t result = swapWithLastElement(empty, 1);
-    EXPECT_THAT(result, Eq(0));
-    EXPECT_THAT(empty, IsEmpty());
+TEST(UnitUtils, swapWithLastElement_WhenVecIsEmpty_NothingIsMoved)
+{
+  std::vector<int> empty;
+  std::size_t result = swapWithLastElement(empty, 1);
+  EXPECT_THAT(result, Eq(0));
+  EXPECT_THAT(empty, IsEmpty());
 }
 
-TEST(UnitUtils, swapWithLastElement_WhenVecDoesNotContainElement_NothingIsMoved) {
-    std::vector<int> testInput = {3, 4, 5};
-    std::vector<int> originalTestInput = testInput;
+TEST(UnitUtils, swapWithLastElement_WhenVecDoesNotContainElement_NothingIsMoved)
+{
+  std::vector<int> testInput = {3, 4, 5};
+  std::vector<int> originalTestInput = testInput;
 
-    std::size_t result = swapWithLastElement(testInput, 1);
-    EXPECT_THAT(result, Eq(0));
-    EXPECT_THAT(testInput, ContainerEq(originalTestInput));
+  std::size_t result = swapWithLastElement(testInput, 1);
+  EXPECT_THAT(result, Eq(0));
+  EXPECT_THAT(testInput, ContainerEq(originalTestInput));
 }
 
-TEST(UnitUtils, swapWithLastElement_WhenVecContainsElementOnce_ItIsMovedToEnd) {
-    std::vector<int> testInput{3, 1, 5};
-    std::vector<int> expectedResult{3, 5, 1};
+TEST(UnitUtils, swapWithLastElement_WhenVecContainsElementOnce_ItIsMovedToEnd)
+{
+  std::vector<int> testInput{3, 1, 5};
+  std::vector<int> expectedResult{3, 5, 1};
 
-    std::size_t result = swapWithLastElement(testInput, 1);
-    EXPECT_THAT(result, Eq(1));
-    EXPECT_THAT(testInput, ContainerEq(expectedResult));
+  std::size_t result = swapWithLastElement(testInput, 1);
+  EXPECT_THAT(result, Eq(1));
+  EXPECT_THAT(testInput, ContainerEq(expectedResult));
 }
 
-TEST(UnitUtils, swapWithLastElement_WhenVecContainsElementMoreThanOnce_ThenOnlyFirstOneIsMoved) {
-    std::vector<int> testInput{3, 1, 5, 1, 20};
-    std::vector<int> expectedResult{3, 20, 5, 1, 1};
+TEST(UnitUtils, swapWithLastElement_WhenVecContainsElementMoreThanOnce_ThenOnlyFirstOneIsMoved)
+{
+  std::vector<int> testInput{3, 1, 5, 1, 20};
+  std::vector<int> expectedResult{3, 20, 5, 1, 1};
 
-    std::size_t result = swapWithLastElement(testInput, 1);
-    EXPECT_THAT(result, Eq(1));
-    EXPECT_THAT(testInput, ContainerEq(expectedResult));
+  std::size_t result = swapWithLastElement(testInput, 1);
+  EXPECT_THAT(result, Eq(1));
+  EXPECT_THAT(testInput, ContainerEq(expectedResult));
 }
 }

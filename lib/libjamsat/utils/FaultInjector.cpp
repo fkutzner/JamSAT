@@ -29,37 +29,44 @@
 namespace jamsat {
 FaultInjector::FaultInjector() : m_enabledFaults() {}
 
-void FaultInjector::enableFaults(const std::string& which) {
-    m_enabledFaults.insert(which);
+void FaultInjector::enableFaults(const std::string& which)
+{
+  m_enabledFaults.insert(which);
 }
 
-bool FaultInjector::isFaultEnabled(const std::string& which) const noexcept {
-    return m_enabledFaults.find(which) != m_enabledFaults.end();
+bool FaultInjector::isFaultEnabled(const std::string& which) const noexcept
+{
+  return m_enabledFaults.find(which) != m_enabledFaults.end();
 }
 
-void FaultInjector::reset() noexcept {
-    m_enabledFaults.clear();
+void FaultInjector::reset() noexcept
+{
+  m_enabledFaults.clear();
 }
 
-FaultInjector::const_iterator FaultInjector::begin() const noexcept {
-    return m_enabledFaults.begin();
+FaultInjector::const_iterator FaultInjector::begin() const noexcept
+{
+  return m_enabledFaults.begin();
 }
 
-FaultInjector::const_iterator FaultInjector::end() const noexcept {
-    return m_enabledFaults.end();
+FaultInjector::const_iterator FaultInjector::end() const noexcept
+{
+  return m_enabledFaults.end();
 }
 
-FaultInjectorResetRAII::FaultInjectorResetRAII() noexcept : m_enabledFaults() {
-    for (auto& x : FaultInjector::getInstance()) {
-        m_enabledFaults.insert(x);
-    }
+FaultInjectorResetRAII::FaultInjectorResetRAII() noexcept : m_enabledFaults()
+{
+  for (auto& x : FaultInjector::getInstance()) {
+    m_enabledFaults.insert(x);
+  }
 }
 
-FaultInjectorResetRAII::~FaultInjectorResetRAII() noexcept {
-    FaultInjector& injector = FaultInjector::getInstance();
-    injector.reset();
-    for (auto& x : m_enabledFaults) {
-        injector.enableFaults(x);
-    }
+FaultInjectorResetRAII::~FaultInjectorResetRAII() noexcept
+{
+  FaultInjector& injector = FaultInjector::getInstance();
+  injector.reset();
+  for (auto& x : m_enabledFaults) {
+    injector.enableFaults(x);
+  }
 }
 }

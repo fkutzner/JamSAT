@@ -49,77 +49,81 @@ namespace jamsat {
  */
 template <size_t Size, typename Key>
 class OverApproximatingSet {
-    static_assert(is_index<Key, typename Key::Type>::value, "Key must satisfy Index, but does not");
+  static_assert(is_index<Key, typename Key::Type>::value, "Key must satisfy Index, but does not");
 
 public:
-    static constexpr size_t size = Size;
-    using Type = typename Key::Type;
+  static constexpr size_t size = Size;
+  using Type = typename Key::Type;
 
-    /**
-     * \brief Inserts a value into the set.
-     * \param toInsert      The value to be inserted into the set.
-     */
-    void insert(typename Key::Type toInsert) noexcept;
+  /**
+   * \brief Inserts a value into the set.
+   * \param toInsert      The value to be inserted into the set.
+   */
+  void insert(typename Key::Type toInsert) noexcept;
 
-    /**
-     * \brief Removes all elements from the set.
-     */
-    void clear() noexcept;
+  /**
+   * \brief Removes all elements from the set.
+   */
+  void clear() noexcept;
 
-    /**
-     * \brief Checks whether a given value might be contained in the set.
-     *
-     * \param toLookup      The value to be looked up.
-     * \return              If \p toLookup had been added to the set, `true`
-     *                      is returned. Otherwise, either `true` or `false`
-     *                      is returned. If `false` is returned, \p toLookup
-     *                      had definitely not been added to the set.
-     *
-     * For any given value of \p toLookup, the return value of this method
-     * is either always `true` or always `false` until the next call to
-     * `insert`.
-     */
-    auto mightContain(typename Key::Type toLookup) const noexcept -> bool;
+  /**
+   * \brief Checks whether a given value might be contained in the set.
+   *
+   * \param toLookup      The value to be looked up.
+   * \return              If \p toLookup had been added to the set, `true`
+   *                      is returned. Otherwise, either `true` or `false`
+   *                      is returned. If `false` is returned, \p toLookup
+   *                      had definitely not been added to the set.
+   *
+   * For any given value of \p toLookup, the return value of this method
+   * is either always `true` or always `false` until the next call to
+   * `insert`.
+   */
+  auto mightContain(typename Key::Type toLookup) const noexcept -> bool;
 
-    /**
-     * \brief Checks whether the set might be a superset of this set.
-     *
-     * \param set           An arbitrary over-approximating set
-     * \return              `false` iff the approximation allows the conclusion
-     *                      that this set is definitely not a subset of `set`;
-     *                      `true` otherwise.
-     */
-    auto mightBeSubsetOf(OverApproximatingSet<Size, Key> const& set) const noexcept -> bool;
+  /**
+   * \brief Checks whether the set might be a superset of this set.
+   *
+   * \param set           An arbitrary over-approximating set
+   * \return              `false` iff the approximation allows the conclusion
+   *                      that this set is definitely not a subset of `set`;
+   *                      `true` otherwise.
+   */
+  auto mightBeSubsetOf(OverApproximatingSet<Size, Key> const& set) const noexcept -> bool;
 
 private:
-    std::bitset<Size> m_approximatedSet;
+  std::bitset<Size> m_approximatedSet;
 };
 
 /********** Implementation ****************************** */
 
 template <size_t Size, typename Key>
-void OverApproximatingSet<Size, Key>::insert(Type toInsert) noexcept {
-    auto index = Key::getIndex(toInsert);
-    m_approximatedSet[index % Size] = 1;
+void OverApproximatingSet<Size, Key>::insert(Type toInsert) noexcept
+{
+  auto index = Key::getIndex(toInsert);
+  m_approximatedSet[index % Size] = 1;
 }
 
 template <size_t Size, typename Key>
-void OverApproximatingSet<Size, Key>::clear() noexcept {
-    m_approximatedSet.reset();
+void OverApproximatingSet<Size, Key>::clear() noexcept
+{
+  m_approximatedSet.reset();
 }
 
 template <size_t Size, typename Key>
-auto OverApproximatingSet<Size, Key>::mightContain(Type toLookup) const noexcept -> bool {
-    auto index = Key::getIndex(toLookup);
-    return (m_approximatedSet[index % Size] == 1);
+auto OverApproximatingSet<Size, Key>::mightContain(Type toLookup) const noexcept -> bool
+{
+  auto index = Key::getIndex(toLookup);
+  return (m_approximatedSet[index % Size] == 1);
 }
 
 template <size_t Size, typename Key>
 auto OverApproximatingSet<Size, Key>::mightBeSubsetOf(
-    OverApproximatingSet<Size, Key> const& set) const noexcept -> bool {
-    // Need to check if m_approximatedSet -> set.m_approximatedSet)
-    // Applying deMorgan's law to enable better code generation by the
-    // compiler:
-    return (m_approximatedSet & ~set.m_approximatedSet).none();
+    OverApproximatingSet<Size, Key> const& set) const noexcept -> bool
+{
+  // Need to check if m_approximatedSet -> set.m_approximatedSet)
+  // Applying deMorgan's law to enable better code generation by the
+  // compiler:
+  return (m_approximatedSet & ~set.m_approximatedSet).none();
 }
 }

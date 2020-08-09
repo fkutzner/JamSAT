@@ -36,13 +36,13 @@
 namespace jamsat {
 
 struct JamSATOptions {
-    std::string m_problemFilename;
-    bool m_printVersion = false;
-    bool m_waitForUserInput = false;
-    std::optional<std::chrono::seconds> m_timeout;
-    std::vector<std::string> m_backendOptions;
-    bool m_verbose = false;
-    bool m_quit = false;
+  std::string m_problemFilename;
+  bool m_printVersion = false;
+  bool m_waitForUserInput = false;
+  std::optional<std::chrono::seconds> m_timeout;
+  std::vector<std::string> m_backendOptions;
+  bool m_verbose = false;
+  bool m_quit = false;
 };
 
 /**

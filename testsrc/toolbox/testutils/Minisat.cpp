@@ -38,23 +38,23 @@
 #endif
 
 namespace jamsat {
-TBool isSatisfiableViaMinisat(CNFProblem const& problem) {
-    Minisat::Solver solver;
-    for (unsigned int i = 0; i <= problem.getMaxVar().getRawValue(); ++i) {
-        solver.newVar();
-    }
+TBool isSatisfiableViaMinisat(CNFProblem const& problem)
+{
+  Minisat::Solver solver;
+  for (unsigned int i = 0; i <= problem.getMaxVar().getRawValue(); ++i) {
+    solver.newVar();
+  }
 
-    for (auto& clause : problem.getClauses()) {
-        Minisat::vec<Minisat::Lit> minisatClause;
-        for (auto lit : clause) {
-            Minisat::Lit minisatLit =
-                Minisat::mkLit(static_cast<Minisat::Var>(lit.getVariable().getRawValue()));
-            minisatClause.push(lit.getSign() == jamsat::CNFSign::POSITIVE ? minisatLit
-                                                                          : ~minisatLit);
-        }
-        solver.addClause(minisatClause);
+  for (auto& clause : problem.getClauses()) {
+    Minisat::vec<Minisat::Lit> minisatClause;
+    for (auto lit : clause) {
+      Minisat::Lit minisatLit =
+          Minisat::mkLit(static_cast<Minisat::Var>(lit.getVariable().getRawValue()));
+      minisatClause.push(lit.getSign() == jamsat::CNFSign::POSITIVE ? minisatLit : ~minisatLit);
     }
+    solver.addClause(minisatClause);
+  }
 
-    return toTBool(solver.solve());
+  return toTBool(solver.solve());
 }
 }

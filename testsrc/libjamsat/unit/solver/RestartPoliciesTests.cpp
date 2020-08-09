@@ -35,133 +35,142 @@
 namespace jamsat {
 using TrivialClause = std::vector<CNFLit>;
 
-TEST(UnitSolver, LubyRestartPolicy_noRestartWithinGraceTime) {
-    LubyRestartPolicy::Options options;
-    options.graceTime = 50;
-    options.log2OfScaleFactor = 2;
-    LubyRestartPolicy underTest{options};
+TEST(UnitSolver, LubyRestartPolicy_noRestartWithinGraceTime)
+{
+  LubyRestartPolicy::Options options;
+  options.graceTime = 50;
+  options.log2OfScaleFactor = 2;
+  LubyRestartPolicy underTest{options};
 
-    for (int i = 0; i < 50; ++i) {
-        underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
-        EXPECT_FALSE(underTest.shouldRestart())
-            << "Erroneous restart after " << (i + 1) << " conflicts";
-    }
+  for (int i = 0; i < 50; ++i) {
+    underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
+    EXPECT_FALSE(underTest.shouldRestart())
+        << "Erroneous restart after " << (i + 1) << " conflicts";
+  }
 }
 
 namespace {
-void fastForward(LubyRestartPolicy& target, int conflicts) {
-    for (int i = 0; i < conflicts; ++i) {
-        target.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
+void fastForward(LubyRestartPolicy& target, int conflicts)
+{
+  for (int i = 0; i < conflicts; ++i) {
+    target.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
+  }
+}
+
+int failsRestartSequenceAt(LubyRestartPolicy& underTest, int scaleFactor, int lubySteps)
+{
+  LubySequence lubySequence;
+  int executedSteps = 0;
+
+  for (int i = 0; i < lubySteps; ++i) {
+    LubySequence::Element currentBudget = lubySequence.current() * scaleFactor;
+    for (; currentBudget != 0; --currentBudget) {
+      if (underTest.shouldRestart()) {
+        return executedSteps;
+      }
+      underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
+      ++executedSteps;
     }
-}
-
-int failsRestartSequenceAt(LubyRestartPolicy& underTest, int scaleFactor, int lubySteps) {
-    LubySequence lubySequence;
-    int executedSteps = 0;
-
-    for (int i = 0; i < lubySteps; ++i) {
-        LubySequence::Element currentBudget = lubySequence.current() * scaleFactor;
-        for (; currentBudget != 0; --currentBudget) {
-            if (underTest.shouldRestart()) {
-                return executedSteps;
-            }
-            underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
-            ++executedSteps;
-        }
-        if (!underTest.shouldRestart()) {
-            return executedSteps;
-        }
-        underTest.registerRestart();
-        lubySequence.next();
+    if (!underTest.shouldRestart()) {
+      return executedSteps;
     }
-
-    return -1;
-}
-}
-
-TEST(UnitSolver, LubyRestartPolicy_restartFrequencyMatchesLubyAfterGraceTime) {
-    LubyRestartPolicy::Options options;
-    options.graceTime = 10;
-    // scale by 2^0: restarts after 1, 1, 2, ... conflicts
-    options.log2OfScaleFactor = 0;
-    LubyRestartPolicy underTest{options};
-    fastForward(underTest, 10);
-
-    auto failureAt = failsRestartSequenceAt(underTest, 1, 10);
-    EXPECT_EQ(failureAt, -1) << "Detected luby restart sequence failure at conflict " << failureAt;
-}
-
-TEST(UnitSolver, LubyRestartPolicy_restartAdvicePersistsWhenNoRestart) {
-    LubyRestartPolicy::Options options;
-    options.graceTime = 4;
-    options.log2OfScaleFactor = 1;
-    LubyRestartPolicy underTest{options};
-
-    while (!underTest.shouldRestart()) {
-        underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
-    }
-
-    for (int i = 0; i < 1024; ++i) {
-        underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
-        EXPECT_TRUE(underTest.shouldRestart())
-            << "Restart advice failed after " << (i + 1) << " conflicts";
-    }
-}
-
-TEST(UnitSolver, LubyRestartPolicy_scaleFactorScalesSequence) {
-    LubyRestartPolicy::Options options;
-    options.graceTime = 0;
-    options.log2OfScaleFactor = 3;
-    LubyRestartPolicy underTest{options};
-
-    auto failureAt = failsRestartSequenceAt(underTest, 8, 32);
-    EXPECT_EQ(failureAt, -1) << "Detected luby restart sequence failure at conflict " << failureAt;
-}
-
-TEST(UnitSolver, GlucoseRestartPolicy_noRestartWhenTooFewConflicts) {
-    GlucoseRestartPolicy::Options options;
-    options.movingAverageWindowSize = 10ull;
-    GlucoseRestartPolicy underTest{options};
-
-    EXPECT_FALSE(underTest.shouldRestart());
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{10});
-    EXPECT_FALSE(underTest.shouldRestart());
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
-    EXPECT_FALSE(underTest.shouldRestart());
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
-    EXPECT_FALSE(underTest.shouldRestart());
-}
-
-TEST(UnitSolver, GlucoseRestartPolicy_noRestartWhenTooFewConflictsSinceLastRestart) {
-    GlucoseRestartPolicy::Options options;
-    options.movingAverageWindowSize = 3ull;
-    options.K = 10.0f;
-    GlucoseRestartPolicy underTest{options};
-
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{10});
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
-    EXPECT_TRUE(underTest.shouldRestart());
     underTest.registerRestart();
-    EXPECT_FALSE(underTest.shouldRestart());
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
-    EXPECT_FALSE(underTest.shouldRestart());
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
-    EXPECT_FALSE(underTest.shouldRestart());
+    lubySequence.next();
+  }
+
+  return -1;
+}
 }
 
-TEST(UnitSolver, GlucoseRestartPolicy_restartWhenAverageLBDTooBad) {
-    GlucoseRestartPolicy::Options options;
-    options.movingAverageWindowSize = 3ull;
-    options.K = 0.8f;
-    GlucoseRestartPolicy underTest{options};
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{2});
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{2});
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{2});
-    EXPECT_FALSE(underTest.shouldRestart());
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
-    underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{40});
-    EXPECT_TRUE(underTest.shouldRestart());
+TEST(UnitSolver, LubyRestartPolicy_restartFrequencyMatchesLubyAfterGraceTime)
+{
+  LubyRestartPolicy::Options options;
+  options.graceTime = 10;
+  // scale by 2^0: restarts after 1, 1, 2, ... conflicts
+  options.log2OfScaleFactor = 0;
+  LubyRestartPolicy underTest{options};
+  fastForward(underTest, 10);
+
+  auto failureAt = failsRestartSequenceAt(underTest, 1, 10);
+  EXPECT_EQ(failureAt, -1) << "Detected luby restart sequence failure at conflict " << failureAt;
+}
+
+TEST(UnitSolver, LubyRestartPolicy_restartAdvicePersistsWhenNoRestart)
+{
+  LubyRestartPolicy::Options options;
+  options.graceTime = 4;
+  options.log2OfScaleFactor = 1;
+  LubyRestartPolicy underTest{options};
+
+  while (!underTest.shouldRestart()) {
+    underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
+  }
+
+  for (int i = 0; i < 1024; ++i) {
+    underTest.registerConflict(LubyRestartPolicy::RegisterConflictArgs{});
+    EXPECT_TRUE(underTest.shouldRestart())
+        << "Restart advice failed after " << (i + 1) << " conflicts";
+  }
+}
+
+TEST(UnitSolver, LubyRestartPolicy_scaleFactorScalesSequence)
+{
+  LubyRestartPolicy::Options options;
+  options.graceTime = 0;
+  options.log2OfScaleFactor = 3;
+  LubyRestartPolicy underTest{options};
+
+  auto failureAt = failsRestartSequenceAt(underTest, 8, 32);
+  EXPECT_EQ(failureAt, -1) << "Detected luby restart sequence failure at conflict " << failureAt;
+}
+
+TEST(UnitSolver, GlucoseRestartPolicy_noRestartWhenTooFewConflicts)
+{
+  GlucoseRestartPolicy::Options options;
+  options.movingAverageWindowSize = 10ull;
+  GlucoseRestartPolicy underTest{options};
+
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{10});
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
+  EXPECT_FALSE(underTest.shouldRestart());
+}
+
+TEST(UnitSolver, GlucoseRestartPolicy_noRestartWhenTooFewConflictsSinceLastRestart)
+{
+  GlucoseRestartPolicy::Options options;
+  options.movingAverageWindowSize = 3ull;
+  options.K = 10.0f;
+  GlucoseRestartPolicy underTest{options};
+
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{10});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
+  EXPECT_TRUE(underTest.shouldRestart());
+  underTest.registerRestart();
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
+  EXPECT_FALSE(underTest.shouldRestart());
+}
+
+TEST(UnitSolver, GlucoseRestartPolicy_restartWhenAverageLBDTooBad)
+{
+  GlucoseRestartPolicy::Options options;
+  options.movingAverageWindowSize = 3ull;
+  options.K = 0.8f;
+  GlucoseRestartPolicy underTest{options};
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{2});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{2});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{2});
+  EXPECT_FALSE(underTest.shouldRestart());
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{20});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{30});
+  underTest.registerConflict(GlucoseRestartPolicy::RegisterConflictArgs{40});
+  EXPECT_TRUE(underTest.shouldRestart());
 }
 }

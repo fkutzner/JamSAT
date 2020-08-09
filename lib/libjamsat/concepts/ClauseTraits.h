@@ -152,7 +152,8 @@ namespace jamsat {
  * </table>
  */
 template <typename, typename = j_void_t<>>
-struct is_literal_container : public std::false_type {};
+struct is_literal_container : public std::false_type {
+};
 
 // Documentation: see the base case
 template <typename T>
@@ -221,7 +222,8 @@ struct is_literal_container<
 
         // For t of type T, require that t.size() exists and has type T::size_type:
         JAM_REQUIRE_EXPR(std::declval<T>().size(), typename T::size_type)>>
-  : public std::true_type {};
+  : public std::true_type {
+};
 
 
 /**
@@ -259,7 +261,8 @@ struct is_literal_container<
  * </table>
  */
 template <typename, typename = j_void_t<>>
-struct is_lbd_carrier : public std::false_type {};
+struct is_lbd_carrier : public std::false_type {
+};
 
 template <typename T>
 struct is_lbd_carrier<T,
@@ -271,7 +274,8 @@ struct is_lbd_carrier<T,
                           // setLBD<int>(i) has type void:
                           JAM_REQUIRE_EXPR(std::declval<std::remove_const_t<T>>()
                                                .template setLBD<int>(std::declval<int>()),
-                                           void)>> : public std::true_type {};
+                                           void)>> : public std::true_type {
+};
 
 /**
  * \ingroup JamSAT_Concepts
@@ -303,11 +307,13 @@ struct is_lbd_carrier<T,
  * </table>
  */
 template <typename, typename = j_void_t<>>
-struct is_clause_flag : public std::false_type {};
+struct is_clause_flag : public std::false_type {
+};
 
 template <typename T>
 struct is_clause_flag<T, j_void_t<decltype(T::SCHEDULED_FOR_DELETION), decltype(T::REDUNDANT)>>
-  : public std::true_type {};
+  : public std::true_type {
+};
 
 
 /**
@@ -350,7 +356,8 @@ struct is_clause_flag<T, j_void_t<decltype(T::SCHEDULED_FOR_DELETION), decltype(
  * </table>
  */
 template <typename, typename = j_void_t<>>
-struct is_clause_flaggable : public std::false_type {};
+struct is_clause_flaggable : public std::false_type {
+};
 
 template <typename T>
 struct is_clause_flaggable<
@@ -371,7 +378,8 @@ struct is_clause_flaggable<
         // valid expression:
         JAM_REQUIRE_EXPR(
             std::declval<std::remove_const_t<T>>().clearFlag(std::declval<typename T::Flag>()),
-            void)>> : public std::true_type {};
+            void)>> : public std::true_type {
+};
 
 
 /**
@@ -449,7 +457,8 @@ struct is_clause_flaggable<
  * </table>
  */
 template <typename, typename = j_void_t<>>
-struct is_clause : public std::false_type {};
+struct is_clause : public std::false_type {
+};
 
 template <typename T>
 struct is_clause<
@@ -479,7 +488,8 @@ struct is_clause<
         JAM_REQUIRE_EXPR(std::declval<std::remove_const_t<T>>().clauseUpdated(), void)
 
         // end requirements
-        >> : public std::true_type {};
+        >> : public std::true_type {
+};
 
 
 /**
@@ -536,7 +546,8 @@ struct is_clause<
  * </table>
  */
 template <typename, typename = void>
-struct is_varsized_into_constructible : public std::false_type {};
+struct is_varsized_into_constructible : public std::false_type {
+};
 
 template <typename T>
 struct is_varsized_into_constructible<
@@ -550,6 +561,7 @@ struct is_varsized_into_constructible<
         JAM_REQUIRE_EXPR(T::getAllocationSize(std::declval<typename T::size_type>()), std::size_t)
 
         // end requirements
-        >> : public std::true_type {};
+        >> : public std::true_type {
+};
 
 }

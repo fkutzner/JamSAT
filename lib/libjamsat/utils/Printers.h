@@ -65,35 +65,38 @@ auto toString(T&& item) -> std::string;
 /********** Implementation ****************************** */
 
 template <typename CNFLitIt>
-std::string toString(CNFLitIt begin, CNFLitIt end) {
-    std::stringstream output;
+std::string toString(CNFLitIt begin, CNFLitIt end)
+{
+  std::stringstream output;
 
-    if (begin == end) {
-        return "";
-    }
-    output << *begin;
+  if (begin == end) {
+    return "";
+  }
+  output << *begin;
+  ++begin;
+
+  while (begin != end) {
+    output << " " << *begin;
     ++begin;
+  }
 
-    while (begin != end) {
-        output << " " << *begin;
-        ++begin;
-    }
-
-    return output.str();
+  return output.str();
 }
 
 namespace jamsat_printers_detail {
 using std::to_string;
 
 template <typename T>
-auto toString(T&& item) -> std::string {
-    return to_string(std::forward<T>(item));
+auto toString(T&& item) -> std::string
+{
+  return to_string(std::forward<T>(item));
 }
 }
 
 template <typename T>
-auto toString(T&& item) -> std::string {
-    return jamsat_printers_detail::toString(std::forward<T>(item));
+auto toString(T&& item) -> std::string
+{
+  return jamsat_printers_detail::toString(std::forward<T>(item));
 }
 
 

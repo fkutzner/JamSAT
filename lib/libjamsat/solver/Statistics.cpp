@@ -30,19 +30,21 @@
 #include <string>
 
 namespace jamsat {
-auto OptimizationStats::operator+=(OptimizationStats const& rhs) -> OptimizationStats& {
-    amntFactsDerived += rhs.amntFactsDerived;
-    amntLitsRemoved += rhs.amntLitsRemoved;
-    amntClausesRemoved += rhs.amntClausesRemoved;
-    amntClausesAdded += rhs.amntClausesAdded;
-    amntVarsEliminated += rhs.amntVarsEliminated;
-    amntVarsAdded += rhs.amntVarsAdded;
-    return *this;
+auto OptimizationStats::operator+=(OptimizationStats const& rhs) -> OptimizationStats&
+{
+  amntFactsDerived += rhs.amntFactsDerived;
+  amntLitsRemoved += rhs.amntLitsRemoved;
+  amntClausesRemoved += rhs.amntClausesRemoved;
+  amntClausesAdded += rhs.amntClausesAdded;
+  amntVarsEliminated += rhs.amntVarsEliminated;
+  amntVarsAdded += rhs.amntVarsAdded;
+  return *this;
 }
 
 
-auto operator<<(std::ostream& output, OptimizationStats const& stats) -> std::ostream& {
-    // clang-format off
+auto operator<<(std::ostream& output, OptimizationStats const& stats) -> std::ostream&
+{
+  // clang-format off
     output << "{"
            << "F:" << stats.amntFactsDerived
            << ",LR:" << stats.amntLitsRemoved
@@ -52,12 +54,13 @@ auto operator<<(std::ostream& output, OptimizationStats const& stats) -> std::os
            << ",VA:" << stats.amntVarsAdded
            << "}";
            return output;
-    // clang-format on
+  // clang-format on
 }
 
-auto to_string(OptimizationStats const& stats) -> std::string {
-    std::stringstream result;
-    result << stats;
-    return result.str();
+auto to_string(OptimizationStats const& stats) -> std::string
+{
+  std::stringstream result;
+  result << stats;
+  return result.str();
 }
 }

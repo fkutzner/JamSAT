@@ -31,32 +31,34 @@
 namespace jamsat {
 namespace {
 template <typename OutIter>
-auto EncodeBinaryDRAT(CNFLit literal, OutIter outIter) noexcept -> OutIter {
-    CNFLit::RawLiteral rawValue = literal.getRawValue();
-    rawValue ^= 1; // Flip the sign bit: DRAT has LSB 0 for positive literals
+auto EncodeBinaryDRAT(CNFLit literal, OutIter outIter) noexcept -> OutIter
+{
+  CNFLit::RawLiteral rawValue = literal.getRawValue();
+  rawValue ^= 1; // Flip the sign bit: DRAT has LSB 0 for positive literals
 
-    do {
-        uint8_t leastSignificant = rawValue & 0x7F;
-        uint8_t msbMask = ((rawValue >> 7) != 0) ? 0x80 : 0x00;
-        uint8_t output = leastSignificant | msbMask;
-        *outIter = output;
+  do {
+    uint8_t leastSignificant = rawValue & 0x7F;
+    uint8_t msbMask = ((rawValue >> 7) != 0) ? 0x80 : 0x00;
+    uint8_t output = leastSignificant | msbMask;
+    *outIter = output;
 
-        rawValue = rawValue >> 7;
-        ++outIter;
-    } while (rawValue != 0);
+    rawValue = rawValue >> 7;
+    ++outIter;
+  } while (rawValue != 0);
 
-    return outIter;
+  return outIter;
 }
 }
 
 auto EncodeBinaryDRAT(gsl::span<CNFLit const> literals, gsl::span<unsigned char> target) noexcept
-    -> std::size_t {
-    JAM_ASSERT(target.size() >= literals.size() * 5, "Encoding target has insufficient space");
-    auto outputIter = target.begin();
-    for (CNFLit lit : literals) {
-        outputIter = EncodeBinaryDRAT(lit, outputIter);
-    }
+    -> std::size_t
+{
+  JAM_ASSERT(target.size() >= literals.size() * 5, "Encoding target has insufficient space");
+  auto outputIter = target.begin();
+  for (CNFLit lit : literals) {
+    outputIter = EncodeBinaryDRAT(lit, outputIter);
+  }
 
-    return static_cast<std::size_t>(std::distance(target.begin(), outputIter));
+  return static_cast<std::size_t>(std::distance(target.begin(), outputIter));
 }
 }

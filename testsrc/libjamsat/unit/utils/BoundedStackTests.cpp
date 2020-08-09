@@ -29,108 +29,115 @@
 #include <libjamsat/utils/BoundedStack.h>
 
 namespace jamsat {
-TEST(UnitUtils, elementsAreSortedByInsertionOrderInBoundedStack) {
-    BoundedStack<int> underTest{42};
-    underTest.push_back(10);
-    underTest.push_back(20);
+TEST(UnitUtils, elementsAreSortedByInsertionOrderInBoundedStack)
+{
+  BoundedStack<int> underTest{42};
+  underTest.push_back(10);
+  underTest.push_back(20);
 
-    ASSERT_EQ(underTest.back(), 20);
-    underTest.pop();
+  ASSERT_EQ(underTest.back(), 20);
+  underTest.pop();
 
-    underTest.push_back(30);
+  underTest.push_back(30);
 
-    ASSERT_EQ(underTest.back(), 30);
-    underTest.pop();
-    EXPECT_EQ(underTest.back(), 10);
-    underTest.pop();
-    EXPECT_TRUE(underTest.empty());
+  ASSERT_EQ(underTest.back(), 30);
+  underTest.pop();
+  EXPECT_EQ(underTest.back(), 10);
+  underTest.pop();
+  EXPECT_TRUE(underTest.empty());
 }
 
-TEST(UnitUtils, multiPopResizesStackCorrectly) {
-    BoundedStack<int> underTest{42};
-    EXPECT_TRUE(underTest.empty());
-    underTest.push_back(10);
-    underTest.push_back(20);
-    underTest.push_back(30);
-    underTest.push_back(40);
-    EXPECT_EQ(underTest.size(), 4ull);
-    underTest.pop_to(2);
-    EXPECT_EQ(underTest.size(), 2ull);
-    EXPECT_EQ(underTest.back(), 20);
+TEST(UnitUtils, multiPopResizesStackCorrectly)
+{
+  BoundedStack<int> underTest{42};
+  EXPECT_TRUE(underTest.empty());
+  underTest.push_back(10);
+  underTest.push_back(20);
+  underTest.push_back(30);
+  underTest.push_back(40);
+  EXPECT_EQ(underTest.size(), 4ull);
+  underTest.pop_to(2);
+  EXPECT_EQ(underTest.size(), 2ull);
+  EXPECT_EQ(underTest.back(), 20);
 }
 
-TEST(UnitUtils, stackIteratorsRemainValidAfterPush) {
-    BoundedStack<int> underTest{1024};
-    EXPECT_TRUE(underTest.empty());
-    underTest.push_back(10);
-    underTest.push_back(20);
-    underTest.push_back(30);
-    underTest.push_back(40);
+TEST(UnitUtils, stackIteratorsRemainValidAfterPush)
+{
+  BoundedStack<int> underTest{1024};
+  EXPECT_TRUE(underTest.empty());
+  underTest.push_back(10);
+  underTest.push_back(20);
+  underTest.push_back(30);
+  underTest.push_back(40);
 
-    auto begin = underTest.begin();
-    auto end = underTest.end();
+  auto begin = underTest.begin();
+  auto end = underTest.end();
 
-    for (int i = 50; i < 1000; ++i) {
-        underTest.push_back(i);
-    }
+  for (int i = 50; i < 1000; ++i) {
+    underTest.push_back(i);
+  }
 
-    EXPECT_EQ(underTest.begin(), begin);
+  EXPECT_EQ(underTest.begin(), begin);
 
-    underTest.pop_to(4);
+  underTest.pop_to(4);
 
-    EXPECT_EQ(underTest.begin(), begin);
-    EXPECT_EQ(underTest.end(), end);
+  EXPECT_EQ(underTest.begin(), begin);
+  EXPECT_EQ(underTest.end(), end);
 }
 
-TEST(UnitUtils, boundedStackIsIterableInInsertionOrder) {
-    BoundedStack<int> underTest{42};
-    EXPECT_TRUE(underTest.empty());
-    underTest.push_back(10);
-    underTest.push_back(20);
-    underTest.push_back(30);
+TEST(UnitUtils, boundedStackIsIterableInInsertionOrder)
+{
+  BoundedStack<int> underTest{42};
+  EXPECT_TRUE(underTest.empty());
+  underTest.push_back(10);
+  underTest.push_back(20);
+  underTest.push_back(30);
 
-    auto begin = underTest.begin();
-    ASSERT_TRUE(begin + 3 == underTest.end());
-    EXPECT_EQ(*begin, 10);
-    EXPECT_EQ(*(begin + 1), 20);
-    EXPECT_EQ(*(begin + 2), 30);
+  auto begin = underTest.begin();
+  ASSERT_TRUE(begin + 3 == underTest.end());
+  EXPECT_EQ(*begin, 10);
+  EXPECT_EQ(*(begin + 1), 20);
+  EXPECT_EQ(*(begin + 2), 30);
 }
 
-TEST(UnitUtils, boundedStackIsConstIterableInInsertionOrder) {
-    BoundedStack<int> underTest{42};
-    EXPECT_TRUE(underTest.empty());
-    underTest.push_back(10);
-    underTest.push_back(20);
-    underTest.push_back(30);
+TEST(UnitUtils, boundedStackIsConstIterableInInsertionOrder)
+{
+  BoundedStack<int> underTest{42};
+  EXPECT_TRUE(underTest.empty());
+  underTest.push_back(10);
+  underTest.push_back(20);
+  underTest.push_back(30);
 
-    const BoundedStack<int>& constUnderTest = underTest;
+  const BoundedStack<int>& constUnderTest = underTest;
 
-    auto begin = constUnderTest.begin();
-    ASSERT_TRUE(begin + 3 == constUnderTest.end());
-    EXPECT_EQ(*begin, 10);
-    EXPECT_EQ(*(begin + 1), 20);
-    EXPECT_EQ(*(begin + 2), 30);
+  auto begin = constUnderTest.begin();
+  ASSERT_TRUE(begin + 3 == constUnderTest.end());
+  EXPECT_EQ(*begin, 10);
+  EXPECT_EQ(*(begin + 1), 20);
+  EXPECT_EQ(*(begin + 2), 30);
 }
 
-TEST(UnitUtils, boundedStackIsConstructibleWithMaxSizeZero) {
-    BoundedStack<int> underTest{0};
-    EXPECT_TRUE(underTest.empty());
-    EXPECT_EQ(underTest.size(), 0ull);
+TEST(UnitUtils, boundedStackIsConstructibleWithMaxSizeZero)
+{
+  BoundedStack<int> underTest{0};
+  EXPECT_TRUE(underTest.empty());
+  EXPECT_EQ(underTest.size(), 0ull);
 }
 
-TEST(UnitUtils, boundedStackSizeIsIncreasable) {
-    BoundedStack<int> underTest{1};
-    underTest.push_back(10);
-    underTest.increaseMaxSizeBy(2);
-    underTest.push_back(11);
-    underTest.push_back(12);
+TEST(UnitUtils, boundedStackSizeIsIncreasable)
+{
+  BoundedStack<int> underTest{1};
+  underTest.push_back(10);
+  underTest.increaseMaxSizeBy(2);
+  underTest.push_back(11);
+  underTest.push_back(12);
 
-    EXPECT_EQ(underTest.back(), 12);
-    underTest.pop();
-    EXPECT_EQ(underTest.back(), 11);
-    underTest.pop();
-    EXPECT_EQ(underTest.back(), 10);
-    underTest.pop();
-    EXPECT_TRUE(underTest.empty());
+  EXPECT_EQ(underTest.back(), 12);
+  underTest.pop();
+  EXPECT_EQ(underTest.back(), 11);
+  underTest.pop();
+  EXPECT_EQ(underTest.back(), 10);
+  underTest.pop();
+  EXPECT_TRUE(underTest.empty());
 }
 }

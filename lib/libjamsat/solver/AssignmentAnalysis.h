@@ -78,55 +78,57 @@ template <typename ReasonProviderT, typename DLProviderT, typename StampMapT>
 std::vector<CNFLit> analyzeAssignment(ReasonProviderT& reasonProvider,
                                       DLProviderT& dlProvider,
                                       StampMapT& stamps,
-                                      CNFLit query) {
-    static_assert(isReason_provider<ReasonProviderT, typename ReasonProviderT::Reason>::value,
-                  "Template arg. ReasonProviderT doesn't satisfy the ReasonProvider concept");
-    static_assert(is_literal_container<typename ReasonProviderT::Reason>::value,
-                  "Template arg. ReasonProviderT::Reason doesn't satisfy the"
-                  " LiteralContainer concept");
-    static_assert(is_decision_level_provider<DLProviderT>::value,
-                  "Template arg. DLProviderT doesn't satisfy the DecisionLevelProvider concept");
-    static_assert(is_stamp_map<StampMapT, CNFVar>::value,
-                  "Template arg. StampMapT is not a StampMap specialization supporting CNFVar");
+                                      CNFLit query)
+{
+  static_assert(isReason_provider<ReasonProviderT, typename ReasonProviderT::Reason>::value,
+                "Template arg. ReasonProviderT doesn't satisfy the ReasonProvider concept");
+  static_assert(is_literal_container<typename ReasonProviderT::Reason>::value,
+                "Template arg. ReasonProviderT::Reason doesn't satisfy the"
+                " LiteralContainer concept");
+  static_assert(is_decision_level_provider<DLProviderT>::value,
+                "Template arg. DLProviderT doesn't satisfy the DecisionLevelProvider concept");
+  static_assert(is_stamp_map<StampMapT, CNFVar>::value,
+                "Template arg. StampMapT is not a StampMap specialization supporting CNFVar");
 
-    const auto stampContext = stamps.createContext();
-    const auto stamp = stampContext.getStamp();
+  const auto stampContext = stamps.createContext();
+  const auto stamp = stampContext.getStamp();
 
-    std::vector<CNFLit> result{query};
+  std::vector<CNFLit> result{query};
 
-    if (reasonProvider.getReason(query.getVariable()) == nullptr) {
-        return result;
-    }
-
-    auto currentDecisionLevel = dlProvider.getCurrentLevel();
-
-    std::vector<CNFVar> toAnalyze{query.getVariable()};
-    while (!toAnalyze.empty()) {
-        CNFVar currentVar = toAnalyze.back();
-        toAnalyze.pop_back();
-        stamps.setStamped(currentVar, stamp, true);
-        JAM_ASSERT(reasonProvider.getReason(currentVar) != nullptr,
-                   "Expected only literals with reasons in the work queue");
-        auto assignmentReason = reasonProvider.getReason(currentVar);
-        for (CNFLit lit : *assignmentReason) {
-            if (stamps.isStamped(lit.getVariable(), stamp)) {
-                continue;
-            }
-            stamps.setStamped(lit.getVariable(), stamp, true);
-            if (dlProvider.getLevel(lit.getVariable()) == currentDecisionLevel) {
-                if (reasonProvider.getReason(lit.getVariable()) != nullptr) {
-                    toAnalyze.push_back(lit.getVariable());
-                } else {
-                    // ~lit must be on the trail: the only positive-assigned literal of
-                    // the clause is the one whose assignment it has forced. The algorithm arrived
-                    // here via that positive-assigned literal, so its variable must have been
-                    // stamped further up the outer loop.
-                    result.push_back(~lit);
-                }
-            }
-        }
-    }
-
+  if (reasonProvider.getReason(query.getVariable()) == nullptr) {
     return result;
+  }
+
+  auto currentDecisionLevel = dlProvider.getCurrentLevel();
+
+  std::vector<CNFVar> toAnalyze{query.getVariable()};
+  while (!toAnalyze.empty()) {
+    CNFVar currentVar = toAnalyze.back();
+    toAnalyze.pop_back();
+    stamps.setStamped(currentVar, stamp, true);
+    JAM_ASSERT(reasonProvider.getReason(currentVar) != nullptr,
+               "Expected only literals with reasons in the work queue");
+    auto assignmentReason = reasonProvider.getReason(currentVar);
+    for (CNFLit lit : *assignmentReason) {
+      if (stamps.isStamped(lit.getVariable(), stamp)) {
+        continue;
+      }
+      stamps.setStamped(lit.getVariable(), stamp, true);
+      if (dlProvider.getLevel(lit.getVariable()) == currentDecisionLevel) {
+        if (reasonProvider.getReason(lit.getVariable()) != nullptr) {
+          toAnalyze.push_back(lit.getVariable());
+        }
+        else {
+          // ~lit must be on the trail: the only positive-assigned literal of
+          // the clause is the one whose assignment it has forced. The algorithm arrived
+          // here via that positive-assigned literal, so its variable must have been
+          // stamped further up the outer loop.
+          result.push_back(~lit);
+        }
+      }
+    }
+  }
+
+  return result;
 }
 }

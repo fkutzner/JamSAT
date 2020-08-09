@@ -33,37 +33,40 @@
 #include <CLI/CLI.hpp>
 
 namespace jamsat {
-auto parseOptions(int argc, char const* const* argv) -> JamSATOptions {
-    CLI::App app{"JamSAT, a SATISFIABILITY problem solver"};
+auto parseOptions(int argc, char const* const* argv) -> JamSATOptions
+{
+  CLI::App app{"JamSAT, a SATISFIABILITY problem solver"};
 
-    JamSATOptions result;
-    int timeout = 0;
-    app.add_flag("-v,--version", result.m_printVersion, "Print the version of JamSAT and exit");
-    app.add_flag(
-        "-V,--verbose", result.m_verbose, "Periodically print stats during the solving process");
-    app.add_option("-t,--timeout", timeout, "Solver timeout in seconds (0 <= N < 2^32)");
-    app.add_flag(
-        "-w,--wait",
-        result.m_waitForUserInput,
-        "Wait for the user to press a key before starting the solver (useful for profiling)");
-    app.add_option(
-           "FILE", result.m_problemFilename, "A file containing a CNF-encoded SAT problem instance")
-        ->required();
-    app.positionals_at_end();
+  JamSATOptions result;
+  int timeout = 0;
+  app.add_flag("-v,--version", result.m_printVersion, "Print the version of JamSAT and exit");
+  app.add_flag(
+      "-V,--verbose", result.m_verbose, "Periodically print stats during the solving process");
+  app.add_option("-t,--timeout", timeout, "Solver timeout in seconds (0 <= N < 2^32)");
+  app.add_flag(
+      "-w,--wait",
+      result.m_waitForUserInput,
+      "Wait for the user to press a key before starting the solver (useful for profiling)");
+  app.add_option(
+         "FILE", result.m_problemFilename, "A file containing a CNF-encoded SAT problem instance")
+      ->required();
+  app.positionals_at_end();
 
-    try {
-        app.parse(argc, argv);
-    } catch (CLI::CallForHelp const&) {
-        std::cout << app.help() << "\n";
-        result.m_quit = true;
-    } catch (CLI::Error const& error) {
-        std::cout << error.what() << "\nRe-run with --help to list valid arguments.\n";
-        throw std::invalid_argument{"bad program options"};
-    }
+  try {
+    app.parse(argc, argv);
+  }
+  catch (CLI::CallForHelp const&) {
+    std::cout << app.help() << "\n";
+    result.m_quit = true;
+  }
+  catch (CLI::Error const& error) {
+    std::cout << error.what() << "\nRe-run with --help to list valid arguments.\n";
+    throw std::invalid_argument{"bad program options"};
+  }
 
-    if (timeout > 0) {
-        result.m_timeout = std::chrono::seconds{timeout};
-    }
-    return result;
+  if (timeout > 0) {
+    result.m_timeout = std::chrono::seconds{timeout};
+  }
+  return result;
 }
 }

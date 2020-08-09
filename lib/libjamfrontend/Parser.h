@@ -34,8 +34,8 @@
 namespace jamsat {
 class CNFParserError : public std::runtime_error {
 public:
-    explicit CNFParserError(std::string const& what);
-    ~CNFParserError() override;
+  explicit CNFParserError(std::string const& what);
+  ~CNFParserError() override;
 };
 
 /**

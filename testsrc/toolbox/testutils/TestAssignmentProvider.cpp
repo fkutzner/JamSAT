@@ -30,122 +30,139 @@
 namespace jamsat {
 
 TestAssignmentProvider::TestAssignmentProvider()
-  : m_assignments(), m_decisionLevels(), m_currentLevel(0), m_trail(1024) {}
-
-TBool TestAssignmentProvider::getAssignment(CNFVar variable) const noexcept {
-    auto possibleAssgn = m_assignments.find(variable);
-    if (possibleAssgn != m_assignments.end()) {
-        return possibleAssgn->second;
-    }
-    return TBools::INDETERMINATE;
+  : m_assignments(), m_decisionLevels(), m_currentLevel(0), m_trail(1024)
+{
 }
 
-TBool TestAssignmentProvider::getAssignment(CNFLit literal) const noexcept {
-    auto varAssgn = getAssignment(literal.getVariable());
-    if (literal.getSign() == CNFSign::POSITIVE || !isDeterminate(varAssgn)) {
-        return varAssgn;
-    }
-    return negate(varAssgn);
+TBool TestAssignmentProvider::getAssignment(CNFVar variable) const noexcept
+{
+  auto possibleAssgn = m_assignments.find(variable);
+  if (possibleAssgn != m_assignments.end()) {
+    return possibleAssgn->second;
+  }
+  return TBools::INDETERMINATE;
 }
 
-void TestAssignmentProvider::append(CNFLit literal) noexcept {
-    JAM_ASSERT(literal.getVariable().getRawValue() < 1024,
-               "literal variable too large for TestAssignmentProvider");
-    m_assignments[literal.getVariable()] =
-        (literal.getSign() == CNFSign::POSITIVE ? TBools::TRUE : TBools::FALSE);
-    m_trail.push_back(literal);
+TBool TestAssignmentProvider::getAssignment(CNFLit literal) const noexcept
+{
+  auto varAssgn = getAssignment(literal.getVariable());
+  if (literal.getSign() == CNFSign::POSITIVE || !isDeterminate(varAssgn)) {
+    return varAssgn;
+  }
+  return negate(varAssgn);
 }
 
-void TestAssignmentProvider::popLiteral() noexcept {
-    CNFLit poppedLiteral = m_trail.back();
-    m_trail.pop();
-    m_assignments.erase(poppedLiteral.getVariable());
+void TestAssignmentProvider::append(CNFLit literal) noexcept
+{
+  JAM_ASSERT(literal.getVariable().getRawValue() < 1024,
+             "literal variable too large for TestAssignmentProvider");
+  m_assignments[literal.getVariable()] =
+      (literal.getSign() == CNFSign::POSITIVE ? TBools::TRUE : TBools::FALSE);
+  m_trail.push_back(literal);
 }
 
-size_t TestAssignmentProvider::getNumberOfAssignments() const noexcept {
-    return m_trail.size();
+void TestAssignmentProvider::popLiteral() noexcept
+{
+  CNFLit poppedLiteral = m_trail.back();
+  m_trail.pop();
+  m_assignments.erase(poppedLiteral.getVariable());
 }
 
-boost::iterator_range<std::vector<CNFLit>::const_iterator>
-TestAssignmentProvider::getLevelAssignments(Level level) const noexcept {
-    decltype(m_trail)::size_type startIndex = 0;
-    decltype(m_trail)::size_type idx = 0;
-    bool foundStart = false;
-
-    for (auto currentLit : m_trail) {
-        auto currentVar = currentLit.getVariable();
-
-        auto dl = m_decisionLevels.find(currentVar);
-        JAM_ASSERT(dl != m_decisionLevels.end(), "decision levels must be defined completely");
-
-        if (!foundStart && dl->second == level) {
-            startIndex = idx;
-            foundStart = true;
-        }
-
-        if (dl->second > level) {
-            break;
-        }
-
-        ++idx;
-    }
-
-    if (foundStart) {
-        if (idx != m_trail.size()) {
-            return boost::make_iterator_range(m_trail.begin() + startIndex, m_trail.begin() + idx);
-        }
-        return boost::make_iterator_range(m_trail.begin() + startIndex, m_trail.end());
-    }
-    return boost::make_iterator_range(m_trail.end(), m_trail.end());
+size_t TestAssignmentProvider::getNumberOfAssignments() const noexcept
+{
+  return m_trail.size();
 }
 
 boost::iterator_range<std::vector<CNFLit>::const_iterator>
-TestAssignmentProvider::getAssignments(size_t index) const noexcept {
-    return boost::make_iterator_range(m_trail.begin() + index, m_trail.end());
-}
+TestAssignmentProvider::getLevelAssignments(Level level) const noexcept
+{
+  decltype(m_trail)::size_type startIndex = 0;
+  decltype(m_trail)::size_type idx = 0;
+  bool foundStart = false;
 
-TestAssignmentProvider::Level TestAssignmentProvider::getLevel(CNFVar variable) const noexcept {
-    auto result = m_decisionLevels.find(variable);
-    if (result != m_decisionLevels.end()) {
-        return result->second;
+  for (auto currentLit : m_trail) {
+    auto currentVar = currentLit.getVariable();
+
+    auto dl = m_decisionLevels.find(currentVar);
+    JAM_ASSERT(dl != m_decisionLevels.end(), "decision levels must be defined completely");
+
+    if (!foundStart && dl->second == level) {
+      startIndex = idx;
+      foundStart = true;
     }
-    return 0;
-}
 
-void TestAssignmentProvider::setAssignmentDecisionLevel(CNFVar variable, Level level) noexcept {
-    m_decisionLevels[variable] = level;
-}
-
-TestAssignmentProvider::Level TestAssignmentProvider::getCurrentLevel() const noexcept {
-    return m_currentLevel;
-}
-
-void TestAssignmentProvider::setCurrentDecisionLevel(TestAssignmentProvider::Level level) noexcept {
-    m_currentLevel = level;
-}
-
-void TestAssignmentProvider::append(CNFLit literal, Clause& clause) noexcept {
-    append(literal);
-    m_reasons[literal.getVariable()] = &clause;
-}
-
-auto TestAssignmentProvider::getReason(CNFVar variable) const noexcept -> Clause const* {
-    auto candidate = m_reasons.find(variable);
-    if (candidate == m_reasons.end()) {
-        return nullptr;
+    if (dl->second > level) {
+      break;
     }
-    return candidate->second;
-}
 
-auto TestAssignmentProvider::getReason(CNFVar variable) noexcept -> Clause* {
-    auto candidate = m_reasons.find(variable);
-    if (candidate == m_reasons.end()) {
-        return nullptr;
+    ++idx;
+  }
+
+  if (foundStart) {
+    if (idx != m_trail.size()) {
+      return boost::make_iterator_range(m_trail.begin() + startIndex, m_trail.begin() + idx);
     }
-    return candidate->second;
+    return boost::make_iterator_range(m_trail.begin() + startIndex, m_trail.end());
+  }
+  return boost::make_iterator_range(m_trail.end(), m_trail.end());
 }
 
-void TestAssignmentProvider::set_reason(CNFVar variable, Clause* reason) noexcept {
-    m_reasons[variable] = reason;
+boost::iterator_range<std::vector<CNFLit>::const_iterator>
+TestAssignmentProvider::getAssignments(size_t index) const noexcept
+{
+  return boost::make_iterator_range(m_trail.begin() + index, m_trail.end());
+}
+
+TestAssignmentProvider::Level TestAssignmentProvider::getLevel(CNFVar variable) const noexcept
+{
+  auto result = m_decisionLevels.find(variable);
+  if (result != m_decisionLevels.end()) {
+    return result->second;
+  }
+  return 0;
+}
+
+void TestAssignmentProvider::setAssignmentDecisionLevel(CNFVar variable, Level level) noexcept
+{
+  m_decisionLevels[variable] = level;
+}
+
+TestAssignmentProvider::Level TestAssignmentProvider::getCurrentLevel() const noexcept
+{
+  return m_currentLevel;
+}
+
+void TestAssignmentProvider::setCurrentDecisionLevel(TestAssignmentProvider::Level level) noexcept
+{
+  m_currentLevel = level;
+}
+
+void TestAssignmentProvider::append(CNFLit literal, Clause& clause) noexcept
+{
+  append(literal);
+  m_reasons[literal.getVariable()] = &clause;
+}
+
+auto TestAssignmentProvider::getReason(CNFVar variable) const noexcept -> Clause const*
+{
+  auto candidate = m_reasons.find(variable);
+  if (candidate == m_reasons.end()) {
+    return nullptr;
+  }
+  return candidate->second;
+}
+
+auto TestAssignmentProvider::getReason(CNFVar variable) noexcept -> Clause*
+{
+  auto candidate = m_reasons.find(variable);
+  if (candidate == m_reasons.end()) {
+    return nullptr;
+  }
+  return candidate->second;
+}
+
+void TestAssignmentProvider::set_reason(CNFVar variable, Clause* reason) noexcept
+{
+  m_reasons[variable] = reason;
 }
 }

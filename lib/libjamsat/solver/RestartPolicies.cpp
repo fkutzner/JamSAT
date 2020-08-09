@@ -35,43 +35,53 @@ LubyRestartPolicy::LubyRestartPolicy(const LubyRestartPolicy::Options& options) 
   , m_conflictsUntilRestart(options.graceTime > 0
                                 ? options.graceTime + 1
                                 : m_lubySeq.current() << options.log2OfScaleFactor)
-  , m_log2OfScaleFactor(options.log2OfScaleFactor) {}
-
-void LubyRestartPolicy::registerConflict(RegisterConflictArgs&& args) noexcept {
-    (void)args;
-    if (m_conflictsUntilRestart > 0) {
-        --m_conflictsUntilRestart;
-    }
+  , m_log2OfScaleFactor(options.log2OfScaleFactor)
+{
 }
 
-void LubyRestartPolicy::registerRestart() noexcept {
-    LubySequence::Element nextLubyElem = m_lubySeq.next();
-    m_conflictsUntilRestart = nextLubyElem << m_log2OfScaleFactor;
+void LubyRestartPolicy::registerConflict(RegisterConflictArgs&& args) noexcept
+{
+  (void)args;
+  if (m_conflictsUntilRestart > 0) {
+    --m_conflictsUntilRestart;
+  }
 }
 
-bool LubyRestartPolicy::shouldRestart() const noexcept {
-    return m_conflictsUntilRestart == 0;
+void LubyRestartPolicy::registerRestart() noexcept
+{
+  LubySequence::Element nextLubyElem = m_lubySeq.next();
+  m_conflictsUntilRestart = nextLubyElem << m_log2OfScaleFactor;
+}
+
+bool LubyRestartPolicy::shouldRestart() const noexcept
+{
+  return m_conflictsUntilRestart == 0;
 }
 
 GlucoseRestartPolicy::GlucoseRestartPolicy(const GlucoseRestartPolicy::Options& options) noexcept
   : m_averageLBD(options.movingAverageWindowSize)
   , m_K(options.K)
   , m_sumLBD(0.0F)
-  , m_conflictCount(0ULL) {}
+  , m_conflictCount(0ULL)
+{
+}
 
 void GlucoseRestartPolicy::registerConflict(
-    GlucoseRestartPolicy::RegisterConflictArgs&& args) noexcept {
-    ++m_conflictCount;
-    m_sumLBD += args.learntClauseLBD;
-    m_averageLBD.add(args.learntClauseLBD);
+    GlucoseRestartPolicy::RegisterConflictArgs&& args) noexcept
+{
+  ++m_conflictCount;
+  m_sumLBD += args.learntClauseLBD;
+  m_averageLBD.add(args.learntClauseLBD);
 }
 
-void GlucoseRestartPolicy::registerRestart() noexcept {
-    m_averageLBD.clear();
+void GlucoseRestartPolicy::registerRestart() noexcept
+{
+  m_averageLBD.clear();
 }
 
-bool GlucoseRestartPolicy::shouldRestart() const noexcept {
-    return m_averageLBD.isFull() &&
-           ((m_averageLBD.getAverage() * m_K) > (m_sumLBD / m_conflictCount));
+bool GlucoseRestartPolicy::shouldRestart() const noexcept
+{
+  return m_averageLBD.isFull() &&
+         ((m_averageLBD.getAverage() * m_K) > (m_sumLBD / m_conflictCount));
 }
 }

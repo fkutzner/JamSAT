@@ -83,7 +83,8 @@ namespace jamsat {
  * </table>
  */
 template <typename, typename, typename = j_void_t<>>
-struct is_index : public std::false_type {};
+struct is_index : public std::false_type {
+};
 
 template <typename I, typename T>
 struct is_index<
@@ -91,6 +92,7 @@ struct is_index<
     T,
     j_void_t<std::enable_if_t<std::is_same<typename I::Type, T>::value, void>,
              JAM_REQUIRE_EXPR(I::getIndex(std::declval<std::add_const_t<T>>()), std::size_t)>>
-  : public std::true_type {};
+  : public std::true_type {
+};
 
 }

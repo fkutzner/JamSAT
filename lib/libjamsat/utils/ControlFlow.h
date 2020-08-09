@@ -47,45 +47,48 @@ namespace jamsat {
  */
 class OnExitScope {
 public:
-    /**
-     * \brief Constructs a new OnExitScope instance.
-     *
-     * \param callOnExit    A function which will be called when this instance is
-     *                      destroyed. This function may not throw.
-     */
-    explicit OnExitScope(std::function<void()> const& callOnExit) noexcept
-      : m_callOnExit(callOnExit) {
-        JAM_ASSERT(callOnExit, "callOnExit must be a callable function, but is not");
-    }
+  /**
+   * \brief Constructs a new OnExitScope instance.
+   *
+   * \param callOnExit    A function which will be called when this instance is
+   *                      destroyed. This function may not throw.
+   */
+  explicit OnExitScope(std::function<void()> const& callOnExit) noexcept : m_callOnExit(callOnExit)
+  {
+    JAM_ASSERT(callOnExit, "callOnExit must be a callable function, but is not");
+  }
 
-    OnExitScope& operator=(const OnExitScope& other) = delete;
-    OnExitScope(const OnExitScope& other) = delete;
+  OnExitScope& operator=(const OnExitScope& other) = delete;
+  OnExitScope(const OnExitScope& other) = delete;
 
-    OnExitScope& operator=(OnExitScope&& other) noexcept {
-        if (this != &other) {
-            this->m_callOnExit = other.m_callOnExit;
-            other.m_callOnExit = std::function<void()>{};
-        }
-        return *this;
+  OnExitScope& operator=(OnExitScope&& other) noexcept
+  {
+    if (this != &other) {
+      this->m_callOnExit = other.m_callOnExit;
+      other.m_callOnExit = std::function<void()>{};
     }
+    return *this;
+  }
 
-    OnExitScope(OnExitScope&& other) noexcept {
-        this->m_callOnExit = other.m_callOnExit;
-        other.m_callOnExit = std::function<void()>{};
-    }
+  OnExitScope(OnExitScope&& other) noexcept
+  {
+    this->m_callOnExit = other.m_callOnExit;
+    other.m_callOnExit = std::function<void()>{};
+  }
 
-    /**
-     * \brief Destructs the instance, calling the \p callOnExit function which has
-     *        been passed to the constructor.
-     */
-    ~OnExitScope() noexcept {
-        if (m_callOnExit) {
-            m_callOnExit();
-        }
+  /**
+   * \brief Destructs the instance, calling the \p callOnExit function which has
+   *        been passed to the constructor.
+   */
+  ~OnExitScope() noexcept
+  {
+    if (m_callOnExit) {
+      m_callOnExit();
     }
+  }
 
 private:
-    std::function<void()> m_callOnExit;
+  std::function<void()> m_callOnExit;
 };
 
 /**
@@ -95,7 +98,8 @@ private:
  *
  * \ingroup JamSAT_Utils
  */
-inline void noOp() noexcept {
-    // deliberately does nothing
+inline void noOp() noexcept
+{
+  // deliberately does nothing
 }
 }

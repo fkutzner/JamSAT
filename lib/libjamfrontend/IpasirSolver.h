@@ -40,86 +40,86 @@ namespace jamsat {
  */
 class IpasirSolver {
 public:
-    IpasirSolver();
-    virtual ~IpasirSolver();
+  IpasirSolver();
+  virtual ~IpasirSolver();
 
-    /**
-     * \brief Adds a clause to the solver.
-     *
-     * \param literals      The clause to add.
-     */
-    virtual void addClause(std::vector<int> const& literals) noexcept = 0;
+  /**
+   * \brief Adds a clause to the solver.
+   *
+   * \param literals      The clause to add.
+   */
+  virtual void addClause(std::vector<int> const& literals) noexcept = 0;
 
-    enum class Result { INDETERMINATE = 0, SATISFIABLE = 10, UNSATISFIABLE = 20 };
+  enum class Result { INDETERMINATE = 0, SATISFIABLE = 10, UNSATISFIABLE = 20 };
 
-    /**
-     * \brief Invokes the SAT solver.
-     *
-     * \param assumedFacts  The vector of literals that shall be assumed to be true
-     *                      during the solver invocation.
-     *
-     * \returns the solving result.
-     */
-    virtual auto solve(std::vector<int> const& assumedFacts) noexcept -> Result = 0;
+  /**
+   * \brief Invokes the SAT solver.
+   *
+   * \param assumedFacts  The vector of literals that shall be assumed to be true
+   *                      during the solver invocation.
+   *
+   * \returns the solving result.
+   */
+  virtual auto solve(std::vector<int> const& assumedFacts) noexcept -> Result = 0;
 
-    enum class Value { TRUE, FALSE, DONTCARE };
+  enum class Value { TRUE, FALSE, DONTCARE };
 
-    /**
-     * \brief Gets the value of a literal.
-     *
-     * This function may only be called if the last `solve()` call returned
-     * Result::SATISFIABLE and `addClause()` has not been called since the last
-     * call to `solve()`.
-     *
-     * \param literal       A literal. `literal` must not be 0.
-     *
-     * \returns the value of the literal.
-     */
-    virtual auto getValue(int literal) noexcept -> Value = 0;
+  /**
+   * \brief Gets the value of a literal.
+   *
+   * This function may only be called if the last `solve()` call returned
+   * Result::SATISFIABLE and `addClause()` has not been called since the last
+   * call to `solve()`.
+   *
+   * \param literal       A literal. `literal` must not be 0.
+   *
+   * \returns the value of the literal.
+   */
+  virtual auto getValue(int literal) noexcept -> Value = 0;
 
-    /**
-     * \brief Determines whether an assumed fact has been used to prove unsatisfiability.
-     *
-     * This function may only be called if the last `solve()` call returned
-     * Result::UNSATISFIABLE and `addClause()` has not been called since the last
-     * call to `solve()`.
-     *
-     * \param literal       A literal. `literal` must not be 0.
-     *
-     * \returns `true` if the literal is an assumed fact that has been used to prove
-     *          unsatisfiability.
-     */
-    virtual auto isFailed(int literal) noexcept -> bool = 0;
+  /**
+   * \brief Determines whether an assumed fact has been used to prove unsatisfiability.
+   *
+   * This function may only be called if the last `solve()` call returned
+   * Result::UNSATISFIABLE and `addClause()` has not been called since the last
+   * call to `solve()`.
+   *
+   * \param literal       A literal. `literal` must not be 0.
+   *
+   * \returns `true` if the literal is an assumed fact that has been used to prove
+   *          unsatisfiability.
+   */
+  virtual auto isFailed(int literal) noexcept -> bool = 0;
 
-    /**
-     * \brief Wrapper for ipasir_set_terminate()
-     *
-     * See the documentation of ipasir_set_terminate().
-     */
-    virtual void setTerminateFn(void* state, int (*terminate)(void* state)) noexcept = 0;
+  /**
+   * \brief Wrapper for ipasir_set_terminate()
+   *
+   * See the documentation of ipasir_set_terminate().
+   */
+  virtual void setTerminateFn(void* state, int (*terminate)(void* state)) noexcept = 0;
 
-    /**
-     * \brief Wrapper for ipasir_set_learn()
-     *
-     * See the documentation of ipasir_set_learn().
-     */
-    virtual void
-    setLearnFn(void* state, int max_length, void (*learn)(void* state, int* clause)) noexcept = 0;
+  /**
+   * \brief Wrapper for ipasir_set_learn()
+   *
+   * See the documentation of ipasir_set_learn().
+   */
+  virtual void
+  setLearnFn(void* state, int max_length, void (*learn)(void* state, int* clause)) noexcept = 0;
 
-    /**
-     * \brief Wrapper for jamsat_ipasir_set_logger()
-     *
-     * Prints the log messages obtained from JamSAT to the given stream.
-     * 
-     * \param targetStream      An ostream. The argument must reference an object that remains
-     *                          valid until the destruction of the IpasirSolver object.
-     */
-    virtual void enableLogging(std::ostream& targetStream) noexcept = 0;
+  /**
+   * \brief Wrapper for jamsat_ipasir_set_logger()
+   *
+   * Prints the log messages obtained from JamSAT to the given stream.
+   * 
+   * \param targetStream      An ostream. The argument must reference an object that remains
+   *                          valid until the destruction of the IpasirSolver object.
+   */
+  virtual void enableLogging(std::ostream& targetStream) noexcept = 0;
 
-    IpasirSolver(IpasirSolver const& rhs) = delete;
-    IpasirSolver(IpasirSolver&& rhs) = delete;
-    auto operator=(IpasirSolver const& rhs) = delete;
-    auto operator=(IpasirSolver&& rhs) = delete;
+  IpasirSolver(IpasirSolver const& rhs) = delete;
+  IpasirSolver(IpasirSolver&& rhs) = delete;
+  auto operator=(IpasirSolver const& rhs) = delete;
+  auto operator=(IpasirSolver&& rhs) = delete;
 };
 
 /**

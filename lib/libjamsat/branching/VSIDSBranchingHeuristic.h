@@ -46,23 +46,24 @@ namespace detail {
 
 class CNFVarActivityOrder {
 public:
-    explicit CNFVarActivityOrder(CNFVar maxVar) : m_activity(maxVar) {}
+  explicit CNFVarActivityOrder(CNFVar maxVar) : m_activity(maxVar) {}
 
-    auto operator()(CNFVar lhs, CNFVar rhs) const noexcept -> bool {
-        JAM_ASSERT(lhs.getRawValue() < static_checked_cast<CNFVar::RawVariable>(m_activity.size()),
-                   "Index out of bounds");
-        JAM_ASSERT(rhs.getRawValue() < static_checked_cast<CNFVar::RawVariable>(m_activity.size()),
-                   "Index out of bounds");
+  auto operator()(CNFVar lhs, CNFVar rhs) const noexcept -> bool
+  {
+    JAM_ASSERT(lhs.getRawValue() < static_checked_cast<CNFVar::RawVariable>(m_activity.size()),
+               "Index out of bounds");
+    JAM_ASSERT(rhs.getRawValue() < static_checked_cast<CNFVar::RawVariable>(m_activity.size()),
+               "Index out of bounds");
 
-        return m_activity[lhs] < m_activity[rhs];
-    }
+    return m_activity[lhs] < m_activity[rhs];
+  }
 
-    auto getActivityMap() noexcept -> BoundedMap<CNFVar, double>& { return m_activity; }
+  auto getActivityMap() noexcept -> BoundedMap<CNFVar, double>& { return m_activity; }
 
-    void increaseMaxSizeTo(CNFVar newMaxElement) { m_activity.increaseSizeTo(newMaxElement); }
+  void increaseMaxSizeTo(CNFVar newMaxElement) { m_activity.increaseSizeTo(newMaxElement); }
 
 private:
-    BoundedMap<CNFVar, double> m_activity;
+  BoundedMap<CNFVar, double> m_activity;
 };
 }
 
@@ -84,106 +85,106 @@ private:
 template <class AssignmentProvider>
 class VSIDSBranchingHeuristic : public BranchingHeuristicBase {
 public:
-    /**
-     * \brief Constructs a new VSIDSBranchingHeuristic object.
-     *
-     * \param maxVar              The largest variable occurring in the SAT
-     * problem instance to be solved. \p maxVar must be a regular variable.
-     * \param assignmentProvider  A reference to an object using which the current
-     * variable assignment can be obtained.
-     */
-    VSIDSBranchingHeuristic(CNFVar maxVar, AssignmentProvider const& assignmentProvider);
+  /**
+   * \brief Constructs a new VSIDSBranchingHeuristic object.
+   *
+   * \param maxVar              The largest variable occurring in the SAT
+   * problem instance to be solved. \p maxVar must be a regular variable.
+   * \param assignmentProvider  A reference to an object using which the current
+   * variable assignment can be obtained.
+   */
+  VSIDSBranchingHeuristic(CNFVar maxVar, AssignmentProvider const& assignmentProvider);
 
-    /**
-     * \brief Informs the branching heuristic that the given variable was
-     * contained in a clause used to obtain a learned clause during conflict
-     * resolution.
-     *
-     * \param variable  The variable as described above. \p variable must not be
-     * larger than \p maxVar passed to this object's constructor.
-     */
-    void seenInConflict(CNFVar variable) noexcept;
+  /**
+   * \brief Informs the branching heuristic that the given variable was
+   * contained in a clause used to obtain a learned clause during conflict
+   * resolution.
+   *
+   * \param variable  The variable as described above. \p variable must not be
+   * larger than \p maxVar passed to this object's constructor.
+   */
+  void seenInConflict(CNFVar variable) noexcept;
 
-    /**
-     * \brief Obtains a branching literal if possible.
-     *
-     * The chosen variable \p v will not be used for branching again before
-     * reset() or reset reset(\p v) has been called.
-     *
-     * \returns If a branching decision can be performed, this method returns a
-     * literal \p L with variable \p v and sign \p s such that the solver can
-     * assign \p v to the value corresponding to \p s as a branching decision.
-     * Otherwise, CNFLit::getUndefinedLiteral() is returned.
-     */
-    auto pickBranchLiteral() noexcept -> CNFLit;
+  /**
+   * \brief Obtains a branching literal if possible.
+   *
+   * The chosen variable \p v will not be used for branching again before
+   * reset() or reset reset(\p v) has been called.
+   *
+   * \returns If a branching decision can be performed, this method returns a
+   * literal \p L with variable \p v and sign \p s such that the solver can
+   * assign \p v to the value corresponding to \p s as a branching decision.
+   * Otherwise, CNFLit::getUndefinedLiteral() is returned.
+   */
+  auto pickBranchLiteral() noexcept -> CNFLit;
 
-    /**
-     * \brief Resets the record of branching decisions.
-     *
-     * After calling this method, all variables which are marked as possible
-     * decision variables and which are not assigned may be used for determining a
-     * branching decision literal.
-     */
-    void reset() noexcept;
+  /**
+   * \brief Resets the record of branching decisions.
+   *
+   * After calling this method, all variables which are marked as possible
+   * decision variables and which are not assigned may be used for determining a
+   * branching decision literal.
+   */
+  void reset() noexcept;
 
-    /**
-     * \brief Resets the record of branching decisions for the given variable.
-     *
-     * After calling this method, the given variable may be used in a branching
-     * decision literal if it is marked as a possible decision variable and has no
-     * assinment.
-     *
-     * \param variable    The variable to be reset.
-     */
-    void reset(CNFVar variable) noexcept;
+  /**
+   * \brief Resets the record of branching decisions for the given variable.
+   *
+   * After calling this method, the given variable may be used in a branching
+   * decision literal if it is marked as a possible decision variable and has no
+   * assinment.
+   *
+   * \param variable    The variable to be reset.
+   */
+  void reset(CNFVar variable) noexcept;
 
-    /**
-     * \brief Informs the heuristic that the solver is about to begin processing a
-     * conflict.
-     */
-    void beginHandlingConflict() noexcept;
+  /**
+   * \brief Informs the heuristic that the solver is about to begin processing a
+   * conflict.
+   */
+  void beginHandlingConflict() noexcept;
 
-    /**
-     * \brief Informs the heuristic that the solver has just finished processing a
-     * conflict.
-     */
-    void endHandlingConflict() noexcept;
+  /**
+   * \brief Informs the heuristic that the solver has just finished processing a
+   * conflict.
+   */
+  void endHandlingConflict() noexcept;
 
-    /**
-     * \brief Sets the activity value delta added to a variable's activity when it
-     * is bumped.
-     *
-     * \param delta The new activity delta.
-     */
-    void setActivityBumpDelta(double delta) noexcept;
+  /**
+   * \brief Sets the activity value delta added to a variable's activity when it
+   * is bumped.
+   *
+   * \param delta The new activity delta.
+   */
+  void setActivityBumpDelta(double delta) noexcept;
 
-    /**
-     * \brief Gets the activity value delta added to a variable's activity when it
-     * is bumped.
-     *
-     * \returns The specified activity delta.
-     */
-    auto getActivityBumpDelta() const noexcept -> double;
+  /**
+   * \brief Gets the activity value delta added to a variable's activity when it
+   * is bumped.
+   *
+   * \returns The specified activity delta.
+   */
+  auto getActivityBumpDelta() const noexcept -> double;
 
-    /**
-     * \brief Increases the maximum variable known to occur in the SAT problem to be solved.
-     *
-     * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
-     *                      maximum variable, and must be a regular variable.
-     */
-    void increaseMaxVarTo(CNFVar newMaxVar);
+  /**
+   * \brief Increases the maximum variable known to occur in the SAT problem to be solved.
+   *
+   * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
+   *                      maximum variable, and must be a regular variable.
+   */
+  void increaseMaxVarTo(CNFVar newMaxVar);
 
 private:
-    void scaleDownActivities() noexcept;
+  void scaleDownActivities() noexcept;
 
-    using VariableHeap = BinaryMaxHeap<CNFVar, detail::CNFVarActivityOrder>;
-    VariableHeap m_variableOrder;
+  using VariableHeap = BinaryMaxHeap<CNFVar, detail::CNFVarActivityOrder>;
+  VariableHeap m_variableOrder;
 
-    const AssignmentProvider& m_assignmentProvider;
-    double m_activityBumpDelta;
-    double m_decayRate;
-    double m_maxDecayRate;
-    int m_numberOfConflicts;
+  const AssignmentProvider& m_assignmentProvider;
+  double m_activityBumpDelta;
+  double m_decayRate;
+  double m_maxDecayRate;
+  int m_numberOfConflicts;
 };
 
 /********** Implementation ****************************** */
@@ -197,108 +198,119 @@ VSIDSBranchingHeuristic<AssignmentProvider>::VSIDSBranchingHeuristic(
   , m_activityBumpDelta(1.0)
   , m_decayRate(0.8)
   , m_maxDecayRate(0.95)
-  , m_numberOfConflicts(0) {
-    JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
-    reset();
+  , m_numberOfConflicts(0)
+{
+  JAM_ASSERT(isRegular(maxVar), "Argument maxVar must be a regular variable.");
+  reset();
 }
 
 template <class AssignmentProvider>
-auto VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept -> CNFLit {
-    CNFVar branchingVar = CNFVar::getUndefinedVariable();
-    while (!m_variableOrder.empty()) {
-        JAM_ASSERT(!m_variableOrder.empty(), "Out of variables to pick for branching");
-        branchingVar = m_variableOrder.removeMax();
-        if (!isDeterminate(m_assignmentProvider.getAssignment(branchingVar)) &&
-            isEligibleForDecisions(branchingVar)) {
-            CNFSign sign = static_cast<CNFSign>(
-                m_assignmentProvider.getPhase(branchingVar).getUnderlyingValue());
-            return CNFLit{branchingVar, sign};
-        }
+auto VSIDSBranchingHeuristic<AssignmentProvider>::pickBranchLiteral() noexcept -> CNFLit
+{
+  CNFVar branchingVar = CNFVar::getUndefinedVariable();
+  while (!m_variableOrder.empty()) {
+    JAM_ASSERT(!m_variableOrder.empty(), "Out of variables to pick for branching");
+    branchingVar = m_variableOrder.removeMax();
+    if (!isDeterminate(m_assignmentProvider.getAssignment(branchingVar)) &&
+        isEligibleForDecisions(branchingVar)) {
+      CNFSign sign =
+          static_cast<CNFSign>(m_assignmentProvider.getPhase(branchingVar).getUnderlyingValue());
+      return CNFLit{branchingVar, sign};
     }
+  }
 
-    return CNFLit::getUndefinedLiteral();
+  return CNFLit::getUndefinedLiteral();
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(CNFVar variable) noexcept {
-    auto& activityMap = m_variableOrder.getComparator().getActivityMap();
+void VSIDSBranchingHeuristic<AssignmentProvider>::seenInConflict(CNFVar variable) noexcept
+{
+  auto& activityMap = m_variableOrder.getComparator().getActivityMap();
 
-    activityMap[variable] += m_activityBumpDelta;
+  activityMap[variable] += m_activityBumpDelta;
 
-    if (activityMap[variable] >= 1e100) {
-        scaleDownActivities();
-    }
+  if (activityMap[variable] >= 1e100) {
+    scaleDownActivities();
+  }
 
-    if (m_variableOrder.contains(variable)) {
-        m_variableOrder.increasingUpdate(variable);
-    }
+  if (m_variableOrder.contains(variable)) {
+    m_variableOrder.increasingUpdate(variable);
+  }
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() noexcept {
-    auto& activityMap = m_variableOrder.getComparator().getActivityMap();
-    for (size_t i = 0; i < activityMap.size(); ++i) {
-        auto rawVariable = static_checked_cast<CNFVar::RawVariable>(i);
-        auto& activity = activityMap[CNFVar{rawVariable}];
-        activity = 1e-100 * activity;
-    }
-    m_activityBumpDelta *= 1e-100;
+void VSIDSBranchingHeuristic<AssignmentProvider>::scaleDownActivities() noexcept
+{
+  auto& activityMap = m_variableOrder.getComparator().getActivityMap();
+  for (size_t i = 0; i < activityMap.size(); ++i) {
+    auto rawVariable = static_checked_cast<CNFVar::RawVariable>(i);
+    auto& activity = activityMap[CNFVar{rawVariable}];
+    activity = 1e-100 * activity;
+  }
+  m_activityBumpDelta *= 1e-100;
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept {
-    m_variableOrder.clear();
-    auto& activityMap = m_variableOrder.getComparator().getActivityMap();
-    CNFVar max = CNFVar{static_checked_cast<CNFVar::RawVariable>(activityMap.size())};
-    for (CNFVar i = CNFVar{0}; i < max; i = nextCNFVar(i)) {
-        m_variableOrder.insert(i);
-    }
+void VSIDSBranchingHeuristic<AssignmentProvider>::reset() noexcept
+{
+  m_variableOrder.clear();
+  auto& activityMap = m_variableOrder.getComparator().getActivityMap();
+  CNFVar max = CNFVar{static_checked_cast<CNFVar::RawVariable>(activityMap.size())};
+  for (CNFVar i = CNFVar{0}; i < max; i = nextCNFVar(i)) {
+    m_variableOrder.insert(i);
+  }
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::reset(CNFVar variable) noexcept {
-    m_variableOrder.insert(variable);
+void VSIDSBranchingHeuristic<AssignmentProvider>::reset(CNFVar variable) noexcept
+{
+  m_variableOrder.insert(variable);
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::setActivityBumpDelta(double delta) noexcept {
-    m_activityBumpDelta = delta;
+void VSIDSBranchingHeuristic<AssignmentProvider>::setActivityBumpDelta(double delta) noexcept
+{
+  m_activityBumpDelta = delta;
 }
 
 template <class AssignmentProvider>
-auto VSIDSBranchingHeuristic<AssignmentProvider>::getActivityBumpDelta() const noexcept -> double {
-    return m_activityBumpDelta;
+auto VSIDSBranchingHeuristic<AssignmentProvider>::getActivityBumpDelta() const noexcept -> double
+{
+  return m_activityBumpDelta;
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::beginHandlingConflict() noexcept {
-    ++m_numberOfConflicts;
-    if (m_numberOfConflicts == 5000) {
-        m_decayRate = std::min(m_decayRate + 0.1, m_maxDecayRate);
-        m_numberOfConflicts = 0;
-    }
+void VSIDSBranchingHeuristic<AssignmentProvider>::beginHandlingConflict() noexcept
+{
+  ++m_numberOfConflicts;
+  if (m_numberOfConflicts == 5000) {
+    m_decayRate = std::min(m_decayRate + 0.1, m_maxDecayRate);
+    m_numberOfConflicts = 0;
+  }
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::endHandlingConflict() noexcept {
-    m_activityBumpDelta *= (1 / m_decayRate);
+void VSIDSBranchingHeuristic<AssignmentProvider>::endHandlingConflict() noexcept
+{
+  m_activityBumpDelta *= (1 / m_decayRate);
 }
 
 template <class AssignmentProvider>
-void VSIDSBranchingHeuristic<AssignmentProvider>::increaseMaxVarTo(CNFVar newMaxVar) {
-    auto& activityMap = m_variableOrder.getComparator().getActivityMap();
-    JAM_ASSERT(newMaxVar.getRawValue() >= (activityMap.size() - 1),
-               "Argument newMaxVar must not be smaller than the previous maximum variable");
-    JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
+void VSIDSBranchingHeuristic<AssignmentProvider>::increaseMaxVarTo(CNFVar newMaxVar)
+{
+  auto& activityMap = m_variableOrder.getComparator().getActivityMap();
+  JAM_ASSERT(newMaxVar.getRawValue() >= (activityMap.size() - 1),
+             "Argument newMaxVar must not be smaller than the previous maximum variable");
+  JAM_ASSERT(isRegular(newMaxVar), "Argument newMaxVar must be a regular variable.");
 
-    CNFVar firstNewVar = CNFVar{static_checked_cast<CNFVar::RawVariable>(activityMap.size())};
+  CNFVar firstNewVar = CNFVar{static_checked_cast<CNFVar::RawVariable>(activityMap.size())};
 
-    increaseMaxDecisionVarTo(newMaxVar);
-    m_variableOrder.increaseMaxSizeTo(newMaxVar);
+  increaseMaxDecisionVarTo(newMaxVar);
+  m_variableOrder.increaseMaxSizeTo(newMaxVar);
 
-    for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
-        activityMap[i] = 0.0f;
-        m_variableOrder.insert(i);
-    }
+  for (CNFVar i = firstNewVar; i <= newMaxVar; i = nextCNFVar(i)) {
+    activityMap[i] = 0.0f;
+    m_variableOrder.insert(i);
+  }
 }
 }

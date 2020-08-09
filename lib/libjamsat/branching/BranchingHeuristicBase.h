@@ -50,42 +50,42 @@ namespace jamsat {
  */
 class BranchingHeuristicBase {
 public:
-    explicit BranchingHeuristicBase(CNFVar maxVar) noexcept;
+  explicit BranchingHeuristicBase(CNFVar maxVar) noexcept;
 
-    /**
-     * \brief Marks variables as eligible for being used in branching decisions.
-     *
-     * \param variable  The target variable. Must not be greater than \p maxVar
-     * passed to the constructor.
-     * \param isEligible  Iff true, \p variable may be used as a branching
-     * decision variable.
-     */
-    void setEligibleForDecisions(CNFVar variable, bool isEligible) noexcept;
+  /**
+   * \brief Marks variables as eligible for being used in branching decisions.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor.
+   * \param isEligible  Iff true, \p variable may be used as a branching
+   * decision variable.
+   */
+  void setEligibleForDecisions(CNFVar variable, bool isEligible) noexcept;
 
-    /**
-     * \brief Determines whether a given variable is eligible for being used in
-     * branching decisions.
-     *
-     * \param variable  The target variable. Must not be greater than \p maxVar
-     * passed to the constructor.
-     * \returns true iff \p variable has been marked eligible for being used in
-     * branching decisions. If the variables's eligibility has not been set yet,
-     * false is returned.
-     */
-    bool isEligibleForDecisions(CNFVar variable) const noexcept;
+  /**
+   * \brief Determines whether a given variable is eligible for being used in
+   * branching decisions.
+   *
+   * \param variable  The target variable. Must not be greater than \p maxVar
+   * passed to the constructor.
+   * \returns true iff \p variable has been marked eligible for being used in
+   * branching decisions. If the variables's eligibility has not been set yet,
+   * false is returned.
+   */
+  bool isEligibleForDecisions(CNFVar variable) const noexcept;
 
 protected:
-    /**
-     * \brief Increases the maximum variable which can be used in branching.
-     *
-     * New variables are not marked as eligible for usage as branching decision variables.
-     *
-     * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
-     *                      maximum variable, and must be a regular variable.
-     */
-    void increaseMaxDecisionVarTo(CNFVar newMaxVar);
+  /**
+   * \brief Increases the maximum variable which can be used in branching.
+   *
+   * New variables are not marked as eligible for usage as branching decision variables.
+   *
+   * \param newMaxVar     The new maximum variable. Must not be smaller than the previous
+   *                      maximum variable, and must be a regular variable.
+   */
+  void increaseMaxDecisionVarTo(CNFVar newMaxVar);
 
 private:
-    BoundedMap<CNFVar, Bool> m_decisionVariables;
+  BoundedMap<CNFVar, Bool> m_decisionVariables;
 };
 }

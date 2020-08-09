@@ -30,25 +30,28 @@
 #include <vector>
 
 namespace jamsat {
-TEST(UnitUtils, toStringReturnsEmptyStringForEmptySeq) {
-    std::vector<int> empty;
-    std::string result = toString(empty.begin(), empty.end());
-    EXPECT_EQ(result, "");
+TEST(UnitUtils, toStringReturnsEmptyStringForEmptySeq)
+{
+  std::vector<int> empty;
+  std::string result = toString(empty.begin(), empty.end());
+  EXPECT_EQ(result, "");
 }
 
-TEST(UnitUtils, toStringPrintsSingleElementToString) {
-    std::vector<int> testData;
-    testData.push_back(7);
-    std::string result = toString(testData.begin(), testData.end());
-    EXPECT_EQ(result, "7");
+TEST(UnitUtils, toStringPrintsSingleElementToString)
+{
+  std::vector<int> testData;
+  testData.push_back(7);
+  std::string result = toString(testData.begin(), testData.end());
+  EXPECT_EQ(result, "7");
 }
 
-TEST(UnitUtils, toStringPrintsMultipleElementsToString) {
-    std::vector<int> testData;
-    testData.push_back(7);
-    testData.push_back(-2);
-    testData.push_back(3);
-    std::string result = toString(testData.begin(), testData.end());
-    EXPECT_EQ(result, "7 -2 3");
+TEST(UnitUtils, toStringPrintsMultipleElementsToString)
+{
+  std::vector<int> testData;
+  testData.push_back(7);
+  testData.push_back(-2);
+  testData.push_back(3);
+  std::string result = toString(testData.begin(), testData.end());
+  EXPECT_EQ(result, "7 -2 3");
 }
 }

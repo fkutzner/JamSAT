@@ -49,64 +49,65 @@ namespace jamsat {
  */
 class FaultInjector {
 public:
-    using const_iterator = std::unordered_set<std::string>::const_iterator;
+  using const_iterator = std::unordered_set<std::string>::const_iterator;
 
-    /**
-     * \brief Enables faults matching the given name.
-     *
-     * \param which   The name of the faults to be marked as enabled, e.g. "low memory".
-     */
-    void enableFaults(const std::string& which);
+  /**
+   * \brief Enables faults matching the given name.
+   *
+   * \param which   The name of the faults to be marked as enabled, e.g. "low memory".
+   */
+  void enableFaults(const std::string& which);
 
-    /**
-     * \brief Determines whether synthetic faults matching the given name
-     *        are enabled.
-     *
-     * Note: All synthetic faults are disabled by default.
-     *
-     * \param which   A name of faults.
-     * \returns true iff \p which denotes a class of faults which should be synthesized for
-     *          testing purposes.
-     */
-    bool isFaultEnabled(const std::string& which) const noexcept;
+  /**
+   * \brief Determines whether synthetic faults matching the given name
+   *        are enabled.
+   *
+   * Note: All synthetic faults are disabled by default.
+   *
+   * \param which   A name of faults.
+   * \returns true iff \p which denotes a class of faults which should be synthesized for
+   *          testing purposes.
+   */
+  bool isFaultEnabled(const std::string& which) const noexcept;
 
-    /**
-     * \brief Marks all synthetic faults as disabled.
-     */
-    void reset() noexcept;
+  /**
+   * \brief Marks all synthetic faults as disabled.
+   */
+  void reset() noexcept;
 
-    /**
-     * \brief Returns a begin iterator of the names of enabled faults.
-     *
-     * \returns a begin iterator of the names of enabled faults.
-     */
-    const_iterator begin() const noexcept;
+  /**
+   * \brief Returns a begin iterator of the names of enabled faults.
+   *
+   * \returns a begin iterator of the names of enabled faults.
+   */
+  const_iterator begin() const noexcept;
 
-    /**
-     * \brief Returns an end iterator of the names of enabled faults.
-     *
-     * \returns an end iterator of the names of enabled faults.
-     */
-    const_iterator end() const noexcept;
+  /**
+   * \brief Returns an end iterator of the names of enabled faults.
+   *
+   * \returns an end iterator of the names of enabled faults.
+   */
+  const_iterator end() const noexcept;
 
-    /**
-     * \brief Returns the singleton FaultInjector instance.
-     *
-     * \returns the singleton FaultInjector instance.
-     */
-    static FaultInjector& getInstance() noexcept {
-        static FaultInjector instance;
-        return instance;
-    }
+  /**
+   * \brief Returns the singleton FaultInjector instance.
+   *
+   * \returns the singleton FaultInjector instance.
+   */
+  static FaultInjector& getInstance() noexcept
+  {
+    static FaultInjector instance;
+    return instance;
+  }
 
-    FaultInjector(const FaultInjector& other) = delete;
-    FaultInjector(FaultInjector&& other) = delete;
-    FaultInjector& operator=(const FaultInjector& other) = delete;
-    FaultInjector& operator=(FaultInjector&& other) = delete;
+  FaultInjector(const FaultInjector& other) = delete;
+  FaultInjector(FaultInjector&& other) = delete;
+  FaultInjector& operator=(const FaultInjector& other) = delete;
+  FaultInjector& operator=(FaultInjector&& other) = delete;
 
 private:
-    FaultInjector();
-    std::unordered_set<std::string> m_enabledFaults;
+  FaultInjector();
+  std::unordered_set<std::string> m_enabledFaults;
 };
 
 /**
@@ -122,25 +123,25 @@ private:
  */
 class FaultInjectorResetRAII {
 public:
-    /**
-     * \brief Constructs the FaultInjectorResetRAII instance, storing a snapshot
-     *        of the current FaultInjector singleton's state.
-     */
-    FaultInjectorResetRAII() noexcept;
+  /**
+   * \brief Constructs the FaultInjectorResetRAII instance, storing a snapshot
+   *        of the current FaultInjector singleton's state.
+   */
+  FaultInjectorResetRAII() noexcept;
 
-    /**
-     * \brief Destructs the FaultInjectorResetRAII instance, restoring the
-     *        FaultInjector singleton's state.
-     */
-    ~FaultInjectorResetRAII() noexcept;
+  /**
+   * \brief Destructs the FaultInjectorResetRAII instance, restoring the
+   *        FaultInjector singleton's state.
+   */
+  ~FaultInjectorResetRAII() noexcept;
 
-    FaultInjectorResetRAII(FaultInjectorResetRAII const& rhs) = delete;
-    auto operator=(FaultInjectorResetRAII const& rhs) -> FaultInjectorResetRAII& = delete;
-    FaultInjectorResetRAII(FaultInjectorResetRAII&& rhs) = default;
-    auto operator=(FaultInjectorResetRAII&& rhs) -> FaultInjectorResetRAII& = default;
+  FaultInjectorResetRAII(FaultInjectorResetRAII const& rhs) = delete;
+  auto operator=(FaultInjectorResetRAII const& rhs) -> FaultInjectorResetRAII& = delete;
+  FaultInjectorResetRAII(FaultInjectorResetRAII&& rhs) = default;
+  auto operator=(FaultInjectorResetRAII&& rhs) -> FaultInjectorResetRAII& = default;
 
 private:
-    std::unordered_set<std::string> m_enabledFaults;
+  std::unordered_set<std::string> m_enabledFaults;
 };
 
 /**
@@ -156,9 +157,10 @@ private:
  * \tparam ...      The types of exception constructor's arguments.
  */
 template <typename Thrown, typename... Args>
-void throwOnInjectedTestFault(const std::string& fault, Args&&... args) {
-    if (FaultInjector::getInstance().isFaultEnabled(fault)) {
-        throw Thrown(std::forward<Args>(args)...);
-    }
+void throwOnInjectedTestFault(const std::string& fault, Args&&... args)
+{
+  if (FaultInjector::getInstance().isFaultEnabled(fault)) {
+    throw Thrown(std::forward<Args>(args)...);
+  }
 }
 }

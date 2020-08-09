@@ -48,98 +48,104 @@ namespace jamsat {
 template <typename T, typename Average = double>
 class SimpleMovingAverage {
 private:
-    using Storage = boost::circular_buffer<T>;
+  using Storage = boost::circular_buffer<T>;
 
 public:
-    using capacity_type = typename Storage::capacity_type;
+  using capacity_type = typename Storage::capacity_type;
 
-    /**
-     * \brief Constructs a SimpleMovingAverage instance with an empty sequence of
-     *        elements.
-     *
-     * \param horizon   The maximum of elements the constructed instance takes
-     *                  into account when computing mean values.
-     */
-    explicit SimpleMovingAverage(capacity_type horizon);
+  /**
+   * \brief Constructs a SimpleMovingAverage instance with an empty sequence of
+   *        elements.
+   *
+   * \param horizon   The maximum of elements the constructed instance takes
+   *                  into account when computing mean values.
+   */
+  explicit SimpleMovingAverage(capacity_type horizon);
 
-    /**
-     * \brief Adds the given value to the sequence of elements whose mean value
-     *        can be computed.
-     *
-     * \param value     The value to be added.
-     */
-    void add(T value) noexcept;
+  /**
+   * \brief Adds the given value to the sequence of elements whose mean value
+   *        can be computed.
+   *
+   * \param value     The value to be added.
+   */
+  void add(T value) noexcept;
 
-    /**
-     * \brief Computes the simple moving average of the values previously passed
-     *        to \p add() .
-     *
-     * Computes the unweighted mean of the last N elements passed to \p add() ,
-     * where N is the minimum of the total number of calls to \p add() and the \p
-     * horizon argument passed to the constructor. The result is computed by
-     * summing up these elements, casting the sum to the Average type and finally
-     * dividing by the number of elements taken into account.
-     *
-     * If no values have been passed yet to \p add() , this method returns 0.
-     *
-     * \returns The mean value as described above.
-     */
-    Average getAverage() const noexcept;
+  /**
+   * \brief Computes the simple moving average of the values previously passed
+   *        to \p add() .
+   *
+   * Computes the unweighted mean of the last N elements passed to \p add() ,
+   * where N is the minimum of the total number of calls to \p add() and the \p
+   * horizon argument passed to the constructor. The result is computed by
+   * summing up these elements, casting the sum to the Average type and finally
+   * dividing by the number of elements taken into account.
+   *
+   * If no values have been passed yet to \p add() , this method returns 0.
+   *
+   * \returns The mean value as described above.
+   */
+  Average getAverage() const noexcept;
 
-    /**
-     * \brief Removes all elements.
-     */
-    void clear() noexcept;
+  /**
+   * \brief Removes all elements.
+   */
+  void clear() noexcept;
 
-    /**
-     * \brief Determines whether the amount of elements currently taken into
-     *        account has reached the instance's horizon.
-     *
-     * \returns true iff the amount of elements currently taken into account has
-     *          reached the instance's horizon.
-     */
-    bool isFull() const noexcept;
+  /**
+   * \brief Determines whether the amount of elements currently taken into
+   *        account has reached the instance's horizon.
+   *
+   * \returns true iff the amount of elements currently taken into account has
+   *          reached the instance's horizon.
+   */
+  bool isFull() const noexcept;
 
 private:
-    Storage m_values;
-    T m_currentSum;
+  Storage m_values;
+  T m_currentSum;
 };
 
 /********** Implementation ****************************** */
 
 template <typename T, typename Average>
 SimpleMovingAverage<T, Average>::SimpleMovingAverage(capacity_type horizon)
-  : m_values(horizon), m_currentSum(0) {}
-
-template <typename T, typename Average>
-void SimpleMovingAverage<T, Average>::add(T value) noexcept {
-    if (m_values.capacity() == 0ull) {
-        return;
-    }
-
-    if (m_values.full()) {
-        m_currentSum -= m_values.front();
-    }
-    m_values.push_back(value);
-    m_currentSum += value;
+  : m_values(horizon), m_currentSum(0)
+{
 }
 
 template <typename T, typename Average>
-Average SimpleMovingAverage<T, Average>::getAverage() const noexcept {
-    if (m_values.empty()) {
-        return static_cast<Average>(0);
-    }
-    return static_cast<Average>(m_currentSum) / static_cast<Average>(m_values.size());
+void SimpleMovingAverage<T, Average>::add(T value) noexcept
+{
+  if (m_values.capacity() == 0ull) {
+    return;
+  }
+
+  if (m_values.full()) {
+    m_currentSum -= m_values.front();
+  }
+  m_values.push_back(value);
+  m_currentSum += value;
 }
 
 template <typename T, typename Average>
-void SimpleMovingAverage<T, Average>::clear() noexcept {
-    m_values.clear();
-    m_currentSum = 0;
+Average SimpleMovingAverage<T, Average>::getAverage() const noexcept
+{
+  if (m_values.empty()) {
+    return static_cast<Average>(0);
+  }
+  return static_cast<Average>(m_currentSum) / static_cast<Average>(m_values.size());
 }
 
 template <typename T, typename Average>
-bool SimpleMovingAverage<T, Average>::isFull() const noexcept {
-    return m_values.size() == m_values.capacity();
+void SimpleMovingAverage<T, Average>::clear() noexcept
+{
+  m_values.clear();
+  m_currentSum = 0;
+}
+
+template <typename T, typename Average>
+bool SimpleMovingAverage<T, Average>::isFull() const noexcept
+{
+  return m_values.size() == m_values.capacity();
 }
 }

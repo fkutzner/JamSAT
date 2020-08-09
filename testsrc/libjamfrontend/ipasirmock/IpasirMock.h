@@ -36,14 +36,14 @@ namespace jamsat {
  * Control structure for the IPASIR mock system
  */
 struct IpasirMockContext {
-    std::vector<int> m_literals;
-    std::vector<int> m_assumptions;
-    std::vector<int> m_assumptionsAtLastSolveCall;
+  std::vector<int> m_literals;
+  std::vector<int> m_assumptions;
+  std::vector<int> m_assumptionsAtLastSolveCall;
 
-    // Configure these during test setup:
-    std::unordered_map<int, int> m_cfgLiteralVals;
-    std::unordered_map<int, int> m_cfgLiteralFailures;
-    int m_cfgSolveResult = 0;
+  // Configure these during test setup:
+  std::unordered_map<int, int> m_cfgLiteralVals;
+  std::unordered_map<int, int> m_cfgLiteralFailures;
+  int m_cfgSolveResult = 0;
 };
 
 /**

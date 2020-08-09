@@ -35,20 +35,21 @@ namespace jamsat {
 template <class ClauseT>
 class TestReasonProvider {
 public:
-    using Clause = ClauseT;
-    using Reason = ClauseT;
+  using Clause = ClauseT;
+  using Reason = ClauseT;
 
-    void set_reason(CNFVar variable, ClauseT& reason) noexcept { m_reasons[variable] = &reason; }
+  void set_reason(CNFVar variable, ClauseT& reason) noexcept { m_reasons[variable] = &reason; }
 
-    const ClauseT* getReason(CNFVar variable) const noexcept {
-        auto reason = m_reasons.find(variable);
-        if (reason != m_reasons.end()) {
-            return reason->second;
-        }
-        return nullptr;
+  const ClauseT* getReason(CNFVar variable) const noexcept
+  {
+    auto reason = m_reasons.find(variable);
+    if (reason != m_reasons.end()) {
+      return reason->second;
     }
+    return nullptr;
+  }
 
 private:
-    std::unordered_map<CNFVar, const ClauseT*> m_reasons;
+  std::unordered_map<CNFVar, const ClauseT*> m_reasons;
 };
 }

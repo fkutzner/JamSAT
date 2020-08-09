@@ -31,25 +31,28 @@ namespace jamsat {
 namespace {
 class NullDRATCertificate : public DRATCertificate {
 public:
-    void addRATClause(gsl::span<CNFLit const>, size_t) override {}
-    void addATClause(gsl::span<CNFLit const>) override {}
-    void deleteClause(gsl::span<CNFLit const>) override {}
-    void flush() override {}
+  void addRATClause(gsl::span<CNFLit const>, size_t) override {}
+  void addATClause(gsl::span<CNFLit const>) override {}
+  void deleteClause(gsl::span<CNFLit const>) override {}
+  void flush() override {}
 
-    virtual ~NullDRATCertificate() = default;
+  virtual ~NullDRATCertificate() = default;
 };
 }
 
-auto PolymorphicClauseDB::createClause(std::size_t size) noexcept -> Clause* {
-    return m_impl->createClause(size);
+auto PolymorphicClauseDB::createClause(std::size_t size) noexcept -> Clause*
+{
+  return m_impl->createClause(size);
 }
 
-void PolymorphicClauseDB::compress() noexcept {
-    m_impl->compress();
+void PolymorphicClauseDB::compress() noexcept
+{
+  m_impl->compress();
 }
 
-void PolymorphicClauseDB::getClauses(ClauseRecv const& receiver) {
-    m_impl->getClauses(receiver);
+void PolymorphicClauseDB::getClauses(ClauseRecv const& receiver)
+{
+  m_impl->getClauses(receiver);
 }
 
 SharedOptimizerState::SharedOptimizerState(std::vector<CNFLit>&& facts,
@@ -65,7 +68,9 @@ SharedOptimizerState::SharedOptimizerState(std::vector<CNFLit>&& facts,
   , m_occMap{}
   , m_breakingChange{false}
   , m_detectedUnsat{false}
-  , m_stats{} {}
+  , m_stats{}
+{
+}
 
 SharedOptimizerState::SharedOptimizerState(SharedOptimizerState&& rhs) noexcept
   : m_facts{std::move(rhs.m_facts)}
@@ -76,70 +81,83 @@ SharedOptimizerState::SharedOptimizerState(SharedOptimizerState&& rhs) noexcept
   , m_occMap{std::move(rhs.m_occMap)}
   , m_breakingChange{rhs.m_breakingChange}
   , m_detectedUnsat{rhs.m_detectedUnsat}
-  , m_stats{rhs.m_stats} {}
-
-auto SharedOptimizerState::operator=(SharedOptimizerState&& rhs) noexcept -> SharedOptimizerState& {
-    m_facts = std::move(rhs.m_facts);
-    m_clauseDB = std::move(rhs.m_clauseDB);
-    m_assignment = std::move(rhs.m_assignment);
-    m_maxVar = rhs.m_maxVar;
-    m_unsatCert = rhs.m_unsatCert;
-    m_occMap = std::move(rhs.m_occMap);
-    m_breakingChange = rhs.m_breakingChange;
-    m_detectedUnsat = rhs.m_detectedUnsat;
-    m_stats = rhs.m_stats;
-    return *this;
+  , m_stats{rhs.m_stats}
+{
 }
 
-void SharedOptimizerState::precomputeOccurrenceMap() {
-    m_occMap = OccMap{getMaxLit(m_maxVar)};
-    m_clauseDB.getClauses([this](std::vector<Clause*> const& clauses) {
-        for (Clause* clause : clauses) {
-            m_occMap->insert(*clause);
-        }
-    });
+auto SharedOptimizerState::operator=(SharedOptimizerState&& rhs) noexcept -> SharedOptimizerState&
+{
+  m_facts = std::move(rhs.m_facts);
+  m_clauseDB = std::move(rhs.m_clauseDB);
+  m_assignment = std::move(rhs.m_assignment);
+  m_maxVar = rhs.m_maxVar;
+  m_unsatCert = rhs.m_unsatCert;
+  m_occMap = std::move(rhs.m_occMap);
+  m_breakingChange = rhs.m_breakingChange;
+  m_detectedUnsat = rhs.m_detectedUnsat;
+  m_stats = rhs.m_stats;
+  return *this;
 }
 
-auto SharedOptimizerState::getUnsatCertificate() noexcept -> DRATCertificate& {
-    static NullDRATCertificate nullCert;
-
-    if (m_unsatCert != nullptr) {
-        return *m_unsatCert;
+void SharedOptimizerState::precomputeOccurrenceMap()
+{
+  m_occMap = OccMap{getMaxLit(m_maxVar)};
+  m_clauseDB.getClauses([this](std::vector<Clause*> const& clauses) {
+    for (Clause* clause : clauses) {
+      m_occMap->insert(*clause);
     }
-    return nullCert;
+  });
 }
 
-auto SharedOptimizerState::hasPrecomputedOccurrenceMap() const noexcept -> bool {
-    return m_occMap.has_value();
+auto SharedOptimizerState::getUnsatCertificate() noexcept -> DRATCertificate&
+{
+  static NullDRATCertificate nullCert;
+
+  if (m_unsatCert != nullptr) {
+    return *m_unsatCert;
+  }
+  return nullCert;
 }
 
-auto SharedOptimizerState::hasDetectedUnsat() const noexcept -> bool {
-    return m_detectedUnsat;
+auto SharedOptimizerState::hasPrecomputedOccurrenceMap() const noexcept -> bool
+{
+  return m_occMap.has_value();
 }
 
-void SharedOptimizerState::setDetectedUnsat() noexcept {
-    m_detectedUnsat = true;
+auto SharedOptimizerState::hasDetectedUnsat() const noexcept -> bool
+{
+  return m_detectedUnsat;
 }
 
-auto SharedOptimizerState::hasBreakingChange() const noexcept -> bool {
-    return m_breakingChange;
+void SharedOptimizerState::setDetectedUnsat() noexcept
+{
+  m_detectedUnsat = true;
 }
 
-void SharedOptimizerState::setBreakingChange() noexcept {
-    m_breakingChange = true;
+auto SharedOptimizerState::hasBreakingChange() const noexcept -> bool
+{
+  return m_breakingChange;
 }
 
-auto SharedOptimizerState::getStats() noexcept -> OptimizationStats& {
-    return m_stats;
+void SharedOptimizerState::setBreakingChange() noexcept
+{
+  m_breakingChange = true;
 }
 
-auto SharedOptimizerState::getStats() const noexcept -> OptimizationStats const& {
-    return m_stats;
+auto SharedOptimizerState::getStats() noexcept -> OptimizationStats&
+{
+  return m_stats;
+}
+
+auto SharedOptimizerState::getStats() const noexcept -> OptimizationStats const&
+{
+  return m_stats;
 }
 
 auto SharedOptimizerState::release() noexcept
-    -> std::tuple<std::vector<CNFLit>, PolymorphicClauseDB, Assignment> {
-    return make_tuple(std::move(m_facts), std::move(m_clauseDB), std::move(m_assignment));
+    -> std::tuple<std::vector<CNFLit>, PolymorphicClauseDB, Assignment>
+{
+  return make_tuple(std::move(m_facts), std::move(m_clauseDB), std::move(m_assignment));
 }
 
 }

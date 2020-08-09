@@ -40,7 +40,8 @@
 
 namespace jamsat {
 
-class FileIOError : public std::exception {};
+class FileIOError : public std::exception {
+};
 
 /**
  * \ingroup JamSAT_Proof
@@ -52,49 +53,49 @@ class FileIOError : public std::exception {};
  */
 class DRATCertificate {
 public:
-    /**
-     * \brief Adds a resolution asymmetric tautology clause to the proof.
-     * 
-     * \param clause    A clause.
-     * \param pivotIdx  The index of the pivot literal within \p{clause}.
-     * 
-     * \throw FileIOError           on file i/o errors
-     */
-    virtual void addRATClause(gsl::span<CNFLit const> clause, size_t pivotIdx) = 0;
+  /**
+   * \brief Adds a resolution asymmetric tautology clause to the proof.
+   * 
+   * \param clause    A clause.
+   * \param pivotIdx  The index of the pivot literal within \p{clause}.
+   * 
+   * \throw FileIOError           on file i/o errors
+   */
+  virtual void addRATClause(gsl::span<CNFLit const> clause, size_t pivotIdx) = 0;
 
-    /**
-     * \brief Adds an asymmetric tautology clause to the proof.
-     * 
-     * \param clause    A clause.
-     * 
-     * \throw FileIOError           on file i/o errors
-     */
-    virtual void addATClause(gsl::span<CNFLit const> clause) = 0;
+  /**
+   * \brief Adds an asymmetric tautology clause to the proof.
+   * 
+   * \param clause    A clause.
+   * 
+   * \throw FileIOError           on file i/o errors
+   */
+  virtual void addATClause(gsl::span<CNFLit const> clause) = 0;
 
-    /**
-     * \brief Adds a clause deletion to the proof.
-     *
-     * \param clause                A clause.
-     * 
-     * \throw FileIOError           on file i/o errors
-     */
-    virtual void deleteClause(gsl::span<CNFLit const> clause) = 0;
+  /**
+   * \brief Adds a clause deletion to the proof.
+   *
+   * \param clause                A clause.
+   * 
+   * \throw FileIOError           on file i/o errors
+   */
+  virtual void deleteClause(gsl::span<CNFLit const> clause) = 0;
 
 
-    /**
-     * \brief Flushes the proof to its target.
-     *
-     * \throw FileIOError           on file i/o errors
-     */
-    virtual void flush() = 0;
+  /**
+   * \brief Flushes the proof to its target.
+   *
+   * \throw FileIOError           on file i/o errors
+   */
+  virtual void flush() = 0;
 
-    DRATCertificate& operator=(const DRATCertificate& other) = delete;
-    DRATCertificate& operator=(DRATCertificate&& other) = delete;
-    DRATCertificate(const DRATCertificate& other) = delete;
-    DRATCertificate(DRATCertificate&& other) = delete;
+  DRATCertificate& operator=(const DRATCertificate& other) = delete;
+  DRATCertificate& operator=(DRATCertificate&& other) = delete;
+  DRATCertificate(const DRATCertificate& other) = delete;
+  DRATCertificate(DRATCertificate&& other) = delete;
 
-    DRATCertificate() = default;
-    virtual ~DRATCertificate() = default;
+  DRATCertificate() = default;
+  virtual ~DRATCertificate() = default;
 };
 
 /**

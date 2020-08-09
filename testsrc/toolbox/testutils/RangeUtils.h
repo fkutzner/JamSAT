@@ -49,14 +49,15 @@ namespace jamsat {
  *                  comparable to the objects obtainable from \p Range objects.
  */
 template <typename Range, typename Expected>
-void expectRangeContainsValues(const Range& r, const Expected& expected) {
-    uint64_t count = 0;
-    for (auto& elem : r) {
-        EXPECT_FALSE(std::find(expected.begin(), expected.end(), elem) == expected.end())
-            << "Element missing in result range";
-        ++count;
-    }
-    EXPECT_EQ(count, expected.size()) << "Result range larger than expected";
+void expectRangeContainsValues(const Range& r, const Expected& expected)
+{
+  uint64_t count = 0;
+  for (auto& elem : r) {
+    EXPECT_FALSE(std::find(expected.begin(), expected.end(), elem) == expected.end())
+        << "Element missing in result range";
+    ++count;
+  }
+  EXPECT_EQ(count, expected.size()) << "Result range larger than expected";
 }
 
 /**
@@ -72,24 +73,25 @@ void expectRangeContainsValues(const Range& r, const Expected& expected) {
  *                  elements in \p RangeA.
  */
 template <typename RangeA, typename RangeB>
-void expectRangeElementsSequencedEqual(const RangeA& toTest, const RangeB& reference) {
-    auto toTestIt = toTest.begin();
-    auto toTestEnd = toTest.end();
-    auto referenceIt = reference.begin();
-    auto referenceEnd = reference.end();
-    uint64_t count = 0;
+void expectRangeElementsSequencedEqual(const RangeA& toTest, const RangeB& reference)
+{
+  auto toTestIt = toTest.begin();
+  auto toTestEnd = toTest.end();
+  auto referenceIt = reference.begin();
+  auto referenceEnd = reference.end();
+  uint64_t count = 0;
 
-    while (toTestIt != toTestEnd && referenceIt != referenceEnd) {
-        EXPECT_TRUE(*toTestIt == *referenceIt)
-            << "Nonequal ranges: element " << count << " differs from reference";
-        ++toTestIt;
-        ++referenceIt;
-        ++count;
-    }
+  while (toTestIt != toTestEnd && referenceIt != referenceEnd) {
+    EXPECT_TRUE(*toTestIt == *referenceIt)
+        << "Nonequal ranges: element " << count << " differs from reference";
+    ++toTestIt;
+    ++referenceIt;
+    ++count;
+  }
 
-    EXPECT_TRUE(toTestIt == toTestEnd)
-        << "Nonequal ranges: more elements in reference than in toTest";
-    EXPECT_TRUE(referenceIt == referenceEnd)
-        << "Nonequal ranges: more elements in toTest than in reference";
+  EXPECT_TRUE(toTestIt == toTestEnd)
+      << "Nonequal ranges: more elements in reference than in toTest";
+  EXPECT_TRUE(referenceIt == referenceEnd)
+      << "Nonequal ranges: more elements in toTest than in reference";
 }
 }

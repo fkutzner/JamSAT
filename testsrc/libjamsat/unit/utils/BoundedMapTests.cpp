@@ -36,63 +36,68 @@ namespace jamsat {
 namespace {
 class IntIndex {
 public:
-    using Type = int;
-    static std::size_t getIndex(int i) { return static_cast<std::size_t>(i); }
+  using Type = int;
+  static std::size_t getIndex(int i) { return static_cast<std::size_t>(i); }
 };
 }
 
-TEST(UnitUtils, boundedMapSizeIsIndependentOfInsertions) {
-    BoundedMap<int, double, IntIndex> underTest{99};
-    EXPECT_EQ(underTest.size(), 100ull);
-    underTest[1] = 2.0f;
-    EXPECT_EQ(underTest.size(), 100ull);
+TEST(UnitUtils, boundedMapSizeIsIndependentOfInsertions)
+{
+  BoundedMap<int, double, IntIndex> underTest{99};
+  EXPECT_EQ(underTest.size(), 100ull);
+  underTest[1] = 2.0f;
+  EXPECT_EQ(underTest.size(), 100ull);
 }
 
-TEST(UnitUtils, boundedMapStoresValues) {
-    BoundedMap<int, double, IntIndex> underTest{10};
-    underTest[1] = 2.0f;
-    underTest[1] = 23.0f;
-    underTest[2] = 223.0f;
-    EXPECT_EQ(underTest[1], 23.0f);
-    EXPECT_EQ(underTest[2], 223.0f);
+TEST(UnitUtils, boundedMapStoresValues)
+{
+  BoundedMap<int, double, IntIndex> underTest{10};
+  underTest[1] = 2.0f;
+  underTest[1] = 23.0f;
+  underTest[2] = 223.0f;
+  EXPECT_EQ(underTest[1], 23.0f);
+  EXPECT_EQ(underTest[2], 223.0f);
 }
 
-TEST(UnitUtils, boundedMapReturnsDefaultValueForUnusedKeys) {
-    BoundedMap<int, double, IntIndex> underTest{10};
-    EXPECT_EQ(underTest[1], 0.0f);
-    EXPECT_EQ(underTest[2], 0.0f);
+TEST(UnitUtils, boundedMapReturnsDefaultValueForUnusedKeys)
+{
+  BoundedMap<int, double, IntIndex> underTest{10};
+  EXPECT_EQ(underTest[1], 0.0f);
+  EXPECT_EQ(underTest[2], 0.0f);
 }
 
-TEST(UnitUtils, boundedMapSizeIsIncreasable) {
-    BoundedMap<int, double, IntIndex> underTest{10};
-    underTest[10] = 1.0f;
-    underTest.increaseSizeTo(13);
-    underTest[13] = 2.0f;
-    EXPECT_EQ(underTest[10], 1.0f);
-    EXPECT_EQ(underTest[13], 2.0f);
+TEST(UnitUtils, boundedMapSizeIsIncreasable)
+{
+  BoundedMap<int, double, IntIndex> underTest{10};
+  underTest[10] = 1.0f;
+  underTest.increaseSizeTo(13);
+  underTest[13] = 2.0f;
+  EXPECT_EQ(underTest[10], 1.0f);
+  EXPECT_EQ(underTest[13], 2.0f);
 }
 
-TEST(UnitUtils, boundedMapInitializesStorageWithDefaultValues) {
-    BoundedMap<int, double, IntIndex> underTest{5, 2.0f};
-    EXPECT_EQ(underTest[4], 2.0f);
-    underTest.increaseSizeTo(20);
-    EXPECT_EQ(underTest[19], 2.0f);
+TEST(UnitUtils, boundedMapInitializesStorageWithDefaultValues)
+{
+  BoundedMap<int, double, IntIndex> underTest{5, 2.0f};
+  EXPECT_EQ(underTest[4], 2.0f);
+  underTest.increaseSizeTo(20);
+  EXPECT_EQ(underTest[19], 2.0f);
 }
 
-TEST(UnitUtils, boundedMapValueRangeContainsDefaultValuesAfterConstruction) {
-    BoundedMap<int, double, IntIndex> underTest{4, 2.0f};
-    expectRangeContainsValues(underTest.values(),
-                              std::vector<double>{2.0f, 2.0f, 2.0f, 2.0f, 2.0f});
+TEST(UnitUtils, boundedMapValueRangeContainsDefaultValuesAfterConstruction)
+{
+  BoundedMap<int, double, IntIndex> underTest{4, 2.0f};
+  expectRangeContainsValues(underTest.values(), std::vector<double>{2.0f, 2.0f, 2.0f, 2.0f, 2.0f});
 }
 
-TEST(UnitUtils, boundedMapValueRangeContainsExactlyTheValues) {
-    BoundedMap<int, double, IntIndex> underTest{2, 2.0f};
-    underTest[0] = 3.0f;
-    underTest[1] = 1.0f;
-    underTest[2] = 2.0f;
-    std::vector<double> expected{1.0f, 2.0f, 3.0f};
-    expectRangeContainsValues(underTest.values(), expected);
-    expectRangeContainsValues(const_cast<const decltype(underTest)*>(&underTest)->values(),
-                              expected);
+TEST(UnitUtils, boundedMapValueRangeContainsExactlyTheValues)
+{
+  BoundedMap<int, double, IntIndex> underTest{2, 2.0f};
+  underTest[0] = 3.0f;
+  underTest[1] = 1.0f;
+  underTest[2] = 2.0f;
+  std::vector<double> expected{1.0f, 2.0f, 3.0f};
+  expectRangeContainsValues(underTest.values(), expected);
+  expectRangeContainsValues(const_cast<const decltype(underTest)*>(&underTest)->values(), expected);
 }
 }

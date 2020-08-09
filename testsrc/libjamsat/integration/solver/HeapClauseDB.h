@@ -68,86 +68,86 @@ namespace jamsat {
 template <class ClauseT>
 class HeapClauseDB {
 private:
-    using ClauseStore = std::vector<std::unique_ptr<ClauseT>>;
+  using ClauseStore = std::vector<std::unique_ptr<ClauseT>>;
 
 public:
-    using size_type = typename ClauseStore::size_type;
+  using size_type = typename ClauseStore::size_type;
 
-    /**
-     * \brief Constructs an empty HeapClauseDB instance.
-     */
-    HeapClauseDB();
+  /**
+   * \brief Constructs an empty HeapClauseDB instance.
+   */
+  HeapClauseDB();
 
-    /**
-     * \brief Creates a new clause in the clause database.
-     *
-     * \param literals    The nonempty range of literals to be contained in the
-     * new clause.
-     * \returns           Reference to the new clause, which contains exactly the
-     * literals given in \p literals .
-     */
-    template <typename ForwardRange>
-    ClauseT& insertClause(const ForwardRange& literals);
+  /**
+   * \brief Creates a new clause in the clause database.
+   *
+   * \param literals    The nonempty range of literals to be contained in the
+   * new clause.
+   * \returns           Reference to the new clause, which contains exactly the
+   * literals given in \p literals .
+   */
+  template <typename ForwardRange>
+  ClauseT& insertClause(const ForwardRange& literals);
 
-    /**
-     * \brief Creates a new, undeletable clause in the clause database.
-     *
-     * Clauses created using this method may not be passed to \p destroy() .
-     *
-     * \param literals    The nonempty range of literals to be contained in the
-     * new clause.
-     * \returns           Reference to the new clause, which contains exactly the
-     * literals given in \p literals .
-     */
-    template <typename ForwardRange>
-    ClauseT& insertUndestroyableClause(const ForwardRange& literals);
+  /**
+   * \brief Creates a new, undeletable clause in the clause database.
+   *
+   * Clauses created using this method may not be passed to \p destroy() .
+   *
+   * \param literals    The nonempty range of literals to be contained in the
+   * new clause.
+   * \returns           Reference to the new clause, which contains exactly the
+   * literals given in \p literals .
+   */
+  template <typename ForwardRange>
+  ClauseT& insertUndestroyableClause(const ForwardRange& literals);
 
-    /**
-     * \brief Lazily destroys a clause.
-     *
-     * The given clause is removed from the clause database and is then destroyed.
-     * The clause destruction is lazy in the sense that the clause may be
-     * postponed until the completion of the next \p purgeDestroyedClause() call.
-     *
-     * \param clause      The clause to be destroyed. \p clause must not have been
-     * added to the database via \p insertUndestroyableClause() .
-     */
-    void destroy(ClauseT& clause);
+  /**
+   * \brief Lazily destroys a clause.
+   *
+   * The given clause is removed from the clause database and is then destroyed.
+   * The clause destruction is lazy in the sense that the clause may be
+   * postponed until the completion of the next \p purgeDestroyedClause() call.
+   *
+   * \param clause      The clause to be destroyed. \p clause must not have been
+   * added to the database via \p insertUndestroyableClause() .
+   */
+  void destroy(ClauseT& clause);
 
-    /**
-     * \brief Determines whether the given clause is marked for (lazy)
-     * destruction.
-     *
-     * \param clause      A clause.
-     * \returns           \p true iff \p clause is currently marked for (lazy)
-     * destruction.
-     */
-    bool isDestroyed(ClauseT& clause) const noexcept;
+  /**
+   * \brief Determines whether the given clause is marked for (lazy)
+   * destruction.
+   *
+   * \param clause      A clause.
+   * \returns           \p true iff \p clause is currently marked for (lazy)
+   * destruction.
+   */
+  bool isDestroyed(ClauseT& clause) const noexcept;
 
-    /**
-     * \brief Forces all remaining clauses marked for (lazy) destruction to be
-     * actually destroyed.
-     */
-    void purgeDestroyedClauses();
+  /**
+   * \brief Forces all remaining clauses marked for (lazy) destruction to be
+   * actually destroyed.
+   */
+  void purgeDestroyedClauses();
 
-    /**
-     * \brief Checks if the given clause is contained in the database.
-     *
-     * Note: This method may be implemented inefficiently and is part of the
-     * interface for testing purposes and for checking assertions.
-     */
-    bool contains(ClauseT& clause) const noexcept;
+  /**
+   * \brief Checks if the given clause is contained in the database.
+   *
+   * Note: This method may be implemented inefficiently and is part of the
+   * interface for testing purposes and for checking assertions.
+   */
+  bool contains(ClauseT& clause) const noexcept;
 
-    /**
-     * \brief Returns the size of the clause database, in clauses.
-     *
-     * \returns           The current size of the clause database, in clauses.
-     */
-    size_type size() const noexcept;
+  /**
+   * \brief Returns the size of the clause database, in clauses.
+   *
+   * \returns           The current size of the clause database, in clauses.
+   */
+  size_type size() const noexcept;
 
 private:
-    ClauseStore m_clauses;
-    std::unordered_set<ClauseT*> m_deleted;
+  ClauseStore m_clauses;
+  std::unordered_set<ClauseT*> m_deleted;
 };
 
 /********** Implementation ****************************** */
@@ -155,68 +155,79 @@ private:
 namespace clausedb_detail {
 template <class ClauseT>
 typename std::enable_if<std::is_constructible<ClauseT>::value, std::unique_ptr<ClauseT>>::type
-heapAllocateClause(typename ClauseT::size_type size) {
-    return std::unique_ptr<ClauseT>(new ClauseT{size});
+heapAllocateClause(typename ClauseT::size_type size)
+{
+  return std::unique_ptr<ClauseT>(new ClauseT{size});
 }
 
 template <class ClauseT>
 typename std::enable_if<!std::is_constructible<ClauseT>::value, std::unique_ptr<ClauseT>>::type
-heapAllocateClause(typename ClauseT::size_type size) {
-    void* rawMemory = operator new(ClauseT::getAllocationSize(size));
-    return std::unique_ptr<ClauseT>(ClauseT::constructIn(rawMemory, size));
+heapAllocateClause(typename ClauseT::size_type size)
+{
+  void* rawMemory = operator new(ClauseT::getAllocationSize(size));
+  return std::unique_ptr<ClauseT>(ClauseT::constructIn(rawMemory, size));
 }
 }
 
 template <class ClauseT>
-HeapClauseDB<ClauseT>::HeapClauseDB() : m_clauses(), m_deleted() {}
-
-template <class ClauseT>
-template <typename ForwardRange>
-ClauseT& HeapClauseDB<ClauseT>::insertClause(const ForwardRange& literals) {
-    JAM_ASSERT(literals.begin() - literals.end() != 0,
-               "The range of literals to be added must be nonempty");
-    auto size = literals.end() - literals.begin();
-    auto clauseSize = static_checked_cast<typename ClauseT::size_type>(size);
-    m_clauses.push_back(clausedb_detail::heapAllocateClause<ClauseT>(clauseSize));
-    boost::copy(literals, m_clauses.back()->begin());
-    return *(m_clauses.back());
+HeapClauseDB<ClauseT>::HeapClauseDB() : m_clauses(), m_deleted()
+{
 }
 
 template <class ClauseT>
 template <typename ForwardRange>
-ClauseT& HeapClauseDB<ClauseT>::insertUndestroyableClause(const ForwardRange& literals) {
-    return insertClause(literals);
+ClauseT& HeapClauseDB<ClauseT>::insertClause(const ForwardRange& literals)
+{
+  JAM_ASSERT(literals.begin() - literals.end() != 0,
+             "The range of literals to be added must be nonempty");
+  auto size = literals.end() - literals.begin();
+  auto clauseSize = static_checked_cast<typename ClauseT::size_type>(size);
+  m_clauses.push_back(clausedb_detail::heapAllocateClause<ClauseT>(clauseSize));
+  boost::copy(literals, m_clauses.back()->begin());
+  return *(m_clauses.back());
 }
 
 template <class ClauseT>
-void HeapClauseDB<ClauseT>::destroy(ClauseT& clause) {
-    m_deleted.insert(&clause);
+template <typename ForwardRange>
+ClauseT& HeapClauseDB<ClauseT>::insertUndestroyableClause(const ForwardRange& literals)
+{
+  return insertClause(literals);
 }
 
 template <class ClauseT>
-bool HeapClauseDB<ClauseT>::isDestroyed(ClauseT& clause) const noexcept {
-    return m_deleted.find(&clause) != m_deleted.end();
+void HeapClauseDB<ClauseT>::destroy(ClauseT& clause)
+{
+  m_deleted.insert(&clause);
 }
 
 template <class ClauseT>
-void HeapClauseDB<ClauseT>::purgeDestroyedClauses() {
-    auto isDeleted = [this](std::unique_ptr<ClauseT>& clause) {
-        return (this->m_deleted.find(clause.get()) != this->m_deleted.end());
-    };
-    boost::remove_erase_if(m_clauses, isDeleted);
+bool HeapClauseDB<ClauseT>::isDestroyed(ClauseT& clause) const noexcept
+{
+  return m_deleted.find(&clause) != m_deleted.end();
 }
 
 template <class ClauseT>
-typename HeapClauseDB<ClauseT>::size_type HeapClauseDB<ClauseT>::size() const noexcept {
-    return m_clauses.size();
+void HeapClauseDB<ClauseT>::purgeDestroyedClauses()
+{
+  auto isDeleted = [this](std::unique_ptr<ClauseT>& clause) {
+    return (this->m_deleted.find(clause.get()) != this->m_deleted.end());
+  };
+  boost::remove_erase_if(m_clauses, isDeleted);
 }
 
 template <class ClauseT>
-bool HeapClauseDB<ClauseT>::contains(ClauseT& clause) const noexcept {
-    auto containsClause = [&clause](const std::unique_ptr<ClauseT>& storedClause) {
-        return storedClause.get() == &clause;
-    };
+typename HeapClauseDB<ClauseT>::size_type HeapClauseDB<ClauseT>::size() const noexcept
+{
+  return m_clauses.size();
+}
 
-    return (boost::find_if(m_clauses, containsClause) != m_clauses.end());
+template <class ClauseT>
+bool HeapClauseDB<ClauseT>::contains(ClauseT& clause) const noexcept
+{
+  auto containsClause = [&clause](const std::unique_ptr<ClauseT>& storedClause) {
+    return storedClause.get() == &clause;
+  };
+
+  return (boost::find_if(m_clauses, containsClause) != m_clauses.end());
 }
 }

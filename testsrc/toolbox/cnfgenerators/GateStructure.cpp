@@ -29,47 +29,50 @@
 #include <toolbox/cnfgenerators/GateStructure.h>
 
 namespace jamsat {
-void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target) {
-    CNFClause fwd;
-    for (auto inputLit : inputs) {
-        fwd.push_back(~inputLit);
-    }
-    fwd.push_back(output);
-    target.addClause(std::move(fwd));
+void insertAND(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target)
+{
+  CNFClause fwd;
+  for (auto inputLit : inputs) {
+    fwd.push_back(~inputLit);
+  }
+  fwd.push_back(output);
+  target.addClause(std::move(fwd));
 
-    for (auto inputLit : inputs) {
-        CNFClause bwd{inputLit, ~output};
-        target.addClause(std::move(bwd));
-    }
-}
-
-void insertOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target) {
-    CNFClause bwd;
-    for (auto inputLit : inputs) {
-        bwd.push_back(inputLit);
-    }
-    bwd.push_back(~output);
+  for (auto inputLit : inputs) {
+    CNFClause bwd{inputLit, ~output};
     target.addClause(std::move(bwd));
-
-    for (auto inputLit : inputs) {
-        CNFClause fwd{~inputLit, output};
-        target.addClause(std::move(fwd));
-    }
+  }
 }
 
-void insertXOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target) {
-    uint32_t max = (1 << inputs.size());
-    for (uint32_t i = 0; i < max; ++i) {
-        CNFClause clause;
-        for (uint32_t j = 0; j < inputs.size(); ++j) {
-            bool sign = ((i & (1ull << j)) != 0);
-            clause.push_back(sign ? ~inputs[j] : inputs[j]);
-        }
+void insertOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target)
+{
+  CNFClause bwd;
+  for (auto inputLit : inputs) {
+    bwd.push_back(inputLit);
+  }
+  bwd.push_back(~output);
+  target.addClause(std::move(bwd));
 
-        // the output is forced to 1 iff exactly one bit is set
-        bool outputPositive = i > 0 && ((i & (i - 1)) == 0);
-        clause.push_back(outputPositive ? output : ~output);
-        target.addClause(std::move(clause));
+  for (auto inputLit : inputs) {
+    CNFClause fwd{~inputLit, output};
+    target.addClause(std::move(fwd));
+  }
+}
+
+void insertXOR(const std::vector<CNFLit> inputs, CNFLit output, CNFProblem& target)
+{
+  uint32_t max = (1 << inputs.size());
+  for (uint32_t i = 0; i < max; ++i) {
+    CNFClause clause;
+    for (uint32_t j = 0; j < inputs.size(); ++j) {
+      bool sign = ((i & (1ull << j)) != 0);
+      clause.push_back(sign ? ~inputs[j] : inputs[j]);
     }
+
+    // the output is forced to 1 iff exactly one bit is set
+    bool outputPositive = i > 0 && ((i & (i - 1)) == 0);
+    clause.push_back(outputPositive ? output : ~output);
+    target.addClause(std::move(clause));
+  }
 }
 }

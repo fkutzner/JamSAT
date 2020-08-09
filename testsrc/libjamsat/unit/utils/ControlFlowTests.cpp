@@ -29,41 +29,44 @@
 #include <libjamsat/utils/ControlFlow.h>
 
 namespace jamsat {
-TEST(UnitUtils, OnExitScopeExitsWhenExitingScope) {
-    bool result = false;
+TEST(UnitUtils, OnExitScopeExitsWhenExitingScope)
+{
+  bool result = false;
 
-    {
-        OnExitScope setResultToTrue([&result]() { result = true; });
-        EXPECT_EQ(result, false);
-    }
+  {
+    OnExitScope setResultToTrue([&result]() { result = true; });
+    EXPECT_EQ(result, false);
+  }
 
-    EXPECT_EQ(result, true);
+  EXPECT_EQ(result, true);
 }
 
-TEST(UnitUtils, OnExitScopeCorrectAfterMoveAssignment) {
-    int callCount = 0;
+TEST(UnitUtils, OnExitScopeCorrectAfterMoveAssignment)
+{
+  int callCount = 0;
 
-    {
-        OnExitScope setResultToTrue([&callCount]() { ++callCount; });
-        EXPECT_EQ(callCount, 0);
-        OnExitScope moveTarget([]() {});
-        moveTarget = std::move(setResultToTrue);
-        EXPECT_EQ(callCount, 0);
-    }
+  {
+    OnExitScope setResultToTrue([&callCount]() { ++callCount; });
+    EXPECT_EQ(callCount, 0);
+    OnExitScope moveTarget([]() {});
+    moveTarget = std::move(setResultToTrue);
+    EXPECT_EQ(callCount, 0);
+  }
 
-    EXPECT_EQ(callCount, 1);
+  EXPECT_EQ(callCount, 1);
 }
 
-TEST(UnitUtils, OnExitScopeCorrectAfterMoveConstruction) {
-    int callCount = 0;
+TEST(UnitUtils, OnExitScopeCorrectAfterMoveConstruction)
+{
+  int callCount = 0;
 
-    {
-        OnExitScope setResultToTrue([&callCount]() { ++callCount; });
-        EXPECT_EQ(callCount, 0);
-        OnExitScope moveTarget{std::move(setResultToTrue)};
-        EXPECT_EQ(callCount, 0);
-    }
+  {
+    OnExitScope setResultToTrue([&callCount]() { ++callCount; });
+    EXPECT_EQ(callCount, 0);
+    OnExitScope moveTarget{std::move(setResultToTrue)};
+    EXPECT_EQ(callCount, 0);
+  }
 
-    EXPECT_EQ(callCount, 1);
+  EXPECT_EQ(callCount, 1);
 }
 }

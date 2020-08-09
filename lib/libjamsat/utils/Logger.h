@@ -42,28 +42,32 @@ extern uint64_t currentEpoch;
 extern uint64_t startLoggingEpoch;
 }
 }
-inline void loggingEpochElapsed() {
-    ++(::jamsat::detail_logger::currentEpoch);
+inline void loggingEpochElapsed()
+{
+  ++(::jamsat::detail_logger::currentEpoch);
 }
-inline void setLoggingStartEpoch(uint64_t epoch) {
-    ::jamsat::detail_logger::startLoggingEpoch = epoch;
+inline void setLoggingStartEpoch(uint64_t epoch)
+{
+  ::jamsat::detail_logger::startLoggingEpoch = epoch;
 }
 
 #define JAM_LOG(level, category, message)                                                          \
-    do {                                                                                           \
-        if (::jamsat::detail_logger::currentEpoch >= ::jamsat::detail_logger::startLoggingEpoch) { \
-            BOOST_LOG_TRIVIAL(level) << "[" << category << "] " << message;                        \
-        }                                                                                          \
-    } while (0)
+  do {                                                                                             \
+    if (::jamsat::detail_logger::currentEpoch >= ::jamsat::detail_logger::startLoggingEpoch) {     \
+      BOOST_LOG_TRIVIAL(level) << "[" << category << "] " << message;                              \
+    }                                                                                              \
+  } while (0)
 
 #else
 
-inline void loggingEpochElapsed() {
-    // Logging disabled, therefore no action required
+inline void loggingEpochElapsed()
+{
+  // Logging disabled, therefore no action required
 }
-inline void setLoggingStartEpoch(uint64_t epoch) {
-    (void)epoch;
-    // Logging disabled, therefore no action required
+inline void setLoggingStartEpoch(uint64_t epoch)
+{
+  (void)epoch;
+  // Logging disabled, therefore no action required
 }
 
 #define JAM_LOG(level, category, message)

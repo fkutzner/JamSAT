@@ -46,53 +46,57 @@ using BinaryDRATEncoderTestsParams = std::tuple<
 
 class BinaryDRATEncoderTests : public ::testing::TestWithParam<BinaryDRATEncoderTestsParams> {
 public:
-    virtual ~BinaryDRATEncoderTests() = default;
+  virtual ~BinaryDRATEncoderTests() = default;
 };
 
-TEST_P(BinaryDRATEncoderTests, BinaryDRATEncoderComputesExpectedResult) {
-    std::vector<CNFLit> testInput = std::get<0>(GetParam());
-    std::vector<unsigned char> expected = std::get<1>(GetParam());
+TEST_P(BinaryDRATEncoderTests, BinaryDRATEncoderComputesExpectedResult)
+{
+  std::vector<CNFLit> testInput = std::get<0>(GetParam());
+  std::vector<unsigned char> expected = std::get<1>(GetParam());
 
-    std::vector<unsigned char> buffer;
-    buffer.resize(5 * expected.size());
+  std::vector<unsigned char> buffer;
+  buffer.resize(5 * expected.size());
 
-    std::size_t writtenBytes = EncodeBinaryDRAT(testInput, buffer);
+  std::size_t writtenBytes = EncodeBinaryDRAT(testInput, buffer);
 
-    ASSERT_THAT(writtenBytes, ::testing::Eq(expected.size()));
+  ASSERT_THAT(writtenBytes, ::testing::Eq(expected.size()));
 
-    buffer.resize(writtenBytes);
-    EXPECT_THAT(buffer, ::testing::ContainerEq(expected));
+  buffer.resize(writtenBytes);
+  EXPECT_THAT(buffer, ::testing::ContainerEq(expected));
 }
 
 namespace {
 using LitDratMap = std::unordered_map<CNFLit, std::vector<unsigned char>>;
 
-auto createLitDratMap() -> LitDratMap {
-    LitDratMap result;
-    result[0_Lit] = {0x00};
-    result[~0_Lit] = {0x01};
-    result[~63_Lit] = {0x7F};
-    result[64_Lit] = {0x80, 0x01};
-    result[129_Lit] = {0x82, 0x02};
-    result[~8191_Lit] = {0xFF, 0x7F};
-    result[~8193_Lit] = {0x83, 0x80, 0x01};
-    result[~134217727_Lit] = {0xFF, 0xFF, 0xFF, 0x7F};
-    result[~134217731_Lit] = {0x87, 0x80, 0x80, 0x80, 0x01};
-    return result;
+auto createLitDratMap() -> LitDratMap
+{
+  LitDratMap result;
+  result[0_Lit] = {0x00};
+  result[~0_Lit] = {0x01};
+  result[~63_Lit] = {0x7F};
+  result[64_Lit] = {0x80, 0x01};
+  result[129_Lit] = {0x82, 0x02};
+  result[~8191_Lit] = {0xFF, 0x7F};
+  result[~8193_Lit] = {0x83, 0x80, 0x01};
+  result[~134217727_Lit] = {0xFF, 0xFF, 0xFF, 0x7F};
+  result[~134217731_Lit] = {0x87, 0x80, 0x80, 0x80, 0x01};
+  return result;
 }
 
-auto createDRATTestParams(std::vector<CNFLit> lits) -> BinaryDRATEncoderTestsParams {
-    static const LitDratMap testLitMappings = createLitDratMap();
-    std::vector<unsigned char> expected;
-    for (CNFLit lit : lits) {
-        if (auto drat = testLitMappings.find(lit); drat != testLitMappings.end()) {
-            expected.insert(expected.end(), drat->second.begin(), drat->second.end());
-        } else {
-            throw std::invalid_argument{"Encountered literal with unknown drat representation"};
-        }
+auto createDRATTestParams(std::vector<CNFLit> lits) -> BinaryDRATEncoderTestsParams
+{
+  static const LitDratMap testLitMappings = createLitDratMap();
+  std::vector<unsigned char> expected;
+  for (CNFLit lit : lits) {
+    if (auto drat = testLitMappings.find(lit); drat != testLitMappings.end()) {
+      expected.insert(expected.end(), drat->second.begin(), drat->second.end());
     }
+    else {
+      throw std::invalid_argument{"Encountered literal with unknown drat representation"};
+    }
+  }
 
-    return std::make_tuple(lits, expected);
+  return std::make_tuple(lits, expected);
 }
 }
 

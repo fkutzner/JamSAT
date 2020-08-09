@@ -30,15 +30,17 @@
 #include <gtest/gtest.h>
 
 namespace jamsat {
-void expectClauseEqual(Clause const& clause, std::initializer_list<CNFLit> literals) noexcept {
-    ASSERT_EQ(clause.size(), literals.size());
-    EXPECT_TRUE(std::is_permutation(clause.begin(), clause.end(), literals.begin()));
+void expectClauseEqual(Clause const& clause, std::initializer_list<CNFLit> literals) noexcept
+{
+  ASSERT_EQ(clause.size(), literals.size());
+  EXPECT_TRUE(std::is_permutation(clause.begin(), clause.end(), literals.begin()));
 }
 
-auto createClause(std::initializer_list<CNFLit> literals) -> std::unique_ptr<Clause> {
-    auto result = createHeapClause(literals.size());
-    std::copy(literals.begin(), literals.end(), result->begin());
-    result->clauseUpdated();
-    return result;
+auto createClause(std::initializer_list<CNFLit> literals) -> std::unique_ptr<Clause>
+{
+  auto result = createHeapClause(literals.size());
+  std::copy(literals.begin(), literals.end(), result->begin());
+  result->clauseUpdated();
+  return result;
 }
 }

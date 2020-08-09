@@ -46,49 +46,51 @@ namespace jamsat {
  */
 class LubySequence {
 public:
-    using Element = int64_t;
+  using Element = int64_t;
 
-    /**
-     * \brief Constructs a fresh LubySequence.
-     */
-    LubySequence() noexcept;
+  /**
+   * \brief Constructs a fresh LubySequence.
+   */
+  LubySequence() noexcept;
 
-    /**
-     * \brief Returns the next element of the Luby sequence.
-     *
-     * \returns the (N+1)th element of the Luby sequence iff next() has been
-     *          called exactly N times (including the current call).
-     */
-    Element next() noexcept;
+  /**
+   * \brief Returns the next element of the Luby sequence.
+   *
+   * \returns the (N+1)th element of the Luby sequence iff next() has been
+   *          called exactly N times (including the current call).
+   */
+  Element next() noexcept;
 
-    /**
-     * \brief Returns the current element of the Luby sequence.
-     *
-     * \returns the (N+1)th element of the Luby sequence iff next() has been
-     *          called exactly N times before.
-     */
-    Element current() const noexcept;
+  /**
+   * \brief Returns the current element of the Luby sequence.
+   *
+   * \returns the (N+1)th element of the Luby sequence iff next() has been
+   *          called exactly N times before.
+   */
+  Element current() const noexcept;
 
 private:
-    struct LubyState {
-        LubySequence::Element u;
-        LubySequence::Element v;
-    };
+  struct LubyState {
+    LubySequence::Element u;
+    LubySequence::Element v;
+  };
 
-    LubyState m_state;
+  LubyState m_state;
 };
 
 inline LubySequence::LubySequence() noexcept : m_state({1, 1}) {}
 
-inline LubySequence::Element LubySequence::next() noexcept {
-    // See Knuth, The Art of Computer Programming, Section 7.2.2.2
-    Element u = m_state.u;
-    Element v = m_state.v;
-    m_state = ((u & -u) == v) ? LubyState{u + 1, 1} : LubyState{u, 2 * v};
-    return current();
+inline LubySequence::Element LubySequence::next() noexcept
+{
+  // See Knuth, The Art of Computer Programming, Section 7.2.2.2
+  Element u = m_state.u;
+  Element v = m_state.v;
+  m_state = ((u & -u) == v) ? LubyState{u + 1, 1} : LubyState{u, 2 * v};
+  return current();
 }
 
-inline LubySequence::Element LubySequence::current() const noexcept {
-    return m_state.v;
+inline LubySequence::Element LubySequence::current() const noexcept
+{
+  return m_state.v;
 }
 }
