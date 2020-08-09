@@ -27,9 +27,17 @@
 #include <libjamsat/proof/DRATCertificate.h>
 
 #include <libjamsat/proof/BinaryDRATEncoder.h>
+#include <libjamsat/utils/Logger.h>
+#include <libjamsat/utils/Printers.h>
 
 #include <cstdio>
 #include <vector>
+
+#if defined(JAM_ENABLE_CERT_LOGGING)
+#define JAM_LOG_CERT(x, y) JAM_LOG(x, "uscert", y)
+#else
+#define JAM_LOG_CERT(x, y)
+#endif
 
 namespace jamsat {
 namespace {
@@ -51,6 +59,9 @@ public:
 
   void addRATClause(gsl::span<CNFLit const> clause, size_t pivotIdx) override
   {
+    JAM_LOG_CERT(info,
+                 "Adding RAT clause: (" << toString(clause.begin(), clause.end()) << "), pivot "
+                                        << pivotIdx);
     if (pivotIdx == 0) {
       writeLiterals(clause, true);
     }
@@ -59,9 +70,17 @@ public:
     }
   }
 
-  void addATClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, true); }
+  void addATClause(gsl::span<CNFLit const> clause) override
+  {
+    JAM_LOG_CERT(info, "Adding AT clause: (" << toString(clause.begin(), clause.end()) << ")");
+    writeLiterals(clause, true);
+  }
 
-  void deleteClause(gsl::span<CNFLit const> clause) override { writeLiterals(clause, false); }
+  void deleteClause(gsl::span<CNFLit const> clause) override
+  {
+    JAM_LOG_CERT(info, "Deleting clause: (" << toString(clause.begin(), clause.end()) << ")");
+    writeLiterals(clause, false);
+  }
 
   void flush() override
   {
