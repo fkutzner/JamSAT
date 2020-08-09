@@ -31,6 +31,7 @@
 #include <libjamsat/solver/Statistics.h>
 #include <libjamsat/utils/BoundedMap.h>
 #include <libjamsat/utils/ControlFlow.h>
+#include <libjamsat/utils/RangeUtils.h>
 
 #include <iostream>
 
@@ -123,17 +124,19 @@ public:
                     // the literal that would remain is a fact
                     deleteClause(sharedOptimizerState, *toStrengthen);
                 } else {
+                    swapWithLastElement(*toStrengthen, ~fact);
+                    unsatCert.addATClause(
+                        toStrengthen->span().subspan(0, toStrengthen->size() - 1));
                     unsatCert.deleteClause(toStrengthen->span());
-                    boost::remove_erase(*toStrengthen, ~fact);
-                    unsatCert.addATClause(toStrengthen->span());
+                    toStrengthen->resize(toStrengthen->size() - 1);
+
                     toStrengthen->setFlag(Clause::Flag::MODIFIED);
                     toStrengthen->clauseUpdated();
                     occurrences.setModified(
                         *toStrengthen, std::array<CNFLit, 0>{}, std::array<CNFLit, 1>{~fact});
+                    assignment.registerClauseModification(*toStrengthen);
                     stats.amntLitsRemoved += 1;
                 }
-
-                assignment.registerClauseModification(*toStrengthen);
             }
         }
         return sharedOptimizerState;
