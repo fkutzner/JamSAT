@@ -58,6 +58,7 @@
 #include <atomic>
 #include <cstdint>
 
+
 #if defined(JAM_ENABLE_SOLVER_LOGGING)
 #define JAM_LOG_SOLVER(x, y) JAM_LOG(x, "solver", y)
 #else
@@ -359,7 +360,7 @@ private:
     // Control
     CNFVar m_maxVar;
     bool m_detectedUNSAT;
-    bool m_detectedOutOfMemory;
+    bool m_hadUnrecoverableError;
     uint64_t m_amntBinariesLearnt;
     Statistics<> m_statistics;
     std::atomic<bool> m_stopRequested;
@@ -418,7 +419,7 @@ CDCLSatSolverImpl::CDCLSatSolverImpl(Config const& configuration)
   , m_restartPolicy{configuration.restartPolicyOptions}
   , m_maxVar{CNFVar{0}}
   , m_detectedUNSAT{false}
-  , m_detectedOutOfMemory{false}
+  , m_hadUnrecoverableError{false}
   , m_amntBinariesLearnt{0}
   , m_statistics{}
   , m_stopRequested{false}
@@ -499,7 +500,7 @@ auto CDCLSatSolverImpl::solve(std::vector<CNFLit> const& assumedFacts)
             m_loggerFn(m_statistics.getStatisticsDescription());
         }
 
-        if (m_detectedOutOfMemory) {
+        if (m_hadUnrecoverableError) {
             m_statistics.registerSolvingStop();
             return std::make_unique<SolvingResultImpl>(
                 TBools::INDETERMINATE, nullptr, std::vector<CNFLit>{});
@@ -536,8 +537,17 @@ auto CDCLSatSolverImpl::solve(std::vector<CNFLit> const& assumedFacts)
         backtrackAll();
         m_statistics.registerSolvingStop();
         return result;
-    } catch (std::bad_alloc&) {
-        m_detectedOutOfMemory = true;
+    } catch (std::bad_alloc const&) {
+        if (m_loggerFn) {
+            m_loggerFn("Error: out of memory");
+        }
+        m_hadUnrecoverableError = true;
+        throw;
+    } catch (FileIOError const&) {
+        if (m_loggerFn) {
+            m_loggerFn("Error: disk I/O");
+        }
+        m_hadUnrecoverableError = true;
         throw;
     }
 }

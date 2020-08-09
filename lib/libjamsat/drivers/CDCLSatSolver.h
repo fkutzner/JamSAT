@@ -132,6 +132,11 @@ public:
      *   from that condition. No resources are leaked. On further calls, the solver
      *   will either throw a `bad_alloc` exception or return an INDETERMINATE result,
      *   but will not produce a wrong result (basic exception guarantee).
+     * 
+     * \throws FileIOError      The solver failed to write to disk and the solver
+     *   cannot recover from that condition. On further calls, the solver will
+     *   return INDETERMINATE. This exception can only be thrown if UNSAT certificate
+     *   generation is enabled.
      */
     virtual auto solve(std::vector<CNFLit> const& assumedFacts)
         -> std::unique_ptr<SolvingResult> = 0;
