@@ -34,6 +34,10 @@
 #include <libjamsat/drivers/CDCLSatSolver.h>
 #include <libjamsat/utils/Assert.h>
 
+#include <libjamsat/utils/Printers.h>
+
+#include <libjamsat/proof/DRATCertificate.h>
+
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -64,7 +68,7 @@ namespace {
 CNFLit ipasirLitToCNFLit(int ipasirLit) noexcept
 {
   CNFSign sign = (ipasirLit > 0 ? CNFSign::POSITIVE : CNFSign::NEGATIVE);
-  CNFVar var{static_cast<CNFVar::RawVariable>(std::abs(ipasirLit))};
+  CNFVar var{static_cast<CNFVar::RawVariable>(std::abs(ipasirLit) - 1)};
   return CNFLit{var, sign};
 }
 
@@ -132,6 +136,8 @@ public:
         m_clauseAddBuffer.push_back(ipasirLitToCNFLit(lit_or_zero));
       }
       else {
+        std::cout << "Added: " << toString(m_clauseAddBuffer.begin(), m_clauseAddBuffer.end())
+                  << std::endl;
         m_solver->addClause(m_clauseAddBuffer);
         m_clauseAddBuffer.clear();
       }
@@ -291,6 +297,8 @@ private:
   {
     if (!m_solver) {
       m_solver = createCDCLSatSolver();
+      m_certificate = createFileDRATCertificate("/tmp/jamsat.drat");
+      m_solver->setDRATCertificate(*m_certificate);
 
       if (m_killThreadContext != nullptr) {
         std::lock_guard<std::mutex> lock(m_killThreadContext->m_lock);
@@ -359,6 +367,9 @@ private:
    * If m_failed is set, the solver always produces INDETERMINATE results.
    */
   bool m_failed;
+
+
+  std::unique_ptr<DRATCertificate> m_certificate;
 };
 }
 }

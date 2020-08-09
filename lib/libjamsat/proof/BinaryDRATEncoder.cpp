@@ -33,7 +33,9 @@ namespace {
 template <typename OutIter>
 auto EncodeBinaryDRAT(CNFLit literal, OutIter outIter) noexcept -> OutIter
 {
-  CNFLit::RawLiteral rawValue = literal.getRawValue();
+  // Adding +2 to account for internal vs. external representation of
+  // literals: 0_Lit is DIMACS literal 1
+  CNFLit::RawLiteral rawValue = literal.getRawValue() + 2;
   rawValue ^= 1; // Flip the sign bit: DRAT has LSB 0 for positive literals
 
   do {

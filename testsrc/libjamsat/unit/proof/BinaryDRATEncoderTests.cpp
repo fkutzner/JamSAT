@@ -71,15 +71,15 @@ using LitDratMap = std::unordered_map<CNFLit, std::vector<unsigned char>>;
 auto createLitDratMap() -> LitDratMap
 {
   LitDratMap result;
-  result[0_Lit] = {0x00};
-  result[~0_Lit] = {0x01};
-  result[~63_Lit] = {0x7F};
-  result[64_Lit] = {0x80, 0x01};
-  result[129_Lit] = {0x82, 0x02};
-  result[~8191_Lit] = {0xFF, 0x7F};
-  result[~8193_Lit] = {0x83, 0x80, 0x01};
-  result[~134217727_Lit] = {0xFF, 0xFF, 0xFF, 0x7F};
-  result[~134217731_Lit] = {0x87, 0x80, 0x80, 0x80, 0x01};
+  result[0_Lit] = {0x02};
+  result[~0_Lit] = {0x03};
+  result[~62_Lit] = {0x7F};
+  result[63_Lit] = {0x80, 0x01};
+  result[128_Lit] = {0x82, 0x02};
+  result[~8190_Lit] = {0xFF, 0x7F};
+  result[~8192_Lit] = {0x83, 0x80, 0x01};
+  result[~134217726_Lit] = {0xFF, 0xFF, 0xFF, 0x7F};
+  result[~134217730_Lit] = {0x87, 0x80, 0x80, 0x80, 0x01};
   return result;
 }
 
@@ -106,15 +106,15 @@ INSTANTIATE_TEST_CASE_P(Unit_Proof, BinaryDRATEncoderTests,
       createDRATTestParams({}),
       createDRATTestParams({0_Lit}),
       createDRATTestParams({~0_Lit}),
-      createDRATTestParams({~63_Lit}),
-      createDRATTestParams({64_Lit}),
-      createDRATTestParams({129_Lit}),
-      createDRATTestParams({~8191_Lit}),
-      createDRATTestParams({~8193_Lit}),
-      createDRATTestParams({~134217727_Lit}),
-      createDRATTestParams({~134217731_Lit}),
-      createDRATTestParams({~63_Lit, 129_Lit}),
-      createDRATTestParams({~63_Lit, 129_Lit, ~8191_Lit})
+      createDRATTestParams({~62_Lit}),
+      createDRATTestParams({63_Lit}),
+      createDRATTestParams({128_Lit}),
+      createDRATTestParams({~8190_Lit}),
+      createDRATTestParams({~8192_Lit}),
+      createDRATTestParams({~134217726_Lit}),
+      createDRATTestParams({~134217730_Lit}),
+      createDRATTestParams({~62_Lit, 128_Lit}),
+      createDRATTestParams({~62_Lit, 128_Lit, ~8190_Lit})
   )
 );
 // clang-format on

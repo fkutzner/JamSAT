@@ -204,18 +204,18 @@ INSTANTIATE_TEST_CASE_P(UnitProof, FileDRATCertificateSerializationTests,
   ::testing::Values(
     ProofClauseAndResult{{}, {}},
     ProofClauseAndResult{{ATClause{}}, {CL_ADD, 0x00}},
-    ProofClauseAndResult{{createATClause({1_Lit})}, {CL_ADD, 0x02, 0x00}},
-    ProofClauseAndResult{{createATClause({1_Lit, 2_Lit, 129_Lit})}, {CL_ADD, 0x02, 0x04, 0x82, 0x02, 0x00}},
-    ProofClauseAndResult{{createRATClause({1_Lit}, 0)}, {CL_ADD, 0x02, 0x00}},
-    ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 0)}, {CL_ADD, 0x02, 0x04, 0x82, 0x02, 0x00}},
-    ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 1)}, {CL_ADD, 0x04, 0x02, 0x82, 0x02, 0x00}},
-    ProofClauseAndResult{{createRATClause({1_Lit, 2_Lit, 129_Lit}, 2)}, {CL_ADD, 0x82, 0x02, 0x02, 0x04, 0x00}},
-    ProofClauseAndResult{{createDeleteClause({1_Lit, 2_Lit, 129_Lit})}, {CL_DEL, 0x02, 0x04, 0x82, 0x02, 0x00}},
+    ProofClauseAndResult{{createATClause({0_Lit})}, {CL_ADD, 0x02, 0x00}},
+    ProofClauseAndResult{{createATClause({0_Lit, 1_Lit, 128_Lit})}, {CL_ADD, 0x02, 0x04, 0x82, 0x02, 0x00}},
+    ProofClauseAndResult{{createRATClause({0_Lit}, 0)}, {CL_ADD, 0x02, 0x00}},
+    ProofClauseAndResult{{createRATClause({0_Lit, 1_Lit, 128_Lit}, 0)}, {CL_ADD, 0x02, 0x04, 0x82, 0x02, 0x00}},
+    ProofClauseAndResult{{createRATClause({0_Lit, 1_Lit, 128_Lit}, 1)}, {CL_ADD, 0x04, 0x02, 0x82, 0x02, 0x00}},
+    ProofClauseAndResult{{createRATClause({0_Lit, 1_Lit, 128_Lit}, 2)}, {CL_ADD, 0x82, 0x02, 0x02, 0x04, 0x00}},
+    ProofClauseAndResult{{createDeleteClause({0_Lit, 1_Lit, 128_Lit})}, {CL_DEL, 0x02, 0x04, 0x82, 0x02, 0x00}},
     ProofClauseAndResult{
         {
-            createATClause({1_Lit}),
-            createDeleteClause({~1_Lit, 2_Lit}),
-            createRATClause({~1_Lit, 2_Lit, 129_Lit}, 1),
+            createATClause({0_Lit}),
+            createDeleteClause({~0_Lit, 1_Lit}),
+            createRATClause({~0_Lit, 1_Lit, 128_Lit}, 1),
         },
         {CL_ADD, 0x02, 0x00, CL_DEL, 0x03, 0x04, 0x00, CL_ADD, 0x04, 0x03, 0x82, 0x02, 0x00}}
   )
