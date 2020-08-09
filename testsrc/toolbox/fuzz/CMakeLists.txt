@@ -25,3 +25,6 @@
 nm_add_library(jstest.toolbox.fuzz.genericfuzzadapter OBJECT
   GenericFuzzAdapter.cpp
 )
+
+nm_add_tool(fuzzdump FuzzDump.cpp)
+target_link_libraries(fuzzdump PRIVATE libjamsat-testing)
