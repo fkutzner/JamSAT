@@ -25,7 +25,7 @@
 add_test(NAME jstest.jamsat.acceptance.satisfiable
          COMMAND jamsat ${CMAKE_CURRENT_SOURCE_DIR}/testinputs/satisfiable.cnf)
 set_tests_properties(jstest.jamsat.acceptance.satisfiable
-                     PROPERTIES PASS_REGULAR_EXPRESSION "[^N]SATISFIABLE")
+                     PROPERTIES PASS_REGULAR_EXPRESSION "[^N]SATISFIABLE|^SATISFIABLE")
 
 add_test(NAME jstest.jamsat.acceptance.unsatisfiable
          COMMAND jamsat ${CMAKE_CURRENT_SOURCE_DIR}/testinputs/unsatisfiable.cnf)
