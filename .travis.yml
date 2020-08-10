@@ -32,9 +32,9 @@ addons:
 
 env:
   matrix:
-    - JAMSAT_MODE=REGULAR
-    - JAMSAT_MODE=COVERAGE
-    - JAMSAT_MODE=SANITIZERS
+    - JAMSAT_MODE=REGULAR  CC=gcc-8 CXX=g++-8
+    - JAMSAT_MODE=COVERAGE CC=gcc-8 CXX=g++-8
+    - JAMSAT_MODE=SANITIZERS CC=gcc-8 CXX=g++-8
 
 
 # Using Travis CI primarily for testing right now, so SonarSource scan and
@@ -50,13 +50,13 @@ matrix:
     - os: osx
       env: JAMSAT_MODE=SANITIZERS
     - os: osx
-      compiler: gcc CC=gcc-8 CXX=g++-8
+      compiler: gcc
     - os: linux
       compiler: gcc
-      env: JAMSAT_MODE=SANITIZERS CC=gcc-8 CXX=g++-8
+      env: JAMSAT_MODE=SANITIZERS
     - os: linux
       compiler: clang
-      env: JAMSAT_MODE=COVERAGE CC=gcc-8 CXX=g++-8
+      env: JAMSAT_MODE=COVERAGE
   allow_failures:
     - env: JAMSAT_MODE=COVERAGE
     - env: SONARSOURCE_SCAN=1 JAMSAT_MODE=REGULAR
