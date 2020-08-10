@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
-export CC=gcc-8
-export CXX=g++-8
+host_os=`uname`
+if [[ "${host_os}"  == "Linux" ]]
+then
+  export CC=gcc-8
+  export CXX=g++-8
+fi
 
 echo "Using C++ compiler: ${CXX}"
 echo "Using C compiler: ${CC}"
