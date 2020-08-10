@@ -26,8 +26,8 @@ addons:
     packages:
     - clang-9
     - cmake
-    - gcc-9
-    - g++-9
+    - gcc-8
+    - g++-8
     - ninja-build
 
 env:
@@ -77,6 +77,8 @@ before_script:
     fi
 
 script:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    if [ "$CXX" = "g++" ]; then export CXX="g++-8" CC="gcc-8"; fi
   - mkdir -p ../build
   - cd ../build
   - bash $TRAVIS_BUILD_DIR/etc/TravisBuild.sh
