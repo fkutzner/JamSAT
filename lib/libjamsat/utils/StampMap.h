@@ -96,9 +96,9 @@ public:
     Stamp getStamp() const noexcept { return m_stamp; }
 
     StampingContext& operator=(const StampingContext& other) = delete;
-    StampingContext& operator=(StampingContext&& other) = default;
+    StampingContext& operator=(StampingContext&& other) noexcept = default;
     StampingContext(const StampingContext& other) = delete;
-    StampingContext(StampingContext&& other) = default;
+    StampingContext(StampingContext&& other) noexcept = default;
 
   private:
     friend class StampMapBase<T>;

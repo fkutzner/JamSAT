@@ -90,10 +90,10 @@ public:
   explicit RegionIterator(RegionT& region) noexcept;
 
   RegionIterator(RegionIterator const& rhs) = default;
-  RegionIterator(RegionIterator&& rhs) = default;
+  RegionIterator(RegionIterator&& rhs) noexcept = default;
 
   auto operator=(RegionIterator const& rhs) -> RegionIterator& = default;
-  auto operator=(RegionIterator&& rhs) -> RegionIterator& = default;
+  auto operator=(RegionIterator&& rhs) noexcept -> RegionIterator& = default;
 
   auto operator++() noexcept -> RegionIterator&;
   auto operator++(int) noexcept -> RegionIterator;

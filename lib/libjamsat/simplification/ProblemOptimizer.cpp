@@ -160,4 +160,6 @@ auto SharedOptimizerState::release() noexcept
   return make_tuple(std::move(m_facts), std::move(m_clauseDB), std::move(m_assignment));
 }
 
+SharedOptimizerState::~SharedOptimizerState() = default;
+
 }
