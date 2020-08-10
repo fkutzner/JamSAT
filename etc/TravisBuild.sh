@@ -1,6 +1,20 @@
 #!/bin/bash
 set -e
 
+echo "Originally configured C++ compiler: ${CXX}"
+echo "Originally configured C compiler: ${CC}"
+
+host_os=`uname`
+if [[ "${host_os}"  == "Linux" ]] && [[ "${CC}" =~ gcc ]]
+then
+  export CC=gcc-8
+  export CXX=g++-8
+fi
+
+echo "Using C++ compiler: ${CXX}"
+echo "Using C compiler: ${CC}"
+
+
 # For this script, it's assumed that the current working directory is an empty
 # directory where the build files can be placed.
 
@@ -51,6 +65,12 @@ then
   elif [ "${JAMSAT_MODE}" = "SANITIZERS" ]
   then
     echo "Running address and leak sanitizer..."
+    
+    # The createHeapClause() function (used only in tests) causes ASAN to report
+    # errors about new/delete size mismatches. Deactivating the check until implementing
+    # a mini clause allocator for testing.
+    export ASAN_OPTIONS=new_delete_type_mismatch=0
+
     cmake -DJAMSAT_ENABLE_TESTING=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DJAMSAT_BUILD_STATIC_LIB=ON -DJAMSAT_ENABLE_ASAN=ON -DJAMSAT_ENABLE_UBSAN=ON -DJAMSAT_DISABLE_OPTIMIZATIONS=ON ${TRAVIS_BUILD_DIR}
     build_and_test
   else

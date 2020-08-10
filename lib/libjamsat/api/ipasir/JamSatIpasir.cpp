@@ -47,8 +47,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include <iostream>
-
 // Note: the try/catch blocks contained in this file are mostly defensive,
 // preventing the solver to crash the client. Eventually, exceptions should
 // not escape the solver, but in the short term, they do - plus, the API
@@ -136,8 +134,6 @@ public:
         m_clauseAddBuffer.push_back(ipasirLitToCNFLit(lit_or_zero));
       }
       else {
-        std::cout << "Added: " << toString(m_clauseAddBuffer.begin(), m_clauseAddBuffer.end())
-                  << std::endl;
         m_solver->addClause(m_clauseAddBuffer);
         m_clauseAddBuffer.clear();
       }
@@ -297,9 +293,6 @@ private:
   {
     if (!m_solver) {
       m_solver = createCDCLSatSolver();
-      m_certificate = createFileDRATCertificate("/tmp/jamsat.drat");
-      m_solver->setDRATCertificate(*m_certificate);
-
       if (m_killThreadContext != nullptr) {
         std::lock_guard<std::mutex> lock(m_killThreadContext->m_lock);
         m_killThreadContext->m_solver = m_solver.get();
@@ -367,9 +360,6 @@ private:
    * If m_failed is set, the solver always produces INDETERMINATE results.
    */
   bool m_failed;
-
-
-  std::unique_ptr<DRATCertificate> m_certificate;
 };
 }
 }

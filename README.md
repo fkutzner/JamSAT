@@ -56,11 +56,11 @@ not very hard individually.
 JamSAT is regularly built and tested using the following
 configurations:
 
-| Operating System    | Compilers           |
-|---------------------|---------------------|
-| GNU/Linux           | clang, gcc          |
-| Apple macOS         | clang               |
-| Microsoft Windows   | Visual C++ 2017     |
+| Operating System    | Compilers                              |
+|---------------------|----------------------------------------|
+| GNU/Linux           | clang 7, gcc 8                         |
+| Apple macOS         | clang (XCode 10.1 / Apple Clang 10)    |
+| Microsoft Windows   | Visual C++ 2017                        |
 
 A compiler supporting C++17 is required to build JamSAT.
 
