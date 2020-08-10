@@ -18,6 +18,17 @@ addons:
     organization: "fkutzner-github"
     token:
       secure: "HBxyKx5j70S0go0geJCv+fpUSYak4NY2z3JIfyyMVdtjz1HkCNlY5FLkVRjIWrUC5/HQP7FcMvjhI53XyXlVg5VgE8iX0YfsdIobuAo8s0LiEvOBjZzo3khNErv3Z8z3Bz4G4aquN9dtZgyDvRaF4vONDmcIXG29LEuEwEpJ6Cot3Xn82p8MgIt2D12LN0bGGdpUpssYrW1r6FbTIMkIOksifbjdsIZj75TUykkPgNHpN/58RE6vizK6gK5oZ4AFji6UuFYbH783KVaXF+rFuOcqHjvBUcEY23tvlkKxNU4hurkD0zNdLqOUK0kHf5w/xxeYaF2LLt0HxsT0IaBYIVncVeOISoZEutSQKA4+i9vNGB6tVJQyGsCkxk+78G+LDnof2pFDk6zimwZeud1cRMJRzZ8Ws5dzZCNAjAT312kIe/afWIw+vrFUJ0rzwiRp37bJGFcsZcSDXocx+UT9XmRa/De3ooMqiYem5rgRnallYr2o1rWa1FGFcvckagg2OG+qZqhNY7Sneiw1FImAVCWA3kSaYnqL68srSq4dyIQkuK/TkM/yH6i27sl9jT28ybyYsGFsI1ueyq7HjCERVojkdLdMCVprOEhrcLuexESfvO40dhsevHjFZ0+D0hljKbLbxEnCqvd7o8QiBQUDZ1ef20B945fIprmJmy9shV4="
+  apt:
+    sources:
+    - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main'
+      key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
+    - sourceline: 'ppa:ubuntu-toolchain-r/test'
+    packages:
+    - clang-9
+    - cmake
+    - gcc-9
+    - g++-9
+    - ninja-build
 
 env:
   matrix:
