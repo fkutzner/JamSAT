@@ -32,9 +32,9 @@ addons:
 
 env:
   matrix:
-    - JAMSAT_MODE=REGULAR  CC=gcc-8 CXX=g++-8
-    - JAMSAT_MODE=COVERAGE CC=gcc-8 CXX=g++-8
-    - JAMSAT_MODE=SANITIZERS CC=gcc-8 CXX=g++-8
+    - JAMSAT_MODE=REGULAR
+    - JAMSAT_MODE=COVERAGE
+    - JAMSAT_MODE=SANITIZERS
 
 
 # Using Travis CI primarily for testing right now, so SonarSource scan and

@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+export CC=gcc-8
+export CXX=g++-8
+
 echo "Using C++ compiler: ${CXX}"
 echo "Using C compiler: ${CC}"
 
