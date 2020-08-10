@@ -5,7 +5,7 @@ echo "Originally configured C++ compiler: ${CXX}"
 echo "Originally configured C compiler: ${CC}"
 
 host_os=`uname`
-if [[ "${host_os}"  == "Linux" ]] && [[ ${CC} ~= gcc ]]
+if [[ "${host_os}"  == "Linux" ]] && [[ "${CC}" =~ gcc ]]
 then
   export CC=gcc-8
   export CXX=g++-8
@@ -13,6 +13,7 @@ fi
 
 echo "Using C++ compiler: ${CXX}"
 echo "Using C compiler: ${CC}"
+
 
 # For this script, it's assumed that the current working directory is an empty
 # directory where the build files can be placed.
