@@ -166,6 +166,8 @@ public:
   auto operator=(SharedOptimizerState&&) noexcept -> SharedOptimizerState&;
   SharedOptimizerState(SharedOptimizerState&&) noexcept;
 
+  ~SharedOptimizerState();
+
 private:
   std::vector<CNFLit> m_facts;
   PolymorphicClauseDB m_clauseDB;
@@ -195,7 +197,7 @@ public:
 
 template <typename T>
 PolymorphicClauseDB::PolymorphicClauseDB(T&& clauseDB)
-  : m_impl{std::make_unique<Impl<T>>(std::move(clauseDB))}
+  : m_impl{std::make_unique<Impl<T>>(std::forward<T>(clauseDB))}
 {
 }
 

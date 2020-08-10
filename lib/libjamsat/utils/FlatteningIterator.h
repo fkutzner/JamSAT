@@ -71,6 +71,10 @@ private:
   using OuterIt = I;
   using InnerIt = decltype(std::declval<I>()->begin());
 
+  static_assert(std::is_nothrow_move_assignable_v<InnerIt>);
+  static_assert(std::is_nothrow_move_constructible_v<InnerIt>);
+
+
 public:
   using value_type = typename std::iterator_traits<InnerIt>::value_type;
   using reference = typename std::iterator_traits<InnerIt>::reference;
@@ -107,9 +111,9 @@ public:
   bool operator!=(const FlatteningIterator<I>& rhs) const noexcept;
 
   FlatteningIterator<I>& operator=(const FlatteningIterator<I>& other) = default;
-  FlatteningIterator<I>& operator=(FlatteningIterator<I>&& other) = default;
+  FlatteningIterator<I>& operator=(FlatteningIterator<I>&& other) noexcept = default;
   FlatteningIterator(const FlatteningIterator<I>& other) = default;
-  FlatteningIterator(FlatteningIterator<I>&& other) = default;
+  FlatteningIterator(FlatteningIterator<I>&& other) noexcept = default;
   ~FlatteningIterator() = default;
 
 private:
