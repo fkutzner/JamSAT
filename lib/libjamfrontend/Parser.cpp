@@ -307,7 +307,7 @@ void readClauses(IpasirSolver& solver, gzFile file, DIMACSHeader problemHeader)
   while ((bytesRead = readChunk(file, preferredChunkReadSize, buffer)) != 0) {
     char* cursor = buffer.data();
     char* endCursor = cursor;
-    char* end = buffer.data() + buffer.size();
+    char* end = buffer.data() + (buffer.size() - 1);
 
     while (cursor != end) {
       constexpr int ipasirLiteralRadix = 10;
@@ -327,7 +327,7 @@ void readClauses(IpasirSolver& solver, gzFile file, DIMACSHeader problemHeader)
       if (cursor == endCursor) {
         // No conversion could be perfomed. Possible reasons: the string
         // is blank or contains something that cannot be parsed as a long.
-        for (char* c = cursor; cursor < end; ++cursor) {
+        for (char* c = cursor; c < end; ++c) {
           if (std::isspace(*c) == 0) {
             throw CNFParserError{"Syntax error: invalid character with code " + std::to_string(*c)};
           }
