@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+echo "Using C++ compiler: ${CXX}"
+echo "Using C compiler: ${CC}"
+
 # For this script, it's assumed that the current working directory is an empty
 # directory where the build files can be placed.
 

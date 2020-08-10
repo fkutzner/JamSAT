@@ -50,13 +50,13 @@ matrix:
     - os: osx
       env: JAMSAT_MODE=SANITIZERS
     - os: osx
-      compiler: gcc
+      compiler: gcc CC=gcc-8 CXX=g++-8
     - os: linux
       compiler: gcc
-      env: JAMSAT_MODE=SANITIZERS
+      env: JAMSAT_MODE=SANITIZERS CC=gcc-8 CXX=g++-8
     - os: linux
       compiler: clang
-      env: JAMSAT_MODE=COVERAGE
+      env: JAMSAT_MODE=COVERAGE CC=gcc-8 CXX=g++-8
   allow_failures:
     - env: JAMSAT_MODE=COVERAGE
     - env: SONARSOURCE_SCAN=1 JAMSAT_MODE=REGULAR
@@ -77,8 +77,6 @@ before_script:
     fi
 
 script:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    if [ "$CXX" = "g++" ]; then export CXX="g++-8" CC="gcc-8"; fi
   - mkdir -p ../build
   - cd ../build
   - bash $TRAVIS_BUILD_DIR/etc/TravisBuild.sh
