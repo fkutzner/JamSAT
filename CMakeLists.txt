@@ -163,6 +163,7 @@ add_subdirectory(tools)
 ### Enable testing
 
 if(JAMSAT_ENABLE_TESTING)
+  include(etc/cmake/FuzzUtils.cmake)
   nm_add_gtest()
   enable_testing()
   add_subdirectory(testsrc)
