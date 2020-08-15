@@ -203,7 +203,8 @@ public:
   OccurrenceMap(OccurrenceMap const& rhs) = delete;
   auto operator=(OccurrenceMap const& rhs) -> OccurrenceMap& = delete;
 
-  OccurrenceMap(OccurrenceMap&& rhs) noexcept = default;
+  // TODO: investigate why MSVC generates no explicitly defaulted noexcept move constructor
+  OccurrenceMap(OccurrenceMap&& rhs) noexcept;
   auto operator=(OccurrenceMap&& rhs) noexcept -> OccurrenceMap& = default;
 
 private:
@@ -261,10 +262,9 @@ template <typename ContainerT,
           typename ContainerValueIndex>
 OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
     OccurrenceMap(value_type maxElement)
-  : m_occurrences(maxElement), m_deletedQuery()
+  : m_occurrences(maxElement), m_deletedQuery(), m_modifiedQuery(), m_delModUpdates()
 {
 }
-
 
 template <typename ContainerT,
           typename ContainerDeletedQuery,
@@ -273,9 +273,23 @@ template <typename ContainerT,
 template <typename ContainerPtrIt>
 OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
     OccurrenceMap(value_type maxElement, ContainerPtrIt begin, ContainerPtrIt end)
-  : m_occurrences(maxElement), m_deletedQuery()
+  : m_occurrences(maxElement), m_deletedQuery(), m_modifiedQuery(), m_delModUpdates()
 {
   insert(begin, end);
+}
+
+
+template <typename ContainerT,
+          typename ContainerDeletedQuery,
+          typename ContainerModifiedQuery,
+          typename ContainerValueIndex>
+OccurrenceMap<ContainerT, ContainerDeletedQuery, ContainerModifiedQuery, ContainerValueIndex>::
+    OccurrenceMap(OccurrenceMap&& rhs) noexcept
+  : m_occurrences(std::move(rhs.m_occurrences))
+  , m_deletedQuery(std::move(rhs.m_deletedQuery))
+  , m_modifiedQuery(std::move(rhs.m_modifiedQuery))
+  , m_delModUpdates(std::move(rhs.m_delModUpdates))
+{
 }
 
 template <typename ContainerT,

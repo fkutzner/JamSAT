@@ -32,6 +32,7 @@
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <type_traits>
 #include <vector>
 
 namespace jamsat {
@@ -77,6 +78,9 @@ public:
 
 using TestOccMap =
     jamsat::OccurrenceMap<TestUIntVec, TestUIntVecDelPred, TestUIntVecModPred, TestUIntIndex>;
+
+static_assert(std::is_nothrow_move_constructible_v<TestOccMap>);
+static_assert(std::is_nothrow_move_assignable_v<TestOccMap>);
 
 TEST(UnitUtils, emptyOccurrenceMapContainsNoEntries)
 {
