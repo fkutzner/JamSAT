@@ -25,8 +25,8 @@ configuration:
 # "build: false" is set, which causes the build script to be ignored.
 install:
 
-  - IF "%PLATFORM%" == "x86" ( SET BOOST_LIBRARYDIR=%BOOST_ROOT%/lib32-msvc-15.0)
-  - IF "%PLATFORM%" == "x64" ( SET BOOST_LIBRARYDIR=%BOOST_ROOT%/lib64-msvc-15.0)
+  - IF "%PLATFORM%" == "x86" ( SET BOOST_LIBRARYDIR=%BOOST_ROOT%\lib32-msvc-14.1)
+  - IF "%PLATFORM%" == "x64" ( SET BOOST_LIBRARYDIR=%BOOST_ROOT%\lib64-msvc-14.1)
   - IF "%PLATFORM%" == "x64" ( SET CMAKE_GENERATOR="Visual Studio 15 2017 Win64")
   - IF "%PLATFORM%" == "x86" ( SET CMAKE_GENERATOR="Visual Studio 15 2017")
 
@@ -41,7 +41,7 @@ install:
   # Build and test JamSAT
   - echo %PLATFORM%
   - echo %BOOST_LIBRARYDIR%
-  - dir C:\Libraries\boost_1_64_0\lib64-msvc-15.0
+
   # Guide DLL lookup (boost & zlib):
   - set PATH=%PATH%;%BOOST_LIBRARYDIR%;%INSTALLATION_DIR%\bin
   - cd %REPO_DIR%\JamSAT
@@ -51,7 +51,6 @@ install:
   - cd ..\build
   - cmake -G %CMAKE_GENERATOR% -DJAMSAT_ENABLE_TESTING=ON -DJAMSAT_LINK_VERBOSE=ON -DCMAKE_INSTALL_PREFIX=%INSTALLATION_DIR% -DCMAKE_PREFIX_PATH=%INSTALLATION_DIR% ..\JamSAT
   - cmake --build . --config %CONFIGURATION%
-  - cp C:\Libraries\boost_1_64_0\lib64-msvc-15.0\* bin
 
   - ctest -V -R testsuite -V -C %CONFIGURATION%
   - ctest -V -E testsuite -C %CONFIGURATION%

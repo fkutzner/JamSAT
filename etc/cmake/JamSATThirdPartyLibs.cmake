@@ -28,7 +28,11 @@ if (JAMSAT_ENABLE_LOGGING)
 endif()
 
 if (NOT JAMSAT_DISABLE_BOOST_LINKING_SETUP)
-  set(Boost_USE_STATIC_LIBS OFF)
+  if(WIN32)
+    set(Boost_USE_STATIC_LIBS ON)
+  else()
+    set(Boost_USE_STATIC_LIBS OFF)
+  endif()
 endif()
 
 find_package(Boost
