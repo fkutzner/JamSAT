@@ -41,7 +41,6 @@ install:
   # Build and test JamSAT
   - echo %PLATFORM%
   - echo %BOOST_LIBRARYDIR%
-  - dir C:\Libraries\boost_1_64_0\lib64-msvc-15.0
   # Guide DLL lookup (boost & zlib):
   - set PATH=%PATH%;%BOOST_LIBRARYDIR%;%INSTALLATION_DIR%\bin
   - cd %REPO_DIR%\JamSAT
