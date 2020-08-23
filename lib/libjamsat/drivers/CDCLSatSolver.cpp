@@ -523,6 +523,10 @@ auto CDCLSatSolverImpl::solve(std::vector<CNFLit> const& assumedFacts)
       return std::make_unique<SolvingResultImpl>(TBools::FALSE, nullptr, std::vector<CNFLit>{});
     }
 
+    for (CNFLit lit : assumedFacts) {
+      m_maxVar = std::max(m_maxVar, lit.getVariable());
+    }
+
     m_facts = withoutRedundancies(m_facts.begin(), m_facts.end());
     resizeSubsystems();
     synchronizeSubsystemsWithClauseDB();

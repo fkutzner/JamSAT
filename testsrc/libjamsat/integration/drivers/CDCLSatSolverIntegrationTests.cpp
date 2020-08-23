@@ -30,6 +30,7 @@
 #include <toolbox/cnfgenerators/Rule110.h>
 #include <toolbox/testutils/Minisat.h>
 
+
 namespace jamsat {
 
 TEST(DriversIntegration, CDCLSatSolver_problemWithEmptyClauseIsUnsatisfiable)
@@ -58,6 +59,16 @@ TEST(DriversIntegration, CDCLSatSolver_problemWithConflictingUnitClausesIsUnsati
   underTest->addClause({1_Lit});
   underTest->addClause({~1_Lit});
   EXPECT_EQ(underTest->solve({})->isProblemSatisfiable(), TBools::FALSE);
+}
+
+TEST(DriversIntegration, CDCLSatSolver_assumptionsWithVarsOutsideOfProblemCanBeAdded)
+{
+  std::unique_ptr<CDCLSatSolver> underTest = createCDCLSatSolver();
+  underTest->addClause({1_Lit});
+  std::unique_ptr<SolvingResult> result = underTest->solve(std::vector<CNFLit>{100_Lit});
+  ASSERT_TRUE(isTrue(result->isProblemSatisfiable()));
+  Model const& model = *(result->getModel());
+  EXPECT_EQ(model.getAssignment(100_Var), TBools::TRUE);
 }
 
 TEST(DriversIntegration, CDCLSatSolver_rule110_reachable)
